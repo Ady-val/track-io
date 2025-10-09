@@ -10,10 +10,10 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { SignalDto } from '../../application/dtos/signal.dto';
-import { SignalService } from '../../application/services/signal.service';
-import { RawSignal } from '../../domain/entities/raw-signal.entity';
-import { RawSignalFilters } from '../../domain/repositories/raw-signal.repository';
+import { SignalDto } from '../application/dtos/signal.dto';
+import { SignalService } from '../application/services/signal.service';
+import { RawSignal } from '../domain/entities/raw-signal.entity';
+import { RawSignalFilters } from '../domain/repositories/raw-signal.repository';
 
 @Controller('signals')
 export class SignalController {

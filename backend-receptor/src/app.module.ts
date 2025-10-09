@@ -5,6 +5,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SignalsModule } from './signals/signals.module';
 import { WebSocketModule } from './websocket/websocket.module';
+import { AreasModule } from './areas/areas.module';
+import { DepartmentsModule } from './departments/departments.module';
+import { DevicesModule } from './devices/devices.module';
+import { DeviceSignalsModule } from './device-signals/device-signals.module';
 
 @Module({
   imports: [
@@ -29,6 +33,10 @@ import { WebSocketModule } from './websocket/websocket.module';
     }),
     SignalsModule,
     WebSocketModule,
+    AreasModule,
+    DepartmentsModule,
+    DevicesModule,
+    DeviceSignalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
