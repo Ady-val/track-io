@@ -1,65 +1,43 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Measurement } from '../../domain/entities/measurement.entity';
 import {
-  RawMeasurementRepository,
-  CreateRawMeasurementDto,
-  RawMeasurementFilters,
-} from '../../domain/repositories/raw-measurement.repository';
-import { RawMeasurement } from '../../domain/entities/raw-measurement.entity';
-import { WebSocketEmitterService } from '../../../websocket/services/websocket-emitter.service';
-import { WEBSOCKET_EVENTS } from '../../../websocket/constants/websocket-events.constant';
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  MeasurementRepository,
+  MeasurementFilters,
+} from '../../domain/repositories/measurement.repository';
+import { Measurement } from '../../domain/entities/measurement.entity';
+import { MeasurementValue } from '../../domain/entities/measurement-value.entity';
+import { MeasurementValueRepository } from '../../domain/repositories/measurement-value.repository';
+import {
+  CreateMeasurementDto,
+  UpdateMeasurementDto,
+} from '../dtos/measurement.dto';
 
 @Injectable()
 export class MeasurementService {
   private readonly logger = new Logger(MeasurementService.name);
 
   constructor(
-    private readonly rawMeasurementRepository: RawMeasurementRepository,
-    private readonly webSocketEmitterService: WebSocketEmitterService
+    private readonly measurementRepository: MeasurementRepository,
+    private readonly measurementValueRepository: MeasurementValueRepository
   ) {}
 
-  async processMeasurement(id: string, value: string): Promise<RawMeasurement> {
-    const measurement = new Measurement(id, value);
-
-    this.logger.log(
-      `Received measurement data: ${JSON.stringify({ id, value })}`
-    );
-    this.logger.log(measurement);
-
+  async createMeasurement(
+    createMeasurementDto: CreateMeasurementDto
+  ): Promise<Measurement> {
     try {
-      const createDto: CreateRawMeasurementDto = {
-        externalId: id,
-        value: value,
-      };
-
-      const savedMeasurement =
-        await this.rawMeasurementRepository.create(createDto);
-
+      const measurement =
+        await this.measurementRepository.create(createMeasurementDto);
       this.logger.log(
-        `Measurement saved to database with ID: ${savedMeasurement.id}`
+        `Measurement created successfully with ID: ${measurement.id}`
       );
-
-      try {
-        this.webSocketEmitterService.emitNewRawMeasurement({
-          id: savedMeasurement.id,
-          externalId: savedMeasurement.externalId,
-          value: savedMeasurement.value,
-          createdAt: savedMeasurement.createdAt,
-        });
-        this.logger.log(
-          `WebSocket message emitted for event: ${WEBSOCKET_EVENTS.NEW_RAW_MEASUREMENT}`
-        );
-      } catch (wsError) {
-        this.logger.error(
-          `Error emitting WebSocket message: ${(wsError as Error).message}`,
-          (wsError as Error).stack
-        );
-      }
-
-      return savedMeasurement;
+      return measurement;
     } catch (error) {
       this.logger.error(
-        `Error saving measurement to database: ${(error as Error).message}`,
+        `Error creating measurement: ${(error as Error).message}`,
         (error as Error).stack
       );
       throw error;
@@ -67,16 +45,10 @@ export class MeasurementService {
   }
 
   async getAllMeasurements(
-    filters?: RawMeasurementFilters
-  ): Promise<{ data: RawMeasurement[]; total: number }> {
+    filters?: MeasurementFilters
+  ): Promise<{ data: Measurement[]; total: number }> {
     try {
-      this.webSocketEmitterService.emitNewRawMeasurement({
-        id: '1',
-        externalId: '1',
-        value: '1',
-        createdAt: new Date(),
-      });
-      return await this.rawMeasurementRepository.findAll(filters);
+      return await this.measurementRepository.findAll(filters);
     } catch (error) {
       this.logger.error(
         `Error retrieving measurements: ${(error as Error).message}`,
@@ -86,9 +58,13 @@ export class MeasurementService {
     }
   }
 
-  async getMeasurementById(id: number): Promise<RawMeasurement | null> {
+  async getMeasurementById(id: number): Promise<Measurement> {
     try {
-      return await this.rawMeasurementRepository.findById(id);
+      const measurement = await this.measurementRepository.findById(id);
+      if (!measurement) {
+        throw new NotFoundException(`Measurement with ID ${id} not found`);
+      }
+      return measurement;
     } catch (error) {
       this.logger.error(
         `Error retrieving measurement by ID ${id}: ${(error as Error).message}`,
@@ -98,14 +74,69 @@ export class MeasurementService {
     }
   }
 
-  async getMeasurementsByExternalId(
+  async getMeasurementByExternalId(
     externalId: string
-  ): Promise<RawMeasurement[]> {
+  ): Promise<Measurement | null> {
     try {
-      return await this.rawMeasurementRepository.findByExternalId(externalId);
+      return await this.measurementRepository.findByExternalId(externalId);
     } catch (error) {
       this.logger.error(
-        `Error retrieving measurements by external ID ${externalId}: ${(error as Error).message}`,
+        `Error retrieving measurement by external ID ${externalId}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      throw error;
+    }
+  }
+
+  async updateMeasurement(
+    id: number,
+    updateMeasurementDto: UpdateMeasurementDto
+  ): Promise<Measurement> {
+    try {
+      const measurement = await this.measurementRepository.update(
+        id,
+        updateMeasurementDto
+      );
+      if (!measurement) {
+        throw new NotFoundException(`Measurement with ID ${id} not found`);
+      }
+      this.logger.log(`Measurement with ID ${id} updated successfully`);
+      return measurement;
+    } catch (error) {
+      this.logger.error(
+        `Error updating measurement with ID ${id}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      throw error;
+    }
+  }
+
+  async deleteMeasurement(id: number): Promise<void> {
+    try {
+      const deleted = await this.measurementRepository.softDelete(id);
+      if (!deleted) {
+        throw new NotFoundException(`Measurement with ID ${id} not found`);
+      }
+      this.logger.log(`Measurement with ID ${id} deleted successfully`);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting measurement with ID ${id}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      throw error;
+    }
+  }
+
+  async restoreMeasurement(id: number): Promise<void> {
+    try {
+      const restored = await this.measurementRepository.restore(id);
+      if (!restored) {
+        throw new NotFoundException(`Measurement with ID ${id} not found`);
+      }
+      this.logger.log(`Measurement with ID ${id} restored successfully`);
+    } catch (error) {
+      this.logger.error(
+        `Error restoring measurement with ID ${id}: ${(error as Error).message}`,
         (error as Error).stack
       );
       throw error;
@@ -114,10 +145,52 @@ export class MeasurementService {
 
   async getMeasurementsCount(): Promise<number> {
     try {
-      return await this.rawMeasurementRepository.count();
+      return await this.measurementRepository.count();
     } catch (error) {
       this.logger.error(
         `Error getting measurements count: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      throw error;
+    }
+  }
+
+  async getMeasurementValues(
+    id: number,
+    limit: number = 10
+  ): Promise<MeasurementValue[]> {
+    try {
+      // Validate limit
+      if (limit > 100) {
+        throw new BadRequestException(
+          'Limit cannot exceed 100. Please request 100 or fewer values.'
+        );
+      }
+
+      if (limit < 1) {
+        throw new BadRequestException('Limit must be at least 1.');
+      }
+
+      // Verify measurement exists
+      const measurement = await this.measurementRepository.findById(id);
+      if (!measurement) {
+        throw new NotFoundException(`Measurement with ID ${id} not found`);
+      }
+
+      const values =
+        await this.measurementValueRepository.findLatestByMeasurementId(
+          id,
+          limit
+        );
+
+      this.logger.log(
+        `Retrieved ${values.length} values for measurement ID ${id}`
+      );
+
+      return values;
+    } catch (error) {
+      this.logger.error(
+        `Error retrieving measurement values for ID ${id}: ${(error as Error).message}`,
         (error as Error).stack
       );
       throw error;

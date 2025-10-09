@@ -2,13 +2,23 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MeasurementController } from './controllers/measurement.controller';
 import { MeasurementService } from './application/services/measurement.service';
-import { RawMeasurement } from './domain/entities/raw-measurement.entity';
-import { RawMeasurementRepository } from './domain/repositories/raw-measurement.repository';
+import { Measurement } from './domain/entities/measurement.entity';
+import { MeasurementValue } from './domain/entities/measurement-value.entity';
+import { MeasurementRepository } from './domain/repositories/measurement.repository';
+import { MeasurementValueRepository } from './domain/repositories/measurement-value.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RawMeasurement])],
+  imports: [TypeOrmModule.forFeature([Measurement, MeasurementValue])],
   controllers: [MeasurementController],
-  providers: [MeasurementService, RawMeasurementRepository],
-  exports: [MeasurementService, RawMeasurementRepository],
+  providers: [
+    MeasurementService,
+    MeasurementRepository,
+    MeasurementValueRepository,
+  ],
+  exports: [
+    MeasurementService,
+    MeasurementRepository,
+    MeasurementValueRepository,
+  ],
 })
 export class MeasurementsModule {}

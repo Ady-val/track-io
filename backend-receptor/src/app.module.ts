@@ -4,12 +4,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SignalsModule } from './signals/signals.module';
-import { MeasurementsModule } from './measurements/measurements.module';
+import { RawMeasurementsModule } from './raw-measurements/raw-measurements.module';
 import { WebSocketModule } from './websocket/websocket.module';
 import { AreasModule } from './areas/areas.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { DevicesModule } from './devices/devices.module';
 import { DeviceSignalsModule } from './device-signals/device-signals.module';
+import { MeasurementsModule } from './measurements/measurements.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { DeviceSignalsModule } from './device-signals/device-signals.module';
       inject: [ConfigService],
     }),
     SignalsModule,
+    RawMeasurementsModule,
     MeasurementsModule,
     WebSocketModule,
     AreasModule,

@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "track-io-api-collection",
 		"name": "Track.IO Backend API",
-		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, raw signals and measurements.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```",
+		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, measurements, raw signals and raw measurements.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Measurements Management**: CRUD operations for measurements (configured measurement definitions)\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "track-io-backend"
 	},
@@ -1242,11 +1242,11 @@
 			]
 		},
 		{
-			"name": "Raw Measurements",
-			"description": "Endpoints for processing and retrieving raw measurement data (time-series data from devices)",
+			"name": "Measurements",
+			"description": "Endpoints for managing measurement definitions (configured measurement types with metadata)",
 			"item": [
 				{
-					"name": "Process Measurement",
+					"name": "Create Measurement",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -1257,7 +1257,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"PRESSURE_SENSOR_001\",\n  \"value\": \"101.3\"\n}"
+							"raw": "{\n  \"externalId\": \"TEMP-SENSOR-001\",\n  \"name\": \"Main Boiler Temperature\",\n  \"type\": \"temperature\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/measurements",
@@ -1268,7 +1268,7 @@
 								"measurements"
 							]
 						},
-						"description": "Processes and stores a new raw measurement. The measurement is saved to the database and emitted via WebSocket with type='measurement'."
+						"description": "Creates a new measurement definition. Type must be one of: temperature, humidity, pressure, level, flow, vibration."
 					},
 					"response": []
 				},
@@ -1288,7 +1288,249 @@
 							"query": [
 								{
 									"key": "externalId",
-									"value": "PRESSURE_SENSOR_001",
+									"value": "TEMP-SENSOR-001",
+									"description": "Filter by external ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "temperature",
+									"description": "Filter by measurement type (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of measurement definitions with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Measurements Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								"count"
+							]
+						},
+						"description": "Returns the total count of measurement definitions in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Measurement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific measurement definition by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Measurement",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Main Boiler Temperature - Updated\",\n  \"type\": \"temperature\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Updates an existing measurement definition."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Measurement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Soft deletes a measurement definition (sets deletedAt timestamp)."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Measurement",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/:id/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								":id",
+								"restore"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Restores a soft-deleted measurement definition."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Measurement Values",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/:id/values?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								":id",
+								"values"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of latest values to retrieve (default: 10, max: 100)"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Retrieves the latest measurement values for a specific measurement. The limit parameter is optional (default: 10, maximum: 100). Returns an error if limit exceeds 100."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Raw Measurements",
+			"description": "Endpoints for processing and retrieving raw measurement data (time-series data from devices)",
+			"item": [
+				{
+					"name": "Process Raw Measurement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"TEMP-SENSOR-001\",\n  \"value\": \"25.5\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/raw-measurements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"raw-measurements"
+							]
+						},
+						"description": "Processes and stores a new raw measurement. If the id matches a measurement's externalId, it will also save to measurement_values table. The measurement is saved to the database and emitted via WebSocket."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Raw Measurements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/raw-measurements?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"raw-measurements"
+							],
+							"query": [
+								{
+									"key": "externalId",
+									"value": "TEMP-SENSOR-001",
 									"description": "Filter by external ID (optional)",
 									"disabled": true
 								},
@@ -1321,17 +1563,17 @@
 					"response": []
 				},
 				{
-					"name": "Get Measurements Count",
+					"name": "Get Raw Measurements Count",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/measurements/count",
+							"raw": "{{baseUrl}}/raw-measurements/count",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"measurements",
+								"raw-measurements",
 								"count"
 							]
 						},
@@ -1340,24 +1582,24 @@
 					"response": []
 				},
 				{
-					"name": "Get Measurement by ID",
+					"name": "Get Raw Measurement by ID",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/measurements/:id",
+							"raw": "{{baseUrl}}/raw-measurements/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"measurements",
+								"raw-measurements",
 								":id"
 							],
 							"variable": [
 								{
 									"key": "id",
 									"value": "1",
-									"description": "Measurement ID"
+									"description": "Raw Measurement ID"
 								}
 							]
 						},
@@ -1366,24 +1608,24 @@
 					"response": []
 				},
 				{
-					"name": "Get Measurements by External ID",
+					"name": "Get Raw Measurements by External ID",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/measurements/external/:externalId",
+							"raw": "{{baseUrl}}/raw-measurements/external/:externalId",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"measurements",
+								"raw-measurements",
 								"external",
 								":externalId"
 							],
 							"variable": [
 								{
 									"key": "externalId",
-									"value": "PRESSURE_SENSOR_001",
+									"value": "TEMP-SENSOR-001",
 									"description": "External ID"
 								}
 							]
