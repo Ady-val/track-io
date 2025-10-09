@@ -1,0 +1,1406 @@
+{
+	"info": {
+		"_postman_id": "track-io-api-collection",
+		"name": "Track.IO Backend API",
+		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, raw signals and measurements.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "track-io-backend"
+	},
+	"item": [
+		{
+			"name": "Areas",
+			"description": "Endpoints for managing geographical or organizational areas",
+			"item": [
+				{
+					"name": "Create Area",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Production Floor A\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/areas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas"
+							]
+						},
+						"description": "Creates a new area in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Areas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/areas?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Production",
+									"description": "Filter by area name (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								},
+								{
+									"key": "includeDeleted",
+									"value": "false",
+									"description": "Include soft-deleted areas",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of all areas with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Areas Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/areas/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas",
+								"count"
+							]
+						},
+						"description": "Returns the total count of areas in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Area by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/areas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Area ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific area by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Area",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Production Floor A - Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/areas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Area ID"
+								}
+							]
+						},
+						"description": "Updates an existing area."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Area",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/areas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Area ID"
+								}
+							]
+						},
+						"description": "Soft deletes an area (sets deletedAt timestamp)."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Area",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/areas/:id/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"areas",
+								":id",
+								"restore"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Area ID"
+								}
+							]
+						},
+						"description": "Restores a soft-deleted area."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Departments",
+			"description": "Endpoints for managing departments",
+			"item": [
+				{
+					"name": "Create Department",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Quality Control\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/departments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments"
+							]
+						},
+						"description": "Creates a new department in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Departments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/departments?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Quality",
+									"description": "Filter by department name (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								},
+								{
+									"key": "includeDeleted",
+									"value": "false",
+									"description": "Include soft-deleted departments",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of all departments with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Departments Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/departments/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments",
+								"count"
+							]
+						},
+						"description": "Returns the total count of departments in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Department by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/departments/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Department ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific department by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Department",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Quality Control - Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/departments/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Department ID"
+								}
+							]
+						},
+						"description": "Updates an existing department."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Department",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/departments/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Department ID"
+								}
+							]
+						},
+						"description": "Soft deletes a department (sets deletedAt timestamp)."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Department",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/departments/:id/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"departments",
+								":id",
+								"restore"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Department ID"
+								}
+							]
+						},
+						"description": "Restores a soft-deleted department."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Devices",
+			"description": "Endpoints for managing IoT devices",
+			"item": [
+				{
+					"name": "Create Device",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Temperature Sensor 01\",\n  \"areaId\": 1,\n  \"externalId\": \"TEMP-SENSOR-001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/devices",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices"
+							]
+						},
+						"description": "Creates a new device in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Devices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Temperature",
+									"description": "Filter by device name (optional)",
+									"disabled": true
+								},
+								{
+									"key": "areaId",
+									"value": "1",
+									"description": "Filter by area ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "externalId",
+									"value": "TEMP-SENSOR-001",
+									"description": "Filter by external ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								},
+								{
+									"key": "includeDeleted",
+									"value": "false",
+									"description": "Include soft-deleted devices",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of all devices with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Devices Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								"count"
+							]
+						},
+						"description": "Returns the total count of devices in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Devices Count by Area",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/area/:areaId/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								"area",
+								":areaId",
+								"count"
+							],
+							"variable": [
+								{
+									"key": "areaId",
+									"value": "1",
+									"description": "Area ID"
+								}
+							]
+						},
+						"description": "Returns the count of devices in a specific area."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Devices by Area",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/area/:areaId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								"area",
+								":areaId"
+							],
+							"variable": [
+								{
+									"key": "areaId",
+									"value": "1",
+									"description": "Area ID"
+								}
+							]
+						},
+						"description": "Retrieves all devices in a specific area."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device by External ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/external/:externalId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								"external",
+								":externalId"
+							],
+							"variable": [
+								{
+									"key": "externalId",
+									"value": "TEMP-SENSOR-001",
+									"description": "Device External ID"
+								}
+							]
+						},
+						"description": "Retrieves a device by its external ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific device by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Device",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Temperature Sensor 01 - Updated\",\n  \"areaId\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/devices/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device ID"
+								}
+							]
+						},
+						"description": "Updates an existing device."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Device",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device ID"
+								}
+							]
+						},
+						"description": "Soft deletes a device (sets deletedAt timestamp)."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Device",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/devices/:id/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								":id",
+								"restore"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device ID"
+								}
+							]
+						},
+						"description": "Restores a soft-deleted device."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Device Signals",
+			"description": "Endpoints for managing device signals (configured signal mappings)",
+			"item": [
+				{
+					"name": "Create Device Signal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Temperature Reading\",\n  \"deviceId\": 1,\n  \"departmentId\": 1,\n  \"externalValueId\": \"TEMP_VALUE_1\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/device-signals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals"
+							]
+						},
+						"description": "Creates a new device signal configuration."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Device Signals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Temperature",
+									"description": "Filter by signal name (optional)",
+									"disabled": true
+								},
+								{
+									"key": "deviceId",
+									"value": "1",
+									"description": "Filter by device ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "departmentId",
+									"value": "1",
+									"description": "Filter by department ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "externalValueId",
+									"value": "TEMP_VALUE_1",
+									"description": "Filter by external value ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								},
+								{
+									"key": "includeDeleted",
+									"value": "false",
+									"description": "Include soft-deleted signals",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of all device signals with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signals Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								"count"
+							]
+						},
+						"description": "Returns the total count of device signals in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signals Count by Device",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/device/:deviceId/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								"device",
+								":deviceId",
+								"count"
+							],
+							"variable": [
+								{
+									"key": "deviceId",
+									"value": "1",
+									"description": "Device ID"
+								}
+							]
+						},
+						"description": "Returns the count of signals for a specific device."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signals Count by Department",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/department/:departmentId/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								"department",
+								":departmentId",
+								"count"
+							],
+							"variable": [
+								{
+									"key": "departmentId",
+									"value": "1",
+									"description": "Department ID"
+								}
+							]
+						},
+						"description": "Returns the count of signals for a specific department."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signals by Device",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/device/:deviceId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								"device",
+								":deviceId"
+							],
+							"variable": [
+								{
+									"key": "deviceId",
+									"value": "1",
+									"description": "Device ID"
+								}
+							]
+						},
+						"description": "Retrieves all signals for a specific device."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signals by Department",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/department/:departmentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								"department",
+								":departmentId"
+							],
+							"variable": [
+								{
+									"key": "departmentId",
+									"value": "1",
+									"description": "Department ID"
+								}
+							]
+						},
+						"description": "Retrieves all signals for a specific department."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signal by External Value ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/external/:externalValueId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								"external",
+								":externalValueId"
+							],
+							"variable": [
+								{
+									"key": "externalValueId",
+									"value": "TEMP_VALUE_1",
+									"description": "External Value ID"
+								}
+							]
+						},
+						"description": "Retrieves a device signal by its external value ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Signal by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device Signal ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific device signal by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Device Signal",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Temperature Reading - Updated\",\n  \"departmentId\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device Signal ID"
+								}
+							]
+						},
+						"description": "Updates an existing device signal."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Device Signal",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device Signal ID"
+								}
+							]
+						},
+						"description": "Soft deletes a device signal (sets deletedAt timestamp)."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Device Signal",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/device-signals/:id/restore",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device-signals",
+								":id",
+								"restore"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Device Signal ID"
+								}
+							]
+						},
+						"description": "Restores a soft-deleted device signal."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Raw Signals",
+			"description": "Endpoints for processing and retrieving raw signal data (time-series data from devices)",
+			"item": [
+				{
+					"name": "Process Signal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"TEMP_SENSOR_001\",\n  \"value\": \"25.5\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/signals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signals"
+							]
+						},
+						"description": "Processes and stores a new raw signal. The signal is saved to the database and emitted via WebSocket with type='signal'."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Signals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signals?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signals"
+							],
+							"query": [
+								{
+									"key": "externalId",
+									"value": "TEMP_SENSOR_001",
+									"description": "Filter by external ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00Z",
+									"description": "Filter by start date (ISO 8601)",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31T23:59:59Z",
+									"description": "Filter by end date (ISO 8601)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of raw signals with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Signals Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signals/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signals",
+								"count"
+							]
+						},
+						"description": "Returns the total count of raw signals in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Signal by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signals/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signals",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Signal ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific raw signal by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Signals by External ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signals/external/:externalId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signals",
+								"external",
+								":externalId"
+							],
+							"variable": [
+								{
+									"key": "externalId",
+									"value": "TEMP_SENSOR_001",
+									"description": "External ID"
+								}
+							]
+						},
+						"description": "Retrieves all raw signals for a specific external ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Raw Measurements",
+			"description": "Endpoints for processing and retrieving raw measurement data (time-series data from devices)",
+			"item": [
+				{
+					"name": "Process Measurement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"PRESSURE_SENSOR_001\",\n  \"value\": \"101.3\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/measurements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements"
+							]
+						},
+						"description": "Processes and stores a new raw measurement. The measurement is saved to the database and emitted via WebSocket with type='measurement'."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Measurements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements?limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements"
+							],
+							"query": [
+								{
+									"key": "externalId",
+									"value": "PRESSURE_SENSOR_001",
+									"description": "Filter by external ID (optional)",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of results per page"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00Z",
+									"description": "Filter by start date (ISO 8601)",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31T23:59:59Z",
+									"description": "Filter by end date (ISO 8601)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of raw measurements with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Measurements Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								"count"
+							]
+						},
+						"description": "Returns the total count of raw measurements in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Measurement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific raw measurement by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Measurements by External ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/measurements/external/:externalId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"measurements",
+								"external",
+								":externalId"
+							],
+							"variable": [
+								{
+									"key": "externalId",
+									"value": "PRESSURE_SENSOR_001",
+									"description": "External ID"
+								}
+							]
+						},
+						"description": "Retrieves all raw measurements for a specific external ID."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
+

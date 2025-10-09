@@ -69,7 +69,17 @@ export class WebSocketEmitterService {
   }
 
   emitNewRawSignal(signalData: unknown): void {
-    this.emitToAll(WEBSOCKET_EVENTS.NEW_RAW_SIGNAL, signalData);
+    this.emitToAll(WEBSOCKET_EVENTS.NEW_RAW_SIGNAL, {
+      type: 'signal',
+      data: signalData,
+    });
+  }
+
+  emitNewRawMeasurement(measurementData: unknown): void {
+    this.emitToAll(WEBSOCKET_EVENTS.NEW_RAW_MEASUREMENT, {
+      type: 'measurement',
+      data: measurementData,
+    });
   }
 
   getServer() {

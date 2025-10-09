@@ -1,5 +1,6 @@
 export const WEBSOCKET_EVENTS = {
   NEW_RAW_SIGNAL: 'new_raw_signal',
+  NEW_RAW_MEASUREMENT: 'new_raw_measurement',
 
   CONNECTION: 'connection',
   DISCONNECT: 'disconnect',
