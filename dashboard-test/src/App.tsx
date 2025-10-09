@@ -1,15 +1,18 @@
 import { Route, Routes } from "react-router-dom";
 
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import IndexPage from "@/pages/index";
+
+import RawSignalsPage from "./pages/rawSignals";
 
 function App() {
   return (
-    <Routes>
-      <Route
-        element={<IndexPage />}
-        path="/"
-      />
-    </Routes>
+    <WebSocketProvider>
+      <Routes>
+        <Route element={<IndexPage />} path="/" />
+        <Route element={<RawSignalsPage />} path="/raw-signals" />
+      </Routes>
+    </WebSocketProvider>
   );
 }
 

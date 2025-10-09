@@ -4,7 +4,7 @@ import socket from "../lib/socket";
 
 export function useSocket(
   eventName: string,
-  callback: (...args: any[]) => void
+  callback: (...args: unknown[]) => void
 ) {
   useEffect(() => {
     socket.connect();
