@@ -15,24 +15,15 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   footer,
   sidebarWidth = "1/3",
 }) => {
-  const sidebarColSpan =
-    sidebarWidth === "1/4" ? "lg:col-span-1" : "lg:col-span-1";
-  const mainColSpan =
-    sidebarWidth === "1/4" ? "lg:col-span-3" : "lg:col-span-2";
-
   return (
     <div className="bg-slate-900 p-4 h-full flex flex-col">
       <div className="max-w-7xl mx-auto w-full flex flex-col h-full gap-3">
         {header && <div className="flex-shrink-0">{header}</div>}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-grow overflow-hidden">
-          <div className={`${sidebarColSpan} h-full overflow-hidden`}>
-            {sidebar}
-          </div>
+        <div className="flex w-full gap-4 flex-grow overflow-hidden">
+          <div className="w-[16rem] h-full overflow-hidden">{sidebar}</div>
 
-          <div className={`${mainColSpan} h-full overflow-hidden`}>
-            {mainContent}
-          </div>
+          <div className="w-full h-full overflow-hidden">{mainContent}</div>
         </div>
 
         {footer && <div className="flex-shrink-0">{footer}</div>}

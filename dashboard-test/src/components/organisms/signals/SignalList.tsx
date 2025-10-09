@@ -28,7 +28,7 @@ export const SignalList: React.FC<SignalListProps> = ({
   }
 
   return (
-    <div className="space-y-2 overflow-auto flex-grow pr-2">
+    <div className="space-y-1.5 overflow-auto flex-grow pr-1">
       {signals.map((signal) => (
         <Card
           key={signal.id}
@@ -41,19 +41,28 @@ export const SignalList: React.FC<SignalListProps> = ({
           } border transition-all`}
           onPress={() => onSelect(signal)}
         >
-          <CardBody className="p-2">
-            <div className="flex justify-between items-start mb-1">
-              <Text className="truncate" color="secondary" variant="small">
+          <CardBody className="p-1.5">
+            <div className="flex justify-between items-center gap-1.5 mb-0.5">
+              <Text
+                className="truncate flex-1 min-w-0"
+                color="secondary"
+                variant="small"
+              >
                 {signal.externalId}
               </Text>
-              <Chip color="primary" size="sm" variant="flat">
+              <Chip
+                className="flex-shrink-0"
+                color="primary"
+                size="sm"
+                variant="flat"
+              >
                 #{signal.id}
               </Chip>
             </div>
-            <Text className="truncate" color="muted" variant="small">
+            <Text className="truncate text-xs" color="muted">
               {signal.value}
             </Text>
-            <div className="text-[10px] text-slate-500 mt-1">
+            <div className="text-[9px] text-slate-500 mt-0.5">
               {formatDate(signal.createdAt)}
             </div>
           </CardBody>

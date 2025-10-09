@@ -1,6 +1,8 @@
-import type React from "react";
-import { Card as HeroUICard, CardBody as HeroUICardBody } from "@heroui/card";
 import type { CardProps as HeroUICardProps } from "@heroui/card";
+
+import type React from "react";
+
+import { Card as HeroUICard, CardBody as HeroUICardBody } from "@heroui/card";
 
 export interface CardProps extends HeroUICardProps {
   children: React.ReactNode;

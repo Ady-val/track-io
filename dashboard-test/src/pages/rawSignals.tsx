@@ -1,14 +1,24 @@
+import type { RawDataItem } from "@components/organisms";
+
 import { useState, useCallback } from "react";
+
 import { FaSignal } from "react-icons/fa";
 
 import { Card, CardBody, Text, Button, Chip } from "@components/atoms";
 import { SearchBar, ConnectionIndicator } from "@components/molecules";
-import { SignalList, SignalDetail } from "@components/organisms";
+import {
+  SignalList,
+  SignalDetail,
+  Modal,
+  CreateMeasurementForm,
+} from "@components/organisms";
 import { TwoColumnLayout } from "@components/templates";
-import type { RawDataItem } from "@components/organisms";
+
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useWebSocketEvent } from "@/hooks/useWebSocketEvent";
 import DefaultLayout from "@/layouts/default";
+import measurementService from "@/lib/services/measurement.service";
+import type { Measurement, CreateMeasurementData } from "@/types/measurement";
 
 interface WebSocketMessage {
   event: string;
@@ -21,8 +31,17 @@ interface WebSocketMessage {
 
 export default function RawSignalsPage() {
   const [signals, setSignals] = useState<RawDataItem[]>([]);
-  const [selectedSignal, setSelectedSignal] = useState<RawDataItem | null>(null);
+  const [selectedSignal, setSelectedSignal] = useState<RawDataItem | null>(
+    null
+  );
+  const [selectedMeasurement, setSelectedMeasurement] =
+    useState<Measurement | null>(null);
+  const [isLoadingMeasurement, setIsLoadingMeasurement] =
+    useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isCreatingMeasurement, setIsCreatingMeasurement] =
+    useState<boolean>(false);
   const { isConnected } = useWebSocket();
 
   const handleNewSignal = useCallback((msg: WebSocketMessage) => {
@@ -42,7 +61,10 @@ export default function RawSignalsPage() {
   }, []);
 
   useWebSocketEvent<WebSocketMessage>("new_raw_signal", handleNewSignal);
-  useWebSocketEvent<WebSocketMessage>("new_raw_measurement", handleNewMeasurement);
+  useWebSocketEvent<WebSocketMessage>(
+    "new_raw_measurement",
+    handleNewMeasurement
+  );
 
   const filteredSignals = signals.filter(
     (signal) =>
@@ -66,7 +88,65 @@ export default function RawSignalsPage() {
   const handleClearSignals = () => {
     setSignals([]);
     setSelectedSignal(null);
+    setSelectedMeasurement(null);
   };
+
+  const handleSelectSignal = useCallback(async (signal: RawDataItem) => {
+    setSelectedSignal(signal);
+    setIsLoadingMeasurement(true);
+    setSelectedMeasurement(null);
+
+    try {
+      const measurement = await measurementService.getByExternalId(
+        signal.externalId
+      );
+
+      setSelectedMeasurement(measurement);
+    } catch (error) {
+      console.error("Error fetching measurement:", error);
+      setSelectedMeasurement(null);
+    } finally {
+      setIsLoadingMeasurement(false);
+    }
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedSignal(null);
+    setSelectedMeasurement(null);
+    setIsModalOpen(false);
+  }, []);
+
+  const handleOpenCreateModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const handleCloseCreateModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const handleCreateMeasurement = useCallback(
+    async (data: CreateMeasurementData) => {
+      if (!selectedSignal) return;
+
+      setIsCreatingMeasurement(true);
+
+      try {
+        const newMeasurement = await measurementService.create(data);
+
+        setSelectedMeasurement(newMeasurement);
+        setIsModalOpen(false);
+
+        // Optional: Show success message
+        console.log("Measurement created successfully:", newMeasurement);
+      } catch (error) {
+        console.error("Error creating measurement:", error);
+        // Optional: Show error message to user
+      } finally {
+        setIsCreatingMeasurement(false);
+      }
+    },
+    [selectedSignal]
+  );
 
   return (
     <DefaultLayout>
@@ -128,8 +208,11 @@ export default function RawSignalsPage() {
             <CardBody className="p-3 flex flex-col h-full overflow-hidden">
               <SignalDetail
                 formatDate={formatDate}
+                isLoadingMeasurement={isLoadingMeasurement}
+                measurement={selectedMeasurement}
                 signal={selectedSignal}
-                onClose={() => setSelectedSignal(null)}
+                onClose={handleCloseDetail}
+                onCreateMeasurement={handleOpenCreateModal}
               />
             </CardBody>
           </Card>
@@ -148,12 +231,29 @@ export default function RawSignalsPage() {
                 formatDate={formatDate}
                 selectedId={selectedSignal?.id}
                 signals={filteredSignals}
-                onSelect={setSelectedSignal}
+                onSelect={handleSelectSignal}
               />
             </CardBody>
           </Card>
         }
       />
+
+      {/* Modal para crear Measurement */}
+      <Modal
+        isOpen={isModalOpen}
+        size="md"
+        title="Crear Nuevo Dispositivo de Medición"
+        onClose={handleCloseCreateModal}
+      >
+        {selectedSignal && (
+          <CreateMeasurementForm
+            externalId={selectedSignal.externalId}
+            isLoading={isCreatingMeasurement}
+            onCancel={handleCloseCreateModal}
+            onSubmit={handleCreateMeasurement}
+          />
+        )}
+      </Modal>
     </DefaultLayout>
   );
 }
