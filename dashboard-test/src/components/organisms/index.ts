@@ -11,6 +11,7 @@ export type {
   Message,
   SensorTypeValue,
   SensorType,
+  Sensor,
   AlertRule,
   Operator,
   GrupoMensaje,

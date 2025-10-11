@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "track-io-api-collection",
 		"name": "Track.IO Backend API",
-		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, measurements, raw signals and raw measurements.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Measurements Management**: CRUD operations for measurements (configured measurement definitions)\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```",
+		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, measurements, raw signals, raw measurements, and the complete alert monitoring system.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Measurements Management**: CRUD operations for measurements (configured measurement definitions)\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data\n- **Alert System**: Complete alert monitoring with rules, messages, torretas, receptors and triggers\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "track-io-backend"
 	},
@@ -1510,7 +1510,7 @@
 								"raw-measurements"
 							]
 						},
-						"description": "Processes and stores a new raw measurement. If the id matches a measurement's externalId, it will also save to measurement_values table. The measurement is saved to the database and emitted via WebSocket."
+						"description": "Processes and stores a new raw measurement. If the id matches a measurement's externalId, it will also save to measurement_values table and evaluate alert rules. The measurement is saved to the database and emitted via WebSocket."
 					},
 					"response": []
 				},
@@ -1635,6 +1635,1302 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Message Groups",
+			"description": "Endpoints for managing message groups (groups of alert notifications)",
+			"item": [
+				{
+					"name": "Create Message Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"High Temperature Alerts\",\n  \"description\": \"Notifications for high temperature events\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/message-groups",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"message-groups"
+							]
+						},
+						"description": "Creates a new message group."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Message Groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/message-groups",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"message-groups"
+							]
+						},
+						"description": "Retrieves all message groups."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Message Group by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/message-groups/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"message-groups",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Message Group ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific message group by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Message Group",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"High Temperature Alerts - Updated\",\n  \"description\": \"Updated description for high temperature events\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/message-groups/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"message-groups",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Message Group ID"
+								}
+							]
+						},
+						"description": "Updates an existing message group."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Message Group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/message-groups/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"message-groups",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Message Group ID"
+								}
+							]
+						},
+						"description": "Soft deletes a message group (sets deletedAt timestamp)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Alert Rules",
+			"description": "Endpoints for managing alert rules (monitoring conditions for measurements)",
+			"item": [
+				{
+					"name": "Create Alert Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"High Temperature Alert\",\n  \"description\": \"Alert when temperature exceeds 75°C\",\n  \"measurementId\": 1,\n  \"messageGroupId\": 1,\n  \"mode\": \"setpoint\",\n  \"operator\": \">\",\n  \"setpoint\": 75.0,\n  \"isEnabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules"
+							]
+						},
+						"description": "Creates a new alert rule. Modes: 'setpoint' (with operator and setpoint) or 'window' (with minValue and maxValue)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Window Alert Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Temperature Out of Range\",\n  \"description\": \"Alert when temperature is outside 20-30°C range\",\n  \"measurementId\": 1,\n  \"messageGroupId\": 1,\n  \"mode\": \"window\",\n  \"minValue\": 20.0,\n  \"maxValue\": 30.0,\n  \"isEnabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules"
+							]
+						},
+						"description": "Creates a new window-type alert rule that triggers when value is outside the specified range."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Alert Rules",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules"
+							]
+						},
+						"description": "Retrieves all alert rules."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Enabled Alert Rules",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules/enabled",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules",
+								"enabled"
+							]
+						},
+						"description": "Retrieves only enabled alert rules (used for active monitoring)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Rule by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific alert rule by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Rules by Measurement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules/measurement/:measurementId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules",
+								"measurement",
+								":measurementId"
+							],
+							"variable": [
+								{
+									"key": "measurementId",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Retrieves all alert rules for a specific measurement."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Alert Rule",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"High Temperature Alert - Updated\",\n  \"description\": \"Updated alert description\",\n  \"setpoint\": 80.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Updates an existing alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Alert Rule",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules/:id/toggle",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules",
+								":id",
+								"toggle"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Toggles the enabled/disabled state of an alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Alert Rule",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-rules/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-rules",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Soft deletes an alert rule (sets deletedAt timestamp)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Alert Messages",
+			"description": "Endpoints for managing alert messages (notifications sent when alerts trigger)",
+			"item": [
+				{
+					"name": "Create Telegram Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"alertRuleId\": 1,\n  \"receptorType\": \"telegram\",\n  \"messageData\": {\n    \"telegram\": {\n      \"title\": \"🌡️ High Temperature Alert\",\n      \"text\": \"Temperature has exceeded the safe threshold!\"\n    }\n  },\n  \"messageGroupId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/alert-rule/:alertRuleId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								"alert-rule",
+								":alertRuleId"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Creates a new Telegram notification message for an alert rule. Max 5 messages per rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Torreta Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"alertRuleId\": 1,\n  \"receptorType\": \"torreta\",\n  \"messageData\": {\n    \"torreta\": {\n      \"torretaId\": 1,\n      \"colorId\": 1\n    }\n  },\n  \"messageGroupId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/alert-rule/:alertRuleId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								"alert-rule",
+								":alertRuleId"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Creates a new Torreta (signal tower) message for an alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Email Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"alertRuleId\": 1,\n  \"receptorType\": \"correo\",\n  \"messageData\": {\n    \"correo\": {\n      \"emails\": [\"admin@company.com\", \"supervisor@company.com\"],\n      \"subject\": \"High Temperature Alert\",\n      \"message\": \"The temperature sensor has detected a value above the configured threshold.\"\n    }\n  },\n  \"messageGroupId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/alert-rule/:alertRuleId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								"alert-rule",
+								":alertRuleId"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Creates a new email notification message for an alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Receptor Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"alertRuleId\": 1,\n  \"receptorType\": \"receptor\",\n  \"messageData\": {\n    \"receptor\": {\n      \"receptorId\": 1,\n      \"message\": \"High temperature detected\"\n    }\n  },\n  \"messageGroupId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/alert-rule/:alertRuleId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								"alert-rule",
+								":alertRuleId"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Creates a new Receptor message for an alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Alert Messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages"
+							]
+						},
+						"description": "Retrieves all alert messages."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Messages by Rule",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/alert-rule/:alertRuleId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								"alert-rule",
+								":alertRuleId"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Retrieves all messages for a specific alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Message by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Message ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific alert message by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Alert Message",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messageData\": {\n    \"telegram\": {\n      \"title\": \"🌡️ High Temperature Alert - UPDATED\",\n      \"text\": \"Temperature has exceeded 80°C!\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Message ID"
+								}
+							]
+						},
+						"description": "Updates an existing alert message."
+					},
+					"response": []
+				},
+				{
+					"name": "Duplicate Alert Message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/:id/duplicate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								":id",
+								"duplicate"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Message ID to duplicate"
+								}
+							]
+						},
+						"description": "Duplicates an existing alert message. Max 5 messages per rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Alert Message",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-messages/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-messages",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Message ID"
+								}
+							]
+						},
+						"description": "Deletes an alert message."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Torretas",
+			"description": "Endpoints for managing torretas (signal tower devices for visual alerts)",
+			"item": [
+				{
+					"name": "Create Torreta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Production Floor Torreta\",\n  \"description\": \"Main signal tower for production area\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/torretas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas"
+							]
+						},
+						"description": "Creates a new torreta device."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Torretas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torretas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas"
+							]
+						},
+						"description": "Retrieves all torretas."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Torretas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torretas/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas",
+								"active"
+							]
+						},
+						"description": "Retrieves only active torretas."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Torreta by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torretas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific torreta by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Torreta",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Production Floor Torreta - Main\",\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/torretas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta ID"
+								}
+							]
+						},
+						"description": "Updates an existing torreta."
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Torreta Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torretas/:id/toggle",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas",
+								":id",
+								"toggle"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta ID"
+								}
+							]
+						},
+						"description": "Toggles the active/inactive status of a torreta."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Torreta",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torretas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torretas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta ID"
+								}
+							]
+						},
+						"description": "Soft deletes a torreta (sets deletedAt timestamp)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Torreta Colors",
+			"description": "Endpoints for managing torreta color configurations (predefined colors for signal towers)",
+			"item": [
+				{
+					"name": "Get All Torreta Colors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torreta-colors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torreta-colors"
+							]
+						},
+						"description": "Retrieves all torreta colors ordered by their display order. Includes 8 predefined colors: Red, Orange, Yellow, Green, Blue, White, Off, Multi-color."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Torreta Color by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torreta-colors/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torreta-colors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta Color ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific torreta color by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Torreta Color",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Purple\",\n  \"htmlColor\": \"#800080\",\n  \"deviceColorId\": 9,\n  \"order\": 9\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/torreta-colors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torreta-colors"
+							]
+						},
+						"description": "Creates a new torreta color. htmlColor must be a valid hex color (#RRGGBB)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Torreta Color",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Dark Red\",\n  \"htmlColor\": \"#8B0000\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/torreta-colors/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torreta-colors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta Color ID"
+								}
+							]
+						},
+						"description": "Updates an existing torreta color."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Torreta Color",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/torreta-colors/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"torreta-colors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Torreta Color ID"
+								}
+							]
+						},
+						"description": "Deletes a torreta color."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Receptors",
+			"description": "Endpoints for managing receptors (message receiving devices)",
+			"item": [
+				{
+					"name": "Create Receptor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"externalId\": \"RCP-001\",\n  \"name\": \"Production Floor Receptor\",\n  \"description\": \"Main message receptor for production area\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/receptors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors"
+							]
+						},
+						"description": "Creates a new receptor device."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Receptors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receptors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors"
+							]
+						},
+						"description": "Retrieves all receptors."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Receptors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receptors/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors",
+								"active"
+							]
+						},
+						"description": "Retrieves only active receptors."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Receptor by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receptors/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Receptor ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific receptor by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Receptor",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Production Floor Receptor - Main\",\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/receptors/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Receptor ID"
+								}
+							]
+						},
+						"description": "Updates an existing receptor."
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Receptor Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receptors/:id/toggle",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors",
+								":id",
+								"toggle"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Receptor ID"
+								}
+							]
+						},
+						"description": "Toggles the active/inactive status of a receptor."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Receptor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/receptors/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"receptors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Receptor ID"
+								}
+							]
+						},
+						"description": "Soft deletes a receptor (sets deletedAt timestamp)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Alert Triggers",
+			"description": "Endpoints for viewing alert trigger history (read-only, created automatically when alerts fire)",
+			"item": [
+				{
+					"name": "Get All Alert Triggers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-triggers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-triggers"
+							]
+						},
+						"description": "Retrieves all alert trigger records (history of fired alerts)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Trigger by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-triggers/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-triggers",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Alert Trigger ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific alert trigger record by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Triggers by Alert Rule",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-triggers/alert-rule/:alertRuleId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-triggers",
+								"alert-rule",
+								":alertRuleId"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Retrieves all trigger records for a specific alert rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alert Rule Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/alert-triggers/alert-rule/:alertRuleId/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alert-triggers",
+								"alert-rule",
+								":alertRuleId",
+								"stats"
+							],
+							"variable": [
+								{
+									"key": "alertRuleId",
+									"value": "1",
+									"description": "Alert Rule ID"
+								}
+							]
+						},
+						"description": "Retrieves statistics for an alert rule: total triggers, average measurement value, min/max values, and timestamps for first/last triggers."
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"variable": [
@@ -1645,4 +2941,3 @@
 		}
 	]
 }
-

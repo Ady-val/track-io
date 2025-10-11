@@ -1,13 +1,16 @@
 import type React from "react";
 
+import { Sidebar } from "@/components/molecules";
+
 interface DefaultLayoutProps {
   children: React.ReactNode;
 }
 
 export default function DefaultLayout({ children }: DefaultLayoutProps) {
   return (
-    <div className="relative flex flex-col h-screen bg-slate-900 overflow-auto">
-      <main className="container mx-auto max-w-7xl flex-grow p-6 overflow-auto">
+    <div className="relative flex h-screen bg-slate-900 overflow-hidden">
+      <Sidebar />
+      <main className="flex-grow overflow-hidden ml-16 flex flex-col">
         {children}
       </main>
     </div>

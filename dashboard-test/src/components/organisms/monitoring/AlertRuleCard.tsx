@@ -1,13 +1,13 @@
 import type React from "react";
 import { useState } from "react";
 import {
-  FaEdit,
-  FaTrashAlt,
-  FaCheckCircle,
-  FaTimesCircle,
+  FaPenToSquare,
+  FaTrashCan,
+  FaCircleCheck,
+  FaCircleXmark,
   FaChevronDown,
   FaChevronUp,
-} from "react-icons/fa";
+} from "react-icons/fa6";
 
 import {
   Card,
@@ -24,17 +24,19 @@ import type {
   Operator,
   SensorType,
   SensorTypeValue,
+  Sensor,
 } from "../types";
 
 export interface AlertRuleCardProps {
   rule: AlertRule;
   disabled: boolean;
+  sensors: Sensor[];
   sensorTypes: SensorType[];
   operators: Operator[];
   onEdit: (
     id: string,
     name: string,
-    sensorTag: string,
+    sensorId: number,
     mode: "setpoint" | "window",
     operator: string,
     setpoint: string,
@@ -44,7 +46,6 @@ export interface AlertRuleCardProps {
   onDelete: (id: string) => void;
   onToggleEdit: (id: string) => void;
   onToggleEnabled: (id: string) => void;
-  onToggleSensorType: (id: string, sensorTypeStr: string) => void;
   getSensorIcon: (type: SensorTypeValue) => React.ReactElement;
   children?: React.ReactNode;
 }
@@ -52,18 +53,20 @@ export interface AlertRuleCardProps {
 export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
   rule,
   disabled,
+  sensors,
   sensorTypes,
   operators,
   onEdit,
   onDelete,
   onToggleEdit,
   onToggleEnabled,
-  onToggleSensorType,
   getSensorIcon,
   children,
 }) => {
   const [ruleName, setRuleName] = useState<string>(rule.name);
-  const [sensorTag, setSensorTag] = useState<string>(rule.sensorTag);
+  const [selectedSensorId, setSelectedSensorId] = useState<number>(
+    rule.sensorId
+  );
   const [mode, setMode] = useState<"setpoint" | "window">(rule.mode);
   const [operator, setOperator] = useState<string>(rule.operator ?? ">");
   const [setpoint, setSetpoint] = useState<string>(
@@ -76,6 +79,8 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
     rule.maxValue?.toString() ?? ""
   );
   const [collapsed, setCollapsed] = useState<boolean>(false);
+
+  const currentSensor = sensors.find((s) => s.id === rule.sensorId);
 
   const getConditionText = (rule: AlertRule): string => {
     if (rule.mode === "setpoint") {
@@ -101,7 +106,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                 <FaChevronUp className="w-4 h-4" />
               )}
             </button>
-            {getSensorIcon(rule.sensorType)}
+            {currentSensor && getSensorIcon(currentSensor.type)}
             <Text variant="h4">{rule.name}</Text>
           </div>
           <Chip
@@ -117,30 +122,37 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
         {!collapsed && (
           <>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center">
-                <Text color="muted" variant="caption">
-                  Tipo de Sensor:
-                </Text>
-                <Select
-                  className="text-sm"
-                  value={rule.sensorType}
-                  onChange={(e) => onToggleSensorType(rule.id, e.target.value)}
-                >
-                  {sensorTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
               <div className="flex justify-between">
                 <Text color="muted" variant="caption">
                   Sensor:
                 </Text>
                 <Text color="secondary" variant="caption">
-                  {rule.sensorTag}
+                  {currentSensor
+                    ? `${currentSensor.name} (${currentSensor.externalId})`
+                    : "Sin sensor"}
                 </Text>
               </div>
+              <div className="flex justify-between">
+                <Text color="muted" variant="caption">
+                  Tipo:
+                </Text>
+                <Text color="secondary" variant="caption">
+                  {currentSensor
+                    ? sensorTypes.find((t) => t.value === currentSensor.type)
+                        ?.label
+                    : "-"}
+                </Text>
+              </div>
+              {currentSensor?.area && (
+                <div className="flex justify-between">
+                  <Text color="muted" variant="caption">
+                    Área:
+                  </Text>
+                  <Text color="secondary" variant="caption">
+                    {currentSensor.area}
+                  </Text>
+                </div>
+              )}
               <div className="flex justify-between">
                 <Text color="muted" variant="caption">
                   Condición:
@@ -151,7 +163,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
               </div>
               <div className="flex justify-between">
                 <Text color="muted" variant="caption">
-                  Tipo:
+                  Modo:
                 </Text>
                 <Text color="secondary" variant="caption">
                   {rule.mode === "setpoint" ? "Setpoint" : "Ventana"}
@@ -173,12 +185,12 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                   <Button
                     color="success"
                     size="sm"
-                    startContent={<FaCheckCircle className="w-3 h-3" />}
+                    startContent={<FaCircleCheck className="w-3 h-3" />}
                     onClick={() =>
                       onEdit(
                         rule.id,
                         ruleName,
-                        sensorTag,
+                        selectedSensorId,
                         mode,
                         operator,
                         setpoint,
@@ -192,7 +204,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                   <Button
                     color="default"
                     size="sm"
-                    startContent={<FaTimesCircle className="w-3 h-3" />}
+                    startContent={<FaCircleXmark className="w-3 h-3" />}
                     variant="flat"
                     onClick={() => onToggleEdit(rule.id)}
                   >
@@ -205,7 +217,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                     color="primary"
                     isDisabled={disabled}
                     size="sm"
-                    startContent={<FaEdit className="w-3 h-3" />}
+                    startContent={<FaPenToSquare className="w-3 h-3" />}
                     variant="bordered"
                     onClick={() => onToggleEdit(rule.id)}
                   >
@@ -215,7 +227,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                     color="danger"
                     isDisabled={disabled}
                     size="sm"
-                    startContent={<FaTrashAlt className="w-3 h-3" />}
+                    startContent={<FaTrashCan className="w-3 h-3" />}
                     variant="flat"
                     onClick={() => onDelete(rule.id)}
                   >
@@ -226,69 +238,136 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
             </div>
 
             {rule.edit && (
-              <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
-                <Input
-                  placeholder="Nombre de la regla"
-                  value={ruleName}
-                  variant="bordered"
-                  onChange={(e) => setRuleName(e.target.value)}
-                />
-                <Input
-                  placeholder="Tag del sensor"
-                  value={sensorTag}
-                  variant="bordered"
-                  onChange={(e) => setSensorTag(e.target.value)}
-                />
-                <Select
-                  fullWidth
-                  value={mode}
-                  onChange={(e) =>
-                    setMode(e.target.value as "setpoint" | "window")
-                  }
-                >
-                  <option value="setpoint">Setpoint</option>
-                  <option value="window">Ventana</option>
-                </Select>
-                {mode === "setpoint" && (
-                  <>
+              <div className="mt-4 pt-4 border-t border-slate-700">
+                <div className="space-y-4">
+                  {/* Nombre de la regla - Full width */}
+                  <div>
+                    <Text className="mb-2" color="secondary" variant="small">
+                      Nombre de la Condición
+                    </Text>
+                    <Input
+                      placeholder="Ej: Temperatura Alta Tanque 1"
+                      value={ruleName}
+                      variant="bordered"
+                      onChange={(e) => setRuleName(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Selector de sensor - Full width */}
+                  <div>
+                    <Text className="mb-2" color="secondary" variant="small">
+                      Sensor a Monitorear
+                    </Text>
                     <Select
                       fullWidth
-                      value={operator}
-                      onChange={(e) => setOperator(e.target.value)}
+                      value={selectedSensorId.toString()}
+                      onChange={(e) =>
+                        setSelectedSensorId(parseInt(e.target.value))
+                      }
                     >
-                      {operators.map((op) => (
-                        <option key={op.value} value={op.value}>
-                          {op.label}
+                      {sensors.map((sensor) => (
+                        <option key={sensor.id} value={sensor.id}>
+                          {sensor.name} ({sensor.externalId}) -{" "}
+                          {
+                            sensorTypes.find((t) => t.value === sensor.type)
+                              ?.label
+                          }
                         </option>
                       ))}
                     </Select>
-                    <Input
-                      placeholder="Valor setpoint"
-                      type="number"
-                      value={setpoint}
-                      variant="bordered"
-                      onChange={(e) => setSetpoint(e.target.value)}
-                    />
-                  </>
-                )}
-                {mode === "window" && (
-                  <>
-                    <Input
-                      placeholder="Valor mínimo"
-                      type="number"
-                      value={minValue}
-                      variant="bordered"
-                      onChange={(e) => setMinValue(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Valor máximo"
-                      type="number"
-                      value={maxValue}
-                      variant="bordered"
-                      onChange={(e) => setMaxValue(e.target.value)}
-                    />
-                  </>
-                )}
+                  </div>
+
+                  {/* Configuración de la condición */}
+                  <div>
+                    <Text className="mb-2" color="secondary" variant="small">
+                      Configuración de Alerta
+                    </Text>
+
+                    {/* Modo de operación */}
+                    <div className="mb-3">
+                      <Select
+                        fullWidth
+                        value={mode}
+                        onChange={(e) =>
+                          setMode(e.target.value as "setpoint" | "window")
+                        }
+                      >
+                        <option value="setpoint">
+                          Setpoint - Valor específico
+                        </option>
+                        <option value="window">
+                          Ventana - Rango de valores
+                        </option>
+                      </Select>
+                    </div>
+
+                    {/* Modo Setpoint: Operador + Valor en grid */}
+                    {mode === "setpoint" && (
+                      <div className="grid grid-cols-5 gap-3">
+                        <div className="col-span-3">
+                          <Select
+                            fullWidth
+                            value={operator}
+                            onChange={(e) => setOperator(e.target.value)}
+                          >
+                            {operators.map((op) => (
+                              <option key={op.value} value={op.value}>
+                                {op.label}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            placeholder="Valor"
+                            type="number"
+                            value={setpoint}
+                            variant="bordered"
+                            onChange={(e) => setSetpoint(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Modo Window: Min y Max en grid */}
+                    {mode === "window" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Text
+                            className="mb-1.5"
+                            color="muted"
+                            variant="caption"
+                          >
+                            Valor Mínimo
+                          </Text>
+                          <Input
+                            placeholder="Min"
+                            type="number"
+                            value={minValue}
+                            variant="bordered"
+                            onChange={(e) => setMinValue(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Text
+                            className="mb-1.5"
+                            color="muted"
+                            variant="caption"
+                          >
+                            Valor Máximo
+                          </Text>
+                          <Input
+                            placeholder="Max"
+                            type="number"
+                            value={maxValue}
+                            variant="bordered"
+                            onChange={(e) => setMaxValue(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

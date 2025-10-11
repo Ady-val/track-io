@@ -26,11 +26,19 @@ export interface SensorType {
   color: string;
 }
 
+export interface Sensor {
+  id: number;
+  externalId: string;
+  name: string;
+  type: SensorTypeValue;
+  area?: string;
+  status?: "active" | "inactive" | "maintenance";
+}
+
 export interface AlertRule {
   id: string;
   name: string;
-  sensorTag: string;
-  sensorType: SensorTypeValue;
+  sensorId: number;
   mode: "setpoint" | "window";
   operator?: string;
   setpoint?: number;

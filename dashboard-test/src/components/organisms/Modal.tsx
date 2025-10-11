@@ -2,14 +2,15 @@ import type React from "react";
 import { useEffect } from "react";
 
 import { Button, Card, CardBody, Text } from "@components/atoms";
-import { FaTimes } from "react-icons/fa";
+import { FaXmark } from "react-icons/fa6";
 
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title: string | React.ReactNode;
   children: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  hideHeader?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -18,6 +19,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   size = "md",
+  hideHeader = false,
 }) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -48,10 +50,12 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const sizeClasses = {
-    sm: "max-w-md",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
+    sm: "max-w-md", // 448px
+    md: "max-w-lg", // 512px
+    lg: "max-w-2xl", // 672px
+    xl: "max-w-4xl", // 896px
+    "2xl": "max-w-[38rem]", // 608px - Golden ratio optimized
+    "3xl": "max-w-5xl", // 1024px
   };
 
   return (
@@ -68,22 +72,27 @@ export const Modal: React.FC<ModalProps> = ({
       >
         <Card className="bg-slate-800 border-slate-600 shadow-2xl">
           <CardBody className="p-0">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-600">
-              <Text variant="h3">{title}</Text>
-              <Button
-                color="default"
-                isIconOnly
-                size="sm"
-                variant="light"
-                onClick={onClose}
-              >
-                <FaTimes />
-              </Button>
-            </div>
+            {/* Header - Minimalista */}
+            {!hideHeader && (
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50">
+                {typeof title === "string" ? (
+                  <Text className="text-lg font-medium" variant="h4">
+                    {title}
+                  </Text>
+                ) : (
+                  title
+                )}
+                <button
+                  className="text-slate-400 hover:text-slate-200 transition-colors p-1 hover:bg-slate-700/50 rounded"
+                  onClick={onClose}
+                >
+                  <FaXmark className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Content */}
-            <div className="p-4">{children}</div>
+            <div className={hideHeader ? "p-6" : "p-6"}>{children}</div>
           </CardBody>
         </Card>
       </div>

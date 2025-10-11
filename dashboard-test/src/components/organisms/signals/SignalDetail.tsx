@@ -1,18 +1,22 @@
+import type { RawDataItem } from "../types";
+
 import type React from "react";
-import { Card, CardBody, Text, Button, Spinner, Chip } from "@components/atoms";
-import { StatCard, EmptyState } from "@components/molecules";
+
 import {
   FaRulerCombined,
   FaHashtag,
-  FaSignal,
   FaClock,
   FaDatabase,
   FaTag,
-  FaInfoCircle,
-  FaExclamationTriangle,
+  FaCircleInfo,
+  FaTriangleExclamation,
   FaPlus,
-} from "react-icons/fa";
-import type { RawDataItem } from "../types";
+} from "react-icons/fa6";
+import { PiWaveSineBold } from "react-icons/pi";
+
+import { Card, CardBody, Text, Button, Spinner, Chip } from "@components/atoms";
+import { StatCard, EmptyState } from "@components/molecules";
+
 import type { Measurement } from "@/types/measurement";
 
 export interface SignalDetailProps {
@@ -34,7 +38,7 @@ const getMeasurementTypeLabel = (type: string): string => {
     vibration: "Vibración",
   };
 
-  return labels[type] || type;
+  return labels[type] ?? type;
 };
 
 const getMeasurementTypeColor = (type: string): string => {
@@ -47,7 +51,7 @@ const getMeasurementTypeColor = (type: string): string => {
     vibration: "default",
   };
 
-  return colors[type] || "default";
+  return colors[type] ?? "default";
 };
 
 export const SignalDetail: React.FC<SignalDetailProps> = ({
@@ -88,7 +92,7 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
           />
 
           <StatCard
-            icon={FaSignal}
+            icon={PiWaveSineBold}
             iconBgColor="bg-purple-500/20"
             iconColor="text-purple-400"
             label="ID Externo"
@@ -140,7 +144,7 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                      <FaInfoCircle className="text-green-400 text-sm" />
+                      <FaCircleInfo className="text-green-400 text-sm" />
                     </div>
                     <div>
                       <Text className="font-semibold" variant="small">
@@ -152,7 +156,15 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
                     </div>
                   </div>
                   <Chip
-                    color={getMeasurementTypeColor(measurement.type) as any}
+                    color={
+                      getMeasurementTypeColor(measurement.type) as
+                        | "danger"
+                        | "primary"
+                        | "warning"
+                        | "secondary"
+                        | "success"
+                        | "default"
+                    }
                     size="sm"
                     variant="flat"
                   >
@@ -175,7 +187,7 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
 
                   <div className="bg-slate-700/50 rounded-lg p-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <FaSignal className="text-purple-400 text-xs" />
+                      <PiWaveSineBold className="text-purple-400 text-xs" />
                       <Text color="muted" variant="caption">
                         External ID
                       </Text>
@@ -204,7 +216,7 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
               <CardBody className="p-3">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                    <FaExclamationTriangle className="text-amber-400 text-sm" />
+                    <FaTriangleExclamation className="text-amber-400 text-sm" />
                   </div>
                   <div className="flex-grow">
                     <Text className="font-semibold mb-1" variant="small">

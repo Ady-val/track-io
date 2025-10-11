@@ -1,8 +1,11 @@
+import type { RawDataItem } from "../types";
+
 import type React from "react";
+
+import { PiWaveSineBold } from "react-icons/pi";
+
 import { Card, CardBody, Text, Chip } from "@components/atoms";
 import { EmptyState } from "@components/molecules";
-import { FaSignal } from "react-icons/fa";
-import type { RawDataItem } from "../types";
 
 export interface SignalListProps {
   signals: RawDataItem[];
@@ -21,14 +24,14 @@ export const SignalList: React.FC<SignalListProps> = ({
     return (
       <EmptyState
         description="Los datos aparecerán aquí en tiempo real"
-        icon={FaSignal}
+        icon={PiWaveSineBold}
         title="No hay registros"
       />
     );
   }
 
   return (
-    <div className="space-y-1.5 overflow-auto flex-grow pr-1">
+    <div className="h-full space-y-1.5 overflow-auto flex-grow pr-1">
       {signals.map((signal) => (
         <Card
           key={signal.id}

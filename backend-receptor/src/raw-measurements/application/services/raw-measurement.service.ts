@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import {
   RawMeasurementRepository,
-  CreateRawMeasurementDto,
   RawMeasurementFilters,
 } from '../../domain/repositories/raw-measurement.repository';
 import { RawMeasurement } from '../../domain/entities/raw-measurement.entity';
@@ -9,6 +8,7 @@ import { WebSocketEmitterService } from '../../../websocket/services/websocket-e
 import { WEBSOCKET_EVENTS } from '../../../websocket/constants/websocket-events.constant';
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import { MeasurementValueRepository } from '../../../measurements/domain/repositories/measurement-value.repository';
+import { AlertEvaluationService } from '../../../alert-rules/application/services/alert-evaluation.service';
 
 @Injectable()
 export class RawMeasurementService {
@@ -18,138 +18,124 @@ export class RawMeasurementService {
     private readonly rawMeasurementRepository: RawMeasurementRepository,
     private readonly webSocketEmitterService: WebSocketEmitterService,
     private readonly measurementService: MeasurementService,
-    private readonly measurementValueRepository: MeasurementValueRepository
+    private readonly measurementValueRepository: MeasurementValueRepository,
+    @Inject(forwardRef(() => AlertEvaluationService))
+    private readonly alertEvaluationService: AlertEvaluationService
   ) {}
 
   async processMeasurement(id: string, value: string): Promise<RawMeasurement> {
     this.logger.log(
-      `Received raw measurement data: ${JSON.stringify({ id, value })}`
+      `Processing raw measurement: ${JSON.stringify({ id, value })}`
     );
 
-    // Try to save to measurement_values if this raw measurement corresponds to a measurement
     try {
-      const measurement =
-        await this.measurementService.getMeasurementByExternalId(id);
-
-      if (measurement) {
-        try {
-          await this.measurementValueRepository.create({
-            measurementId: measurement.id,
-            value: value,
-          });
-          this.logger.log(
-            `Measurement value saved for measurement ID: ${measurement.id}`
-          );
-        } catch (measurementValueError) {
-          this.logger.error(
-            `Error saving measurement value: ${(measurementValueError as Error).message}`,
-            (measurementValueError as Error).stack
-          );
-        }
-      }
-    } catch (measurementLookupError) {
-      this.logger.error(
-        `Error looking up measurement by external ID: ${(measurementLookupError as Error).message}`,
-        (measurementLookupError as Error).stack
-      );
-    }
-
-    // Continue with normal flow regardless of measurement value save result
-    try {
-      const createDto: CreateRawMeasurementDto = {
+      // 1. Guardar raw measurement (operación crítica)
+      const savedMeasurement = await this.rawMeasurementRepository.create({
         externalId: id,
         value: value,
-      };
+      });
 
-      const savedMeasurement =
-        await this.rawMeasurementRepository.create(createDto);
+      this.logger.log(`Raw measurement saved with ID: ${savedMeasurement.id}`);
 
-      this.logger.log(
-        `Raw measurement saved to database with ID: ${savedMeasurement.id}`
-      );
-
-      try {
-        this.webSocketEmitterService.emitNewRawMeasurement({
-          id: savedMeasurement.id,
-          externalId: savedMeasurement.externalId,
-          value: savedMeasurement.value,
-          createdAt: savedMeasurement.createdAt,
-        });
-        this.logger.log(
-          `WebSocket message emitted for event: ${WEBSOCKET_EVENTS.NEW_RAW_MEASUREMENT}`
-        );
-      } catch (wsError) {
-        this.logger.error(
-          `Error emitting WebSocket message: ${(wsError as Error).message}`,
-          (wsError as Error).stack
-        );
-      }
+      // 2. Operaciones secundarias (no críticas - no deben romper el flujo)
+      await this.saveMeasurementValue(id, value);
+      this.emitWebSocketEvent(savedMeasurement);
+      await this.evaluateAlertRules(savedMeasurement);
 
       return savedMeasurement;
     } catch (error) {
       this.logger.error(
-        `Error saving raw measurement to database: ${(error as Error).message}`,
+        `Critical error processing measurement: ${(error as Error).message}`,
         (error as Error).stack
       );
       throw error;
+    }
+  }
+
+  /**
+   * Guarda el valor en measurement_values si existe el measurement configurado
+   */
+  private async saveMeasurementValue(
+    externalId: string,
+    value: string
+  ): Promise<void> {
+    try {
+      const measurement =
+        await this.measurementService.getMeasurementByExternalId(externalId);
+
+      if (measurement) {
+        await this.measurementValueRepository.create({
+          measurementId: measurement.id,
+          value: value,
+        });
+        this.logger.log(
+          `Measurement value saved for measurement ID: ${measurement.id}`
+        );
+      }
+    } catch (error) {
+      // No crítico - solo loguear y continuar
+      this.logger.debug(
+        `Could not save measurement value: ${(error as Error).message}`
+      );
+    }
+  }
+
+  /**
+   * Emite evento WebSocket con la nueva medición
+   */
+  private emitWebSocketEvent(rawMeasurement: RawMeasurement): void {
+    try {
+      this.webSocketEmitterService.emitNewRawMeasurement({
+        id: rawMeasurement.id,
+        externalId: rawMeasurement.externalId,
+        value: rawMeasurement.value,
+        createdAt: rawMeasurement.createdAt,
+      });
+      this.logger.log(
+        `WebSocket event emitted: ${WEBSOCKET_EVENTS.NEW_RAW_MEASUREMENT}`
+      );
+    } catch (error) {
+      // No crítico - solo loguear y continuar
+      this.logger.error(
+        `WebSocket emission failed: ${(error as Error).message}`
+      );
+    }
+  }
+
+  /**
+   * Evalúa las reglas de alerta para esta medición
+   */
+  private async evaluateAlertRules(
+    rawMeasurement: RawMeasurement
+  ): Promise<void> {
+    try {
+      await this.alertEvaluationService.evaluateMeasurement(rawMeasurement);
+      this.logger.log(
+        `Alert evaluation completed for: ${rawMeasurement.externalId}`
+      );
+    } catch (error) {
+      // No crítico - solo loguear y continuar
+      this.logger.error(`Alert evaluation failed: ${(error as Error).message}`);
     }
   }
 
   async getAllMeasurements(
     filters?: RawMeasurementFilters
   ): Promise<{ data: RawMeasurement[]; total: number }> {
-    try {
-      this.webSocketEmitterService.emitNewRawMeasurement({
-        id: '1',
-        externalId: '1',
-        value: '1',
-        createdAt: new Date(),
-      });
-      return await this.rawMeasurementRepository.findAll(filters);
-    } catch (error) {
-      this.logger.error(
-        `Error retrieving raw measurements: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return this.rawMeasurementRepository.findAll(filters);
   }
 
   async getMeasurementById(id: number): Promise<RawMeasurement | null> {
-    try {
-      return await this.rawMeasurementRepository.findById(id);
-    } catch (error) {
-      this.logger.error(
-        `Error retrieving raw measurement by ID ${id}: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return this.rawMeasurementRepository.findById(id);
   }
 
   async getMeasurementsByExternalId(
     externalId: string
   ): Promise<RawMeasurement[]> {
-    try {
-      return await this.rawMeasurementRepository.findByExternalId(externalId);
-    } catch (error) {
-      this.logger.error(
-        `Error retrieving raw measurements by external ID ${externalId}: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return this.rawMeasurementRepository.findByExternalId(externalId);
   }
 
   async getMeasurementsCount(): Promise<number> {
-    try {
-      return await this.rawMeasurementRepository.count();
-    } catch (error) {
-      this.logger.error(
-        `Error getting raw measurements count: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return this.rawMeasurementRepository.count();
   }
 }

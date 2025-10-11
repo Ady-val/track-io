@@ -1,6 +1,6 @@
 import type React from "react";
 import { Input } from "@components/atoms";
-import { FaSearch } from "react-icons/fa";
+import { FaMagnifyingGlass } from "react-icons/fa6";
 
 export interface SearchBarProps {
   value: string;
@@ -19,7 +19,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     <Input
       placeholder={placeholder}
       size={size}
-      startContent={<FaSearch className="text-slate-400" />}
+      startContent={<FaMagnifyingGlass className="text-slate-400" />}
       value={value}
       variant="bordered"
       onChange={(e) => onChange(e.target.value)}

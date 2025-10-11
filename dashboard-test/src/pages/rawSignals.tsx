@@ -2,7 +2,7 @@ import type { RawDataItem } from "@components/organisms";
 
 import { useState, useCallback } from "react";
 
-import { FaSignal } from "react-icons/fa";
+import { PiWaveSineBold } from "react-icons/pi";
 
 import { Card, CardBody, Text, Button, Chip } from "@components/atoms";
 import { SearchBar, ConnectionIndicator } from "@components/molecules";
@@ -224,7 +224,7 @@ export default function RawSignalsPage() {
                 className="mb-2 flex items-center gap-2 flex-shrink-0"
                 variant="caption"
               >
-                <FaSignal className="text-blue-400 text-sm" />
+                <PiWaveSineBold className="text-blue-400 text-sm" />
                 Lista de Registros
               </Text>
               <SignalList

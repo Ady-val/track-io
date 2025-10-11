@@ -5,7 +5,6 @@ export interface TwoColumnLayoutProps {
   sidebar: React.ReactNode;
   mainContent: React.ReactNode;
   footer?: React.ReactNode;
-  sidebarWidth?: "1/3" | "1/4" | "1/5";
 }
 
 export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
@@ -13,17 +12,20 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   sidebar,
   mainContent,
   footer,
-  sidebarWidth = "1/3",
 }) => {
   return (
-    <div className="bg-slate-900 p-4 h-full flex flex-col">
-      <div className="max-w-7xl mx-auto w-full flex flex-col h-full gap-3">
+    <div className="h-full flex flex-col overflow-hidden p-4">
+      <div className="max-w-7xl mx-auto w-full flex flex-col h-full gap-3 overflow-hidden">
         {header && <div className="flex-shrink-0">{header}</div>}
 
-        <div className="flex w-full gap-4 flex-grow overflow-hidden">
-          <div className="w-[16rem] h-full overflow-hidden">{sidebar}</div>
+        <div className="flex w-full gap-4 flex-grow overflow-hidden min-h-0">
+          <div className="w-[16rem] h-full flex flex-col overflow-hidden">
+            {sidebar}
+          </div>
 
-          <div className="w-full h-full overflow-hidden">{mainContent}</div>
+          <div className="flex-1 h-full flex flex-col overflow-hidden">
+            {mainContent}
+          </div>
         </div>
 
         {footer && <div className="flex-shrink-0">{footer}</div>}

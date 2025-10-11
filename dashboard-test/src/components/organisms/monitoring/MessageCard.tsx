@@ -1,7 +1,7 @@
 import type React from "react";
 import { Card, CardBody, Chip, Input } from "@components/atoms";
 import { SelectField } from "@components/molecules";
-import { FaCopy, FaTrashAlt } from "react-icons/fa";
+import { FaCopy, FaTrashCan } from "react-icons/fa6";
 import type { Message, GrupoMensaje, Receptor, UsuarioCorreo } from "../types";
 
 export interface MessageCardProps {
@@ -60,7 +60,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
               title="Eliminar mensaje"
               onClick={() => onDelete(message.id)}
             >
-              <FaTrashAlt className="w-3 h-3" />
+              <FaTrashCan className="w-3 h-3" />
             </button>
           </div>
         </div>

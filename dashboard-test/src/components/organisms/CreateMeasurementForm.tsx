@@ -2,7 +2,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { Button, Input, Select, Text } from "@components/atoms";
-import { FaSave, FaTimes, FaTag, FaCubes } from "react-icons/fa";
+import { FaFloppyDisk, FaXmark, FaTag, FaCubesStacked } from "react-icons/fa6";
 
 import type {
   CreateMeasurementData,
@@ -85,7 +85,7 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
       {/* Type Select */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
-          <FaCubes className="text-purple-400 text-sm" />
+          <FaCubesStacked className="text-purple-400 text-sm" />
           <Text color="secondary" variant="small">
             Tipo de Dispositivo
           </Text>
@@ -114,7 +114,7 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
           variant="flat"
           onClick={onCancel}
         >
-          <FaTimes className="mr-2" />
+          <FaXmark className="mr-2" />
           Cancelar
         </Button>
         <Button
@@ -125,7 +125,7 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
           type="submit"
           variant="solid"
         >
-          <FaSave className="mr-2" />
+          <FaFloppyDisk className="mr-2" />
           Crear Dispositivo
         </Button>
       </div>

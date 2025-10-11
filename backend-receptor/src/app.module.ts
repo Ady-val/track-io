@@ -11,6 +11,13 @@ import { DepartmentsModule } from './departments/departments.module';
 import { DevicesModule } from './devices/devices.module';
 import { DeviceSignalsModule } from './device-signals/device-signals.module';
 import { MeasurementsModule } from './measurements/measurements.module';
+import { MessageGroupsModule } from './message-groups/message-groups.module';
+import { AlertRulesModule } from './alert-rules/alert-rules.module';
+import { AlertMessagesModule } from './alert-messages/alert-messages.module';
+import { TorretasModule } from './torretas/torretas.module';
+import { TorretaColorsModule } from './torreta-colors/torreta-colors.module';
+import { AlertTriggersModule } from './alert-triggers/alert-triggers.module';
+import { ReceptorsModule } from './receptors/receptors.module';
 
 @Module({
   imports: [
@@ -41,6 +48,14 @@ import { MeasurementsModule } from './measurements/measurements.module';
     DepartmentsModule,
     DevicesModule,
     DeviceSignalsModule,
+    // Alert system modules
+    MessageGroupsModule,
+    AlertRulesModule,
+    AlertMessagesModule,
+    TorretasModule,
+    TorretaColorsModule,
+    AlertTriggersModule,
+    ReceptorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
