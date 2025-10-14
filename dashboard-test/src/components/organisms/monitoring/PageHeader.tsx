@@ -1,6 +1,7 @@
+import type { ButtonProps } from "@components/atoms";
+
 import type React from "react";
 
-import type { ButtonProps } from "@components/atoms";
 import { Card, CardBody, Text, Button } from "@components/atoms";
 
 export interface PageHeaderProps {
@@ -20,10 +21,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   return (
     <Card>
-      <CardBody className="pt-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Text className="mb-2" variant="h2">
+      <CardBody className="py-3 px-3">
+        <div className="flex items-center justify-between">
+          <div className="gap-1">
+            <Text className="" variant="h3">
               {title}
             </Text>
             {description && (

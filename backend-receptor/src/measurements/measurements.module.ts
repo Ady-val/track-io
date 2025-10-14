@@ -6,9 +6,13 @@ import { Measurement } from './domain/entities/measurement.entity';
 import { MeasurementValue } from './domain/entities/measurement-value.entity';
 import { MeasurementRepository } from './domain/repositories/measurement.repository';
 import { MeasurementValueRepository } from './domain/repositories/measurement-value.repository';
+import { WebSocketModule } from '../websocket/websocket.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Measurement, MeasurementValue])],
+  imports: [
+    TypeOrmModule.forFeature([Measurement, MeasurementValue]),
+    WebSocketModule,
+  ],
   controllers: [MeasurementController],
   providers: [
     MeasurementService,

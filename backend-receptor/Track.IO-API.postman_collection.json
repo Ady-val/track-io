@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "track-io-api-collection",
 		"name": "Track.IO Backend API",
-		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, measurements, raw signals, raw measurements, and the complete alert monitoring system.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Measurements Management**: CRUD operations for measurements (configured measurement definitions)\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data\n- **Alert System**: Complete alert monitoring with rules, messages, torretas, receptors and triggers\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```",
+		"description": "Complete API collection for Track.IO Backend Receptor application. This collection includes all endpoints for managing areas, departments, devices, device signals, measurements, raw signals, raw measurements, dashboard configurations, and the complete alert monitoring system.\n\n## Base URL\nDefault: `http://localhost:3000`\n\n## Features\n- **Areas Management**: CRUD operations for areas\n- **Departments Management**: CRUD operations for departments\n- **Devices Management**: CRUD operations for devices\n- **Device Signals Management**: CRUD operations for device signals\n- **Measurements Management**: CRUD operations for measurements (configured measurement definitions)\n- **Dashboard Measurements**: Configure min/max values for measurement dashboards\n- **Raw Signals**: Process and retrieve raw signal data\n- **Raw Measurements**: Process and retrieve raw measurement data (triggers alert evaluation)\n- **Alert System**: Complete alert monitoring with rules, messages, torretas, receptors and triggers\n- **WebSocket Events**: Real-time updates for raw measurements, measurement values, and alerts\n\n## Authentication\nCurrently no authentication is required.\n\n## Response Format\nAll responses follow this structure:\n```json\n{\n  \"message\": \"Operation description\",\n  \"data\": {},\n  \"total\": 0,\n  \"pagination\": {\n    \"limit\": 10,\n    \"offset\": 0,\n    \"total\": 0\n  }\n}\n```\n\n## WebSocket Events\n- **new_raw_measurement**: Emitted when a raw measurement is processed\n- **new_measurement_value**: Emitted when a measurement value is saved (measurementId, value, createdAt)\n- **alert_triggered**: Emitted when an alert rule is triggered",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "track-io-backend"
 	},
@@ -1631,6 +1631,171 @@
 							]
 						},
 						"description": "Retrieves all raw measurements for a specific external ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard Measurements",
+			"description": "Endpoints for managing measurement dashboard configurations (min/max display values for real-time dashboards)",
+			"item": [
+				{
+					"name": "Create Dashboard Measurement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"measurementId\": 1,\n  \"minValue\": 0,\n  \"maxValue\": 100\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/dashboard-measurements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard-measurements"
+							]
+						},
+						"description": "Creates a new dashboard configuration for a measurement. Only one configuration per measurement is allowed."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Dashboard Measurements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard-measurements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard-measurements"
+							]
+						},
+						"description": "Retrieves all dashboard measurement configurations with their associated measurement data."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Measurement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard-measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard-measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Dashboard Measurement ID"
+								}
+							]
+						},
+						"description": "Retrieves a specific dashboard measurement configuration by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard by Measurement ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard-measurements/measurement/:measurementId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard-measurements",
+								"measurement",
+								":measurementId"
+							],
+							"variable": [
+								{
+									"key": "measurementId",
+									"value": "1",
+									"description": "Measurement ID"
+								}
+							]
+						},
+						"description": "Retrieves the dashboard configuration for a specific measurement."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Dashboard Measurement",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"minValue\": 10,\n  \"maxValue\": 90\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/dashboard-measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard-measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Dashboard Measurement ID"
+								}
+							]
+						},
+						"description": "Updates an existing dashboard measurement configuration."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Dashboard Measurement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard-measurements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard-measurements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Dashboard Measurement ID"
+								}
+							]
+						},
+						"description": "Soft deletes a dashboard measurement configuration (sets deletedAt timestamp)."
 					},
 					"response": []
 				}

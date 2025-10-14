@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { FaChartLine } from "react-icons/fa6";
+import { FaChartLine, FaGaugeHigh } from "react-icons/fa6";
 import { PiWaveSineBold } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
 
@@ -14,7 +14,12 @@ const sidebarItems: SidebarItem[] = [
   {
     path: "/",
     icon: FaChartLine,
-    label: "Dashboard",
+    label: "Alertas",
+  },
+  {
+    path: "/dashboard-measurements",
+    icon: FaGaugeHigh,
+    label: "Mediciones",
   },
   {
     path: "/raw-signals",

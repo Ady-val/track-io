@@ -11,6 +11,7 @@ import { DepartmentsModule } from './departments/departments.module';
 import { DevicesModule } from './devices/devices.module';
 import { DeviceSignalsModule } from './device-signals/device-signals.module';
 import { MeasurementsModule } from './measurements/measurements.module';
+import { DashboardMeasurementsModule } from './dashboard-measurements/dashboard-measurements.module';
 import { MessageGroupsModule } from './message-groups/message-groups.module';
 import { AlertRulesModule } from './alert-rules/alert-rules.module';
 import { AlertMessagesModule } from './alert-messages/alert-messages.module';
@@ -43,6 +44,7 @@ import { ReceptorsModule } from './receptors/receptors.module';
     SignalsModule,
     RawMeasurementsModule,
     MeasurementsModule,
+    DashboardMeasurementsModule,
     WebSocketModule,
     AreasModule,
     DepartmentsModule,
