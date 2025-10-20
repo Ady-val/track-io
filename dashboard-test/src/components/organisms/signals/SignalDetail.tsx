@@ -127,7 +127,26 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
             </Text>
           </div>
 
-          {isLoadingMeasurement ? (
+          {/* Si es un signal, mostrar mensaje */}
+          {signal.type === "signal" ? (
+            <Card className="bg-slate-800/50 border-purple-500/30">
+              <CardBody className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <PiWaveSineBold className="text-purple-400 text-sm" />
+                  </div>
+                  <div>
+                    <Text className="font-semibold mb-1" variant="small">
+                      Es un signal
+                    </Text>
+                    <Text color="muted" variant="caption">
+                      Este registro es una señal raw, no una medición
+                    </Text>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          ) : isLoadingMeasurement ? (
             <Card className="bg-slate-800/50">
               <CardBody className="p-4">
                 <div className="flex flex-col items-center justify-center gap-2">

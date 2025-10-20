@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { FaChartLine, FaGaugeHigh } from "react-icons/fa6";
+import { FaChartLine, FaGaugeHigh, FaIndustry } from "react-icons/fa6";
 import { PiWaveSineBold } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
 
@@ -25,6 +25,11 @@ const sidebarItems: SidebarItem[] = [
     path: "/raw-signals",
     icon: PiWaveSineBold,
     label: "Señales",
+  },
+  {
+    path: "/industrial-dashboard",
+    icon: FaIndustry,
+    label: "Dashboard Industrial",
   },
 ];
 

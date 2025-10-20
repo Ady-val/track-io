@@ -1,43 +1,45 @@
-export interface DashboardMeasurement {
+export interface DashboardAreaData {
+  area: string;
+  departments?: Array<{
+    department: string;
+    status: string;
+  }>;
+  eventsTime: string;
+}
+
+export interface DashboardEventData {
   id: number;
-  measurementId: number;
-  minValue: number;
-  maxValue: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
-  measurement: {
-    id: number;
-    externalId: string;
-    name: string;
-    type: MeasurementType;
-    createdAt: string;
-    updatedAt: string;
-  };
+  area: string;
+  department: string;
+  device: string;
+  signal: string;
+  status: string;
+  startedAt: Date;
+  endedAt?: Date;
+  duration?: number;
 }
 
-export type MeasurementType =
-  | "temperature"
-  | "humidity"
-  | "pressure"
-  | "level"
-  | "flow"
-  | "vibration";
+export interface DashboardResponse {
+  success: boolean;
+  headers: string[];
+  data: DashboardAreaData[];
+}
 
-export interface MeasurementValueEvent {
-  type: "measurement_value";
+export interface EventsResponse {
+  success: boolean;
+  data: DashboardEventData[];
+  total: number;
+}
+
+export interface DashboardStatus {
+  success: boolean;
   data: {
-    measurementId: number;
-    value: string;
-    createdAt: string;
+    openEvents: number;
+    inProgressEvents: number;
+    closedEvents: number;
+    totalEvents: number;
   };
 }
 
-export interface MeasurementValueState {
-  [measurementId: number]: {
-    value: number;
-    timestamp: string;
-  };
-}
-
-
+export type EventStatus = "open" | "in-progress" | "closed";
+export type DepartmentStatus = "ok" | "alert" | "warning" | "critical" | "NA";

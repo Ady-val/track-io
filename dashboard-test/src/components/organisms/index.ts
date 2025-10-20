@@ -7,6 +7,9 @@ export type { ModalProps } from "./Modal";
 export { CreateMeasurementForm } from "./CreateMeasurementForm";
 export type { CreateMeasurementFormProps } from "./CreateMeasurementForm";
 
+export { AreasGrid } from "./AreasGrid";
+export type { AreasGridProps } from "./AreasGrid";
+
 export type {
   Message,
   SensorTypeValue,

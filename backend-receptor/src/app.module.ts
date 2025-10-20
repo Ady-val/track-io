@@ -19,6 +19,8 @@ import { TorretasModule } from './torretas/torretas.module';
 import { TorretaColorsModule } from './torreta-colors/torreta-colors.module';
 import { AlertTriggersModule } from './alert-triggers/alert-triggers.module';
 import { ReceptorsModule } from './receptors/receptors.module';
+import { EventsModule } from './events/events.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -58,6 +60,8 @@ import { ReceptorsModule } from './receptors/receptors.module';
     TorretaColorsModule,
     AlertTriggersModule,
     ReceptorsModule,
+    EventsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

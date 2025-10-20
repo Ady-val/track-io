@@ -24,3 +24,9 @@ export type { IconProps } from "./Icon";
 
 export { Card, CardBody } from "./Card";
 export type { CardProps, CardBodyProps } from "./Card";
+
+export { ConnectionStatusIndicator } from "./ConnectionStatusIndicator";
+export type { ConnectionStatusIndicatorProps } from "./ConnectionStatusIndicator";
+
+export { CustomScrollbar } from "./CustomScrollbar";
+export type { CustomScrollbarProps } from "./CustomScrollbar";

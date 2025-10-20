@@ -16,6 +16,9 @@ export type { StatCardProps } from "./StatCard";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
 
+export { CollapsibleSection } from "./CollapsibleSection";
+export type { CollapsibleSectionProps } from "./CollapsibleSection";
+
 export { LoadingState } from "./LoadingState";
 export type { LoadingStateProps } from "./LoadingState";
 
@@ -35,3 +38,6 @@ export { MeasurementChart } from "./MeasurementChart";
 export type { MeasurementChartProps } from "./MeasurementChart";
 
 export { default as Sidebar } from "./Sidebar";
+
+export { AreaCard } from "./AreaCard";
+export type { AreaCardProps } from "./AreaCard";

@@ -48,7 +48,8 @@ export default function RawSignalsPage() {
     console.log("New signal received:", msg);
 
     if (msg?.data?.data) {
-      setSignals((prev) => [msg.data.data, ...prev].slice(0, 100));
+      const signalData = { ...msg.data.data, type: "signal" as const };
+      setSignals((prev) => [signalData, ...prev].slice(0, 100));
     }
   }, []);
 
@@ -56,7 +57,11 @@ export default function RawSignalsPage() {
     console.log("New measurement received:", msg);
 
     if (msg?.data?.data) {
-      setSignals((prev) => [msg.data.data, ...prev].slice(0, 100));
+      const measurementData = {
+        ...msg.data.data,
+        type: "measurement" as const,
+      };
+      setSignals((prev) => [measurementData, ...prev].slice(0, 100));
     }
   }, []);
 
@@ -93,19 +98,24 @@ export default function RawSignalsPage() {
 
   const handleSelectSignal = useCallback(async (signal: RawDataItem) => {
     setSelectedSignal(signal);
-    setIsLoadingMeasurement(true);
     setSelectedMeasurement(null);
 
-    try {
-      const measurement = await measurementService.getByExternalId(
-        signal.externalId
-      );
+    // Solo buscar measurement si el tipo es 'measurement'
+    if (signal.type === "measurement") {
+      setIsLoadingMeasurement(true);
 
-      setSelectedMeasurement(measurement);
-    } catch (error) {
-      console.error("Error fetching measurement:", error);
-      setSelectedMeasurement(null);
-    } finally {
+      try {
+        const measurement = await measurementService.getByExternalId(
+          signal.externalId
+        );
+        setSelectedMeasurement(measurement);
+      } catch (error) {
+        console.error("Error fetching measurement:", error);
+        setSelectedMeasurement(null);
+      } finally {
+        setIsLoadingMeasurement(false);
+      }
+    } else {
       setIsLoadingMeasurement(false);
     }
   }, []);
@@ -126,7 +136,7 @@ export default function RawSignalsPage() {
 
   const handleCreateMeasurement = useCallback(
     async (data: CreateMeasurementData) => {
-      if (!selectedSignal) return;
+      if (!selectedSignal || selectedSignal.type !== "measurement") return;
 
       setIsCreatingMeasurement(true);
 
@@ -187,7 +197,8 @@ export default function RawSignalsPage() {
                     Señales y Mediciones en Tiempo Real
                   </Text>
                   <Text color="muted" variant="caption">
-                    Monitor de datos entrantes vía WebSocket
+                    Monitor de datos entrantes vía WebSocket - Distingue entre
+                    signals y measurements
                   </Text>
                 </div>
                 <Chip color="primary" size="sm" variant="flat">

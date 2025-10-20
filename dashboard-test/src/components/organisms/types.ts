@@ -87,4 +87,5 @@ export interface RawDataItem {
   externalId: string;
   value: string;
   createdAt: string;
+  type?: "signal" | "measurement";
 }
