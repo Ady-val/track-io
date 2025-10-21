@@ -1,20 +1,22 @@
-export enum MeasurementType {
-  TEMPERATURE = "temperature",
-  HUMIDITY = "humidity",
-  PRESSURE = "pressure",
-  LEVEL = "level",
-  FLOW = "flow",
-  VIBRATION = "vibration",
-}
+export type MeasurementType =
+  | "temperature"
+  | "humidity"
+  | "pressure"
+  | "level"
+  | "vibration"
+  | "flow"
+  | "shape"
+  | "totalizador";
 
 export interface Measurement {
   id: number;
   externalId: string;
   name: string;
   type: MeasurementType;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
+  area?: string;
+  status: "active" | "inactive" | "maintenance";
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MeasurementResponse {
@@ -31,10 +33,19 @@ export interface MeasurementResponse {
 export interface CreateMeasurementData {
   externalId: string;
   name: string;
-  type: MeasurementType | string;
+  type: MeasurementType;
+  area?: string;
+  status?: "active" | "inactive" | "maintenance";
 }
 
 export interface MeasurementTypeOption {
   value: string;
   label: string;
+}
+
+export interface MeasurementFilters {
+  externalId?: string;
+  type?: string;
+  limit?: number;
+  offset?: number;
 }

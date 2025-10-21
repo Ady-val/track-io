@@ -1,7 +1,7 @@
 import type React from "react";
 import { Card, CardBody, Button, Input } from "@components/atoms";
 import { SelectField } from "@components/molecules";
-import type { NewMessageData, Receptor, UsuarioCorreo } from "../types";
+import type { NewMessageData, Receptor, UsuarioCorreo } from "@/types";
 
 export interface MessageFormProps {
   messageData: NewMessageData;
@@ -116,13 +116,19 @@ export const MessageForm: React.FC<MessageFormProps> = ({
           )}
         </div>
         <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-slate-600">
-          <Button size="sm" variant="flat" onClick={onCancel}>
+          <Button
+            color="default"
+            size="sm"
+            variant="bordered"
+            onClick={onCancel}
+          >
             Cancelar
           </Button>
           <Button
             color="success"
             isDisabled={!messageData.tipoReceptor || !messageData.receptor}
             size="sm"
+            variant="solid"
             onClick={onCreate}
           >
             Crear Mensaje

@@ -2,7 +2,7 @@ import type React from "react";
 
 import { Card, CardBody, Text, Chip } from "@components/atoms";
 
-import type { AlertRule, Sensor, SensorType, SensorTypeValue } from "../types";
+import type { AlertRule, Sensor, SensorType, SensorTypeValue } from "@/types";
 
 export interface CompactAlertCardProps {
   rule: AlertRule;
@@ -57,14 +57,15 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
             role="button"
             tabIndex={0}
           >
-            <Chip
-              className="cursor-pointer"
-              color={rule.isEnabled ? "success" : "default"}
-              size="sm"
-              variant="flat"
+            <div
+              className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                rule.isEnabled
+                  ? "bg-green-600 text-white border border-green-500"
+                  : "bg-gray-600 text-white border border-gray-500"
+              }`}
             >
-              {rule.isEnabled ? "●" : "○"}
-            </Chip>
+              {rule.isEnabled ? "Activa" : "Inactiva"}
+            </div>
           </div>
         </div>
 

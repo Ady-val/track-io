@@ -2,7 +2,7 @@ import type React from "react";
 import { Card, CardBody, Chip, Input } from "@components/atoms";
 import { SelectField } from "@components/molecules";
 import { FaCopy, FaTrashCan } from "react-icons/fa6";
-import type { Message, GrupoMensaje, Receptor, UsuarioCorreo } from "../types";
+import type { Message, GrupoMensaje, Receptor, UsuarioCorreo } from "@/types";
 
 export interface MessageCardProps {
   message: Message;

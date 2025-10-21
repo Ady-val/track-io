@@ -2,6 +2,8 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import {
   FaPenToSquare,
+  FaPencil,
+  FaTrash,
   FaTrashCan,
   FaCircleCheck,
   FaCircleXmark,
@@ -22,7 +24,7 @@ import type {
   GrupoMensaje,
   Receptor,
   UsuarioCorreo,
-} from "../types";
+} from "@/types";
 import { MessageForm } from "./MessageForm";
 import { MessageCard } from "./MessageCard";
 
@@ -42,7 +44,7 @@ export interface AlertRuleDetailModalProps {
   onEdit: (
     id: string,
     name: string,
-    sensorId: number,
+    measurementId: number,
     mode: "setpoint" | "window",
     operator: string,
     setpoint: string,
@@ -98,7 +100,7 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
   useEffect(() => {
     if (rule) {
       setRuleName(rule.name);
-      setSelectedSensorId(rule.sensorId);
+      setSelectedSensorId(rule.measurementId);
       setMode(rule.mode);
       setOperator(rule.operator ?? ">");
       setSetpoint(rule.setpoint?.toString() ?? "");
@@ -111,7 +113,7 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
 
   if (!rule) return null;
 
-  const currentSensor = sensors.find((s) => s.id === rule.sensorId);
+  const currentSensor = sensors.find((s) => s.id === rule.measurementId);
 
   const handleSave = () => {
     onEdit(
@@ -183,68 +185,42 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
       onClose={onClose}
     >
       <div className="space-y-4">
-        {/* Barra de acciones destacada */}
-        <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-          <Chip
-            className="cursor-pointer font-medium"
-            color={rule.isEnabled ? "success" : "default"}
-            size="md"
-            variant="solid"
+        {/* Componentes de control sueltos */}
+        <div className="flex items-center justify-between">
+          <div
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              rule.isEnabled
+                ? "bg-green-600 text-white border border-green-500"
+                : "bg-gray-600 text-white border border-gray-500"
+            }`}
             onClick={() => onToggleEnabled(rule.id)}
           >
-            {rule.isEnabled ? "● Activa" : "○ Inactiva"}
-          </Chip>
+            {rule.isEnabled ? "Activa" : "Inactiva"}
+          </div>
 
           <div className="flex gap-2">
-            {isEditing ? (
-              <>
-                <Button
-                  color="success"
-                  size="sm"
-                  startContent={<FaCircleCheck className="w-3.5 h-3.5" />}
-                  variant="solid"
-                  onClick={handleSave}
-                >
-                  Guardar
-                </Button>
-                <Button
-                  color="default"
-                  size="sm"
-                  startContent={<FaCircleXmark className="w-3.5 h-3.5" />}
-                  variant="bordered"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Cancelar
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  color="primary"
-                  size="sm"
-                  startContent={<FaPenToSquare className="w-3.5 h-3.5" />}
-                  variant="solid"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Editar
-                </Button>
-                <Button
-                  color="danger"
-                  size="sm"
-                  startContent={<FaTrashCan className="w-3.5 h-3.5" />}
-                  variant="solid"
-                  onClick={handleDelete}
-                >
-                  Eliminar
-                </Button>
-              </>
-            )}
+            <Button
+              color="primary"
+              size="sm"
+              startContent={<FaPencil className="w-3.5 h-3.5" />}
+              variant="solid"
+              onClick={() => setIsEditing(true)}
+            >
+              Editar
+            </Button>
+            <Button
+              color="danger"
+              size="sm"
+              startContent={<FaTrash className="w-3.5 h-3.5" />}
+              variant="solid"
+              onClick={() => onDelete(rule.id)}
+            >
+              Eliminar
+            </Button>
           </div>
         </div>
 
-        {/* Contenido */}
         {isEditing ? (
-          // Modo edición
           <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
             <div className="space-y-4">
               <div>
@@ -265,7 +241,7 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                 </Text>
                 <Select
                   fullWidth
-                  value={selectedSensorId.toString()}
+                  value={selectedSensorId?.toString() ?? "0"}
                   onChange={(e) =>
                     setSelectedSensorId(parseInt(e.target.value))
                   }
@@ -358,7 +334,6 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
             </div>
           </div>
         ) : (
-          // Modo vista - Grid de 2 columnas con mejor contraste
           <div className="bg-slate-700 rounded-lg p-4 border border-slate-600">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Columna 1 */}
@@ -421,9 +396,9 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                   >
                     Modo de Operación
                   </Text>
-                  <Chip color="primary" size="sm" variant="flat">
+                  <div className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white text-sm font-medium border border-blue-500">
                     {rule.mode === "setpoint" ? "Setpoint" : "Ventana"}
-                  </Chip>
+                  </div>
                 </div>
 
                 <div>
@@ -434,9 +409,9 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                     Condición
                   </Text>
                   <div className="flex items-center gap-2">
-                    <Chip color="warning" size="md" variant="solid">
+                    <div className="inline-block px-3 py-1 rounded-full bg-orange-200 text-orange-800 text-sm font-medium border border-orange-300">
                       {getConditionText(rule)}
-                    </Chip>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -472,9 +447,13 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
               color="success"
               size="sm"
               variant="solid"
+              startContent={
+                <span className="text-white text-lg font-bold">+</span>
+              }
+              className="text-white"
               onClick={() => setShowAddMessageForm(true)}
             >
-              ➕ Agregar
+              Agregar
             </Button>
           </div>
 

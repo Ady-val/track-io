@@ -4,7 +4,7 @@ import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 
 import { Button, Text, Input, Select } from "@components/atoms";
 import { Modal } from "../Modal";
-import type { Sensor, SensorType, Operator } from "../types";
+import type { Sensor, SensorType, Operator } from "@/types";
 
 export interface CreateAlertRuleModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ export interface CreateAlertRuleModalProps {
   onClose: () => void;
   onCreate: (
     name: string,
-    sensorId: number,
+    measurementId: number,
     mode: "setpoint" | "window",
     operator: string,
     setpoint: string,
@@ -42,7 +42,6 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
   const [maxValue, setMaxValue] = useState("");
 
   const handleClose = () => {
-    // Reset form
     setRuleName("");
     setSelectedSensorId(sensors.length > 0 ? sensors[0].id : 1);
     setMode("setpoint");
