@@ -13,7 +13,6 @@ export const useRealtimeMeasurementValues = () => {
   const handleMeasurementValue = useCallback((message: any) => {
     console.log("📊 [WebSocket] Received new_measurement_value:", message);
 
-    // El mensaje viene envuelto: { event, data: { type, data: { measurementId, value, createdAt } }, timestamp }
     const payload = message.data?.data || message.data;
 
     if (!payload || !payload.measurementId) {
@@ -37,7 +36,6 @@ export const useRealtimeMeasurementValues = () => {
       },
     }));
 
-    // Actualizar historial (máximo 20 valores)
     setHistory((prev) => {
       const currentHistory = prev[measurementId] || [];
       const newHistory = [...currentHistory, newValue].slice(-20); // Mantener solo los últimos 20
@@ -56,13 +54,11 @@ export const useRealtimeMeasurementValues = () => {
 
     console.log("✅ Subscribing to new_measurement_value event");
 
-    // DEBUG: Escuchar TODOS los eventos para debug
     const debugListener = (...args: any[]) => {
       console.log("🔔 [DEBUG] Received event:", args);
     };
     socket.onAny(debugListener);
 
-    // Escuchar eventos de nuevos valores de medición
     socket.on("new_measurement_value", handleMeasurementValue);
 
     return () => {
@@ -72,7 +68,6 @@ export const useRealtimeMeasurementValues = () => {
     };
   }, [socket, handleMeasurementValue]);
 
-  // Debug log para ver el estado actual
   useEffect(() => {
     console.log("📊 Current measurement values state:", values);
   }, [values]);

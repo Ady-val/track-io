@@ -22,13 +22,10 @@ export const useDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Referencias para mantener el tiempo actualizado
   const baseAreasDataRef = useRef<DashboardAreaData[]>([]);
   const allEventsRef = useRef<DashboardEventData[]>([]);
-  // Referencia para mantener el tiempo de inicio de la parada por área
   const areaOutageStartTimeRef = useRef<Record<string, Date | null>>({});
 
-  // Función para formatear duración
   const formatDuration = useCallback((seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -43,7 +40,6 @@ export const useDashboard = () => {
     }
   }, []);
 
-  // Función para determinar el estado del área basado en eventos activos
   const getAreaEventStatus = useCallback(
     (
       areaName: string
@@ -61,20 +57,14 @@ export const useDashboard = () => {
         return { status: "ok", hasOpenEvents: false };
       }
 
-      // Aplicar las reglas específicas:
-      // 1. Si hay eventos open, siempre priorizar el status "open" (alert)
-      // 2. Si no hay eventos open pero hay in-progress, usar "warning"
       const openEvents = activeEvents.filter(
         (event) => event.status === "open"
       );
       const hasOpenEvents = openEvents.length > 0;
 
       if (hasOpenEvents) {
-        // Si hay eventos abiertos, siempre mostrar status "alert" (rojo con pulso)
-        // Incluso si el evento más reciente es in-progress
         return { status: "alert", hasOpenEvents: true };
       } else {
-        // Solo eventos in-progress, mostrar "warning" (amarillo)
         return { status: "warning", hasOpenEvents: false };
       }
     },
@@ -96,37 +86,30 @@ export const useDashboard = () => {
    */
   const calculateEventTimeForArea = useCallback(
     (areaName: string): string => {
-      // Obtener solo eventos activos del área (open o in-progress)
       const activeEvents = allEventsRef.current.filter(
         (event) =>
           event.area === areaName &&
           (event.status === "open" || event.status === "in-progress")
       );
 
-      // Si no hay eventos activos, resetear el tiempo de inicio y retornar 0
       if (activeEvents.length === 0) {
         areaOutageStartTimeRef.current[areaName] = null;
         return "0h 0m 0s";
       }
 
-      // Obtener el tiempo de inicio actualmente registrado para esta área
       let outageStartTime = areaOutageStartTimeRef.current[areaName];
 
-      // Si esta es la primera vez que hay eventos activos, establecer el tiempo de inicio
       if (!outageStartTime) {
-        // Encontrar el evento activo más antiguo para establecer el inicio de la parada
         const oldestActiveEvent = activeEvents.reduce((oldest, current) => {
           const oldestStart = new Date(oldest.startedAt);
           const currentStart = new Date(current.startedAt);
           return currentStart < oldestStart ? current : oldest;
         });
 
-        // Registrar el tiempo de inicio de la parada (no cambiar hasta que no haya eventos activos)
         outageStartTime = new Date(oldestActiveEvent.startedAt);
         areaOutageStartTimeRef.current[areaName] = outageStartTime;
       }
 
-      // Calcular tiempo transcurrido desde el inicio de la parada hasta ahora
       const now = new Date();
       if (!outageStartTime) {
         return "0h 0m 0s";
@@ -244,7 +227,6 @@ export const useDashboard = () => {
     fetchDashboardStatus,
   ]);
 
-  // Función para actualizar el tiempo en tiempo real
   const updateEventTimes = useCallback(() => {
     if (baseAreasDataRef.current.length > 0) {
       const updatedAreas = baseAreasDataRef.current.map((area) => ({
@@ -255,10 +237,7 @@ export const useDashboard = () => {
     }
   }, [calculateEventTimeForArea]);
 
-  // Mantener actualizada la referencia de eventos activos para el cálculo
   useEffect(() => {
-    // Solo incluir eventos activos (open e in-progress) para el cálculo de tiempo
-    // Los eventos cerrados no deben afectar el cálculo del tiempo acumulado
     allEventsRef.current = [...openEvents, ...inProgressEvents];
   }, [openEvents, inProgressEvents]);
 
@@ -266,7 +245,6 @@ export const useDashboard = () => {
     refreshAll();
   }, [refreshAll]);
 
-  // Actualizar tiempo cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       updateEventTimes();

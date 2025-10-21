@@ -1,4 +1,3 @@
-// Alert Rules hooks
 export {
   useAlertRules,
   useAlertRule,
@@ -8,7 +7,6 @@ export {
   useDeleteAlertRule,
 } from "./useAlertRules";
 
-// Alert Messages hooks
 export {
   useCreateAlertMessage,
   useUpdateAlertMessage,
@@ -16,33 +14,24 @@ export {
   useDuplicateAlertMessage,
 } from "./useAlertMessages";
 
-// Receptors hooks
 export {
   useReceptors,
   useClockReceptors,
   useReceptorsByDepartment,
 } from "./useReceptors";
 
-// Message Groups hooks
 export { useMessageGroups } from "./useMessageGroups";
-
-// Torreta Colors hooks
 export { useTorretaColors } from "./useTorretaColors";
 
-// Measurements hooks
 export {
   useMeasurements,
   useMeasurement,
   useMeasurementsByExternalId,
 } from "./useMeasurements";
 
-// Monitoring Conditions hook (combined data)
 export { useMonitoringConditions } from "./useMonitoringConditions";
-
-// Notifications hook
 export { useNotifications } from "./useNotifications";
 
-// Existing hooks
 export { useDashboard } from "./useDashboard";
 export { useAreaDowntimes } from "./useAreaDowntimes";
 export { useAreas } from "./useAreas";

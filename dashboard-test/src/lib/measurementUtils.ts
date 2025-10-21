@@ -73,7 +73,6 @@ export const getDynamicColor = (
   maxValue: number,
   originalColor: string
 ): string => {
-  // Si el valor es undefined o null, usar gris suave
   if (value === undefined || value === null) {
     return "#94a3b8"; // Gris suave (slate-400)
   }
@@ -86,12 +85,10 @@ export const getDynamicColor = (
 
   const normalizedValue = (value - min) / range;
 
-  // Rojo: entre min y 1/5 del rango
   if (normalizedValue >= 0 && normalizedValue <= 0.2) {
     return "#ef4444"; // Rojo
   }
 
-  // Amarillo: entre min y 1/4 del rango, o entre 3/4 y max
   if (
     (normalizedValue > 0.2 && normalizedValue <= 0.25) ||
     (normalizedValue >= 0.75 && normalizedValue < 1)
@@ -99,7 +96,6 @@ export const getDynamicColor = (
     return "#f59e0b"; // Amarillo
   }
 
-  // Rojo: entre 4/5 y max
   if (normalizedValue >= 0.8 && normalizedValue <= 1) {
     return "#ef4444"; // Rojo
   }

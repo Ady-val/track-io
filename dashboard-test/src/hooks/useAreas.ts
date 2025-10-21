@@ -23,7 +23,6 @@ export const useAreas = (initialFilters?: AreaFilters): UseAreasReturn => {
       setError(null);
 
       const response = await areaService.getAll(filters);
-      // Ordenar áreas por fecha de creación descendente (más nuevas primero)
       const sortedAreas = response.data.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

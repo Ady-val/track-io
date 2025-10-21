@@ -56,7 +56,6 @@ export const getStatusTextColor = (status: string): string => {
   }
 };
 
-// Función para obtener el color de status basado en el estado del evento
 export const getEventStatusColor = (eventStatus: string): string => {
   switch (eventStatus) {
     case "open":
