@@ -10,6 +10,33 @@ import {
   IsEmail,
 } from 'class-validator';
 
+interface TelegramMessageData {
+  chatId: string;
+  message: string;
+}
+
+interface TorretaMessageData {
+  color: string;
+  pattern: string;
+}
+
+interface EmailMessageData {
+  to: string;
+  subject: string;
+  body: string;
+}
+
+interface ReceptorMessageData {
+  deviceId: number;
+  signal: string;
+}
+
+type MessageData =
+  | EmailMessageData
+  | ReceptorMessageData
+  | TelegramMessageData
+  | TorretaMessageData;
+
 export class TelegramMessageDataDto {
   @IsString()
   @IsNotEmpty()
@@ -61,7 +88,7 @@ export class CreateAlertMessageDto {
   receptorType!: string;
 
   @IsObject()
-  messageData!: Record<string, any>;
+  messageData!: MessageData;
 
   @IsInt()
   messageGroupId!: number;
@@ -79,7 +106,7 @@ export class UpdateAlertMessageDto {
 
   @IsOptional()
   @IsObject()
-  messageData?: Record<string, any>;
+  messageData?: MessageData;
 
   @IsOptional()
   @IsInt()

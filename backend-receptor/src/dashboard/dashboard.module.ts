@@ -12,6 +12,3 @@ import { EventsModule } from '../events/events.module';
   exports: [DashboardService],
 })
 export class DashboardModule {}
-
-
-

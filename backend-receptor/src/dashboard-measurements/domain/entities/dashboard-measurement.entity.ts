@@ -38,5 +38,3 @@ export class DashboardMeasurement {
   @JoinColumn({ name: 'measurement_id' })
   measurement!: Measurement;
 }
-
-

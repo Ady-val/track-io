@@ -37,7 +37,3 @@ export class ProcessedSignal {
   })
   createdAt!: Date;
 }
-
-
-
-

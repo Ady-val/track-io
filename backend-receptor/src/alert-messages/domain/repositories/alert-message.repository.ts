@@ -23,4 +23,3 @@ export class AlertMessageRepository extends Repository<AlertMessage> {
     });
   }
 }
-

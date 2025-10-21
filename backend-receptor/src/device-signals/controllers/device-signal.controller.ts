@@ -66,16 +66,16 @@ export class DeviceSignalController {
     if (offset) filters.offset = offset;
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
-    const result = await this.deviceSignalService.findAll(filters);
+    const { data, total } = await this.deviceSignalService.findAll(filters);
 
     return {
       message: 'Device signals retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

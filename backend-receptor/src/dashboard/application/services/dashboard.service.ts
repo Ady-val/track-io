@@ -25,6 +25,32 @@ export interface DashboardEventData {
   duration?: number;
 }
 
+interface EventForDashboard {
+  id: number;
+  areaId: number;
+  departmentId: number;
+  status: EventStatus;
+  createdAt: Date;
+  closedAt?: Date;
+}
+
+interface EventWithDetails {
+  id: number;
+  areaId: number;
+  areaName: string;
+  departmentId: number;
+  departmentName: string;
+  deviceId: number;
+  deviceName: string;
+  deviceSignalId: number;
+  deviceSignalName: string;
+  status: EventStatus;
+  createdAt: Date;
+  inProgressAt?: Date;
+  closedAt?: Date;
+  durationSeconds?: number;
+}
+
 @Injectable()
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
@@ -158,7 +184,7 @@ export class DashboardService {
   private getDepartmentStatus(
     areaId: number,
     departmentId: number,
-    events: any[]
+    events: EventForDashboard[]
   ): string {
     // Buscar eventos activos (open o in-progress) para esta área y departamento
     const activeEvents = events.filter(
@@ -190,7 +216,10 @@ export class DashboardService {
     return 'ok';
   }
 
-  private calculateTotalEventTime(areaId: number, events: any[]): string {
+  private calculateTotalEventTime(
+    areaId: number,
+    events: EventForDashboard[]
+  ): string {
     // Calcular tiempo total de eventos activos en el área
     const activeEvents = events.filter(
       event =>
@@ -229,7 +258,7 @@ export class DashboardService {
     }
   }
 
-  private mapEventToDashboardData(event: any): DashboardEventData {
+  private mapEventToDashboardData(event: EventWithDetails): DashboardEventData {
     return {
       id: event.id,
       area: event.areaName,
@@ -238,8 +267,8 @@ export class DashboardService {
       signal: event.deviceSignalName,
       status: event.status,
       startedAt: event.createdAt,
-      endedAt: event.closedAt,
-      duration: event.durationSeconds,
+      ...(event.closedAt && { endedAt: event.closedAt }),
+      ...(event.durationSeconds && { duration: event.durationSeconds }),
     };
   }
 }

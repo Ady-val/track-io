@@ -1,6 +1,6 @@
 import {
-  MigrationInterface,
-  QueryRunner,
+  type MigrationInterface,
+  type QueryRunner,
   Table,
   TableIndex,
   TableForeignKey,
@@ -105,4 +105,3 @@ export class CreateAlertTriggersTable1704067980000
     await queryRunner.dropTable('alert_triggers');
   }
 }
-

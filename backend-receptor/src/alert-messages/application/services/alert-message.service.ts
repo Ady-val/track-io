@@ -9,6 +9,7 @@ import {
   CreateAlertMessageDto,
   UpdateAlertMessageDto,
 } from '../dtos/alert-message.dto';
+import { AlertMessageFactory } from '../factories/alert-message.factory';
 import { AlertRuleService } from '../../../alert-rules/application/services/alert-rule.service';
 import { MessageGroupService } from '../../../message-groups/application/services/message-group.service';
 
@@ -56,15 +57,11 @@ export class AlertMessageService {
       );
     }
 
-    const alertMessage = this.alertMessageRepository.create({
-      alertRuleId,
-      receptorType: createDto.receptorType as any,
-      messageData: createDto.messageData as any,
-      messageGroupId: createDto.messageGroupId,
-      status: createDto.status ?? 'pending',
-    });
-
-    return this.alertMessageRepository.save(alertMessage);
+    const alertMessage = AlertMessageFactory.createFromDto(
+      createDto,
+      alertRuleId
+    );
+    return await this.alertMessageRepository.save(alertMessage);
   }
 
   async updateAlertMessage(
@@ -102,15 +99,9 @@ export class AlertMessageService {
       );
     }
 
-    const duplicatedMessage = this.alertMessageRepository.create({
-      alertRuleId: originalMessage.alertRuleId,
-      receptorType: originalMessage.receptorType as any,
-      messageData: originalMessage.messageData as any,
-      messageGroupId: originalMessage.messageGroupId,
-      status: originalMessage.status,
-    });
-
-    return this.alertMessageRepository.save(duplicatedMessage);
+    const duplicatedMessage =
+      AlertMessageFactory.createFromExisting(originalMessage);
+    return await this.alertMessageRepository.save(duplicatedMessage);
   }
 
   async getMessagesByAlertRuleId(alertRuleId: number): Promise<AlertMessage[]> {

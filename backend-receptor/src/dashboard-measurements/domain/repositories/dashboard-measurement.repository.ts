@@ -24,5 +24,3 @@ export class DashboardMeasurementRepository extends Repository<DashboardMeasurem
     });
   }
 }
-
-

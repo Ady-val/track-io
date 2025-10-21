@@ -77,4 +77,3 @@ export class MessageGroupService {
     await this.messageGroupRepository.remove(messageGroup);
   }
 }
-

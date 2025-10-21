@@ -35,24 +35,23 @@ export class AlertTriggerController {
     if (limit) filters.limit = limit;
     if (offset) filters.offset = offset;
 
-    const result = await this.alertTriggerService.getAllAlertTriggers(filters);
+    const { data, total } =
+      await this.alertTriggerService.getAllAlertTriggers(filters);
 
     return {
       message: 'Alert triggers retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 50,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }
 
   @Get('alert-triggers/:id')
-  async getAlertTriggerById(
-    @Param('id', ParseIntPipe) id: number
-  ): Promise<{
+  async getAlertTriggerById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AlertTrigger;
   }> {
@@ -101,4 +100,3 @@ export class AlertTriggerController {
     };
   }
 }
-

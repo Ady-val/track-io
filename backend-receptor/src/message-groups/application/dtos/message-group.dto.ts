@@ -52,4 +52,3 @@ export class UpdateMessageGroupDto {
   @Min(0)
   order?: number;
 }
-

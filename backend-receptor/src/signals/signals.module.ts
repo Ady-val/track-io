@@ -12,6 +12,7 @@ import { Device } from '../devices/domain/entities/device.entity';
 import { DeviceSignal } from '../device-signals/domain/entities/device-signal.entity';
 import { WebSocketModule } from '../websocket/websocket.module';
 import { EventsModule } from '../events/events.module';
+import { AreaDowntimeModule } from '../area-downtime/area-downtime.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EventsModule } from '../events/events.module';
     ]),
     WebSocketModule,
     EventsModule,
+    AreaDowntimeModule,
   ],
   controllers: [SignalController],
   providers: [

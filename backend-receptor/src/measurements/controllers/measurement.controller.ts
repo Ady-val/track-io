@@ -62,16 +62,17 @@ export class MeasurementController {
     if (limit) filters.limit = limit;
     if (offset) filters.offset = offset;
 
-    const result = await this.measurementService.getAllMeasurements(filters);
+    const { data, total } =
+      await this.measurementService.getAllMeasurements(filters);
 
     return {
       message: 'Measurements retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

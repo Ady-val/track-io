@@ -63,17 +63,17 @@ export class DeviceController {
     if (offset) filters.offset = offset;
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
-    const result = await this.deviceService.findAll(filters);
-    const deviceResponses = DeviceMapper.toResponseDtoArray(result.data);
+    const { data, total } = await this.deviceService.findAll(filters);
+    const deviceResponses = DeviceMapper.toResponseDtoArray(data);
 
     return {
       message: 'Devices retrieved successfully',
       data: deviceResponses,
-      total: result.total,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

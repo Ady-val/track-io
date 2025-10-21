@@ -42,5 +42,3 @@ export class CreateDashboardMeasurementsTable1704068100000
     `);
   }
 }
-
-

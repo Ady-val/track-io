@@ -29,5 +29,3 @@ export class UpdateDashboardMeasurementDto {
   @Min(0)
   maxValue?: number;
 }
-
-

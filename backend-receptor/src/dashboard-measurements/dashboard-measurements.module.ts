@@ -16,5 +16,3 @@ import { MeasurementsModule } from '../measurements/measurements.module';
   exports: [DashboardMeasurementService, DashboardMeasurementRepository],
 })
 export class DashboardMeasurementsModule {}
-
-

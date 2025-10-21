@@ -60,16 +60,17 @@ export class RawMeasurementController {
     if (startDate) filters.startDate = new Date(startDate);
     if (endDate) filters.endDate = new Date(endDate);
 
-    const result = await this.rawMeasurementService.getAllMeasurements(filters);
+    const { data, total } =
+      await this.rawMeasurementService.getAllMeasurements(filters);
 
     return {
       message: 'Measurements retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

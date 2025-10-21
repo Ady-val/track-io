@@ -123,7 +123,3 @@ export class ProcessedSignalRepository {
     });
   }
 }
-
-
-
-

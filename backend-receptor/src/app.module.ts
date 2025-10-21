@@ -21,6 +21,7 @@ import { AlertTriggersModule } from './alert-triggers/alert-triggers.module';
 import { ReceptorsModule } from './receptors/receptors.module';
 import { EventsModule } from './events/events.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ReceptorsModule,
     EventsModule,
     DashboardModule,
+    AreaDowntimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -161,6 +161,17 @@ export class TypeOrmEventRepository implements EventRepository {
     });
   }
 
+  async findActiveByArea(areaId: number): Promise<Event[]> {
+    return this.repository.find({
+      where: [
+        { areaId, status: EventStatus.OPEN },
+        { areaId, status: EventStatus.IN_PROGRESS },
+      ],
+      relations: ['area', 'department', 'device', 'deviceSignal'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async findRecentClosedEvents(limit: number): Promise<Event[]> {
     return this.repository.find({
       where: { status: EventStatus.CLOSED },

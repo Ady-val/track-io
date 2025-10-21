@@ -37,4 +37,3 @@ export class MessageGroup {
   })
   updatedAt!: Date;
 }
-

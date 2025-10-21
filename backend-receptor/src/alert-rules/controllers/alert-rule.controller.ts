@@ -19,6 +19,12 @@ import {
   UpdateAlertRuleDto,
 } from '../application/dtos/alert-rule.dto';
 
+interface AlertRuleFilters {
+  measurementId?: number;
+  isEnabled?: boolean;
+  mode?: string;
+}
+
 @Controller('alert-rules')
 export class AlertRuleController {
   constructor(private readonly alertRuleService: AlertRuleService) {}
@@ -33,7 +39,7 @@ export class AlertRuleController {
     data: AlertRule[];
     total: number;
   }> {
-    const filters: any = {};
+    const filters: AlertRuleFilters = {};
 
     if (measurementId) filters.measurementId = parseInt(measurementId);
     if (isEnabled !== undefined) filters.isEnabled = isEnabled === 'true';
@@ -110,4 +116,3 @@ export class AlertRuleController {
     await this.alertRuleService.deleteAlertRule(id);
   }
 }
-

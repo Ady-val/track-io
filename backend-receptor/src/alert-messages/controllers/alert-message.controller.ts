@@ -132,4 +132,3 @@ export class AlertMessageController {
     await this.alertMessageService.deleteAlertMessage(id);
   }
 }
-

@@ -1,4 +1,9 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
+import {
+  type MigrationInterface,
+  type QueryRunner,
+  Table,
+  TableIndex,
+} from 'typeorm';
 
 export class CreateEventsTable1704068220000 implements MigrationInterface {
   name = 'CreateEventsTable1704068220000';
@@ -137,6 +142,3 @@ export class CreateEventsTable1704068220000 implements MigrationInterface {
     await queryRunner.dropTable('events');
   }
 }
-
-
-

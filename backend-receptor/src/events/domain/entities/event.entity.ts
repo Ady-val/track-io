@@ -109,6 +109,3 @@ export class Event {
   @JoinColumn({ name: 'device_signal_id' })
   deviceSignal?: DeviceSignal;
 }
-
-
-

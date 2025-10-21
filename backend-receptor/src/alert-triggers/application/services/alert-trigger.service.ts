@@ -52,4 +52,3 @@ export class AlertTriggerService {
     return this.alertTriggerRepository.getStatsForAlertRule(alertRuleId);
   }
 }
-

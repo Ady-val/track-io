@@ -1,6 +1,6 @@
 import {
-  MigrationInterface,
-  QueryRunner,
+  type MigrationInterface,
+  type QueryRunner,
   Table,
   TableIndex,
   TableForeignKey,
@@ -118,4 +118,3 @@ export class CreateAlertRulesTable1704067680000 implements MigrationInterface {
     await queryRunner.dropTable('alert_rules');
   }
 }
-

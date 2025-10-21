@@ -100,5 +100,3 @@ export class DashboardMeasurementService {
     await this.dashboardMeasurementRepository.softDelete(id);
   }
 }
-
-

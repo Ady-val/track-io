@@ -23,4 +23,3 @@ import { WebSocketModule } from '../websocket/websocket.module';
   exports: [AlertRuleService, AlertRuleRepository, AlertEvaluationService],
 })
 export class AlertRulesModule {}
-

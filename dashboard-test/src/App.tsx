@@ -5,6 +5,7 @@ import IndexPage from "@/pages/index";
 import RawSignalsPage from "./pages/rawSignals";
 import DashboardMeasurementsPage from "./pages/dashboardMeasurements";
 import { IndustrialDashboard } from "./pages/IndustrialDashboard";
+import { AreaDowntimesPage } from "./pages/AreaDowntimesPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           path="/dashboard-measurements"
         />
         <Route element={<IndustrialDashboard />} path="/industrial-dashboard" />
+        <Route element={<AreaDowntimesPage />} path="/area-downtimes" />
       </Routes>
     </WebSocketProvider>
   );

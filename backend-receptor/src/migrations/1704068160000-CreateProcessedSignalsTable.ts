@@ -1,4 +1,9 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
+import {
+  type MigrationInterface,
+  type QueryRunner,
+  Table,
+  TableIndex,
+} from 'typeorm';
 
 export class CreateProcessedSignalsTable1704068160000
   implements MigrationInterface

@@ -12,4 +12,3 @@ import { MessageGroupController } from './controllers/message-group.controller';
   exports: [MessageGroupService, MessageGroupRepository],
 })
 export class MessageGroupsModule {}
-

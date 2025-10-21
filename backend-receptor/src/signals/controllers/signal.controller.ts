@@ -57,16 +57,16 @@ export class SignalController {
     if (startDate) filters.startDate = new Date(startDate);
     if (endDate) filters.endDate = new Date(endDate);
 
-    const result = await this.signalService.getAllSignals(filters);
+    const { data, total } = await this.signalService.getAllSignals(filters);
 
     return {
       message: 'Signals retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

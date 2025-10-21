@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { type MigrationInterface, type QueryRunner, Table } from 'typeorm';
 
 export class CreateMessageGroupsTable1704067620000
   implements MigrationInterface
@@ -66,4 +66,3 @@ export class CreateMessageGroupsTable1704067620000
     await queryRunner.dropTable('message_groups');
   }
 }
-

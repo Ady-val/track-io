@@ -88,4 +88,3 @@ export class MessageGroupController {
     await this.messageGroupService.deleteMessageGroup(id);
   }
 }
-

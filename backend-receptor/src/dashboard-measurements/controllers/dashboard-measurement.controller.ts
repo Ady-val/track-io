@@ -93,5 +93,3 @@ export class DashboardMeasurementController {
     await this.dashboardMeasurementService.deleteDashboardMeasurement(id);
   }
 }
-
-

@@ -54,4 +54,3 @@ export class AlertRuleRepository extends Repository<AlertRule> {
     });
   }
 }
-

@@ -57,16 +57,16 @@ export class DepartmentController {
     if (offset) filters.offset = offset;
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
-    const result = await this.departmentService.findAll(filters);
+    const { data, total } = await this.departmentService.findAll(filters);
 
     return {
       message: 'Departments retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

@@ -10,6 +10,8 @@ export type { CreateMeasurementFormProps } from "./CreateMeasurementForm";
 export { AreasGrid } from "./AreasGrid";
 export type { AreasGridProps } from "./AreasGrid";
 
+export { AreaDowntimesTable } from "./AreaDowntimesTable";
+
 export type {
   Message,
   SensorTypeValue,

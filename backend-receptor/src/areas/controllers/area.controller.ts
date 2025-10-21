@@ -54,16 +54,16 @@ export class AreaController {
     if (offset) filters.offset = offset;
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
-    const result = await this.areaService.findAll(filters);
+    const { data, total } = await this.areaService.findAll(filters);
 
     return {
       message: 'Areas retrieved successfully',
-      data: result.data,
-      total: result.total,
+      data,
+      total,
       pagination: {
         limit: limit ?? 10,
         offset: offset ?? 0,
-        total: result.total,
+        total,
       },
     };
   }

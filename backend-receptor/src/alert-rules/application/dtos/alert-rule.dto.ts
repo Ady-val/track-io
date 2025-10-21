@@ -11,6 +11,10 @@ import {
 } from 'class-validator';
 import { AlertRuleMode } from '../../domain/entities/alert-rule.entity';
 
+interface ValidationObject {
+  mode: AlertRuleMode;
+}
+
 export class CreateAlertRuleDto {
   @IsString()
   @IsNotEmpty()
@@ -24,21 +28,21 @@ export class CreateAlertRuleDto {
   mode!: AlertRuleMode;
 
   // Campos para modo setpoint
-  @ValidateIf(o => o.mode === AlertRuleMode.SETPOINT)
+  @ValidateIf((o: ValidationObject) => o.mode === AlertRuleMode.SETPOINT)
   @IsString()
   @IsNotEmpty()
   operator?: string;
 
-  @ValidateIf(o => o.mode === AlertRuleMode.SETPOINT)
+  @ValidateIf((o: ValidationObject) => o.mode === AlertRuleMode.SETPOINT)
   @IsNumber()
   setpoint?: number;
 
   // Campos para modo window
-  @ValidateIf(o => o.mode === AlertRuleMode.WINDOW)
+  @ValidateIf((o: ValidationObject) => o.mode === AlertRuleMode.WINDOW)
   @IsNumber()
   minValue?: number;
 
-  @ValidateIf(o => o.mode === AlertRuleMode.WINDOW)
+  @ValidateIf((o: ValidationObject) => o.mode === AlertRuleMode.WINDOW)
   @IsNumber()
   maxValue?: number;
 
@@ -82,4 +86,3 @@ export class UpdateAlertRuleDto {
   @IsBoolean()
   isEnabled?: boolean;
 }
-

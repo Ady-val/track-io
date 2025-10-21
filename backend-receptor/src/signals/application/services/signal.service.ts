@@ -18,6 +18,7 @@ import { WebSocketEmitterService } from '../../../websocket/services/websocket-e
 import { WEBSOCKET_EVENTS } from '../../../websocket/constants/websocket-events.constant';
 import { TypeOrmEventRepository } from '../../../events/domain/repositories/typeorm-event.repository';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
+import { AreaDowntimeService } from '../../../area-downtime/application/services/area-downtime.service';
 import type { Event } from '../../../events/domain/entities/event.entity';
 import type { Device } from '../../../devices/domain/entities/device.entity';
 import type { DeviceSignal } from '../../../device-signals/domain/entities/device-signal.entity';
@@ -32,7 +33,8 @@ export class SignalService {
     private readonly deviceRepository: DeviceRepository,
     private readonly deviceSignalRepository: DeviceSignalRepository,
     private readonly eventRepository: TypeOrmEventRepository,
-    private readonly webSocketEmitterService: WebSocketEmitterService
+    private readonly webSocketEmitterService: WebSocketEmitterService,
+    private readonly areaDowntimeService: AreaDowntimeService
   ) {}
 
   async processSignal(id: string, value: string): Promise<RawSignal> {
@@ -323,6 +325,16 @@ export class SignalService {
 
       this.logger.log(`Created new event with ID: ${event.id}`);
 
+      // Manejar lógica de tiempo de paro del área
+      try {
+        await this.areaDowntimeService.handleEventForAreaDowntime(event);
+      } catch (downtimeError) {
+        this.logger.error(
+          `Error handling area downtime for new event: ${(downtimeError as Error).message}`,
+          (downtimeError as Error).stack
+        );
+      }
+
       // Emitir evento WebSocket
       this.webSocketEmitterService.emitToAll('new-event', {
         area: event.areaName,
@@ -351,6 +363,16 @@ export class SignalService {
       );
 
       this.logger.log(`Event ${event.id} set to in-progress`);
+
+      // Manejar lógica de tiempo de paro del área
+      try {
+        await this.areaDowntimeService.handleEventForAreaDowntime(updatedEvent);
+      } catch (downtimeError) {
+        this.logger.error(
+          `Error handling area downtime for event update: ${(downtimeError as Error).message}`,
+          (downtimeError as Error).stack
+        );
+      }
 
       // Emitir evento WebSocket
       this.webSocketEmitterService.emitToAll('event-updated', {
@@ -388,6 +410,16 @@ export class SignalService {
       this.logger.log(
         `Event ${event.id} closed with duration: ${durationSeconds} seconds`
       );
+
+      // Manejar lógica de tiempo de paro del área
+      try {
+        await this.areaDowntimeService.handleEventForAreaDowntime(updatedEvent);
+      } catch (downtimeError) {
+        this.logger.error(
+          `Error handling area downtime for closed event: ${(downtimeError as Error).message}`,
+          (downtimeError as Error).stack
+        );
+      }
 
       // Emitir evento WebSocket
       this.webSocketEmitterService.emitToAll('closed-event', {

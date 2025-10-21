@@ -12,4 +12,3 @@ import { AlertTriggerController } from './controllers/alert-trigger.controller';
   exports: [AlertTriggerService, AlertTriggerRepository],
 })
 export class AlertTriggersModule {}
-
