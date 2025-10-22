@@ -1,0 +1,117 @@
+import React from "react";
+import { Button } from "../atoms/Button";
+import { Icon } from "../atoms/Icon";
+
+export interface TableColumn<T = any> {
+  id: string;
+  label: string;
+  key: keyof T;
+  component?: (value: any, row: T) => React.ReactNode;
+  sortable?: boolean;
+  width?: string;
+}
+
+export interface DataTableProps<T = any> {
+  data: T[];
+  columns: TableColumn<T>[];
+  onEdit?: (item: T) => void;
+  onDelete?: (item: T) => void;
+  loading?: boolean;
+  emptyMessage?: string;
+  className?: string;
+  maxHeight?: string;
+}
+
+export function DataTable<T extends { id: number | string }>({
+  data,
+  columns,
+  onEdit,
+  onDelete,
+  loading = false,
+  emptyMessage = "No hay datos disponibles",
+  className = "",
+  maxHeight = "max-h-80",
+}: DataTableProps<T>) {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-8 text-slate-400">{emptyMessage}</div>
+    );
+  }
+
+  return (
+    <div
+      className={`overflow-x-auto overflow-y-auto ${maxHeight} ${className}`}
+    >
+      <table className="min-w-full bg-slate-700 border border-slate-600 rounded-lg">
+        <thead className="bg-slate-800">
+          <tr>
+            {columns.map((column) => (
+              <th
+                key={column.id}
+                className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider"
+                style={{ width: column.width }}
+              >
+                {column.label}
+              </th>
+            ))}
+            {(onEdit || onDelete) && (
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Acciones
+              </th>
+            )}
+          </tr>
+        </thead>
+        <tbody className="bg-slate-700 divide-y divide-slate-600">
+          {data.map((row, index) => (
+            <tr key={row.id} className="hover:bg-slate-600">
+              {columns.map((column) => (
+                <td
+                  key={column.id}
+                  className="px-6 py-4 whitespace-nowrap text-sm text-slate-200"
+                >
+                  {column.component
+                    ? column.component(row[column.key], row)
+                    : String(row[column.key] || "")}
+                </td>
+              ))}
+              {(onEdit || onDelete) && (
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-2">
+                    {onEdit && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit(row)}
+                        className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
+                      >
+                        <Icon name="edit" className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDelete(row)}
+                        className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
+                      >
+                        <Icon name="trash" className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

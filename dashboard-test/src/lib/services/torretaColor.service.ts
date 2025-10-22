@@ -20,4 +20,3 @@ class TorretaColorService {
 
 const torretaColorService = new TorretaColorService();
 export default torretaColorService;
-

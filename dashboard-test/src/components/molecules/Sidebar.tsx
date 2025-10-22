@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 
-import { FaChartLine, FaGaugeHigh, FaIndustry, FaClock } from "react-icons/fa6";
+import {
+  FaChartLine,
+  FaGaugeHigh,
+  FaIndustry,
+  FaClock,
+  FaDatabase,
+} from "react-icons/fa6";
 import { PiWaveSineBold } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
 
@@ -35,6 +41,11 @@ const sidebarItems: SidebarItem[] = [
     path: "/area-downtimes",
     icon: FaClock,
     label: "Tiempos de Paro",
+  },
+  {
+    path: "/catalogs",
+    icon: FaDatabase,
+    label: "Catálogos",
   },
 ];
 

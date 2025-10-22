@@ -44,3 +44,12 @@ export type { AreaCardProps } from "./AreaCard";
 
 export { DataEmptyState } from "./DataEmptyState";
 export { DataErrorState } from "./DataErrorState";
+
+export { DataTable } from "./DataTable";
+export type { DataTableProps, TableColumn } from "./DataTable";
+
+export { Pagination } from "./Pagination";
+export type { PaginationProps } from "./Pagination";
+
+export { ConfirmationModal } from "./ConfirmationModal";
+export type { ConfirmationModalProps } from "./ConfirmationModal";

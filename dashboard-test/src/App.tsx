@@ -6,6 +6,7 @@ import RawSignalsPage from "./pages/rawSignals";
 import DashboardMeasurementsPage from "./pages/dashboardMeasurements";
 import { IndustrialDashboard } from "./pages/IndustrialDashboard";
 import { AreaDowntimesPage } from "./pages/AreaDowntimesPage";
+import { CatalogsPage } from "./pages/CatalogsPage";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         />
         <Route element={<IndustrialDashboard />} path="/industrial-dashboard" />
         <Route element={<AreaDowntimesPage />} path="/area-downtimes" />
+        <Route element={<CatalogsPage />} path="/catalogs" />
       </Routes>
     </WebSocketProvider>
   );

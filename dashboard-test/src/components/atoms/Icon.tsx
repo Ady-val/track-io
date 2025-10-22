@@ -1,15 +1,47 @@
-import type React from "react";
-import type { IconType } from "react-icons";
+import React from "react";
+import {
+  FaEdit,
+  FaTrash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaExclamationTriangle,
+  FaExclamationCircle,
+  FaInfo,
+  FaSignal,
+  FaChartLine,
+  FaBuilding,
+  FaUsers,
+  FaWifi,
+  FaPalette,
+  FaBroadcastTower,
+} from "react-icons/fa";
 
 export interface IconProps {
-  icon: IconType;
+  name: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   color?: string;
   className?: string;
 }
 
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  edit: FaEdit,
+  trash: FaTrash,
+  "chevron-left": FaChevronLeft,
+  "chevron-right": FaChevronRight,
+  "alert-triangle": FaExclamationTriangle,
+  "alert-circle": FaExclamationCircle,
+  info: FaInfo,
+  signal: FaSignal,
+  activity: FaChartLine,
+  building: FaBuilding,
+  users: FaUsers,
+  tower: FaWifi,
+  palette: FaPalette,
+  radio: FaBroadcastTower,
+};
+
 export const Icon: React.FC<IconProps> = ({
-  icon: IconComponent,
+  name,
   size = "md",
   color,
   className = "",
@@ -21,6 +53,13 @@ export const Icon: React.FC<IconProps> = ({
     lg: "w-6 h-6",
     xl: "w-8 h-8",
   };
+
+  const IconComponent = iconMap[name];
+
+  if (!IconComponent) {
+    console.warn(`Icon "${name}" not found`);
+    return null;
+  }
 
   return (
     <IconComponent

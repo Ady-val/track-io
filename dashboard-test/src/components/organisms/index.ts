@@ -12,6 +12,13 @@ export type { AreasGridProps } from "./AreasGrid";
 
 export { AreaDowntimesTable } from "./AreaDowntimesTable";
 
+// Catalog components
+export { AreasCatalog } from "./catalogs/AreasCatalog";
+export { DepartmentsCatalog } from "./catalogs/DepartmentsCatalog";
+export { TorretasCatalog } from "./catalogs/TorretasCatalog";
+export { TorretaColorsCatalog } from "./catalogs/TorretaColorsCatalog";
+export { ReceptorsCatalog } from "./catalogs/ReceptorsCatalog";
+
 export type {
   Message,
   SensorTypeValue,

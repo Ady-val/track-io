@@ -26,4 +26,3 @@ class ReceptorService {
 
 const receptorService = new ReceptorService();
 export default receptorService;
-
