@@ -1,0 +1,35 @@
+# Track.IO Backend - NestJS Dockerfile
+# Multi-stage build for optimized production image
+
+# Use Node.js 18 Alpine as base image
+FROM node:18-alpine
+
+# Install system dependencies for PostgreSQL client
+RUN apk add --no-cache postgresql-client
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better layer caching
+COPY package*.json ./
+COPY pnpm-lock.yaml ./
+
+# Install pnpm package manager globally
+RUN npm install -g pnpm
+
+# Install project dependencies
+# Using --frozen-lockfile ensures exact versions from lockfile
+RUN pnpm install --frozen-lockfile
+
+# Copy source code (node_modules excluded by .dockerignore)
+COPY . .
+
+# Build the NestJS application
+RUN pnpm run build
+
+# Expose the application port
+EXPOSE 3000
+
+# Start the application with crypto support flag
+# The --experimental-global-webcrypto flag is required for crypto operations
+CMD ["node", "--experimental-global-webcrypto", "dist/main.js"]

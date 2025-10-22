@@ -1,0 +1,43 @@
+# Track.IO Frontend - React + Vite Dockerfile
+# Multi-stage build for optimized production image
+
+# Build stage - Node.js environment for building
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better layer caching
+COPY package*.json ./
+COPY pnpm-lock.yaml ./
+
+# Install pnpm package manager globally
+RUN npm install -g pnpm
+
+# Install project dependencies
+# Using --frozen-lockfile ensures exact versions from lockfile
+RUN pnpm install --frozen-lockfile
+
+# Copy source code (node_modules excluded by .dockerignore)
+COPY . .
+
+# Set environment variables for build
+# These will be overridden by docker-compose.yml at runtime
+ENV VITE_API_BASE_URL=http://localhost:3000
+ENV VITE_API_URL=http://localhost:3000
+
+# Build the React application using Vite
+# Using npx vite build directly to handle TypeScript compilation
+RUN npx vite build
+
+# Production stage - Nginx for serving static files
+FROM nginx:alpine
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80 for web server
+EXPOSE 80
+
+# Start Nginx in foreground mode
+CMD ["nginx", "-g", "daemon off;"]

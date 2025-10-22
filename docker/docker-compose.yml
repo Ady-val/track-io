@@ -1,0 +1,92 @@
+# Track.IO - Docker Compose Configuration
+# This file orchestrates all services for the Track.IO application
+
+services:
+  # PostgreSQL Database Service
+  # Provides the main database for the application
+  postgres:
+    image: postgres:15-alpine
+    container_name: track_io_postgres
+    restart: unless-stopped
+    environment:
+      # Database configuration with default values
+      POSTGRES_DB: ${POSTGRES_DB:-track_io}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      # Expose database port to host
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+      # Mount database initialization scripts
+      - ../database/init:/docker-entrypoint-initdb.d
+    networks:
+      - track_io_network
+    healthcheck:
+      # Check if database is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-track_io}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Backend Service
+  # Provides the API and business logic
+  backend:
+    build:
+      context: ../backend-receptor
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: track_io_backend
+    restart: unless-stopped
+    environment:
+      # Node.js environment configuration
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${BACKEND_PORT:-3000}
+      # Database connection settings
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - DATABASE_NAME=${POSTGRES_DB:-track_io}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-track_io}
+      # CORS configuration for frontend access
+      - CORS_ORIGIN=http://localhost
+    ports:
+      # Expose backend API port to host
+      - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      # Wait for database to be ready
+      - postgres
+    networks:
+      - track_io_network
+
+  # React + Vite Frontend Service
+  # Provides the user interface
+  frontend:
+    build:
+      context: ../dashboard-test
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: track_io_frontend
+    restart: unless-stopped
+    environment:
+      # Frontend API configuration
+      - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-3000}
+      - VITE_API_URL=http://localhost:${BACKEND_PORT:-3000}
+    ports:
+      # Expose frontend port to host
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      # Wait for backend to be ready
+      - backend
+    networks:
+      - track_io_network
+
+# Named volumes for data persistence
+volumes:
+  # PostgreSQL data volume
+  postgres_data:
+
+# Custom network for service communication
+networks:
+  track_io_network:
+    driver: bridge
