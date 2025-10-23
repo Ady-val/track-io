@@ -1,4 +1,3 @@
-import apiClient from "../api";
 import type {
   AlertRule,
   AlertRuleResponse,
@@ -7,6 +6,8 @@ import type {
   UpdateAlertRuleData,
   AlertRuleFilters,
 } from "@/types/alertRule";
+
+import apiClient from "../api";
 
 class AlertRuleService {
   private readonly baseUrl = "/alert-rules";
@@ -24,6 +25,7 @@ class AlertRuleService {
     const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
     const response = await apiClient.get<AlertRuleResponse>(url);
+
     return response.data.data;
   }
 
@@ -31,6 +33,7 @@ class AlertRuleService {
     const response = await apiClient.get<AlertRuleSingleResponse>(
       `${this.baseUrl}/${id}`
     );
+
     return response.data.data;
   }
 
@@ -39,6 +42,7 @@ class AlertRuleService {
       this.baseUrl,
       data
     );
+
     return response.data.data;
   }
 
@@ -47,6 +51,7 @@ class AlertRuleService {
       `${this.baseUrl}/${id}`,
       data
     );
+
     return response.data.data;
   }
 
@@ -54,6 +59,7 @@ class AlertRuleService {
     const response = await apiClient.patch<AlertRuleSingleResponse>(
       `${this.baseUrl}/${id}/toggle`
     );
+
     return response.data.data;
   }
 
@@ -63,5 +69,5 @@ class AlertRuleService {
 }
 
 const alertRuleService = new AlertRuleService();
-export default alertRuleService;
 
+export default alertRuleService;

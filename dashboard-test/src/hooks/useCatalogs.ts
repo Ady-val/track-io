@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import apiClient from "../lib/api";
 
 // Types
@@ -57,18 +58,22 @@ const catalogApi = {
     name?: string;
   }) => {
     const response = await apiClient.get("/areas", { params });
+
     return response.data;
   },
   createArea: async (data: { name: string }) => {
     const response = await apiClient.post("/areas", data);
+
     return response.data;
   },
   updateArea: async (id: number, data: { name: string }) => {
     const response = await apiClient.patch(`/areas/${id}`, data);
+
     return response.data;
   },
   deleteArea: async (id: number) => {
     const response = await apiClient.delete(`/areas/${id}`);
+
     return response.data;
   },
 
@@ -79,28 +84,34 @@ const catalogApi = {
     name?: string;
   }) => {
     const response = await apiClient.get("/departments", { params });
+
     return response.data;
   },
   createDepartment: async (data: { name: string }) => {
     const response = await apiClient.post("/departments", data);
+
     return response.data;
   },
   updateDepartment: async (id: number, data: { name: string }) => {
     const response = await apiClient.patch(`/departments/${id}`, data);
+
     return response.data;
   },
   deleteDepartment: async (id: number) => {
     const response = await apiClient.delete(`/departments/${id}`);
+
     return response.data;
   },
 
   // Torretas
   getTorretas: async (params?: { active?: boolean }) => {
     const response = await apiClient.get("/torretas", { params });
+
     return response.data;
   },
   createTorreta: async (data: { name: string; description?: string }) => {
     const response = await apiClient.post("/torretas", data);
+
     return response.data;
   },
   updateTorreta: async (
@@ -108,16 +119,19 @@ const catalogApi = {
     data: { name: string; description?: string }
   ) => {
     const response = await apiClient.put(`/torretas/${id}`, data);
+
     return response.data;
   },
   deleteTorreta: async (id: number) => {
     const response = await apiClient.delete(`/torretas/${id}`);
+
     return response.data;
   },
 
   // Torreta Colors
   getTorretaColors: async () => {
     const response = await apiClient.get("/torreta-colors");
+
     return response.data;
   },
   createTorretaColor: async (data: {
@@ -127,6 +141,7 @@ const catalogApi = {
     order: number;
   }) => {
     const response = await apiClient.post("/torreta-colors", data);
+
     return response.data;
   },
   updateTorretaColor: async (
@@ -139,20 +154,24 @@ const catalogApi = {
     }
   ) => {
     const response = await apiClient.put(`/torreta-colors/${id}`, data);
+
     return response.data;
   },
   deleteTorretaColor: async (id: number) => {
     const response = await apiClient.delete(`/torreta-colors/${id}`);
+
     return response.data;
   },
 
   // Receptors
   getReceptors: async (params?: { active?: boolean }) => {
     const response = await apiClient.get("/receptors", { params });
+
     return response.data;
   },
   createReceptor: async (data: { externalId: string; name: string }) => {
     const response = await apiClient.post("/receptors", data);
+
     return response.data;
   },
   updateReceptor: async (
@@ -160,10 +179,12 @@ const catalogApi = {
     data: { externalId: string; name: string }
   ) => {
     const response = await apiClient.put(`/receptors/${id}`, data);
+
     return response.data;
   },
   deleteReceptor: async (id: number) => {
     const response = await apiClient.delete(`/receptors/${id}`);
+
     return response.data;
   },
 };

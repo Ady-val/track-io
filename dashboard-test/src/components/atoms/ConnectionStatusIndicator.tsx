@@ -65,6 +65,3 @@ export const ConnectionStatusIndicator: React.FC<
     </div>
   );
 };
-
-
-

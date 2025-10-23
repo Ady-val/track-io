@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Card, CardBody, Text, Spinner } from "@components/atoms";
-import { FaChevronLeft, FaChevronDown } from "react-icons/fa";
 
-interface CollapsibleSectionProps {
+import { FaChevronLeft } from "react-icons/fa";
+
+import { Spinner } from "@components/atoms";
+
+export interface CollapsibleSectionProps {
   title: string;
   children: React.ReactNode;
   isLoading?: boolean;
@@ -21,6 +23,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
   const handleToggle = () => {
     const newExpanded = !isExpanded;
+
     setIsExpanded(newExpanded);
     onToggle?.(newExpanded);
   };
@@ -34,7 +37,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       >
         <h2 className="text-2xl font-bold text-slate-100">{title}</h2>
         <div className="flex items-center gap-2">
-          {isLoading && <Spinner size="sm" color="blue" />}
+          {isLoading && <Spinner color="primary" size="sm" />}
           <div
             className={`transform transition-transform duration-200 ${
               isExpanded ? "rotate-90" : "rotate-0"
@@ -50,6 +53,3 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     </div>
   );
 };
-
-
-

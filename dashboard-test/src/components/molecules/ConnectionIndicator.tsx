@@ -1,4 +1,5 @@
 import type React from "react";
+
 import { Text } from "@components/atoms";
 
 export interface ConnectionIndicatorProps {

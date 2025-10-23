@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/molecules";
 import { AreaCard } from "@/components/molecules/AreaCard";
 import { useAreas } from "@/hooks/useAreas";
 import type { Area } from "@/types/area";
+import type { DashboardAreaData } from "@/types/dashboard";
 
 export interface AreasGridProps {
   onAreaClick?: (area: Area) => void;
@@ -83,9 +84,20 @@ export const AreasGrid: React.FC<AreasGridProps> = ({
         />
       ) : (
         <div className="flex flex-wrap gap-4 justify-start">
-          {areas.map((area) => (
-            <AreaCard key={area.id} area={area} onClick={onAreaClick} />
-          ))}
+          {areas.map((area) => {
+            const dashboardArea: DashboardAreaData = {
+              area: area.name,
+              eventsTime: new Date().toISOString(),
+            };
+
+            return (
+              <AreaCard
+                key={area.id}
+                area={dashboardArea}
+                onClick={() => onAreaClick?.(area)}
+              />
+            );
+          })}
         </div>
       )}
     </div>

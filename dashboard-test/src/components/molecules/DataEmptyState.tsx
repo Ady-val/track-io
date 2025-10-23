@@ -1,9 +1,11 @@
 import React from "react";
+
 import {
   FaDatabase,
   FaExclamationTriangle,
   FaInfoCircle,
 } from "react-icons/fa";
+
 import { Button, Text } from "@components/atoms";
 
 interface DataEmptyStateProps {
@@ -28,6 +30,7 @@ export const DataEmptyState: React.FC<DataEmptyStateProps> = ({
   const getIcon = () => {
     if (icon) {
       const IconComponent = icon;
+
       return <IconComponent className="w-16 h-16 mx-auto mb-4 text-gray-400" />;
     }
 
@@ -59,18 +62,27 @@ export const DataEmptyState: React.FC<DataEmptyStateProps> = ({
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
       {getIcon()}
-      <Text variant="h3" className={`mb-2 ${getTextColor()}`}>
+      <Text className={`mb-2 ${getTextColor()}`} variant="h3">
         {title}
       </Text>
-      <Text variant="body" className="mb-6 max-w-md" color="muted">
+      <Text className="mb-6 max-w-md" color="muted" variant="body">
         {description}
       </Text>
       {action && (
-        <Button variant={action.variant || "primary"} onClick={action.onClick}>
+        <Button
+          color={action.variant === "primary" ? "primary" : undefined}
+          variant={
+            action.variant === "primary"
+              ? "solid"
+              : action.variant === "secondary"
+                ? "bordered"
+                : "flat"
+          }
+          onClick={action.onClick}
+        >
           {action.label}
         </Button>
       )}
     </div>
   );
 };
-

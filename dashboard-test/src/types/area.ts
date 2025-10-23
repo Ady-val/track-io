@@ -16,7 +16,3 @@ export interface AreasResponse {
     total: number;
   };
 }
-
-
-
-

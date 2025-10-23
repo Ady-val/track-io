@@ -1,15 +1,17 @@
 import React, { useState } from "react";
+
 import {
   useReceptors,
   useCreateReceptor,
   useUpdateReceptor,
   useDeleteReceptor,
-  Receptor,
+  type Receptor,
 } from "@/hooks/useCatalogs";
-import { DataTable, TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
+
 import { Button } from "../../atoms/Button";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
+import { DataTable, type TableColumn } from "../../molecules/DataTable";
+import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function ReceptorsCatalog() {
@@ -34,14 +36,14 @@ export function ReceptorsCatalog() {
   const updateReceptorMutation = useUpdateReceptor();
   const deleteReceptorMutation = useDeleteReceptor();
 
-  const receptors = receptorsData?.data || [];
+  const receptors = receptorsData?.data ?? [];
   const filteredReceptors = receptors.filter(
-    (receptor) =>
+    (receptor: { name: string; externalId: string }) =>
       receptor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       receptor.externalId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const columns: TableColumn<Receptor>[] = [
+  const columns: Array<TableColumn<Receptor>> = [
     {
       id: "id",
       label: "ID",
@@ -97,6 +99,7 @@ export function ReceptorsCatalog() {
     e.preventDefault();
 
     const errors: { externalId?: string; name?: string } = {};
+
     if (!formData.externalId.trim()) {
       errors.externalId = "El ID externo es requerido";
     }
@@ -106,6 +109,7 @@ export function ReceptorsCatalog() {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+
       return;
     }
 
@@ -154,18 +158,18 @@ export function ReceptorsCatalog() {
       <div className="flex justify-between items-center">
         <div className="flex-1 max-w-lg">
           <input
-            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Buscar receptores..."
+            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <Button
-          onClick={handleCreate}
+          className="ml-4"
           color="primary"
           size="lg"
-          className="ml-4"
+          onClick={handleCreate}
         >
           Crear Receptor
         </Button>
@@ -173,63 +177,63 @@ export function ReceptorsCatalog() {
 
       {/* Table */}
       <DataTable
-        data={filteredReceptors}
         columns={columns}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        loading={isLoading}
+        data={filteredReceptors}
         emptyMessage="No hay receptores registrados"
+        loading={isLoading}
         maxHeight="max-h-96"
+        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
 
       {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
-        onClose={handleCancel}
         title={isCreateModalOpen ? "Crear Receptor" : "Editar Receptor"}
+        onClose={handleCancel}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <FormField
+            required
+            error={formErrors.externalId}
             label="ID Externo"
             name="externalId"
+            placeholder="Ingresa el ID externo del receptor"
             value={formData.externalId}
             onChange={(value) =>
               setFormData({ ...formData, externalId: value as string })
             }
-            placeholder="Ingresa el ID externo del receptor"
-            required
-            error={formErrors.externalId}
           />
 
           <FormField
+            required
+            error={formErrors.name}
             label="Nombre"
             name="name"
+            placeholder="Ingresa el nombre del receptor"
             value={formData.name}
             onChange={(value) =>
               setFormData({ ...formData, name: value as string })
             }
-            placeholder="Ingresa el nombre del receptor"
-            required
-            error={formErrors.name}
           />
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
               size="lg"
+              type="button"
+              variant="bordered"
+              onClick={handleCancel}
             >
               Cancelar
             </Button>
             <Button
-              type="submit"
               color="primary"
-              size="lg"
               disabled={
                 createReceptorMutation.isPending ||
                 updateReceptorMutation.isPending
               }
+              size="lg"
+              type="submit"
             >
               {createReceptorMutation.isPending ||
               updateReceptorMutation.isPending
@@ -244,15 +248,15 @@ export function ReceptorsCatalog() {
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
+        cancelText="Cancelar"
+        confirmText="Eliminar"
         isOpen={isDeleteModalOpen}
+        loading={deleteReceptorMutation.isPending}
+        message={`¿Estás seguro de querer eliminar "${selectedReceptor?.name}"?`}
+        title="Eliminar Receptor"
+        variant="danger"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Eliminar Receptor"
-        message={`¿Estás seguro de querer eliminar "${selectedReceptor?.name}"?`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deleteReceptorMutation.isPending}
       />
     </div>
   );

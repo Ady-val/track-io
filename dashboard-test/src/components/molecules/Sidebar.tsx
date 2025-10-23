@@ -6,6 +6,7 @@ import {
   FaIndustry,
   FaClock,
   FaDatabase,
+  FaMicrochip,
 } from "react-icons/fa6";
 import { PiWaveSineBold } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
@@ -41,6 +42,11 @@ const sidebarItems: SidebarItem[] = [
     path: "/area-downtimes",
     icon: FaClock,
     label: "Tiempos de Paro",
+  },
+  {
+    path: "/devices",
+    icon: FaMicrochip,
+    label: "Dispositivos",
   },
   {
     path: "/catalogs",

@@ -4,11 +4,13 @@
 # Node.js dependencies - NEVER copy from host, always install in container
 node_modules/
 **/node_modules/
+**/node_modules/**
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
+.pnpm/
 
 # Build artifacts - These will be generated during build
 dist/

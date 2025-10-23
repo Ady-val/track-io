@@ -16,6 +16,7 @@ import {
 import annotationPlugin from "chartjs-plugin-annotation";
 
 import { Card, CardBody, Text } from "@components/atoms";
+
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
@@ -117,7 +118,7 @@ export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
             borderWidth: 1,
             callbacks: {
               label: function (context) {
-                return `Valor: ${context.parsed.y.toFixed(2)} ${config.unit}`;
+                return `Valor: ${context.parsed.y?.toFixed(2) ?? "0.00"} ${config.unit}`;
               },
             },
           },

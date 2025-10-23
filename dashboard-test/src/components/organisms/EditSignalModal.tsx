@@ -1,0 +1,160 @@
+import type { Device } from "../../types/device";
+
+import React, { useState, useEffect } from "react";
+
+import { FaMicrochip } from "react-icons/fa";
+
+import { useDepartments } from "../../hooks/useCatalogs";
+import deviceSignalService from "../../lib/services/device-signal.service";
+import { Button } from "../atoms/Button";
+import { Input } from "../atoms/Input";
+import { Select } from "../atoms/Select";
+
+import { Modal } from "./Modal";
+
+interface EditSignalModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  signal: any;
+  device: Device | null;
+}
+
+export const EditSignalModal: React.FC<EditSignalModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  signal,
+  device,
+}) => {
+  const [name, setName] = useState("");
+  const [externalValueId, setExternalValueId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { data: departmentsData } = useDepartments();
+  const departments = departmentsData?.data ?? [];
+
+  useEffect(() => {
+    if (signal && isOpen) {
+      setName(signal.name);
+      setExternalValueId(signal.externalValueId);
+      setDepartmentId(signal.departmentId?.toString() ?? "");
+    }
+  }, [signal, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signal || !name || !externalValueId || !departmentId) return;
+
+    setIsLoading(true);
+    try {
+      await deviceSignalService.update(signal.id, {
+        name,
+        externalValueId,
+        departmentId: Number(departmentId),
+      });
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error("Error updating signal:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!signal || !device) return null;
+
+  return (
+    <Modal isOpen={isOpen} size="md" title="Editar Señal" onClose={onClose}>
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="flex items-center space-x-2 mb-4">
+          <FaMicrochip className="w-5 h-5 text-green-500" />
+          <h3 className="text-lg font-semibold text-slate-200">
+            Editar Señal de {device.name}
+          </h3>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="edit-signal-name"
+              className="block text-sm font-medium text-slate-300 mb-2"
+            >
+              Nombre del Botón
+            </label>
+            <Input
+              id="edit-signal-name"
+              required
+              placeholder="Ej: Botón 1"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="edit-signal-external-value"
+              className="block text-sm font-medium text-slate-300 mb-2"
+            >
+              External Value ID
+            </label>
+            <Input
+              id="edit-signal-external-value"
+              required
+              placeholder="Ej: 432"
+              value={externalValueId}
+              onChange={(e) => setExternalValueId(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="edit-signal-department"
+              className="block text-sm font-medium text-slate-300 mb-2"
+            >
+              Departamento
+            </label>
+            <Select
+              id="edit-signal-department"
+              required
+              value={departmentId}
+              onChange={(e) => setDepartmentId(e.target.value)}
+            >
+              <option value="">Seleccionar departamento</option>
+              {departments.map((dept: any) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
+          <Button
+            className="px-6 py-2 font-semibold"
+            color="default"
+            disabled={isLoading}
+            size="md"
+            type="button"
+            variant="solid"
+            onPress={onClose}
+          >
+            Cancelar
+          </Button>
+          <Button
+            className="px-6 py-2 font-semibold"
+            color="primary"
+            disabled={isLoading || !name || !externalValueId || !departmentId}
+            size="md"
+            type="submit"
+            variant="solid"
+          >
+            {isLoading ? "Guardando..." : "Guardar Cambios"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+};

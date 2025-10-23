@@ -2,8 +2,8 @@ import type { RawDataItem } from "../types";
 
 import type React from "react";
 
-import { PiWaveSineBold } from "react-icons/pi";
 import { FaRulerCombined } from "react-icons/fa6";
+import { PiWaveSineBold } from "react-icons/pi";
 
 import { Card, CardBody, Text, Chip } from "@components/atoms";
 import { EmptyState } from "@components/molecules";

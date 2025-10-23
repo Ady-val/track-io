@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+
 import type { DashboardMeasurement } from "@/types/dashboard";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export const useDashboardMeasurements = () => {
   const [dashboards, setDashboards] = useState<DashboardMeasurement[]>([]);
@@ -20,10 +21,12 @@ export const useDashboardMeasurements = () => {
       }
 
       const result = await response.json();
-      setDashboards(result.data || []);
+
+      setDashboards(result.data ?? []);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch dashboards";
+
       setError(errorMessage);
       console.error("Error fetching dashboard measurements:", err);
     } finally {
@@ -42,5 +45,3 @@ export const useDashboardMeasurements = () => {
     refetch: fetchDashboards,
   };
 };
-
-

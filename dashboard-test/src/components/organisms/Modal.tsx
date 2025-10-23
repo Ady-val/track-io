@@ -1,8 +1,9 @@
 import type React from "react";
 import { useEffect } from "react";
 
-import { Button, Card, CardBody, Text } from "@components/atoms";
 import { FaXmark } from "react-icons/fa6";
+
+import { Card, CardBody, Text } from "@components/atoms";
 
 export interface ModalProps {
   isOpen: boolean;

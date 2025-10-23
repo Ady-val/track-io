@@ -1,10 +1,13 @@
 import type React from "react";
 import { useState } from "react";
+
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 
 import { Button, Text, Input, Select } from "@components/atoms";
-import { Modal } from "../Modal";
+
 import type { Sensor, SensorType, Operator } from "@/types";
+
+import { Modal } from "../Modal";
 
 export interface CreateAlertRuleModalProps {
   isOpen: boolean;
@@ -33,7 +36,7 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
 }) => {
   const [ruleName, setRuleName] = useState("");
   const [selectedSensorId, setSelectedSensorId] = useState<number>(
-    sensors.length > 0 ? sensors[0].id : 1
+    sensors.length > 0 && sensors[0] ? sensors[0].id : 1
   );
   const [mode, setMode] = useState<"setpoint" | "window">("setpoint");
   const [operator, setOperator] = useState(">");
@@ -43,7 +46,7 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
 
   const handleClose = () => {
     setRuleName("");
-    setSelectedSensorId(sensors.length > 0 ? sensors[0].id : 1);
+    setSelectedSensorId(sensors.length > 0 && sensors[0] ? sensors[0].id : 1);
     setMode("setpoint");
     setOperator(">");
     setSetpoint("");
@@ -55,16 +58,19 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
   const handleCreate = () => {
     if (!ruleName.trim()) {
       alert("Por favor ingresa un nombre para la condición");
+
       return;
     }
 
     if (mode === "setpoint" && !setpoint) {
       alert("Por favor ingresa un valor para el setpoint");
+
       return;
     }
 
     if (mode === "window" && (!minValue || !maxValue)) {
       alert("Por favor ingresa los valores mínimo y máximo");
+
       return;
     }
 
@@ -96,7 +102,6 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
               Nombre de la Condición
             </Text>
             <Input
-              autoFocus
               placeholder="Ej: Temperatura Alta Tanque 1"
               value={ruleName}
               variant="bordered"

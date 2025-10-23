@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const apiBaseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 export const apiClient = axios.create({
   baseURL: apiBaseURL,
@@ -25,6 +25,7 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     console.error("API Error:", error);
+
     return Promise.reject(error);
   }
 );

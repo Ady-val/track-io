@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Button } from "../atoms/Button";
 import { Icon } from "../atoms/Icon";
 
@@ -13,7 +14,7 @@ export interface TableColumn<T = any> {
 
 export interface DataTableProps<T = any> {
   data: T[];
-  columns: TableColumn<T>[];
+  columns: Array<TableColumn<T>>;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   loading?: boolean;
@@ -35,7 +36,7 @@ export function DataTable<T extends { id: number | string }>({
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -62,7 +63,7 @@ export function DataTable<T extends { id: number | string }>({
                 {column.label}
               </th>
             ))}
-            {(onEdit || onDelete) && (
+            {(onEdit ?? onDelete) && (
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                 Acciones
               </th>
@@ -70,7 +71,7 @@ export function DataTable<T extends { id: number | string }>({
           </tr>
         </thead>
         <tbody className="bg-slate-700 divide-y divide-slate-600">
-          {data.map((row, index) => (
+          {data.map((row) => (
             <tr key={row.id} className="hover:bg-slate-600">
               {columns.map((column) => (
                 <td
@@ -79,30 +80,30 @@ export function DataTable<T extends { id: number | string }>({
                 >
                   {column.component
                     ? column.component(row[column.key], row)
-                    : String(row[column.key] || "")}
+                    : String(row[column.key] ?? "")}
                 </td>
               ))}
-              {(onEdit || onDelete) && (
+              {(onEdit ?? onDelete) && (
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
                     {onEdit && (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit(row)}
                         className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
+                        size="sm"
+                        variant="bordered"
+                        onClick={() => onEdit(row)}
                       >
-                        <Icon name="edit" className="w-4 h-4" />
+                        <Icon className="w-4 h-4" name="edit" />
                       </Button>
                     )}
                     {onDelete && (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDelete(row)}
                         className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
+                        size="sm"
+                        variant="bordered"
+                        onClick={() => onDelete(row)}
                       >
-                        <Icon name="trash" className="w-4 h-4" />
+                        <Icon className="w-4 h-4" name="trash" />
                       </Button>
                     )}
                   </div>

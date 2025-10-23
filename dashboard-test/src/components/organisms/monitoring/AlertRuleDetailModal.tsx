@@ -1,18 +1,10 @@
 import type React from "react";
 import { useState, useEffect } from "react";
-import {
-  FaPenToSquare,
-  FaPencil,
-  FaTrash,
-  FaTrashCan,
-  FaCircleCheck,
-  FaCircleXmark,
-  FaChevronDown,
-  FaChevronUp,
-} from "react-icons/fa6";
+
+import { FaPencil, FaTrash, FaChevronDown, FaChevronUp } from "react-icons/fa6";
 
 import { Button, Text, Chip, Input, Select } from "@components/atoms";
-import { Modal } from "../Modal";
+
 import type {
   AlertRule,
   Sensor,
@@ -25,8 +17,11 @@ import type {
   Receptor,
   UsuarioCorreo,
 } from "@/types";
-import { MessageForm } from "./MessageForm";
+
+import { Modal } from "../Modal";
+
 import { MessageCard } from "./MessageCard";
+import { MessageForm } from "./MessageForm";
 
 export interface AlertRuleDetailModalProps {
   isOpen: boolean;
@@ -72,7 +67,6 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
   getSensorIcon,
   getColorValue,
   onClose,
-  onEdit,
   onDelete,
   onToggleEnabled,
   onCreateMessage,
@@ -90,10 +84,11 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
   const [maxValue, setMaxValue] = useState("");
   const [showAddMessageForm, setShowAddMessageForm] = useState(false);
   const [newMessageData, setNewMessageData] = useState<NewMessageData>({
-    tipoReceptor: "",
+    tipoReceptor: "reloj" as "reloj" | "correo" | "torreta",
     receptor: "",
     receptorNombre: "",
     message: "",
+    grupo: "",
   });
   const [collapsedMessages, setCollapsedMessages] = useState(false);
 
@@ -115,27 +110,6 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
 
   const currentSensor = sensors.find((s) => s.id === rule.measurementId);
 
-  const handleSave = () => {
-    onEdit(
-      rule.id,
-      ruleName,
-      selectedSensorId,
-      mode,
-      operator,
-      setpoint,
-      minValue,
-      maxValue
-    );
-    setIsEditing(false);
-  };
-
-  const handleDelete = () => {
-    if (confirm("¿Estás seguro de eliminar esta condición de monitoreo?")) {
-      onDelete(rule.id);
-      onClose();
-    }
-  };
-
   const handleCreateMessage = () => {
     if (!newMessageData.tipoReceptor || !newMessageData.receptor) {
       return;
@@ -150,10 +124,11 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
 
     onCreateMessage(rule.id, newMessageData);
     setNewMessageData({
-      tipoReceptor: "",
+      tipoReceptor: "reloj" as "reloj" | "correo" | "torreta",
       receptor: "",
       receptorNombre: "",
       message: "",
+      grupo: "",
     });
     setShowAddMessageForm(false);
   };
@@ -444,13 +419,13 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
               </Chip>
             </div>
             <Button
+              className="text-white"
               color="success"
               size="sm"
-              variant="solid"
               startContent={
                 <span className="text-white text-lg font-bold">+</span>
               }
-              className="text-white"
+              variant="solid"
               onClick={() => setShowAddMessageForm(true)}
             >
               Agregar

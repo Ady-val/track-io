@@ -1,7 +1,6 @@
-import React from "react";
-import { Modal } from "../organisms/Modal";
 import { Button } from "../atoms/Button";
 import { Icon } from "../atoms/Icon";
+import { Modal } from "../organisms/Modal";
 
 export interface ConfirmationModalProps {
   isOpen: boolean;
@@ -58,11 +57,11 @@ export function ConfirmationModal({
   const styles = getVariantStyles();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="sm">
+    <Modal isOpen={isOpen} size="sm" title={title} onClose={onClose}>
       <div className="p-6">
         <div className="flex items-center mb-4">
           <div className={`flex-shrink-0 ${styles.iconColor}`}>
-            <Icon name={styles.icon} className="w-6 h-6" />
+            <Icon className="w-6 h-6" name={styles.icon} />
           </div>
           <div className="ml-3">
             <h3 className="text-lg font-medium text-gray-900">{title}</h3>
@@ -74,17 +73,17 @@ export function ConfirmationModal({
         </div>
 
         <div className="flex justify-end space-x-3">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button disabled={loading} variant="bordered" onClick={onClose}>
             {cancelText}
           </Button>
           <Button
-            onClick={onConfirm}
-            disabled={loading}
             className={styles.confirmButton}
+            disabled={loading}
+            onClick={onConfirm}
           >
             {loading ? (
               <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                 Procesando...
               </div>
             ) : (
@@ -96,4 +95,3 @@ export function ConfirmationModal({
     </Modal>
   );
 }
-

@@ -1,22 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
+
 import { useWebSocket } from "@/contexts/WebSocketContext";
-import type {
-  MeasurementValueState,
-  MeasurementValueEvent,
-} from "@/types/dashboard";
+import type { MeasurementValueState } from "@/types/dashboard";
 
 export const useRealtimeMeasurementValues = () => {
   const { socket } = useWebSocket();
-  const [values, setValues] = useState<MeasurementValueState>({});
+  const [values, setValues] = useState<MeasurementValueState>(
+    {} as MeasurementValueState
+  );
   const [history, setHistory] = useState<Record<number, number[]>>({});
 
   const handleMeasurementValue = useCallback((message: any) => {
     console.log("📊 [WebSocket] Received new_measurement_value:", message);
 
-    const payload = message.data?.data || message.data;
+    const payload = message.data?.data ?? message.data;
 
-    if (!payload || !payload.measurementId) {
+    if (!payload?.measurementId) {
       console.error("⚠️ Invalid message format:", message);
+
       return;
     }
 
@@ -37,8 +38,9 @@ export const useRealtimeMeasurementValues = () => {
     }));
 
     setHistory((prev) => {
-      const currentHistory = prev[measurementId] || [];
+      const currentHistory = prev[measurementId] ?? [];
       const newHistory = [...currentHistory, newValue].slice(-20); // Mantener solo los últimos 20
+
       return {
         ...prev,
         [measurementId]: newHistory,
@@ -49,6 +51,7 @@ export const useRealtimeMeasurementValues = () => {
   useEffect(() => {
     if (!socket) {
       console.log("⚠️ Socket not available yet");
+
       return;
     }
 
@@ -57,6 +60,7 @@ export const useRealtimeMeasurementValues = () => {
     const debugListener = (...args: any[]) => {
       console.log("🔔 [DEBUG] Received event:", args);
     };
+
     socket.onAny(debugListener);
 
     socket.on("new_measurement_value", handleMeasurementValue);
@@ -75,8 +79,9 @@ export const useRealtimeMeasurementValues = () => {
   return {
     values,
     history,
-    getValue: (measurementId: number) => values[measurementId]?.value,
-    getTimestamp: (measurementId: number) => values[measurementId]?.timestamp,
-    getHistory: (measurementId: number) => history[measurementId] || [],
+    getValue: (measurementId: number) => (values as any)[measurementId]?.value,
+    getTimestamp: (measurementId: number) =>
+      (values as any)[measurementId]?.timestamp,
+    getHistory: (measurementId: number) => history[measurementId] ?? [],
   };
 };

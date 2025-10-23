@@ -1,6 +1,8 @@
 import type React from "react";
+
 import { Card, CardBody, Button, Input } from "@components/atoms";
 import { SelectField } from "@components/molecules";
+
 import type { NewMessageData, Receptor, UsuarioCorreo } from "@/types";
 
 export interface MessageFormProps {
@@ -35,7 +37,11 @@ export const MessageForm: React.FC<MessageFormProps> = ({
             id="tipo-receptor"
             label="Tipo de Receptor"
             value={messageData.tipoReceptor}
-            onChange={(e) => onUpdate({ tipoReceptor: e.target.value })}
+            onChange={(e) =>
+              onUpdate({
+                tipoReceptor: e.target.value as "reloj" | "correo" | "torreta",
+              })
+            }
           >
             <option value="">Seleccionar tipo...</option>
             <option value="reloj">Reloj</option>

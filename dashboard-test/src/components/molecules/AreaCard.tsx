@@ -4,7 +4,7 @@ import React from "react";
 
 import { FaClock } from "react-icons/fa";
 
-interface AreaCardProps {
+export interface AreaCardProps {
   area: DashboardAreaData;
   onClick?: () => void;
   className?: string;

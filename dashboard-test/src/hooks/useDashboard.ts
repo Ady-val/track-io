@@ -6,7 +6,7 @@ import type {
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-import { DashboardService } from "../lib/services/dashboard.service";
+import DashboardService from "../lib/services/dashboard.service";
 
 export const useDashboard = () => {
   const [areasData, setAreasData] = useState<DashboardAreaData[]>([]);
@@ -94,6 +94,7 @@ export const useDashboard = () => {
 
       if (activeEvents.length === 0) {
         areaOutageStartTimeRef.current[areaName] = null;
+
         return "0h 0m 0s";
       }
 
@@ -103,6 +104,7 @@ export const useDashboard = () => {
         const oldestActiveEvent = activeEvents.reduce((oldest, current) => {
           const oldestStart = new Date(oldest.startedAt);
           const currentStart = new Date(current.startedAt);
+
           return currentStart < oldestStart ? current : oldest;
         });
 
@@ -111,6 +113,7 @@ export const useDashboard = () => {
       }
 
       const now = new Date();
+
       if (!outageStartTime) {
         return "0h 0m 0s";
       }
@@ -130,6 +133,7 @@ export const useDashboard = () => {
 
       if (response.success) {
         const areasDataReversed = response.data.reverse();
+
         setAreasData(areasDataReversed);
         baseAreasDataRef.current = areasDataReversed;
         setHeaders(response.headers);
@@ -233,6 +237,7 @@ export const useDashboard = () => {
         ...area,
         eventsTime: calculateEventTimeForArea(area.area),
       }));
+
       setAreasData(updatedAreas);
     }
   }, [calculateEventTimeForArea]);

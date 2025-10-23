@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Icon } from "../atoms/Icon";
 
 export interface PaginationProps {
@@ -70,15 +71,15 @@ export function Pagination({
       <div className="flex items-center space-x-1">
         {/* Previous Button */}
         <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
           className={`p-2 rounded-md text-sm font-medium transition-colors ${
             currentPage === 1
               ? "text-slate-500 cursor-not-allowed"
               : "text-slate-400 hover:text-white hover:bg-slate-700"
           }`}
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
         >
-          <Icon name="chevron-left" className="h-4 w-4" />
+          <Icon className="h-4 w-4" name="chevron-left" />
         </button>
 
         {/* Page Numbers */}
@@ -89,12 +90,12 @@ export function Pagination({
                 <span className="px-3 py-2 text-sm text-slate-500">...</span>
               ) : (
                 <button
-                  onClick={() => onPageChange(page as number)}
                   className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     currentPage === page
                       ? "bg-blue-600 text-white"
                       : "text-slate-400 hover:text-white hover:bg-slate-700"
                   }`}
+                  onClick={() => onPageChange(page as number)}
                 >
                   {page}
                 </button>
@@ -105,15 +106,15 @@ export function Pagination({
 
         {/* Next Button */}
         <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
           className={`p-2 rounded-md text-sm font-medium transition-colors ${
             currentPage === totalPages
               ? "text-slate-500 cursor-not-allowed"
               : "text-slate-400 hover:text-white hover:bg-slate-700"
           }`}
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
         >
-          <Icon name="chevron-right" className="h-4 w-4" />
+          <Icon className="h-4 w-4" name="chevron-right" />
         </button>
       </div>
     </div>

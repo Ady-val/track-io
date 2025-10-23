@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState } from "react";
+
 import {
   FaPenToSquare,
   FaTrashCan,
@@ -25,7 +26,7 @@ import type {
   SensorType,
   SensorTypeValue,
   Sensor,
-} from "../types";
+} from "@/types/alertRule";
 
 export interface AlertRuleCardProps {
   rule: AlertRule;
@@ -65,7 +66,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
 }) => {
   const [ruleName, setRuleName] = useState<string>(rule.name);
   const [selectedSensorId, setSelectedSensorId] = useState<number>(
-    rule.sensorId
+    rule.measurementId
   );
   const [mode, setMode] = useState<"setpoint" | "window">(rule.mode);
   const [operator, setOperator] = useState<string>(rule.operator ?? ">");
@@ -80,7 +81,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
   );
   const [collapsed, setCollapsed] = useState<boolean>(false);
 
-  const currentSensor = sensors.find((s) => s.id === rule.sensorId);
+  const currentSensor = sensors.find((s) => s.id === rule.measurementId);
 
   const getConditionText = (rule: AlertRule): string => {
     if (rule.mode === "setpoint") {
@@ -310,7 +311,7 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                             value={operator}
                             onChange={(e) => setOperator(e.target.value)}
                           >
-                            {operators.map((op) => (
+                            {operators.map((op: any) => (
                               <option key={op.value} value={op.value}>
                                 {op.label}
                               </option>

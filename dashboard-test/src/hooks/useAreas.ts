@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+
 import areaService, { type AreaFilters } from "@/lib/services/area.service";
 import type { Area } from "@/types/area";
 
@@ -27,11 +28,13 @@ export const useAreas = (initialFilters?: AreaFilters): UseAreasReturn => {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
+
       setAreas(sortedAreas);
       setTotal(response.total);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Error al cargar las áreas";
+
       setError(errorMessage);
       console.error("Error fetching areas:", err);
     } finally {

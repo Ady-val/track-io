@@ -30,3 +30,11 @@ export type {
   Measurement as MeasurementType,
   CreateMeasurementData,
 } from "./measurement";
+
+export type { IconSvgProps } from "./IconSvgProps";
+export type { Device, CreateDeviceData, DeviceFilters } from "./device";
+export type {
+  DeviceSignal,
+  CreateDeviceSignalData,
+  DeviceSignalFilters,
+} from "./device-signal";

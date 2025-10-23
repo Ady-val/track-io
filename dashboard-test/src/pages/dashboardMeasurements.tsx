@@ -83,13 +83,13 @@ export default function DashboardMeasurementsPage() {
                   <MeasurementChart
                     key={dashboard.id}
                     history={getHistory(dashboard.measurementId)}
-                    maxValue={dashboard.maxValue}
-                    minValue={dashboard.minValue}
+                    maxValue={dashboard.maxValue ?? 100}
+                    minValue={dashboard.minValue ?? 0}
                     subtitle={dashboard.measurement.externalId}
                     timestamp={getTimestamp(dashboard.measurementId)}
                     title={dashboard.measurement.name}
                     type={dashboard.measurement.type}
-                    value={values[dashboard.measurementId]?.value}
+                    value={(values as any)[dashboard.measurementId]?.value}
                   />
                 ))}
               </div>

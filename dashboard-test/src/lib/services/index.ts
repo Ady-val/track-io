@@ -7,3 +7,5 @@ export { default as areaService } from "./area.service";
 export { default as areaDowntimeService } from "./areaDowntime.service";
 export { default as dashboardService } from "./dashboard.service";
 export { default as measurementService } from "./measurement.service";
+export { default as deviceService } from "./device.service";
+export { default as deviceSignalService } from "./device-signal.service";

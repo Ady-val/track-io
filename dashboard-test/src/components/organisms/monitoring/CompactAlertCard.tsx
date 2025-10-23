@@ -16,7 +16,6 @@ export interface CompactAlertCardProps {
 export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
   rule,
   sensor,
-  sensorTypes,
   getSensorIcon,
   onToggleEnabled,
   onClick,
@@ -48,14 +47,14 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
           </div>
           <div
             className="chip-toggle"
+            role="button"
+            tabIndex={0}
             onClick={handleToggleClick}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 handleToggleClick(e as any);
               }
             }}
-            role="button"
-            tabIndex={0}
           >
             <div
               className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium transition-colors ${
@@ -71,7 +70,7 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
 
         {/* Título */}
         <div className="mb-3">
-          <Text className="line-clamp-2 min-h-[2.5rem]" variant="h5">
+          <Text className="line-clamp-2 min-h-[2.5rem]" variant="h4">
             {rule.name}
           </Text>
         </div>

@@ -1,5 +1,6 @@
-import apiClient from "../api";
 import type { Area, AreasResponse } from "@/types/area";
+
+import apiClient from "../api";
 
 export interface AreaFilters {
   name?: string;
@@ -23,6 +24,7 @@ class AreaService {
     const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
     const response = await apiClient.get<AreasResponse>(url);
+
     return response.data;
   }
 
@@ -30,6 +32,7 @@ class AreaService {
     const response = await apiClient.get<{ message: string; data: Area }>(
       `${this.baseUrl}/${id}`
     );
+
     return response.data;
   }
 
@@ -37,6 +40,7 @@ class AreaService {
     const response = await apiClient.get<{ message: string; count: number }>(
       `${this.baseUrl}/count`
     );
+
     return response.data;
   }
 
@@ -47,6 +51,7 @@ class AreaService {
       this.baseUrl,
       data
     );
+
     return response.data;
   }
 
@@ -58,6 +63,7 @@ class AreaService {
       `${this.baseUrl}/${id}`,
       data
     );
+
     return response.data;
   }
 
@@ -65,6 +71,7 @@ class AreaService {
     const response = await apiClient.delete<{ message: string }>(
       `${this.baseUrl}/${id}`
     );
+
     return response.data;
   }
 
@@ -72,9 +79,11 @@ class AreaService {
     const response = await apiClient.patch<{ message: string; data: Area }>(
       `${this.baseUrl}/${id}/restore`
     );
+
     return response.data;
   }
 }
 
 const areaService = new AreaService();
+
 export default areaService;

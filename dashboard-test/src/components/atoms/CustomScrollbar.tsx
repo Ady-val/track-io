@@ -1,6 +1,6 @@
 import React from "react";
 
-interface CustomScrollbarProps {
+export interface CustomScrollbarProps {
   children: React.ReactNode;
   className?: string;
   variant?: "default" | "dashboard" | "table" | "dark";
@@ -30,6 +30,3 @@ export const CustomScrollbar: React.FC<CustomScrollbarProps> = ({
     </div>
   );
 };
-
-
-

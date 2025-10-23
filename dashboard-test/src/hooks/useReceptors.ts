@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+
 import receptorService from "../lib/services/receptor.service";
 
 export const useReceptors = () => {
@@ -25,4 +26,3 @@ export const useReceptorsByDepartment = (department: string) => {
     staleTime: 10 * 60 * 1000,
   });
 };
-

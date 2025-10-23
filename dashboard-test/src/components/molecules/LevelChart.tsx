@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import type React from "react";
+
 import {
   Chart as ChartJS,
   ArcElement,
@@ -7,8 +9,9 @@ import {
   DoughnutController,
   type ChartConfiguration,
 } from "chart.js";
-import type React from "react";
+
 import { Card, CardBody, Text } from "@components/atoms";
+
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
@@ -43,6 +46,7 @@ export const LevelChart: React.FC<LevelChartProps> = ({
     if (!canvasRef.current) return;
 
     const ctx = canvasRef.current.getContext("2d");
+
     if (!ctx) return;
 
     // Solo crear si no existe
@@ -110,21 +114,26 @@ export const LevelChart: React.FC<LevelChartProps> = ({
         ? ((clampedValue - min) / range) * 100
         : 0;
 
-    const dynamicColor = getDynamicColor(value, min, max, config.color);
-    chartRef.current.data.datasets[0].data = [percentage, 100 - percentage];
-    chartRef.current.data.datasets[0].backgroundColor = [
-      dynamicColor,
-      "rgba(100, 116, 139, 0.2)",
-    ];
-    chartRef.current.data.datasets[0].borderColor = dynamicColor;
-    chartRef.current.update();
+    const dynamicColor = getDynamicColor(value ?? 0, min, max, config.color);
+
+    if (chartRef.current?.data?.datasets?.[0]) {
+      chartRef.current.data.datasets[0].data = [percentage, 100 - percentage];
+      chartRef.current.data.datasets[0].backgroundColor = [
+        dynamicColor,
+        "rgba(100, 116, 139, 0.2)",
+      ];
+      chartRef.current.data.datasets[0].borderColor = dynamicColor;
+      chartRef.current.update();
+    }
   }, [value, minValue, maxValue]);
 
   const getValueColor = () => {
     if (value === undefined) return "text-slate-400";
     const min = parseFloat(minValue.toString());
     const max = parseFloat(maxValue.toString());
+
     if (value < min || value > max) return "text-red-400";
+
     return "text-slate-100";
   };
 

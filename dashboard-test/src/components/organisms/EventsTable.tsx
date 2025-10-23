@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
-import {
-  getDepartmentColor,
-  getStatusTextColor,
-  getEventStatusColor,
-} from "../../config/departmentColors";
 import type { DashboardEventData } from "../../types/dashboard";
+
+import React, { useState, useEffect } from "react";
+
+import { getEventStatusColor } from "../../config/departmentColors";
 
 interface EventsTableProps {
   events: DashboardEventData[];
@@ -30,6 +28,7 @@ export const EventsTable: React.FC<EventsTableProps> = ({
   }, []);
   const formatTimestamp = (timestamp: Date | string) => {
     const date = new Date(timestamp);
+
     return date.toLocaleString("es-ES", {
       day: "2-digit",
       month: "2-digit",
@@ -44,6 +43,7 @@ export const EventsTable: React.FC<EventsTableProps> = ({
     const duration = Math.floor(
       (currentTime.getTime() - startTime.getTime()) / 1000
     );
+
     return formatDuration(Math.max(0, duration));
   };
 
@@ -59,21 +59,6 @@ export const EventsTable: React.FC<EventsTableProps> = ({
     } else {
       return `${secs}s`;
     }
-  };
-
-  const getDepartmentCellStyle = (department: string) => {
-    const color = getDepartmentColor(department);
-    const hex = color.replace("#", "");
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    const textColor = brightness > 128 ? "#000000" : "#ffffff";
-
-    return {
-      backgroundColor: color,
-      color: textColor,
-    };
   };
 
   return (

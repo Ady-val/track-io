@@ -1,9 +1,10 @@
 import type React from "react";
+
+import type { MeasurementType } from "@/types/dashboard";
+
 import { GaugeChart } from "./GaugeChart";
 import { HorizontalBarChart } from "./HorizontalBarChart";
-import { LevelChart } from "./LevelChart";
 import { VibrationLineChart } from "./VibrationLineChart";
-import type { MeasurementType } from "@/types/dashboard";
 
 export interface MeasurementChartProps {
   title: string;
@@ -32,27 +33,27 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     case "humidity":
       return (
         <GaugeChart
-          title={title}
-          subtitle={subtitle}
-          value={value}
-          minValue={minValue}
-          maxValue={maxValue}
-          type={type}
-          timestamp={timestamp}
           degrees={270} // 270 grados para temperature y humidity
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={value}
         />
       );
 
     case "pressure":
       return (
         <HorizontalBarChart
-          title={title}
-          subtitle={subtitle}
-          value={value}
-          minValue={minValue}
           maxValue={maxValue}
-          type={type}
+          minValue={minValue}
+          subtitle={subtitle}
           timestamp={timestamp}
+          title={title}
+          type={type}
+          value={value}
         />
       );
 
@@ -60,28 +61,28 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     case "level":
       return (
         <GaugeChart
-          title={title}
-          subtitle={subtitle}
-          value={value}
-          minValue={minValue}
-          maxValue={maxValue}
-          type={type}
-          timestamp={timestamp}
           degrees={270}
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={value}
         />
       );
 
     case "vibration":
       return (
         <VibrationLineChart
-          title={title}
-          subtitle={subtitle}
-          value={value}
-          minValue={minValue}
-          maxValue={maxValue}
-          type={type}
-          timestamp={timestamp}
           history={history}
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={value}
         />
       );
 
@@ -89,14 +90,14 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
       // Fallback al GaugeChart original para tipos no especificados
       return (
         <GaugeChart
-          title={title}
-          subtitle={subtitle}
-          value={value}
-          minValue={minValue}
-          maxValue={maxValue}
-          type={type}
-          timestamp={timestamp}
           degrees={180}
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={value}
         />
       );
   }

@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
   FaCheckCircle,
   FaExclamationTriangle,
@@ -24,8 +25,11 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   React.useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(onClose, duration);
+
       return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, [duration, onClose]);
 
   const getIcon = () => {
@@ -69,8 +73,8 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
           {message && <p className="text-xs text-gray-300">{message}</p>}
         </div>
         <button
-          onClick={onClose}
           className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+          onClick={onClose}
         >
           <FaTimes className="w-3 h-3" />
         </button>
@@ -78,4 +82,3 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
     </div>
   );
 };
-

@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
   FaEdit,
   FaTrash,
@@ -58,12 +59,13 @@ export const Icon: React.FC<IconProps> = ({
 
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found`);
+
     return null;
   }
 
   return (
     <IconComponent
-      className={`${sizeClasses[size]} ${color ? color : ""} ${className}`}
+      className={`${sizeClasses[size]} ${color ?? ""} ${className}`}
     />
   );
 };

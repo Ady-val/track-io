@@ -11,13 +11,24 @@ import {
   SignalDetail,
   Modal,
   CreateMeasurementForm,
+  CreateDeviceForm,
+  CreateDeviceSignalForm,
+  CreateDeviceAndSignalForm,
+  CreateDeviceSignalWithDeviceForm,
 } from "@components/organisms";
 import { TwoColumnLayout } from "@components/templates";
 
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useWebSocketEvent } from "@/hooks/useWebSocketEvent";
 import DefaultLayout from "@/layouts/default";
+import deviceSignalService from "@/lib/services/device-signal.service";
+import deviceService from "@/lib/services/device.service";
 import measurementService from "@/lib/services/measurement.service";
+import type { Device, CreateDeviceData } from "@/types/device";
+import type {
+  DeviceSignal,
+  CreateDeviceSignalData,
+} from "@/types/device-signal";
 import type { Measurement, CreateMeasurementData } from "@/types/measurement";
 
 interface WebSocketMessage {
@@ -36,11 +47,28 @@ export default function RawSignalsPage() {
   );
   const [selectedMeasurement, setSelectedMeasurement] =
     useState<Measurement | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+  const [selectedDeviceSignal, setSelectedDeviceSignal] =
+    useState<DeviceSignal | null>(null);
   const [isLoadingMeasurement, setIsLoadingMeasurement] =
+    useState<boolean>(false);
+  const [isLoadingDevice, setIsLoadingDevice] = useState<boolean>(false);
+  const [isLoadingDeviceSignal, setIsLoadingDeviceSignal] =
     useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalType, setModalType] = useState<
+    | "measurement"
+    | "device"
+    | "deviceSignal"
+    | "deviceAndSignal"
+    | "deviceSignalWithDevice"
+  >("measurement");
+  const [usedDepartments, setUsedDepartments] = useState<number[]>([]);
   const [isCreatingMeasurement, setIsCreatingMeasurement] =
+    useState<boolean>(false);
+  const [isCreatingDevice, setIsCreatingDevice] = useState<boolean>(false);
+  const [isCreatingDeviceSignal, setIsCreatingDeviceSignal] =
     useState<boolean>(false);
   const { isConnected } = useWebSocket();
 
@@ -49,6 +77,7 @@ export default function RawSignalsPage() {
 
     if (msg?.data?.data) {
       const signalData = { ...msg.data.data, type: "signal" as const };
+
       setSignals((prev) => [signalData, ...prev].slice(0, 100));
     }
   }, []);
@@ -61,6 +90,7 @@ export default function RawSignalsPage() {
         ...msg.data.data,
         type: "measurement" as const,
       };
+
       setSignals((prev) => [measurementData, ...prev].slice(0, 100));
     }
   }, []);
@@ -94,20 +124,24 @@ export default function RawSignalsPage() {
     setSignals([]);
     setSelectedSignal(null);
     setSelectedMeasurement(null);
+    setSelectedDevice(null);
+    setSelectedDeviceSignal(null);
   };
 
   const handleSelectSignal = useCallback(async (signal: RawDataItem) => {
     setSelectedSignal(signal);
     setSelectedMeasurement(null);
+    setSelectedDevice(null);
+    setSelectedDeviceSignal(null);
 
-    // Solo buscar measurement si el tipo es 'measurement'
     if (signal.type === "measurement") {
+      // Buscar measurement
       setIsLoadingMeasurement(true);
-
       try {
         const measurement = await measurementService.getByExternalId(
           signal.externalId
         );
+
         setSelectedMeasurement(measurement);
       } catch (error) {
         console.error("Error fetching measurement:", error);
@@ -115,20 +149,74 @@ export default function RawSignalsPage() {
       } finally {
         setIsLoadingMeasurement(false);
       }
-    } else {
-      setIsLoadingMeasurement(false);
+    } else if (signal.type === "signal") {
+      // Buscar device
+      setIsLoadingDevice(true);
+      try {
+        const device = await deviceService.getByExternalId(signal.externalId);
+
+        setSelectedDevice(device);
+
+        if (device) {
+          // Si existe el device, buscar deviceSignal y departamentos usados
+          setIsLoadingDeviceSignal(true);
+          try {
+            const deviceSignal =
+              await deviceSignalService.getByExternalValueIdAndDeviceExternalId(
+                signal.value,
+                signal.externalId
+              );
+
+            setSelectedDeviceSignal(deviceSignal);
+
+            // Cargar departamentos ya usados por este dispositivo
+            const existingSignals = await deviceSignalService.getByDeviceId(
+              device.id
+            );
+            const usedDepts = existingSignals.map(
+              (signal) => signal.departmentId
+            );
+
+            setUsedDepartments(usedDepts);
+          } catch (error) {
+            console.error("Error fetching device signal:", error);
+            setSelectedDeviceSignal(null);
+            setUsedDepartments([]);
+          } finally {
+            setIsLoadingDeviceSignal(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching device:", error);
+        setSelectedDevice(null);
+      } finally {
+        setIsLoadingDevice(false);
+      }
     }
   }, []);
 
   const handleCloseDetail = useCallback(() => {
     setSelectedSignal(null);
     setSelectedMeasurement(null);
+    setSelectedDevice(null);
+    setSelectedDeviceSignal(null);
     setIsModalOpen(false);
   }, []);
 
-  const handleOpenCreateModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
+  const handleOpenCreateModal = useCallback(
+    (
+      type:
+        | "measurement"
+        | "device"
+        | "deviceSignal"
+        | "deviceAndSignal"
+        | "deviceSignalWithDevice"
+    ) => {
+      setModalType(type);
+      setIsModalOpen(true);
+    },
+    []
+  );
 
   const handleCloseCreateModal = useCallback(() => {
     setIsModalOpen(false);
@@ -153,6 +241,108 @@ export default function RawSignalsPage() {
         // Optional: Show error message to user
       } finally {
         setIsCreatingMeasurement(false);
+      }
+    },
+    [selectedSignal]
+  );
+
+  const handleCreateDevice = useCallback(
+    async (data: CreateDeviceData) => {
+      if (!selectedSignal || selectedSignal.type !== "signal") return;
+
+      setIsCreatingDevice(true);
+
+      try {
+        const newDevice = await deviceService.create(data);
+
+        setSelectedDevice(newDevice);
+        setIsModalOpen(false);
+
+        // Optional: Show success message
+        console.log("Device created successfully:", newDevice);
+      } catch (error) {
+        console.error("Error creating device:", error);
+        // Optional: Show error message to user
+      } finally {
+        setIsCreatingDevice(false);
+      }
+    },
+    [selectedSignal]
+  );
+
+  const handleCreateDeviceSignal = useCallback(
+    async (data: CreateDeviceSignalData) => {
+      if (
+        !selectedSignal ||
+        selectedSignal.type !== "signal" ||
+        !selectedDevice
+      )
+        return;
+
+      setIsCreatingDeviceSignal(true);
+
+      try {
+        const newDeviceSignal = await deviceSignalService.create(data);
+
+        setSelectedDeviceSignal(newDeviceSignal);
+        setIsModalOpen(false);
+
+        // Actualizar lista de departamentos usados
+        setUsedDepartments((prev) => [...prev, data.departmentId]);
+
+        // Optional: Show success message
+        console.log("Device signal created successfully:", newDeviceSignal);
+      } catch (error) {
+        console.error("Error creating device signal:", error);
+        // Optional: Show error message to user
+      } finally {
+        setIsCreatingDeviceSignal(false);
+      }
+    },
+    [selectedSignal, selectedDevice]
+  );
+
+  const handleCreateDeviceAndSignal = useCallback(
+    async (
+      deviceData: CreateDeviceData,
+      signalData: Omit<CreateDeviceSignalData, "deviceId">
+    ) => {
+      if (!selectedSignal || selectedSignal.type !== "signal") return;
+
+      setIsCreatingDevice(true);
+
+      try {
+        // Crear dispositivo primero
+        const newDevice = await deviceService.create(deviceData);
+
+        setSelectedDevice(newDevice);
+
+        // Crear señal con el ID del dispositivo recién creado
+        const signalDataWithDevice: CreateDeviceSignalData = {
+          ...signalData,
+          deviceId: newDevice.id,
+        };
+
+        const newDeviceSignal =
+          await deviceSignalService.create(signalDataWithDevice);
+
+        setSelectedDeviceSignal(newDeviceSignal);
+
+        // Actualizar lista de departamentos usados
+        setUsedDepartments([signalData.departmentId]);
+
+        setIsModalOpen(false);
+
+        // Optional: Show success message
+        console.log("Device and signal created successfully:", {
+          newDevice,
+          newDeviceSignal,
+        });
+      } catch (error) {
+        console.error("Error creating device and signal:", error);
+        // Optional: Show error message to user
+      } finally {
+        setIsCreatingDevice(false);
       }
     },
     [selectedSignal]
@@ -218,12 +408,32 @@ export default function RawSignalsPage() {
           <Card className="bg-slate-700 border-slate-600 h-full flex flex-col">
             <CardBody className="p-3 flex flex-col h-full overflow-hidden">
               <SignalDetail
+                device={selectedDevice}
+                deviceSignal={selectedDeviceSignal}
                 formatDate={formatDate}
+                isLoadingDevice={isLoadingDevice}
+                isLoadingDeviceSignal={isLoadingDeviceSignal}
                 isLoadingMeasurement={isLoadingMeasurement}
                 measurement={selectedMeasurement}
                 signal={selectedSignal}
                 onClose={handleCloseDetail}
-                onCreateMeasurement={handleOpenCreateModal}
+                onCreateDevice={() => {
+                  // Si no existe device ni signal, abrir modal combinado
+                  if (!selectedDevice && !selectedDeviceSignal) {
+                    handleOpenCreateModal("deviceAndSignal");
+                  } else {
+                    handleOpenCreateModal("device");
+                  }
+                }}
+                onCreateDeviceSignal={() => {
+                  // Si existe device pero no signal, usar modal con información del device
+                  if (selectedDevice && !selectedDeviceSignal) {
+                    handleOpenCreateModal("deviceSignalWithDevice");
+                  } else {
+                    handleOpenCreateModal("deviceSignal");
+                  }
+                }}
+                onCreateMeasurement={() => handleOpenCreateModal("measurement")}
               />
             </CardBody>
           </Card>
@@ -249,14 +459,24 @@ export default function RawSignalsPage() {
         }
       />
 
-      {/* Modal para crear Measurement */}
+      {/* Modal para crear Measurement, Device, DeviceSignal, DeviceAndSignal o DeviceSignalWithDevice */}
       <Modal
         isOpen={isModalOpen}
         size="md"
-        title="Crear Nuevo Dispositivo de Medición"
+        title={
+          modalType === "measurement"
+            ? "Crear Nuevo Dispositivo de Medición"
+            : modalType === "device"
+              ? "Crear Nuevo Dispositivo"
+              : modalType === "deviceSignal"
+                ? "Crear Nueva Señal del Dispositivo"
+                : modalType === "deviceAndSignal"
+                  ? "Crear Dispositivo y Señal"
+                  : "Crear Señal para Dispositivo Existente"
+        }
         onClose={handleCloseCreateModal}
       >
-        {selectedSignal && (
+        {selectedSignal && modalType === "measurement" && (
           <CreateMeasurementForm
             externalId={selectedSignal.externalId}
             isLoading={isCreatingMeasurement}
@@ -264,6 +484,45 @@ export default function RawSignalsPage() {
             onSubmit={handleCreateMeasurement}
           />
         )}
+        {selectedSignal && modalType === "device" && (
+          <CreateDeviceForm
+            externalId={selectedSignal.externalId}
+            isLoading={isCreatingDevice}
+            onCancel={handleCloseCreateModal}
+            onSubmit={handleCreateDevice}
+          />
+        )}
+        {selectedSignal && selectedDevice && modalType === "deviceSignal" && (
+          <CreateDeviceSignalForm
+            deviceId={selectedDevice.id}
+            deviceName={selectedDevice.name}
+            externalValueId={selectedSignal.value}
+            isLoading={isCreatingDeviceSignal}
+            onCancel={handleCloseCreateModal}
+            onSubmit={handleCreateDeviceSignal}
+          />
+        )}
+        {selectedSignal && modalType === "deviceAndSignal" && (
+          <CreateDeviceAndSignalForm
+            externalId={selectedSignal.externalId}
+            externalValueId={selectedSignal.value}
+            isLoading={isCreatingDevice}
+            onCancel={handleCloseCreateModal}
+            onSubmit={handleCreateDeviceAndSignal}
+          />
+        )}
+        {selectedSignal &&
+          selectedDevice &&
+          modalType === "deviceSignalWithDevice" && (
+            <CreateDeviceSignalWithDeviceForm
+              device={selectedDevice}
+              externalValueId={selectedSignal.value}
+              isLoading={isCreatingDeviceSignal}
+              usedDepartments={usedDepartments}
+              onCancel={handleCloseCreateModal}
+              onSubmit={handleCreateDeviceSignal}
+            />
+          )}
       </Modal>
     </DefaultLayout>
   );

@@ -1,11 +1,13 @@
-import apiClient from "../api";
 import type { GrupoMensaje, MessageGroupsResponse } from "@/types/alertRule";
+
+import apiClient from "../api";
 
 class MessageGroupService {
   private readonly baseUrl = "/message-groups";
 
   async getAll(): Promise<GrupoMensaje[]> {
     const response = await apiClient.get<MessageGroupsResponse>(this.baseUrl);
+
     return response.data.data;
   }
 
@@ -14,10 +16,11 @@ class MessageGroupService {
       message: string;
       data: GrupoMensaje;
     }>(`${this.baseUrl}/${id}`);
+
     return response.data.data;
   }
 }
 
 const messageGroupService = new MessageGroupService();
-export default messageGroupService;
 
+export default messageGroupService;

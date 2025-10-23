@@ -1,4 +1,3 @@
-import React from "react";
 import { Input } from "../atoms/Input";
 import { Label } from "../atoms/Label";
 import { Select } from "../atoms/Select";
@@ -42,15 +41,15 @@ export function FormField({
 
       {select ? (
         <Select
-          id={fieldId}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
           className={
             error
               ? "border-red-500 focus:border-red-500 focus:ring-red-500"
               : ""
           }
+          disabled={disabled}
+          id={fieldId}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
         >
           <option value="">Seleccionar...</option>
           {options.map((option) => (
@@ -61,19 +60,19 @@ export function FormField({
         </Select>
       ) : (
         <Input
-          id={fieldId}
-          name={name}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          required={required}
-          disabled={disabled}
           className={
             error
               ? "border-red-500 focus:border-red-500 focus:ring-red-500"
               : ""
           }
+          disabled={disabled}
+          id={fieldId}
+          name={name}
+          placeholder={placeholder}
+          required={required}
+          type={type}
+          value={String(value)}
+          onChange={(e) => onChange(e.target.value)}
         />
       )}
 

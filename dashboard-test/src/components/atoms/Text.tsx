@@ -21,7 +21,7 @@ export interface TextProps {
   variant?: TextVariant;
   color?: TextColor;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
 }
 
 export const Text: React.FC<TextProps> = ({

@@ -41,4 +41,3 @@ export interface AreaDowntimeFilters {
   limit?: number;
   offset?: number;
 }
-

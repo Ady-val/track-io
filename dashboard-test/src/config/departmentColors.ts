@@ -14,7 +14,7 @@ export const departmentColors: Record<string, string> = {
 };
 
 export const getDepartmentColor = (department: string): string => {
-  return departmentColors[department] || "#6B7280";
+  return departmentColors[department] ?? "#6B7280";
 };
 
 export const availabilityColors = {
@@ -26,6 +26,7 @@ export const availabilityColors = {
 export const getAvailabilityColor = (availability: number): string => {
   if (availability >= 90) return availabilityColors.high;
   if (availability >= 70) return availabilityColors.medium;
+
   return availabilityColors.low;
 };
 
@@ -38,7 +39,7 @@ export const statusColors: Record<string, string> = {
 };
 
 export const getStatusColor = (status: string): string => {
-  return statusColors[status] || "bg-gray-500";
+  return statusColors[status] ?? "bg-gray-500";
 };
 
 export const getStatusTextColor = (status: string): string => {

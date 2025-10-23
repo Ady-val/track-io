@@ -1,15 +1,17 @@
 import React, { useState } from "react";
+
 import {
   useTorretaColors,
   useCreateTorretaColor,
   useUpdateTorretaColor,
   useDeleteTorretaColor,
-  TorretaColor,
+  type TorretaColor,
 } from "@/hooks/useCatalogs";
-import { DataTable, TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
+
 import { Button } from "../../atoms/Button";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
+import { DataTable, type TableColumn } from "../../molecules/DataTable";
+import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function TorretaColorsCatalog() {
@@ -36,12 +38,12 @@ export function TorretaColorsCatalog() {
   const updateColorMutation = useUpdateTorretaColor();
   const deleteColorMutation = useDeleteTorretaColor();
 
-  const colors = colorsData?.data || [];
-  const filteredColors = colors.filter((color) =>
+  const colors = colorsData?.data ?? [];
+  const filteredColors = colors.filter((color: { name: string }) =>
     color.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const columns: TableColumn<TorretaColor>[] = [
+  const columns: Array<TableColumn<TorretaColor>> = [
     {
       id: "id",
       label: "ID",
@@ -113,6 +115,7 @@ export function TorretaColorsCatalog() {
 
     const errors: { name?: string; deviceColorId?: string; order?: string } =
       {};
+
     if (!formData.name.trim()) {
       errors.name = "El nombre es requerido";
     }
@@ -125,6 +128,7 @@ export function TorretaColorsCatalog() {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+
       return;
     }
 
@@ -183,18 +187,18 @@ export function TorretaColorsCatalog() {
       <div className="flex justify-between items-center">
         <div className="flex-1 max-w-lg">
           <input
-            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Buscar colores..."
+            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <Button
-          onClick={handleCreate}
+          className="ml-4"
           color="primary"
           size="lg"
-          className="ml-4"
+          onClick={handleCreate}
         >
           Crear Color
         </Button>
@@ -202,104 +206,108 @@ export function TorretaColorsCatalog() {
 
       {/* Table */}
       <DataTable
-        data={filteredColors}
         columns={columns}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        loading={isLoading}
+        data={filteredColors}
         emptyMessage="No hay colores registrados"
+        loading={isLoading}
         maxHeight="max-h-96"
+        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
 
       {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
-        onClose={handleCancel}
         title={
           isCreateModalOpen
             ? "Crear Color de Torreta"
             : "Editar Color de Torreta"
         }
+        onClose={handleCancel}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <FormField
+            required
+            error={formErrors.name}
             label="Nombre"
             name="name"
+            placeholder="Ingresa el nombre del color"
             value={formData.name}
             onChange={(value) =>
               setFormData({ ...formData, name: value as string })
             }
-            placeholder="Ingresa el nombre del color"
-            required
-            error={formErrors.name}
           />
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="color-input"
+              className="block text-sm font-medium text-gray-700"
+            >
               Color
             </label>
             <div className="flex items-center space-x-3">
               <input
+                id="color-input"
+                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
                 type="color"
                 value={formData.htmlColor}
                 onChange={(e) =>
                   setFormData({ ...formData, htmlColor: e.target.value })
                 }
-                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
               />
               <input
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="#000000"
                 type="text"
                 value={formData.htmlColor}
                 onChange={(e) =>
                   setFormData({ ...formData, htmlColor: e.target.value })
                 }
-                placeholder="#000000"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
           <FormField
+            required
+            error={formErrors.deviceColorId}
             label="ID del Dispositivo"
             name="deviceColorId"
+            placeholder="Ingresa el ID del dispositivo"
             value={formData.deviceColorId}
             onChange={(value) =>
               setFormData({ ...formData, deviceColorId: value as string })
             }
-            placeholder="Ingresa el ID del dispositivo"
-            required
-            error={formErrors.deviceColorId}
           />
 
           <FormField
+            required
+            error={formErrors.order}
             label="Orden"
             name="order"
+            placeholder="0"
             type="number"
             value={formData.order}
             onChange={(value) =>
               setFormData({ ...formData, order: Number(value) })
             }
-            placeholder="0"
-            required
-            error={formErrors.order}
           />
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
               size="lg"
+              type="button"
+              variant="bordered"
+              onClick={handleCancel}
             >
               Cancelar
             </Button>
             <Button
-              type="submit"
               color="primary"
-              size="lg"
               disabled={
                 createColorMutation.isPending || updateColorMutation.isPending
               }
+              size="lg"
+              type="submit"
             >
               {createColorMutation.isPending || updateColorMutation.isPending
                 ? "Guardando..."
@@ -313,15 +321,15 @@ export function TorretaColorsCatalog() {
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
+        cancelText="Cancelar"
+        confirmText="Eliminar"
         isOpen={isDeleteModalOpen}
+        loading={deleteColorMutation.isPending}
+        message={`¿Estás seguro de querer eliminar "${selectedColor?.name}"?`}
+        title="Eliminar Color"
+        variant="danger"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Eliminar Color"
-        message={`¿Estás seguro de querer eliminar "${selectedColor?.name}"?`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deleteColorMutation.isPending}
       />
     </div>
   );

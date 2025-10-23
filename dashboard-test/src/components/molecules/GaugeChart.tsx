@@ -11,6 +11,7 @@ import {
 } from "chart.js";
 
 import { Card, CardBody, Text } from "@components/atoms";
+
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
@@ -46,6 +47,7 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
     if (!canvasRef.current) return;
 
     const ctx = canvasRef.current.getContext("2d");
+
     if (!ctx) return;
 
     if (chartRef.current) return;
@@ -129,9 +131,11 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
     }
     const min = parseFloat(minValue.toString());
     const max = parseFloat(maxValue.toString());
+
     if (value < min || value > max) {
       return "text-red-400";
     }
+
     return "text-slate-100";
   };
 

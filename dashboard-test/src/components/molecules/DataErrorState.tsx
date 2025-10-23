@@ -1,5 +1,7 @@
 import React from "react";
+
 import { FaExclamationTriangle, FaRedo, FaWifi } from "react-icons/fa";
+
 import { Button, Text } from "@components/atoms";
 
 interface DataErrorStateProps {
@@ -59,17 +61,18 @@ export const DataErrorState: React.FC<DataErrorStateProps> = ({
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
       {getIcon()}
-      <Text variant="h3" className="mb-2 text-red-400">
+      <Text className="mb-2 text-red-400" variant="h3">
         {getTitle()}
       </Text>
-      <Text variant="body" className="mb-6 max-w-md" color="muted">
+      <Text className="mb-6 max-w-md" color="muted" variant="body">
         {getDescription()}
       </Text>
       {onRetry && (
         <Button
-          variant="primary"
-          onClick={onRetry}
+          color="primary"
           startContent={<FaRedo className="w-4 h-4" />}
+          variant="solid"
+          onClick={onRetry}
         >
           Reintentar
         </Button>

@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import alertMessageService from "../lib/services/alertMessage.service";
+
 import type { NewMessageData } from "@/types/alertRule";
+
+import alertMessageService from "../lib/services/alertMessage.service";
 
 export const useCreateAlertMessage = () => {
   const queryClient = useQueryClient();
@@ -84,4 +86,3 @@ export const useDuplicateAlertMessage = () => {
     },
   });
 };
-

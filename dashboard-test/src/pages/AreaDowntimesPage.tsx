@@ -1,5 +1,7 @@
 import React from "react";
+
 import { FaClock } from "react-icons/fa";
+
 import { Text } from "../components/atoms/Text";
 import { AreaDowntimesTable } from "../components/organisms";
 import { useAreaDowntimes } from "../hooks/useAreaDowntimes";
@@ -18,10 +20,10 @@ export const AreaDowntimesPage: React.FC = () => {
               <FaClock className="w-6 h-6 text-white" />
             </div>
             <div>
-              <Text variant="h2" color="primary">
+              <Text color="primary" variant="h2">
                 Tiempos de Paro por Área
               </Text>
-              <Text variant="caption" color="muted" className="mt-1">
+              <Text className="mt-1" color="muted" variant="caption">
                 Historial de tiempos de inactividad y eventos relacionados
               </Text>
             </div>
@@ -40,9 +42,9 @@ export const AreaDowntimesPage: React.FC = () => {
 
           <div className="h-full">
             <AreaDowntimesTable
-              data={data?.data || []}
-              loading={isLoading}
               className="h-full"
+              data={data?.data ?? []}
+              loading={isLoading}
             />
           </div>
         </div>

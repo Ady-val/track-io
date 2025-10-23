@@ -43,3 +43,48 @@ export interface DashboardStatus {
 
 export type EventStatus = "open" | "in-progress" | "closed";
 export type DepartmentStatus = "ok" | "alert" | "warning" | "critical" | "NA";
+
+export type MeasurementType =
+  | "temperature"
+  | "humidity"
+  | "pressure"
+  | "level"
+  | "vibration"
+  | "flow"
+  | "shape"
+  | "totalizador";
+
+export interface DashboardMeasurement {
+  id: number;
+  measurementId: number;
+  externalId: string;
+  name: string;
+  type: MeasurementType;
+  value: number;
+  unit: string;
+  timestamp: string;
+  area?: string;
+  status: "active" | "inactive" | "maintenance";
+  maxValue?: number;
+  minValue?: number;
+  measurement: {
+    id: number;
+    name: string;
+    externalId: string;
+    type: MeasurementType;
+  };
+}
+
+export interface MeasurementValueState {
+  id: number;
+  value: number;
+  timestamp: string;
+  status: "normal" | "warning" | "critical";
+}
+
+export interface MeasurementValueEvent {
+  type: "value_update" | "status_change";
+  measurementId: number;
+  data: MeasurementValueState;
+  timestamp: string;
+}

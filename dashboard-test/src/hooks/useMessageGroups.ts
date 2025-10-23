@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+
 import messageGroupService from "../lib/services/messageGroup.service";
 
 export const useMessageGroups = () => {
@@ -8,4 +9,3 @@ export const useMessageGroups = () => {
     staleTime: 15 * 60 * 1000, // 15 minutes - message groups are static
   });
 };
-

@@ -1,11 +1,13 @@
-import apiClient from "../api";
 import type { TorretaColor, TorretaColorsResponse } from "@/types/alertRule";
+
+import apiClient from "../api";
 
 class TorretaColorService {
   private readonly baseUrl = "/torreta-colors";
 
   async getAll(): Promise<TorretaColor[]> {
     const response = await apiClient.get<TorretaColorsResponse>(this.baseUrl);
+
     return response.data.data;
   }
 
@@ -14,9 +16,11 @@ class TorretaColorService {
       message: string;
       data: TorretaColor;
     }>(`${this.baseUrl}/${id}`);
+
     return response.data.data;
   }
 }
 
 const torretaColorService = new TorretaColorService();
+
 export default torretaColorService;

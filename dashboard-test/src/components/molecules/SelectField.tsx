@@ -1,6 +1,8 @@
-import type React from "react";
-import { Select, Label } from "@components/atoms";
 import type { SelectProps } from "@components/atoms";
+
+import type React from "react";
+
+import { Select, Label } from "@components/atoms";
 
 export interface SelectFieldProps extends Omit<SelectProps, "id"> {
   label: string;

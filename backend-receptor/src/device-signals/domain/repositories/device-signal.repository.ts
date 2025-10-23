@@ -113,6 +113,17 @@ export class DeviceSignalRepository {
     });
   }
 
+  async findByExternalValueIdAndDeviceId(
+    externalValueId: string,
+    deviceId: number
+  ): Promise<DeviceSignal | null> {
+    return await this.deviceSignalRepository.findOne({
+      where: { externalValueId, deviceId },
+      withDeleted: false,
+      relations: ['device', 'department'],
+    });
+  }
+
   async findByDeviceId(deviceId: number): Promise<DeviceSignal[]> {
     return await this.deviceSignalRepository.find({
       where: { deviceId },

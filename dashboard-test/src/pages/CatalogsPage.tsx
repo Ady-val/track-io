@@ -1,14 +1,13 @@
-import React, { useState } from "react";
-import { Card } from "../components/atoms/Card";
-import { Button } from "../components/atoms/Button";
-import { Icon } from "../components/atoms/Icon";
-import { DashboardTemplate } from "../components/templates/monitoring/DashboardTemplate";
+import { useState } from "react";
 
+import { Card } from "../components/atoms/Card";
+import { Icon } from "../components/atoms/Icon";
 import { AreasCatalog } from "../components/organisms/catalogs/AreasCatalog";
 import { DepartmentsCatalog } from "../components/organisms/catalogs/DepartmentsCatalog";
-import { TorretasCatalog } from "../components/organisms/catalogs/TorretasCatalog";
-import { TorretaColorsCatalog } from "../components/organisms/catalogs/TorretaColorsCatalog";
 import { ReceptorsCatalog } from "../components/organisms/catalogs/ReceptorsCatalog";
+import { TorretaColorsCatalog } from "../components/organisms/catalogs/TorretaColorsCatalog";
+import { TorretasCatalog } from "../components/organisms/catalogs/TorretasCatalog";
+import { DashboardTemplate } from "../components/templates/monitoring/DashboardTemplate";
 
 type CatalogType = "signals" | "measurements";
 type SignalsCatalog = "areas" | "departments";
@@ -69,28 +68,28 @@ export function CatalogsPage() {
       <div className="mb-6">
         <nav className="flex space-x-8 border-b border-slate-600">
           <button
-            onClick={() => setCatalogType("signals")}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               catalogType === "signals"
                 ? "border-blue-500 text-blue-400"
                 : "border-transparent text-slate-400 hover:text-white hover:border-slate-500"
             }`}
+            onClick={() => setCatalogType("signals")}
           >
             <div className="flex items-center">
-              <Icon name="signal" className="w-5 h-5 mr-2" />
+              <Icon className="w-5 h-5 mr-2" name="signal" />
               Señales
             </div>
           </button>
           <button
-            onClick={() => setCatalogType("measurements")}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               catalogType === "measurements"
                 ? "border-blue-500 text-blue-400"
                 : "border-transparent text-slate-400 hover:text-white hover:border-slate-500"
             }`}
+            onClick={() => setCatalogType("measurements")}
           >
             <div className="flex items-center">
-              <Icon name="activity" className="w-5 h-5 mr-2" />
+              <Icon className="w-5 h-5 mr-2" name="activity" />
               Mediciones
             </div>
           </button>
@@ -111,34 +110,34 @@ export function CatalogsPage() {
                   ? signalsCatalogs.map((catalog) => (
                       <button
                         key={catalog.id}
-                        onClick={() =>
-                          setSignalsCatalog(catalog.id as SignalsCatalog)
-                        }
                         className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                           signalsCatalog === catalog.id
                             ? "bg-blue-900/30 text-blue-300 border-l-2 border-blue-500"
                             : "text-slate-400 hover:text-white hover:bg-slate-700"
                         }`}
+                        onClick={() =>
+                          setSignalsCatalog(catalog.id as SignalsCatalog)
+                        }
                       >
-                        <Icon name={catalog.icon} className="w-4 h-4 mr-3" />
+                        <Icon className="w-4 h-4 mr-3" name={catalog.icon} />
                         {catalog.name}
                       </button>
                     ))
                   : measurementsCatalogs.map((catalog) => (
                       <button
                         key={catalog.id}
-                        onClick={() =>
-                          setMeasurementsCatalog(
-                            catalog.id as MeasurementsCatalog
-                          )
-                        }
                         className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                           measurementsCatalog === catalog.id
                             ? "bg-blue-900/30 text-blue-300 border-l-2 border-blue-500"
                             : "text-slate-400 hover:text-white hover:bg-slate-700"
                         }`}
+                        onClick={() =>
+                          setMeasurementsCatalog(
+                            catalog.id as MeasurementsCatalog
+                          )
+                        }
                       >
-                        <Icon name={catalog.icon} className="w-4 h-4 mr-3" />
+                        <Icon className="w-4 h-4 mr-3" name={catalog.icon} />
                         {catalog.name}
                       </button>
                     ))}

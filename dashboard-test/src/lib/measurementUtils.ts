@@ -1,4 +1,5 @@
-import type { MeasurementType } from "@/types/dashboard";
+import type React from "react";
+
 import {
   FaTemperatureHalf,
   FaDroplet,
@@ -6,7 +7,10 @@ import {
   FaArrowsUpDown,
   FaWater,
   FaWaveSquare,
+  FaChartLine,
 } from "react-icons/fa6";
+
+import type { MeasurementType } from "@/types/dashboard";
 
 export interface MeasurementConfig {
   icon: React.ComponentType<{ className?: string }>;
@@ -58,6 +62,20 @@ export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
     formatValue: (value: number) => `${value.toFixed(2)} Hz`,
     color: "#06b6d4", // Azul cyan original
     bgColor: "rgba(6, 182, 212, 0.1)",
+  },
+  shape: {
+    icon: FaChartLine,
+    unit: "mm",
+    formatValue: (value: number) => `${value.toFixed(2)}mm`,
+    color: "#6366f1", // Índigo
+    bgColor: "rgba(99, 102, 241, 0.1)",
+  },
+  totalizador: {
+    icon: FaChartLine,
+    unit: "L",
+    formatValue: (value: number) => `${value.toFixed(1)}L`,
+    color: "#84cc16", // Lima
+    bgColor: "rgba(132, 204, 22, 0.1)",
   },
 };
 

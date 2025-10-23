@@ -1,15 +1,17 @@
 import React, { useState } from "react";
+
 import {
   useTorretas,
   useCreateTorreta,
   useUpdateTorreta,
   useDeleteTorreta,
-  Torreta,
+  type Torreta,
 } from "@/hooks/useCatalogs";
-import { DataTable, TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
+
 import { Button } from "../../atoms/Button";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
+import { DataTable, type TableColumn } from "../../molecules/DataTable";
+import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function TorretasCatalog() {
@@ -29,12 +31,12 @@ export function TorretasCatalog() {
   const updateTorretaMutation = useUpdateTorreta();
   const deleteTorretaMutation = useDeleteTorreta();
 
-  const torretas = torretasData?.data || [];
-  const filteredTorretas = torretas.filter((torreta) =>
+  const torretas = torretasData?.data ?? [];
+  const filteredTorretas = torretas.filter((torreta: { name: string }) =>
     torreta.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const columns: TableColumn<Torreta>[] = [
+  const columns: Array<TableColumn<Torreta>> = [
     {
       id: "id",
       label: "ID",
@@ -51,7 +53,7 @@ export function TorretasCatalog() {
       id: "description",
       label: "Descripción",
       key: "description",
-      component: (value) => value || "-",
+      component: (value) => value ?? "-",
     },
     {
       id: "isActive",
@@ -77,7 +79,7 @@ export function TorretasCatalog() {
 
   const handleEdit = (torreta: Torreta) => {
     setSelectedTorreta(torreta);
-    setFormData({ name: torreta.name, description: torreta.description || "" });
+    setFormData({ name: torreta.name, description: torreta.description ?? "" });
     setFormErrors({});
     setIsEditModalOpen(true);
   };
@@ -91,12 +93,14 @@ export function TorretasCatalog() {
     e.preventDefault();
 
     const errors: { name?: string } = {};
+
     if (!formData.name.trim()) {
       errors.name = "El nombre es requerido";
     }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+
       return;
     }
 
@@ -145,18 +149,18 @@ export function TorretasCatalog() {
       <div className="flex justify-between items-center">
         <div className="flex-1 max-w-lg">
           <input
-            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Buscar torretas..."
+            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <Button
-          onClick={handleCreate}
+          className="ml-4"
           color="primary"
           size="lg"
-          className="ml-4"
+          onClick={handleCreate}
         >
           Crear Torreta
         </Button>
@@ -164,61 +168,61 @@ export function TorretasCatalog() {
 
       {/* Table */}
       <DataTable
-        data={filteredTorretas}
         columns={columns}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        loading={isLoading}
+        data={filteredTorretas}
         emptyMessage="No hay torretas registradas"
+        loading={isLoading}
         maxHeight="max-h-96"
+        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
 
       {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
-        onClose={handleCancel}
         title={isCreateModalOpen ? "Crear Torreta" : "Editar Torreta"}
+        onClose={handleCancel}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <FormField
+            required
+            error={formErrors.name}
             label="Nombre"
             name="name"
+            placeholder="Ingresa el nombre de la torreta"
             value={formData.name}
             onChange={(value) =>
               setFormData({ ...formData, name: value as string })
             }
-            placeholder="Ingresa el nombre de la torreta"
-            required
-            error={formErrors.name}
           />
 
           <FormField
             label="Descripción"
             name="description"
+            placeholder="Ingresa la descripción de la torreta (opcional)"
             value={formData.description}
             onChange={(value) =>
               setFormData({ ...formData, description: value as string })
             }
-            placeholder="Ingresa la descripción de la torreta (opcional)"
           />
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
               size="lg"
+              type="button"
+              variant="bordered"
+              onClick={handleCancel}
             >
               Cancelar
             </Button>
             <Button
-              type="submit"
               color="primary"
-              size="lg"
               disabled={
                 createTorretaMutation.isPending ||
                 updateTorretaMutation.isPending
               }
+              size="lg"
+              type="submit"
             >
               {createTorretaMutation.isPending ||
               updateTorretaMutation.isPending
@@ -233,15 +237,15 @@ export function TorretasCatalog() {
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
+        cancelText="Cancelar"
+        confirmText="Eliminar"
         isOpen={isDeleteModalOpen}
+        loading={deleteTorretaMutation.isPending}
+        message={`¿Estás seguro de querer eliminar "${selectedTorreta?.name}"?`}
+        title="Eliminar Torreta"
+        variant="danger"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Eliminar Torreta"
-        message={`¿Estás seguro de querer eliminar "${selectedTorreta?.name}"?`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deleteTorretaMutation.isPending}
       />
     </div>
   );

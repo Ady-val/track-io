@@ -51,14 +51,15 @@ export class DeviceSignalService {
       );
     }
 
-    // Check if device signal with same externalValueId already exists
+    // Check if device signal with same externalValueId already exists for this device
     const existingDeviceSignal =
-      await this.deviceSignalRepository.findByExternalValueId(
-        createDeviceSignalDto.externalValueId
+      await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
+        createDeviceSignalDto.externalValueId,
+        createDeviceSignalDto.deviceId
       );
     if (existingDeviceSignal) {
       throw new ConflictException(
-        `Device signal with externalValueId '${createDeviceSignalDto.externalValueId}' already exists`
+        `Device signal with externalValueId '${createDeviceSignalDto.externalValueId}' already exists for this device`
       );
     }
 
@@ -214,15 +215,18 @@ export class DeviceSignalService {
         }
       }
 
-      // Check if new externalValueId conflicts with existing device signal
+      // Check if new externalValueId conflicts with existing device signal for this device
       if (updateDeviceSignalDto.externalValueId) {
+        const deviceId =
+          updateDeviceSignalDto.deviceId || (await this.findById(id)).deviceId;
         const existingDeviceSignal =
-          await this.deviceSignalRepository.findByExternalValueId(
-            updateDeviceSignalDto.externalValueId
+          await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
+            updateDeviceSignalDto.externalValueId,
+            deviceId
           );
         if (existingDeviceSignal && existingDeviceSignal.id !== id) {
           throw new ConflictException(
-            `Device signal with externalValueId '${updateDeviceSignalDto.externalValueId}' already exists`
+            `Device signal with externalValueId '${updateDeviceSignalDto.externalValueId}' already exists for this device`
           );
         }
       }

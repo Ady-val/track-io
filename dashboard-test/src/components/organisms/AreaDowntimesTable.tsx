@@ -1,7 +1,10 @@
+import type { AreaDowntime } from "../../types/areaDowntime";
+
 import React, { useState } from "react";
+
 import { FaChevronDown, FaChevronRight, FaCircle } from "react-icons/fa";
+
 import { Spinner } from "../atoms/Spinner";
-import type { AreaDowntime, DowntimeEvent } from "../../types/areaDowntime";
 
 interface AreaDowntimesTableProps {
   data: AreaDowntime[];
@@ -18,6 +21,7 @@ export const AreaDowntimesTable: React.FC<AreaDowntimesTableProps> = ({
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
+
     return date.toLocaleString("es-ES", {
       day: "2-digit",
       month: "2-digit",
@@ -38,6 +42,7 @@ export const AreaDowntimesTable: React.FC<AreaDowntimesTableProps> = ({
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
+
     return `${minutes}m`;
   };
 
@@ -54,6 +59,7 @@ export const AreaDowntimesTable: React.FC<AreaDowntimesTableProps> = ({
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
+
     return `${minutes}m`;
   };
 
@@ -85,6 +91,7 @@ export const AreaDowntimesTable: React.FC<AreaDowntimesTableProps> = ({
 
   const toggleRow = (id: number) => {
     const newExpanded = new Set(expandedRows);
+
     if (newExpanded.has(id)) {
       newExpanded.delete(id);
     } else {
@@ -167,8 +174,8 @@ export const AreaDowntimesTable: React.FC<AreaDowntimesTableProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <button
-                      onClick={() => toggleRow(downtime.id)}
                       className="flex items-center justify-center w-full text-slate-300 hover:text-white transition-colors duration-200"
+                      onClick={() => toggleRow(downtime.id)}
                     >
                       {expandedRows.has(downtime.id) ? (
                         <FaChevronDown className="w-4 h-4" />
@@ -185,7 +192,7 @@ export const AreaDowntimesTable: React.FC<AreaDowntimesTableProps> = ({
                 {/* Sub-rows for Events */}
                 {expandedRows.has(downtime.id) && (
                   <tr>
-                    <td colSpan={6} className="px-0 py-0">
+                    <td className="px-0 py-0" colSpan={6}>
                       <div className="bg-slate-800/50 border-t border-slate-600">
                         <div className="px-6 py-4">
                           <div className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider border-b border-slate-600 pb-2">

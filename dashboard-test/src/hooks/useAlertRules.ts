@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import alertRuleService from "../lib/services/alertRule.service";
+
 import type {
-  AlertRule,
   CreateAlertRuleData,
   UpdateAlertRuleData,
   AlertRuleFilters,
 } from "@/types/alertRule";
+
+import alertRuleService from "../lib/services/alertRule.service";
 
 export const useAlertRules = (filters?: AlertRuleFilters) => {
   return useQuery({
@@ -70,4 +71,3 @@ export const useDeleteAlertRule = () => {
     },
   });
 };
-

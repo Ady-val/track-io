@@ -1,10 +1,6 @@
+import type { AlertMessage } from "@/types/alertRule";
+
 import apiClient from "../api";
-import type {
-  AlertMessage,
-  NewMessageData,
-  CreateAlertMessageData,
-  UpdateAlertMessageData,
-} from "@/types/alertRule";
 
 interface CreateAlertMessageData {
   tipoReceptor: "reloj" | "correo" | "torreta";
@@ -40,6 +36,7 @@ class AlertMessageService {
       `${this.baseUrl}/rule/${alertRuleId}`,
       data
     );
+
     return response.data.data;
   }
 
@@ -52,6 +49,7 @@ class AlertMessageService {
       `${this.baseUrl}/rule/${alertRuleId}/${messageId}`,
       data
     );
+
     return response.data.data;
   }
 
@@ -66,10 +64,11 @@ class AlertMessageService {
     const response = await apiClient.post<AlertMessageResponse>(
       `${this.baseUrl}/rule/${alertRuleId}/${messageId}/duplicate`
     );
+
     return response.data.data;
   }
 }
 
 const alertMessageService = new AlertMessageService();
-export default alertMessageService;
 
+export default alertMessageService;

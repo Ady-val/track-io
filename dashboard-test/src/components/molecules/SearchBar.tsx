@@ -1,6 +1,8 @@
 import type React from "react";
-import { Input } from "@components/atoms";
+
 import { FaMagnifyingGlass } from "react-icons/fa6";
+
+import { Input } from "@components/atoms";
 
 export interface SearchBarProps {
   value: string;

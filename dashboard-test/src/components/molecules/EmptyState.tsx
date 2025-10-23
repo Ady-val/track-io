@@ -1,8 +1,8 @@
 import type { IconType } from "react-icons";
 
-import type React from "react";
+import React from "react";
 
-import { Text, Icon } from "@components/atoms";
+import { Text } from "@components/atoms";
 
 export interface EmptyStateProps {
   icon: IconType;
@@ -20,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div className="h-full flex flex-col items-center justify-center text-center py-12">
       <div className="bg-slate-800 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-        <Icon className="text-slate-400" name={icon} size="xl" />
+        {React.createElement(icon, { className: "text-slate-400 w-8 h-8" })}
       </div>
       <Text className="mb-2" variant="h4">
         {title}

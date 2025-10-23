@@ -1,8 +1,9 @@
-import apiClient from "../api";
 import type {
   AreaDowntimesResponse,
   AreaDowntimeFilters,
 } from "@/types/areaDowntime";
+
+import apiClient from "../api";
 
 class AreaDowntimeService {
   private readonly baseUrl = "/area-downtime";
@@ -22,6 +23,7 @@ class AreaDowntimeService {
     const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
     const response = await apiClient.get<AreaDowntimesResponse>(url);
+
     return response.data;
   }
 
@@ -29,10 +31,11 @@ class AreaDowntimeService {
     const response = await apiClient.get(
       `${this.baseUrl}/${downtimeId}/events`
     );
+
     return response.data;
   }
 }
 
 const areaDowntimeService = new AreaDowntimeService();
-export default areaDowntimeService;
 
+export default areaDowntimeService;

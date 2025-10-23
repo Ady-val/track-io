@@ -1,9 +1,11 @@
 import type React from "react";
 import { useState } from "react";
 
-import { Button, Input, Select, Text } from "@components/atoms";
 import { FaFloppyDisk, FaXmark, FaTag, FaCubesStacked } from "react-icons/fa6";
 
+import { Button, Input, Select, Text } from "@components/atoms";
+
+import type { MeasurementType } from "@/types/dashboard";
 import type {
   CreateMeasurementData,
   MeasurementTypeOption,
@@ -32,7 +34,7 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
   isLoading = false,
 }) => {
   const [name, setName] = useState<string>("");
-  const [type, setType] = useState<string>("temperature");
+  const [type, setType] = useState<MeasurementType>("temperature");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,9 +68,8 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
       {/* Name Input */}
       <div className="mb-4">
         <Input
-          required
-          autoFocus
           fullWidth
+          required
           isDisabled={isLoading}
           label="Nombre del Dispositivo"
           labelPlacement="outside"
@@ -91,11 +92,11 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
           </Text>
         </div>
         <Select
-          required
           fullWidth
+          required
           disabled={isLoading}
           value={type}
-          onChange={(e) => setType(e.target.value)}
+          onChange={(e) => setType(e.target.value as MeasurementType)}
         >
           {measurementTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
