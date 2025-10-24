@@ -12,24 +12,29 @@ declare module "@react-types/shared" {
   }
 }
 
-interface ProviderProps {
+interface AppProviderProps {
   children: React.ReactNode;
 }
 
-// Create a client
+// Create a client with optimized configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Data is always considered stale by default
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 2,
       retryDelay: 1000,
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       refetchOnMount: true,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
     },
   },
 });
 
-export function Provider({ children }: ProviderProps) {
+export function AppProvider({ children }: AppProviderProps) {
   const navigate = useNavigate();
 
   return (

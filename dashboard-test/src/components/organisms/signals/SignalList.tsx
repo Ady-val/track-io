@@ -32,7 +32,7 @@ export const SignalList: React.FC<SignalListProps> = ({
   }
 
   return (
-    <div className="h-full space-y-1.5 overflow-auto flex-grow pr-1 dashboard-scrollbar">
+    <div className="h-full space-y-1.5 overflow-y-auto pr-1">
       {signals.map((signal) => (
         <Card
           key={signal.id}

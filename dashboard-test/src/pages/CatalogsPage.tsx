@@ -7,7 +7,7 @@ import { DepartmentsCatalog } from "../components/organisms/catalogs/Departments
 import { ReceptorsCatalog } from "../components/organisms/catalogs/ReceptorsCatalog";
 import { TorretaColorsCatalog } from "../components/organisms/catalogs/TorretaColorsCatalog";
 import { TorretasCatalog } from "../components/organisms/catalogs/TorretasCatalog";
-import { DashboardTemplate } from "../components/templates/monitoring/DashboardTemplate";
+// import { DashboardTemplate } from "../components/templates/monitoring/DashboardTemplate";
 
 type CatalogType = "signals" | "measurements";
 type SignalsCatalog = "areas" | "departments";
@@ -55,7 +55,7 @@ export function CatalogsPage() {
   };
 
   return (
-    <DashboardTemplate>
+    <div className="p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white">Gestión de Catálogos</h1>
@@ -171,6 +171,6 @@ export function CatalogsPage() {
           </Card>
         </div>
       </div>
-    </DashboardTemplate>
+    </div>
   );
 }

@@ -1,7 +1,9 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import { WebSocketProvider } from "@/contexts/WebSocketContext";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import IndexPage from "@/pages/index";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 
 import { AreaDowntimesPage } from "./pages/AreaDowntimesPage";
 import { CatalogsPage } from "./pages/CatalogsPage";
@@ -12,20 +14,29 @@ import RawSignalsPage from "./pages/rawSignals";
 
 function App() {
   return (
-    <WebSocketProvider>
+    <ErrorBoundary>
       <Routes>
-        <Route element={<IndexPage />} path="/" />
-        <Route element={<RawSignalsPage />} path="/raw-signals" />
         <Route
-          element={<DashboardMeasurementsPage />}
-          path="/dashboard-measurements"
+          element={<Navigate replace to="/dashboard/industrial" />}
+          path="/"
         />
-        <Route element={<IndustrialDashboard />} path="/industrial-dashboard" />
-        <Route element={<AreaDowntimesPage />} path="/area-downtimes" />
-        <Route element={<DevicesPage />} path="/devices" />
-        <Route element={<CatalogsPage />} path="/catalogs" />
+        <Route element={<DashboardLayout />} path="/dashboard">
+          <Route
+            index
+            element={<Navigate replace to="/dashboard/industrial" />}
+          />
+          <Route element={<IndexPage />} path="alerts" />
+          <Route element={<DashboardMeasurementsPage />} path="measurements" />
+          <Route element={<RawSignalsPage />} path="signals" />
+          <Route element={<IndustrialDashboard />} path="industrial" />
+          <Route element={<AreaDowntimesPage />} path="downtimes" />
+          <Route element={<DevicesPage />} path="devices" />
+          <Route element={<CatalogsPage />} path="catalogs" />
+        </Route>
+        {/* 404 Route */}
+        <Route element={<NotFoundPage />} path="*" />
       </Routes>
-    </WebSocketProvider>
+    </ErrorBoundary>
   );
 }
 

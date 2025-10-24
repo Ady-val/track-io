@@ -11,6 +11,8 @@ import {
 import { PiWaveSineBold } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
 
+// import { getSidebarRoutes } from "@/config/routes";
+
 interface SidebarItem {
   path: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -19,37 +21,37 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   {
-    path: "/",
+    path: "/dashboard/alerts",
     icon: FaChartLine,
     label: "Alertas",
   },
   {
-    path: "/dashboard-measurements",
+    path: "/dashboard/measurements",
     icon: FaGaugeHigh,
     label: "Mediciones",
   },
   {
-    path: "/raw-signals",
+    path: "/dashboard/signals",
     icon: PiWaveSineBold,
     label: "Señales",
   },
   {
-    path: "/industrial-dashboard",
+    path: "/dashboard/industrial",
     icon: FaIndustry,
     label: "Dashboard Industrial",
   },
   {
-    path: "/area-downtimes",
+    path: "/dashboard/downtimes",
     icon: FaClock,
     label: "Tiempos de Paro",
   },
   {
-    path: "/devices",
+    path: "/dashboard/devices",
     icon: FaMicrochip,
     label: "Dispositivos",
   },
   {
-    path: "/catalogs",
+    path: "/dashboard/catalogs",
     icon: FaDatabase,
     label: "Catálogos",
   },
@@ -64,7 +66,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-16 bg-slate-800 flex flex-col items-center py-6 px-2 z-50">
+    <div className="h-full w-16 bg-slate-800 flex flex-col items-center py-6 px-2 z-50 border-2">
       <div className="flex flex-col gap-3 w-full">
         {sidebarItems.map((item) => {
           const Icon = item.icon;

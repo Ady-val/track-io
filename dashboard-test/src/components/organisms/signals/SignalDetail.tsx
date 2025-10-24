@@ -96,7 +96,7 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
         </Button>
       </div>
 
-      <div className="flex-grow overflow-auto">
+      <div className="flex-grow overflow-y-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
           <StatCard
             icon={FaHashtag}

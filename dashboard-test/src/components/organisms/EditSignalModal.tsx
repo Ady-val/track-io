@@ -78,14 +78,14 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
         <div className="space-y-4">
           <div>
             <label
-              htmlFor="edit-signal-name"
               className="block text-sm font-medium text-slate-300 mb-2"
+              htmlFor="edit-signal-name"
             >
               Nombre del Botón
             </label>
             <Input
-              id="edit-signal-name"
               required
+              id="edit-signal-name"
               placeholder="Ej: Botón 1"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -94,14 +94,14 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
 
           <div>
             <label
-              htmlFor="edit-signal-external-value"
               className="block text-sm font-medium text-slate-300 mb-2"
+              htmlFor="edit-signal-external-value"
             >
               External Value ID
             </label>
             <Input
-              id="edit-signal-external-value"
               required
+              id="edit-signal-external-value"
               placeholder="Ej: 432"
               value={externalValueId}
               onChange={(e) => setExternalValueId(e.target.value)}
@@ -110,14 +110,14 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
 
           <div>
             <label
-              htmlFor="edit-signal-department"
               className="block text-sm font-medium text-slate-300 mb-2"
+              htmlFor="edit-signal-department"
             >
               Departamento
             </label>
             <Select
-              id="edit-signal-department"
               required
+              id="edit-signal-department"
               value={departmentId}
               onChange={(e) => setDepartmentId(e.target.value)}
             >

@@ -240,15 +240,15 @@ export function TorretaColorsCatalog() {
 
           <div className="space-y-2">
             <label
-              htmlFor="color-input"
               className="block text-sm font-medium text-gray-700"
+              htmlFor="color-input"
             >
               Color
             </label>
             <div className="flex items-center space-x-3">
               <input
-                id="color-input"
                 className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                id="color-input"
                 type="color"
                 value={formData.htmlColor}
                 onChange={(e) =>

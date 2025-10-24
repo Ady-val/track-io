@@ -20,7 +20,7 @@ import { TwoColumnLayout } from "@components/templates";
 
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useWebSocketEvent } from "@/hooks/useWebSocketEvent";
-import DefaultLayout from "@/layouts/default";
+// import DefaultLayout from "@/layouts/default";
 import deviceSignalService from "@/lib/services/device-signal.service";
 import deviceService from "@/lib/services/device.service";
 import measurementService from "@/lib/services/measurement.service";
@@ -349,7 +349,7 @@ export default function RawSignalsPage() {
   );
 
   return (
-    <DefaultLayout>
+    <>
       <TwoColumnLayout
         footer={
           <Card>
@@ -405,7 +405,7 @@ export default function RawSignalsPage() {
           </Card>
         }
         mainContent={
-          <Card className="bg-slate-700 border-slate-600 h-full flex flex-col">
+          <Card className="bg-slate-700 border-slate-600 flex flex-col h-full">
             <CardBody className="p-3 flex flex-col h-full overflow-hidden">
               <SignalDetail
                 device={selectedDevice}
@@ -439,7 +439,7 @@ export default function RawSignalsPage() {
           </Card>
         }
         sidebar={
-          <Card className="bg-slate-700 border-slate-600 h-full flex flex-col">
+          <Card className="bg-slate-700 border-slate-600 flex flex-col h-full">
             <CardBody className="p-3 flex flex-col h-full overflow-hidden">
               <Text
                 className="mb-2 flex items-center gap-2 flex-shrink-0"
@@ -448,18 +448,18 @@ export default function RawSignalsPage() {
                 <PiWaveSineBold className="text-blue-400 text-sm" />
                 Lista de Registros
               </Text>
-              <SignalList
-                formatDate={formatDate}
-                selectedId={selectedSignal?.id}
-                signals={filteredSignals}
-                onSelect={handleSelectSignal}
-              />
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <SignalList
+                  formatDate={formatDate}
+                  selectedId={selectedSignal?.id}
+                  signals={filteredSignals}
+                  onSelect={handleSelectSignal}
+                />
+              </div>
             </CardBody>
           </Card>
         }
       />
-
-      {/* Modal para crear Measurement, Device, DeviceSignal, DeviceAndSignal o DeviceSignalWithDevice */}
       <Modal
         isOpen={isModalOpen}
         size="md"
@@ -524,6 +524,6 @@ export default function RawSignalsPage() {
             />
           )}
       </Modal>
-    </DefaultLayout>
+    </>
   );
 }

@@ -9,7 +9,6 @@ import {
   AlertRuleDetailModal,
   CreateAlertRuleModal,
 } from "@components/organisms";
-import { DashboardTemplate } from "@components/templates";
 
 import { DataEmptyState } from "@/components/molecules/DataEmptyState";
 import { DataErrorState } from "@/components/molecules/DataErrorState";
@@ -284,28 +283,22 @@ function AlertRules() {
   };
 
   if (isLoading) {
-    return (
-      <DashboardTemplate>
-        <LoadingState message="Cargando condiciones de monitoreo..." />
-      </DashboardTemplate>
-    );
+    return <LoadingState message="Cargando condiciones de monitoreo..." />;
   }
 
   if (error) {
     return (
-      <DashboardTemplate>
-        <DataErrorState
-          error={error}
-          type="server"
-          onRetry={() => window.location.reload()}
-        />
-      </DashboardTemplate>
+      <DataErrorState
+        error={error}
+        type="server"
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   if (alertRules.length === 0) {
     return (
-      <DashboardTemplate>
+      <div className="p-6">
         <PageHeader
           action={{
             label: "Agregar Condición",
@@ -350,12 +343,12 @@ function AlertRules() {
             onClose={() => removeNotification(notification.id)}
           />
         ))}
-      </DashboardTemplate>
+      </div>
     );
   }
 
   return (
-    <DashboardTemplate>
+    <div className="p-6">
       <PageHeader
         action={{
           label: "Agregar Condición",
@@ -426,7 +419,7 @@ function AlertRules() {
           onClose={() => removeNotification(notification.id)}
         />
       ))}
-    </DashboardTemplate>
+    </div>
   );
 }
 
