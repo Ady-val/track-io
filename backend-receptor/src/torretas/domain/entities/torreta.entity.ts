@@ -18,6 +18,15 @@ export class Torreta {
   @Column({ type: 'varchar', length: 500, nullable: true })
   description?: string;
 
+  @Column({
+    name: 'external_id',
+    type: 'varchar',
+    length: 255,
+    unique: true,
+    nullable: true,
+  })
+  externalId?: string;
+
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 

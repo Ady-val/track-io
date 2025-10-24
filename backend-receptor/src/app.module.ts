@@ -22,6 +22,9 @@ import { ReceptorsModule } from './receptors/receptors.module';
 import { EventsModule } from './events/events.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
+import { AlertEscalationModule } from './alert-escalation/alert-escalation.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -29,6 +32,8 @@ import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
+    ScheduleModule.forRoot(),
+    HttpModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -40,7 +45,7 @@ import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
         database: configService.get<string>('DATABASE_NAME') ?? 'track_io',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get<string>('NODE_ENV') === 'development',
-        logging: configService.get<string>('NODE_ENV') === 'development',
+        // logging: configService.get<string>('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),
@@ -64,6 +69,7 @@ import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
     EventsModule,
     DashboardModule,
     AreaDowntimeModule,
+    AlertEscalationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

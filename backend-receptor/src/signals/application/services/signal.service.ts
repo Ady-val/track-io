@@ -19,6 +19,7 @@ import { WEBSOCKET_EVENTS } from '../../../websocket/constants/websocket-events.
 import { TypeOrmEventRepository } from '../../../events/domain/repositories/typeorm-event.repository';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { AreaDowntimeService } from '../../../area-downtime/application/services/area-downtime.service';
+import { AlertCronService } from '../../../alert-escalation/application/services/alert-cron.service';
 import type { Event } from '../../../events/domain/entities/event.entity';
 import type { Device } from '../../../devices/domain/entities/device.entity';
 import type { DeviceSignal } from '../../../device-signals/domain/entities/device-signal.entity';
@@ -34,7 +35,8 @@ export class SignalService {
     private readonly deviceSignalRepository: DeviceSignalRepository,
     private readonly eventRepository: TypeOrmEventRepository,
     private readonly webSocketEmitterService: WebSocketEmitterService,
-    private readonly areaDowntimeService: AreaDowntimeService
+    private readonly areaDowntimeService: AreaDowntimeService,
+    private readonly alertCronService: AlertCronService
   ) {}
 
   async processSignal(id: string, value: string): Promise<RawSignal> {
@@ -433,6 +435,16 @@ export class SignalService {
       this.logger.log(
         `WebSocket event 'closed-event' emitted for event ID: ${updatedEvent.id}`
       );
+
+      // NUEVA LÓGICA: Enviar alerta de cierre de evento
+      try {
+        await this.alertCronService.processClosedEvent(updatedEvent);
+      } catch (alertError) {
+        this.logger.error(
+          `Error processing close event alert: ${(alertError as Error).message}`,
+          (alertError as Error).stack
+        );
+      }
     } catch (error) {
       this.logger.error(
         `Error closing event: ${(error as Error).message}`,

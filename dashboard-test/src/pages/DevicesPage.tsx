@@ -14,6 +14,7 @@ import {
   DeleteDeviceModal,
   EditSignalModal,
   DeleteSignalModal,
+  EscalationConfigModal,
 } from "../components/organisms";
 import { useDevices } from "../hooks/useDevices";
 
@@ -25,8 +26,13 @@ export const DevicesPage: React.FC = () => {
   const [isDeleteDeviceModalOpen, setIsDeleteDeviceModalOpen] = useState(false);
   const [isEditSignalModalOpen, setIsEditSignalModalOpen] = useState(false);
   const [isDeleteSignalModalOpen, setIsDeleteSignalModalOpen] = useState(false);
+  const [isEscalationConfigModalOpen, setIsEscalationConfigModalOpen] =
+    useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [selectedSignal, setSelectedSignal] = useState<any>(null);
+  const [selectedSignal, setSelectedSignal] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -76,6 +82,11 @@ export const DevicesPage: React.FC = () => {
             onAddSignal={(device) => {
               setSelectedDevice(device);
               setIsAddSignalModalOpen(true);
+            }}
+            onConfigureEscalation={(signal, device) => {
+              setSelectedSignal(signal);
+              setSelectedDevice(device);
+              setIsEscalationConfigModalOpen(true);
             }}
             onDeleteDevice={(device) => {
               setSelectedDevice(device);
@@ -140,6 +151,15 @@ export const DevicesPage: React.FC = () => {
         isOpen={isDeleteSignalModalOpen}
         signal={selectedSignal}
         onClose={() => setIsDeleteSignalModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
+      <EscalationConfigModal
+        key={`${selectedDevice?.id}-${selectedSignal?.id}`}
+        device={selectedDevice}
+        isOpen={isEscalationConfigModalOpen}
+        signal={selectedSignal}
+        onClose={() => setIsEscalationConfigModalOpen(false)}
         onSuccess={() => refetch()}
       />
     </div>

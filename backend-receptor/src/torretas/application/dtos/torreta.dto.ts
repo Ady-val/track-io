@@ -18,6 +18,11 @@ export class CreateTorretaDto {
   description?: string;
 
   @IsOptional()
+  @IsString()
+  @Length(1, 255)
+  externalId?: string;
+
+  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 }
@@ -33,6 +38,11 @@ export class UpdateTorretaDto {
   @IsString()
   @Length(1, 500)
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 255)
+  externalId?: string;
 
   @IsOptional()
   @IsBoolean()

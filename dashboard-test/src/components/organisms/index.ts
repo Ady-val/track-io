@@ -25,6 +25,7 @@ export { AddSignalModal } from "./AddSignalModal";
 export { DeleteDeviceModal } from "./DeleteDeviceModal";
 export { EditSignalModal } from "./EditSignalModal";
 export { DeleteSignalModal } from "./DeleteSignalModal";
+export { EscalationConfigModal } from "./EscalationConfigModal";
 
 export { AreasGrid } from "./AreasGrid";
 export type { AreasGridProps } from "./AreasGrid";

@@ -266,4 +266,18 @@ export class TypeOrmEventRepository implements EventRepository {
 
     return queryBuilder.getCount();
   }
+
+  async findOpenEvents(): Promise<Event[]> {
+    return this.repository.find({
+      where: [
+        { status: EventStatus.OPEN },
+        { status: EventStatus.IN_PROGRESS },
+      ],
+      relations: ['area', 'department', 'device', 'deviceSignal'],
+    });
+  }
+
+  async closeEvent(id: number): Promise<Event> {
+    return this.updateStatus(id, EventStatus.CLOSED);
+  }
 }

@@ -10,9 +10,10 @@ import { DeviceRepository } from '../devices/domain/repositories/device.reposito
 import { DeviceSignalRepository } from '../device-signals/domain/repositories/device-signal.repository';
 import { Device } from '../devices/domain/entities/device.entity';
 import { DeviceSignal } from '../device-signals/domain/entities/device-signal.entity';
-import { WebSocketModule } from '../websocket/websocket.module';
+// import { WebSocketModule } from '../websocket/websocket.module';
 import { EventsModule } from '../events/events.module';
 import { AreaDowntimeModule } from '../area-downtime/area-downtime.module';
+import { AlertEscalationModule } from '../alert-escalation/alert-escalation.module';
 
 @Module({
   imports: [
@@ -22,9 +23,10 @@ import { AreaDowntimeModule } from '../area-downtime/area-downtime.module';
       Device,
       DeviceSignal,
     ]),
-    WebSocketModule,
+    // WebSocketModule,
     EventsModule,
     AreaDowntimeModule,
+    AlertEscalationModule,
   ],
   controllers: [SignalController],
   providers: [

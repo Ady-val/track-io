@@ -9,6 +9,7 @@ import {
   FaEdit,
   FaTrash,
   FaPlus,
+  FaCog,
 } from "react-icons/fa";
 
 import { Button } from "../atoms/Button";
@@ -29,6 +30,10 @@ interface DevicesTableProps {
     signal: NonNullable<Device["deviceSignals"]>[0],
     device: Device
   ) => void;
+  onConfigureEscalation?: (
+    signal: NonNullable<Device["deviceSignals"]>[0],
+    device: Device
+  ) => void;
 }
 
 export const DevicesTable: React.FC<DevicesTableProps> = ({
@@ -40,6 +45,7 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
   onAddSignal,
   onEditSignal,
   onDeleteSignal,
+  onConfigureEscalation,
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
@@ -213,7 +219,7 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
                                       <td className="px-4 py-3 text-sm text-slate-300">
                                         {signal.externalValueId}
                                       </td>
-                                      <td className="px-2 py-3 text-center w-24">
+                                      <td className="px-2 py-3 text-center w-32">
                                         <div className="flex items-center justify-center space-x-1">
                                           <Button
                                             className="flex items-center justify-center w-8 h-8 font-semibold text-white"
@@ -226,6 +232,21 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
                                             }
                                           >
                                             <FaEdit className="w-4 h-4" />
+                                          </Button>
+                                          <Button
+                                            className="flex items-center justify-center w-8 h-8 font-semibold"
+                                            color="primary"
+                                            size="sm"
+                                            title="Configurar escalamientos"
+                                            variant="solid"
+                                            onPress={() =>
+                                              onConfigureEscalation?.(
+                                                signal,
+                                                device
+                                              )
+                                            }
+                                          >
+                                            <FaCog className="w-4 h-4" />
                                           </Button>
                                           <Button
                                             className="flex items-center justify-center w-8 h-8 font-semibold"
