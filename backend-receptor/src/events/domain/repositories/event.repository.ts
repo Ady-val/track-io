@@ -9,6 +9,9 @@ export interface CreateEventDto {
   deviceName: string;
   deviceSignalId: number;
   deviceSignalName: string;
+  virtualDevice?: boolean;
+  reason?: string;
+  comment?: string;
 }
 
 export interface EventFilters {

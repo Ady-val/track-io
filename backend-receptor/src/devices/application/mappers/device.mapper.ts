@@ -21,6 +21,7 @@ export class DeviceMapper {
       areaId: device.areaId,
       areaName: device.area?.name ?? '',
       externalId: device.externalId,
+      isVirtualDevice: device.isVirtualDevice,
       deviceSignals,
       createdAt: device.createdAt,
       updatedAt: device.updatedAt,

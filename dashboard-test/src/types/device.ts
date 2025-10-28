@@ -4,6 +4,7 @@ export interface Device {
   areaId: number;
   areaName: string;
   externalId: string;
+  isVirtualDevice: boolean;
   createdAt: string;
   updatedAt: string;
   deviceSignals?: DeviceSignal[];
@@ -37,11 +38,13 @@ export interface CreateDeviceData {
   name: string;
   areaId: number;
   externalId: string;
+  isVirtualDevice?: boolean;
 }
 
 export interface UpdateDeviceData {
   name?: string;
   externalId?: string;
+  isVirtualDevice?: boolean;
 }
 
 export interface CreateDeviceSignalData {

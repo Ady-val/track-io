@@ -10,7 +10,10 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { SignalDto } from '../application/dtos/signal.dto';
+import {
+  SignalDto,
+  VirtualDeviceSignalDto,
+} from '../application/dtos/signal.dto';
 import { SignalService } from '../application/services/signal.service';
 import { RawSignal } from '../domain/entities/raw-signal.entity';
 import { RawSignalFilters } from '../domain/repositories/raw-signal.repository';
@@ -32,6 +35,27 @@ export class SignalController {
 
     return {
       message: 'Signal processed successfully',
+      data: savedSignal,
+    };
+  }
+
+  @Post('virtual-device')
+  @HttpCode(HttpStatus.CREATED)
+  async createVirtualDeviceSignal(
+    @Body() signalDto: VirtualDeviceSignalDto
+  ): Promise<{
+    message: string;
+    data: RawSignal;
+  }> {
+    const savedSignal = await this.signalService.processVirtualDeviceSignal(
+      signalDto.id,
+      signalDto.value,
+      signalDto.reason,
+      signalDto.comment
+    );
+
+    return {
+      message: 'Virtual device signal processed successfully',
       data: savedSignal,
     };
   }

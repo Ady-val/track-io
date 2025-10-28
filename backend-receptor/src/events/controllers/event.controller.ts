@@ -5,16 +5,40 @@ import {
   Delete,
   Param,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { TypeOrmEventRepository } from '../domain/repositories/typeorm-event.repository';
+import { EventFilters } from '../domain/repositories/event.repository';
+import { EventStatus } from '../domain/entities/event.entity';
 
 @Controller('events')
 export class EventController {
   constructor(private readonly eventRepository: TypeOrmEventRepository) {}
 
   @Get()
-  async findOpenEvents() {
-    return await this.eventRepository.findOpenEvents();
+  async findEvents(
+    @Query('deviceId') deviceId?: string,
+    @Query('deviceSignalId') deviceSignalId?: string,
+    @Query('status') status?: string
+  ) {
+    const filters: EventFilters = {};
+
+    if (deviceId) filters.deviceId = parseInt(deviceId, 10);
+    if (deviceSignalId) filters.deviceSignalId = parseInt(deviceSignalId, 10);
+
+    // Si hay status, manejar múltiples valores separados por coma
+    if (status) {
+      const statuses = status.split(',');
+      if (statuses.length === 1) {
+        filters.status = status as EventStatus;
+      } else {
+        // Para múltiples statuses, filtrar después de obtener todos
+        const allEvents = await this.eventRepository.findAll(filters);
+        return allEvents.filter(event => statuses.includes(event.status));
+      }
+    }
+
+    return await this.eventRepository.findAll(filters);
   }
 
   @Get('all')

@@ -12,6 +12,7 @@ export class DeviceResponseDto {
   areaId!: number;
   areaName!: string;
   externalId!: string;
+  isVirtualDevice!: boolean;
   deviceSignals!: DeviceSignalResponseDto[];
   createdAt!: Date;
   updatedAt!: Date;

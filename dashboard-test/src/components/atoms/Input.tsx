@@ -8,7 +8,8 @@ export interface InputProps extends HeroUIInputProps {}
 
 export const Input: React.FC<InputProps> = ({ classNames, ...props }) => {
   const defaultClassNames = {
-    input: "text-white placeholder:text-slate-400",
+    input:
+      "!text-white placeholder:text-slate-400 focus:!text-black hover:!text-black",
     inputWrapper:
       "bg-slate-700 border-slate-600 hover:border-slate-500 focus-within:border-blue-500",
     ...classNames,

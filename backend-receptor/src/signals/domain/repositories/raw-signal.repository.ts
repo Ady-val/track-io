@@ -6,6 +6,9 @@ import { RawSignal } from '../entities/raw-signal.entity';
 export interface CreateRawSignalDto {
   externalId: string;
   value: string;
+  virtualDevice?: boolean;
+  reason?: string;
+  comment?: string;
 }
 
 export interface RawSignalFilters {

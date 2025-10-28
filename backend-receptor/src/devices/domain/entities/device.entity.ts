@@ -28,6 +28,9 @@ export class Device {
   @Column({ name: 'external_id', type: 'varchar', length: 255, unique: true })
   externalId!: string;
 
+  @Column({ name: 'is_virtual_device', type: 'boolean', default: false })
+  isVirtualDevice!: boolean;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp with time zone',

@@ -20,6 +20,15 @@ export class RawMeasurement {
   @Column({ type: 'varchar', length: 255 })
   value!: string;
 
+  @Column({ name: 'virtual_device', type: 'boolean', default: false })
+  virtualDevice!: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  reason?: string;
+
+  @Column({ type: 'text', nullable: true })
+  comment?: string;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp with time zone',

@@ -1,9 +1,15 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 
-import { FaFloppyDisk, FaXmark, FaTag, FaLocationDot } from "react-icons/fa6";
+import {
+  FaFloppyDisk,
+  FaXmark,
+  FaTag,
+  FaLocationDot,
+  FaDesktop,
+} from "react-icons/fa6";
 
-import { Button, Input, Select, Text } from "@components/atoms";
+import { Button, Input, Select, Text, Checkbox } from "@components/atoms";
 
 import { useAreas } from "@/hooks/useAreas";
 import type { CreateDeviceData } from "@/types/device";
@@ -23,6 +29,7 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
 }) => {
   const [name, setName] = useState<string>("");
   const [areaId, setAreaId] = useState<number | string>("");
+  const [isVirtualDevice, setIsVirtualDevice] = useState<boolean>(false);
   const { areas, loading: areasLoading } = useAreas();
 
   useEffect(() => {
@@ -42,6 +49,7 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
       externalId,
       name: name.trim(),
       areaId: Number(areaId),
+      isVirtualDevice,
     });
   };
 
@@ -79,7 +87,7 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
       </div>
 
       {/* Area Select */}
-      <div className="mb-6">
+      <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <FaLocationDot className="text-green-400 text-sm" />
           <Text color="secondary" variant="small">
@@ -104,6 +112,26 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
             Cargando áreas...
           </Text>
         )}
+      </div>
+
+      {/* Virtual Device Checkbox */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <FaDesktop className="text-purple-400 text-sm" />
+          <Text color="secondary" variant="small">
+            Tipo de Dispositivo
+          </Text>
+        </div>
+        <Checkbox
+          isSelected={isVirtualDevice}
+          onValueChange={setIsVirtualDevice}
+          color="primary"
+          size="md"
+        >
+          <Text color="secondary" variant="small">
+            Dispositivo Virtual (para computadora)
+          </Text>
+        </Checkbox>
       </div>
 
       {/* Actions */}

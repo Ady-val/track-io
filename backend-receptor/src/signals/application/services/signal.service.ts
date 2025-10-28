@@ -90,6 +90,60 @@ export class SignalService {
     }
   }
 
+  async processVirtualDeviceSignal(
+    id: string,
+    value: string,
+    reason?: string,
+    comment?: string
+  ): Promise<RawSignal> {
+    this.logger.log(
+      `Received virtual device signal data: ${JSON.stringify({ id, value, reason, comment })}`
+    );
+
+    try {
+      const createDto: CreateRawSignalDto = {
+        externalId: id,
+        value: value,
+        virtualDevice: true,
+        ...(reason && { reason }),
+        ...(comment && { comment }),
+      };
+
+      const savedSignal = await this.rawSignalRepository.create(createDto);
+      this.logger.log(
+        `Raw virtual device signal saved to database with ID: ${savedSignal.id}`
+      );
+
+      await this.processSignalWithDeviceRelation(id, value);
+      await this.handleEventLogicForVirtualDevice(id, value, reason, comment);
+
+      try {
+        this.webSocketEmitterService.emitNewRawSignal({
+          id: savedSignal.id,
+          externalId: savedSignal.externalId,
+          value: savedSignal.value,
+          createdAt: savedSignal.createdAt,
+        });
+        this.logger.log(
+          `WebSocket message emitted for event: ${WEBSOCKET_EVENTS.NEW_RAW_SIGNAL}`
+        );
+      } catch (wsError) {
+        this.logger.error(
+          `Error emitting WebSocket message: ${(wsError as Error).message}`,
+          (wsError as Error).stack
+        );
+      }
+
+      return savedSignal;
+    } catch (error) {
+      this.logger.error(
+        `Error saving virtual device signal to database: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      throw error;
+    }
+  }
+
   private async processSignalWithDeviceRelation(
     externalId: string,
     value: string
@@ -98,9 +152,13 @@ export class SignalService {
       // Buscar device por externalId
       const device = await this.deviceRepository.findByExternalId(externalId);
 
-      // Buscar device-signal por externalValueId (que corresponde al value)
-      const deviceSignal =
-        await this.deviceSignalRepository.findByExternalValueId(value);
+      // Buscar device-signal por externalValueId Y deviceId para evitar colisiones
+      const deviceSignal = device
+        ? await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
+            value,
+            device.id
+          )
+        : await this.deviceSignalRepository.findByExternalValueId(value);
 
       const processedSignalDto: CreateProcessedSignalDto = {};
 
@@ -261,16 +319,26 @@ export class SignalService {
     value: string
   ): Promise<void> {
     try {
-      // Buscar device y deviceSignal
+      // Buscar device por externalId
       const device = await this.deviceRepository.findByExternalId(externalId);
-      const deviceSignal =
-        await this.deviceSignalRepository.findByExternalValueId(value);
 
-      if (!device || !deviceSignal) {
-        this.logger.log(
-          `No device or deviceSignal found for externalId: ${externalId}, value: ${value}`
+      if (!device) {
+        this.logger.log(`No device found for externalId: ${externalId}`);
+        return;
+      }
+
+      // Buscar deviceSignal por externalValueId Y deviceId para evitar colisiones
+      const deviceSignal =
+        await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
+          value,
+          device.id
         );
-        return; // No hay device/signal correspondiente
+
+      if (!deviceSignal) {
+        this.logger.log(
+          `No deviceSignal found for externalValueId: ${value} and deviceId: ${device.id}`
+        );
+        return;
       }
 
       this.logger.log(
@@ -448,6 +516,125 @@ export class SignalService {
     } catch (error) {
       this.logger.error(
         `Error closing event: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+    }
+  }
+
+  private async handleEventLogicForVirtualDevice(
+    externalId: string,
+    value: string,
+    reason?: string,
+    comment?: string
+  ): Promise<void> {
+    try {
+      const device = await this.deviceRepository.findByExternalId(externalId);
+
+      if (!device) {
+        this.logger.log(`No device found for externalId: ${externalId}`);
+        return;
+      }
+
+      // CRÍTICO: Buscar deviceSignal por externalValueId Y deviceId para evitar colisiones
+      const deviceSignal =
+        await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
+          value,
+          device.id
+        );
+
+      if (!deviceSignal) {
+        this.logger.log(
+          `No deviceSignal found for externalValueId: ${value} and deviceId: ${device.id}`
+        );
+        return;
+      }
+
+      this.logger.log(
+        `Processing virtual device event logic for device: ${device.name} (ID: ${device.id}), signal: ${deviceSignal.name} (ID: ${deviceSignal.id}, ExternalValueId: ${deviceSignal.externalValueId}, DepartmentId: ${deviceSignal.departmentId})`
+      );
+
+      const existingOpenEvent =
+        await this.eventRepository.findOpenByDeviceAndSignal(
+          device.id,
+          deviceSignal.id
+        );
+
+      const existingInProgressEvent =
+        await this.eventRepository.findInProgressByDeviceAndSignal(
+          device.id,
+          deviceSignal.id
+        );
+
+      if (existingInProgressEvent) {
+        await this.closeEvent(existingInProgressEvent);
+      } else if (existingOpenEvent) {
+        await this.setEventInProgress(existingOpenEvent);
+      } else {
+        await this.createNewVirtualDeviceEvent(
+          device,
+          deviceSignal,
+          reason,
+          comment
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error handling virtual device event logic: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+    }
+  }
+
+  private async createNewVirtualDeviceEvent(
+    device: Device,
+    deviceSignal: DeviceSignal,
+    reason?: string,
+    comment?: string
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        `Creating new virtual device event - Device: ${device.name} (ID: ${device.id}), Signal: ${deviceSignal.name} (ID: ${deviceSignal.id})`
+      );
+
+      const event = await this.eventRepository.create({
+        areaId: device.areaId,
+        areaName: device.area?.name ?? 'Unknown Area',
+        departmentId: deviceSignal.departmentId || 1,
+        departmentName: deviceSignal.department?.name ?? 'Unknown Department',
+        deviceId: device.id,
+        deviceName: device.name,
+        deviceSignalId: deviceSignal.id,
+        deviceSignalName: deviceSignal.name,
+        virtualDevice: true,
+        ...(reason && { reason }),
+        ...(comment && { comment }),
+      });
+
+      this.logger.log(`Created new virtual device event with ID: ${event.id}`);
+
+      try {
+        await this.areaDowntimeService.handleEventForAreaDowntime(event);
+      } catch (downtimeError) {
+        this.logger.error(
+          `Error handling area downtime for new virtual device event: ${(downtimeError as Error).message}`,
+          (downtimeError as Error).stack
+        );
+      }
+
+      this.webSocketEmitterService.emitToAll('new-event', {
+        area: event.areaName,
+        department: event.departmentName,
+        status: event.status,
+        device: event.deviceName,
+        signal: event.deviceSignalName,
+      });
+
+      this.logger.log(
+        `WebSocket event 'new-event' emitted for virtual device event ID: ${event.id}`
+      );
+    } catch (error) {
+      this.logger.error(
+        `Error creating new virtual device event: ${(error as Error).message}`,
         (error as Error).stack
       );
     }

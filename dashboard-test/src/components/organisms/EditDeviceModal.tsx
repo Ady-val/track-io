@@ -2,10 +2,11 @@ import type { Device, UpdateDeviceData } from "../../types/device";
 
 import React, { useState, useEffect } from "react";
 
-import { FaMicrochip } from "react-icons/fa";
+import { FaMicrochip, FaDesktop } from "react-icons/fa";
 
 import deviceService from "../../lib/services/device.service";
 import { Button } from "../atoms/Button";
+import { Checkbox } from "../atoms/Checkbox";
 import { Input } from "../atoms/Input";
 
 import { Modal } from "./Modal";
@@ -25,12 +26,14 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 }) => {
   const [name, setName] = useState("");
   const [externalId, setExternalId] = useState("");
+  const [isVirtualDevice, setIsVirtualDevice] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (device && isOpen) {
       setName(device.name);
       setExternalId(device.externalId);
+      setIsVirtualDevice(device.isVirtualDevice);
     }
   }, [device, isOpen]);
 
@@ -43,6 +46,7 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
       const deviceData: UpdateDeviceData = {
         name,
         externalId,
+        isVirtualDevice,
       };
 
       await deviceService.update(device.id, deviceData);
@@ -118,6 +122,25 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
               id="edit-device-area"
               value={device.areaName}
             />
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <FaDesktop className="text-purple-400 text-sm" />
+              <span className="text-sm font-medium text-slate-300">
+                Tipo de Dispositivo
+              </span>
+            </div>
+            <Checkbox
+              color="primary"
+              isSelected={isVirtualDevice}
+              size="md"
+              onValueChange={setIsVirtualDevice}
+            >
+              <span className="text-sm text-slate-400">
+                Dispositivo Virtual (para computadora)
+              </span>
+            </Checkbox>
           </div>
         </div>
 

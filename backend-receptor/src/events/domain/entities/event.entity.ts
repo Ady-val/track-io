@@ -92,6 +92,15 @@ export class Event {
   })
   durationSeconds?: number;
 
+  @Column({ name: 'virtual_device', type: 'boolean', default: false })
+  virtualDevice!: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  reason?: string;
+
+  @Column({ type: 'text', nullable: true })
+  comment?: string;
+
   // Relations
   @ManyToOne(() => Area)
   @JoinColumn({ name: 'area_id' })

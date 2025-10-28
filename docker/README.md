@@ -33,12 +33,14 @@
 
 - ✅ PostgreSQL Database
 - ✅ NestJS Backend with migrations executed
-- ✅ React + Vite Frontend
+- ✅ React + Vite Frontend (Dashboard)
+- ✅ React + Vite Virtual Device Simulator
 
 ## 📋 Services
 
-- **Frontend**: http://localhost
-- **Backend API**: http://localhost:3000
+- **Frontend (Dashboard)**: http://localhost (or http://[HOST_IP] for network access)
+- **Virtual Device**: http://localhost:8080 (or http://[HOST_IP]:8080 for network access)
+- **Backend API**: http://localhost:3000 (or http://[HOST_IP]:3000 for network access)
 - **Database**: localhost:5432
 
 ## 🔄 Updating the System
@@ -75,6 +77,33 @@ docker-compose exec backend npm run migration:run
 
 The system is configured to work on internal networks. Other devices on the same network can access using the server's IP:
 
+### **Setup for Network Access:**
+
+1. **Find your machine's IP address:**
+
+   ```bash
+   # Windows
+   ipconfig
+
+   # Linux/Mac
+   ip addr show
+   ```
+
+2. **Configure the IP in .env file:**
+
+   ```bash
+   # Edit .env file and set your IP
+   HOST_IP=192.168.1.100  # Replace with your actual IP
+   ```
+
+3. **Restart the services:**
+   ```bash
+   docker-compose down
+   docker-compose up -d --build
+   ```
+
+### **Access URLs:**
+
 - **Frontend**: http://[SERVER_IP]
 - **Backend API**: http://[SERVER_IP]:3000
 
@@ -87,6 +116,7 @@ docker-compose logs -f
 # View logs for specific service
 docker-compose logs -f backend
 docker-compose logs -f frontend
+docker-compose logs -f virtual-device
 
 # Stop services
 docker-compose down
@@ -97,6 +127,7 @@ docker-compose down -v
 # Rebuild specific service
 docker-compose up -d --build backend
 docker-compose up -d --build frontend
+docker-compose up -d --build virtual-device
 
 # Check service status
 docker-compose ps
@@ -122,6 +153,12 @@ POSTGRES_PORT=5432
 # Service Ports
 BACKEND_PORT=3000
 FRONTEND_PORT=80
+VIRTUAL_DEVICE_PORT=8080
+
+# Network Configuration
+# Set this to your machine's IP address for network access
+# Leave empty or set to 'localhost' for local-only access
+HOST_IP=192.168.1.100
 
 # Node Environment
 NODE_ENV=production
@@ -180,13 +217,14 @@ docker-compose exec backend npm run migration:run
 
 ```
 docker/
-├── docker-compose.yml      # Main orchestration file
-├── Dockerfile.backend      # Backend container definition
-├── Dockerfile.frontend     # Frontend container definition
-├── .dockerignore          # Files to ignore during build
-├── .env                   # Environment variables (create from env.example)
-├── env.example            # Environment variables template
-└── README.md              # This file
+├── docker-compose.yml           # Main orchestration file
+├── Dockerfile.backend           # Backend container definition
+├── Dockerfile.frontend          # Frontend container definition
+├── Dockerfile.virtual-device    # Virtual Device container definition
+├── .dockerignore               # Files to ignore during build
+├── .env                        # Environment variables (create from env.example)
+├── env.example                 # Environment variables template
+└── README.md                   # This file
 ```
 
 ## 🎯 Key Features

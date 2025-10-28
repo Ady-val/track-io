@@ -30,3 +30,6 @@ export type { ConnectionStatusIndicatorProps } from "./ConnectionStatusIndicator
 
 export { CustomScrollbar } from "./CustomScrollbar";
 export type { CustomScrollbarProps } from "./CustomScrollbar";
+
+export { Checkbox } from "./Checkbox";
+export type { CheckboxProps } from "./Checkbox";

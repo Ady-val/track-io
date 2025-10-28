@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsNumber,
   IsPositive,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateDeviceDto {
@@ -18,6 +19,10 @@ export class CreateDeviceDto {
   @IsString({ message: 'externalId must be a string' })
   @IsNotEmpty({ message: 'externalId is required' })
   externalId!: string;
+
+  @IsOptional()
+  @IsBoolean({ message: 'isVirtualDevice must be a boolean' })
+  isVirtualDevice?: boolean;
 }
 
 export class UpdateDeviceDto {
@@ -35,6 +40,10 @@ export class UpdateDeviceDto {
   @IsString({ message: 'externalId must be a string' })
   @IsNotEmpty({ message: 'externalId cannot be empty' })
   externalId?: string;
+
+  @IsOptional()
+  @IsBoolean({ message: 'isVirtualDevice must be a boolean' })
+  isVirtualDevice?: boolean;
 }
 
 export class DeviceResponseDto {
@@ -42,6 +51,7 @@ export class DeviceResponseDto {
   name!: string;
   areaId!: number;
   externalId!: string;
+  isVirtualDevice!: boolean;
   createdAt!: Date;
   updatedAt!: Date;
   deletedAt?: Date;
