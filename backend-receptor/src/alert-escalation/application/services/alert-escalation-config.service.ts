@@ -68,7 +68,7 @@ export class AlertEscalationConfigService {
     if (existingConfig) {
       // Actualizar configuración existente
       const updateData: any = {
-        endpointUrl: 'http://localhost:1880/events', // Siempre usar el endpoint por defecto
+        endpointUrl: 'http://host.docker.internal:1880/events',
       };
       if (dto.warningDelayMinutes !== undefined)
         updateData.warningDelayMinutes = dto.warningDelayMinutes;
@@ -89,7 +89,7 @@ export class AlertEscalationConfigService {
       const createData: any = {
         deviceId: dto.deviceId,
         deviceSignalId: dto.deviceSignalId,
-        endpointUrl: 'http://localhost:1880/events', // Siempre usar el endpoint por defecto
+        endpointUrl: 'http://host.docker.internal:1880/events',
       };
       if (dto.warningDelayMinutes !== undefined)
         createData.warningDelayMinutes = dto.warningDelayMinutes;

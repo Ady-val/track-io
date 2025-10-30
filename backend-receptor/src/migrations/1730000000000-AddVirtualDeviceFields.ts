@@ -3,6 +3,8 @@ import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 export class AddVirtualDeviceFields1730000000000
   implements MigrationInterface
 {
+  name = 'AddVirtualDeviceFields1730000000000';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add is_virtual_device to devices table
     const devicesTable = await queryRunner.getTable('devices');

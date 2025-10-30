@@ -1,4 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 import { Signal } from '../../domain/entities/signal.entity';
 import {
   RawSignalRepository,
@@ -36,7 +39,9 @@ export class SignalService {
     private readonly eventRepository: TypeOrmEventRepository,
     private readonly webSocketEmitterService: WebSocketEmitterService,
     private readonly areaDowntimeService: AreaDowntimeService,
-    private readonly alertCronService: AlertCronService
+    private readonly alertCronService: AlertCronService,
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService
   ) {}
 
   async processSignal(id: string, value: string): Promise<RawSignal> {
@@ -395,6 +400,8 @@ export class SignalService {
 
       this.logger.log(`Created new event with ID: ${event.id}`);
 
+      await this.sendEventWebhook(event, 'created');
+
       // Manejar lógica de tiempo de paro del área
       try {
         await this.areaDowntimeService.handleEventForAreaDowntime(event);
@@ -433,6 +440,8 @@ export class SignalService {
       );
 
       this.logger.log(`Event ${event.id} set to in-progress`);
+
+      await this.sendEventWebhook(updatedEvent, 'updated');
 
       // Manejar lógica de tiempo de paro del área
       try {
@@ -480,6 +489,8 @@ export class SignalService {
       this.logger.log(
         `Event ${event.id} closed with duration: ${durationSeconds} seconds`
       );
+
+      await this.sendEventWebhook(updatedEvent, 'closed');
 
       // Manejar lógica de tiempo de paro del área
       try {
@@ -612,6 +623,8 @@ export class SignalService {
 
       this.logger.log(`Created new virtual device event with ID: ${event.id}`);
 
+      await this.sendEventWebhook(event, 'created');
+
       try {
         await this.areaDowntimeService.handleEventForAreaDowntime(event);
       } catch (downtimeError) {
@@ -635,6 +648,51 @@ export class SignalService {
     } catch (error) {
       this.logger.error(
         `Error creating new virtual device event: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+    }
+  }
+
+  private async sendEventWebhook(event: Event, action: 'created' | 'updated' | 'closed'): Promise<void> {
+    try {
+      const url =
+        this.configService.get<string>('EVENTS_WEBHOOK_URL') ||
+        // En Windows/macOS, host.docker.internal apunta al host desde Docker
+        'http://host.docker.internal:1880/events';
+      const payload = {
+        action,
+        event: {
+          id: event.id,
+          status: event.status,
+          areaId: event.areaId,
+          areaName: event.areaName,
+          departmentId: event.departmentId,
+          departmentName: event.departmentName,
+          deviceId: event.deviceId,
+          deviceName: event.deviceName,
+          deviceSignalId: event.deviceSignalId,
+          deviceSignalName: event.deviceSignalName,
+          createdAt: event.createdAt,
+          updatedAt: event.updatedAt,
+          inProgressAt: event.inProgressAt,
+          closedAt: event.closedAt,
+          durationSeconds: event.durationSeconds,
+          virtualDevice: event.virtualDevice,
+          reason: event.reason,
+          comment: event.comment,
+        },
+      };
+
+      await firstValueFrom(
+        this.httpService.post(url, payload, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 5000,
+        })
+      );
+      this.logger.log(`Event webhook sent to ${url} for action ${action}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send event webhook: ${(error as Error).message}`,
         (error as Error).stack
       );
     }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SignalController } from './controllers/signal.controller';
 import { SignalService } from './application/services/signal.service';
@@ -17,6 +18,7 @@ import { AlertEscalationModule } from '../alert-escalation/alert-escalation.modu
 
 @Module({
   imports: [
+    HttpModule,
     TypeOrmModule.forFeature([
       RawSignal,
       ProcessedSignal,

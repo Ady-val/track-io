@@ -53,6 +53,7 @@ export class AlertEscalationService {
     endpointUrl: string
   ): Promise<boolean> {
     try {
+      const resolvedUrl = this.resolveEndpointUrl(endpointUrl);
       const payload = {
         data: messages.map(msg => ({
           capcode: msg.targetId,
@@ -62,7 +63,7 @@ export class AlertEscalationService {
       };
 
       this.logger.log(
-        `🚨 ALERT ESCALATION - Sending messages to endpoint ${endpointUrl}:`
+        `🚨 ALERT ESCALATION - Sending messages to endpoint ${resolvedUrl}:`
       );
       this.logger.log('📤 PAYLOAD TO SEND:', JSON.stringify(payload, null, 2));
       this.logger.log('🎯 MESSAGES DETAILS:');
@@ -74,7 +75,7 @@ export class AlertEscalationService {
 
       try {
         const response = await firstValueFrom(
-          this.httpService.post(endpointUrl, payload, {
+          this.httpService.post(resolvedUrl, payload, {
             headers: { 'Content-Type': 'application/json' },
             timeout: 5000,
           })
@@ -86,7 +87,7 @@ export class AlertEscalationService {
         return true;
       } catch (httpError) {
         this.logger.error(
-          `❌ HTTP Error sending messages to endpoint ${endpointUrl}:`,
+          `❌ HTTP Error sending messages to endpoint ${resolvedUrl}:`,
           httpError instanceof Error ? httpError.message : String(httpError)
         );
         return false;
@@ -97,6 +98,22 @@ export class AlertEscalationService {
         error instanceof Error ? error.message : String(error)
       );
       return false;
+    }
+  }
+
+  private resolveEndpointUrl(endpointUrl: string): string {
+    try {
+      const url = new URL(endpointUrl);
+      if (
+        url.hostname === 'localhost' ||
+        url.hostname === '127.0.0.1' ||
+        url.hostname === '::1'
+      ) {
+        url.hostname = 'host.docker.internal';
+      }
+      return url.toString();
+    } catch {
+      return endpointUrl;
     }
   }
 
