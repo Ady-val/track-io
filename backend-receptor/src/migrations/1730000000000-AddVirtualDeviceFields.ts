@@ -1,14 +1,11 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddVirtualDeviceFields1730000000000
-  implements MigrationInterface
-{
-  name = 'AddVirtualDeviceFields1730000000000';
-
+export class AddVirtualDeviceFields1730000000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add is_virtual_device to devices table
     const devicesTable = await queryRunner.getTable('devices');
-    const hasIsVirtualDevice = devicesTable?.findColumnByName('is_virtual_device');
+    const hasIsVirtualDevice =
+      devicesTable?.findColumnByName('is_virtual_device');
 
     if (!hasIsVirtualDevice) {
       await queryRunner.addColumn(
@@ -23,7 +20,8 @@ export class AddVirtualDeviceFields1730000000000
 
     // Add virtual_device, reason, and comment to raw_measurements table
     const rawMeasurementsTable = await queryRunner.getTable('raw_measurements');
-    const hasVirtualDevice = rawMeasurementsTable?.findColumnByName('virtual_device');
+    const hasVirtualDevice =
+      rawMeasurementsTable?.findColumnByName('virtual_device');
     const hasReason = rawMeasurementsTable?.findColumnByName('reason');
     const hasComment = rawMeasurementsTable?.findColumnByName('comment');
 
@@ -63,7 +61,8 @@ export class AddVirtualDeviceFields1730000000000
 
     // Add virtual_device, reason, and comment to events table
     const eventsTable = await queryRunner.getTable('events');
-    const hasEventsVirtualDevice = eventsTable?.findColumnByName('virtual_device');
+    const hasEventsVirtualDevice =
+      eventsTable?.findColumnByName('virtual_device');
     const hasEventsReason = eventsTable?.findColumnByName('reason');
     const hasEventsComment = eventsTable?.findColumnByName('comment');
 
@@ -134,4 +133,3 @@ export class AddVirtualDeviceFields1730000000000
     }
   }
 }
-

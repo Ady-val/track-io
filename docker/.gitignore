@@ -1,0 +1,9 @@
+# Auto-generated environment files
+.env.host
+
+# Environment files with secrets (optional)
+.env
+
+# Docker volumes
+postgres_data/
+

@@ -20,28 +20,45 @@
 
 3. **Start the complete system:**
 
-   ```bash
-   docker-compose up -d --build
+   **Windows:**
+   ```batch
+   start.bat
    ```
 
-4. **Run database migrations:**
+   **Linux/Mac:**
+   ```bash
+   chmod +x start.sh
+   ./start.sh
+   ```
+
+   The script will automatically:
+   - ✅ Detect your machine's IP address
+   - ✅ Configure the system for network access
+   - ✅ Build and start all services
+   - ✅ Show you the access URLs
+
+4. **Run database migrations (first time only):**
    ```bash
    docker-compose exec backend npm run migration:run
    ```
 
-**That's it!** The system is now running with:
-
-- ✅ PostgreSQL Database
-- ✅ NestJS Backend with migrations executed
-- ✅ React + Vite Frontend (Dashboard)
-- ✅ React + Vite Virtual Device Simulator
+**That's it!** The system is now running and accessible from any device on your network!
 
 ## 📋 Services
 
-- **Frontend (Dashboard)**: http://localhost (or http://[HOST_IP] for network access)
-- **Virtual Device**: http://localhost:8080 (or http://[HOST_IP]:8080 for network access)
-- **Backend API**: http://localhost:3000 (or http://[HOST_IP]:3000 for network access)
-- **Database**: localhost:5432
+After running `start.bat` or `start.sh`, you'll see the access URLs:
+
+### Local Access (same machine):
+- **Dashboard**: http://localhost
+- **Virtual Device**: http://localhost/virtual-device
+- **Backend API**: http://localhost:3000
+
+### Network Access (other devices):
+- **Dashboard**: http://[YOUR_IP]
+- **Virtual Device**: http://[YOUR_IP]/virtual-device
+- **Backend API**: http://[YOUR_IP]:3000
+
+The scripts automatically detect your IP and configure everything!
 
 ## 🔄 Updating the System
 
@@ -53,70 +70,76 @@ git pull
 
 # 2. Rebuild and restart services
 cd docker
-docker-compose up -d --build
+
+# Windows:
+start.bat
+
+# Linux/Mac:
+./start.sh
 
 # 3. If there are new migrations, run them
 docker-compose exec backend npm run migration:run
 ```
 
-### When you add new migrations:
+**Note:** The `start.bat` or `start.sh` script automatically detects if your IP changed and only rebuilds if necessary, making subsequent starts much faster!
 
-```bash
-# 1. Pull latest changes
-git pull
+## 🌐 Network Access
 
-# 2. Rebuild and restart services
-cd docker
-docker-compose up -d --build
+### ✨ Automatic Configuration
 
-# 3. Run new migrations
-docker-compose exec backend npm run migration:run
+The system **automatically configures itself for network access** when you run `start.bat` or `start.sh`. No manual configuration needed!
+
+**How it works:**
+1. The script detects your machine's IP address (e.g., 192.168.1.100)
+2. Builds the frontend applications with the correct API URL
+3. Exposes services on all network interfaces
+4. Shows you the access URLs for both local and network access
+
+### 🔄 When You Change Networks
+
+If you switch from WiFi to Ethernet (or vice versa), just run `start.bat` or `start.sh` again:
+
+```batch
+# Windows
+start.bat
+
+# Linux/Mac
+./start.sh
 ```
 
-## 🌐 Internal Network Access
+The script will detect the new IP and rebuild only if necessary.
 
-The system is configured to work on internal networks. Other devices on the same network can access using the server's IP:
+### 📱 Accessing from Other Devices
 
-### **Setup for Network Access:**
+Once the system is running, other devices on the same network can access it using the IP shown in the terminal:
 
-1. **Find your machine's IP address:**
+**Example:**
+```
+🌐 URLs de acceso:
+   [Acceso en Red Local]
+     Dashboard:       http://192.168.1.100
+     Virtual Device:  http://192.168.1.100/virtual-device
+     Backend API:     http://192.168.1.100:3000
+```
 
-   ```bash
-   # Windows
-   ipconfig
-
-   # Linux/Mac
-   ip addr show
-   ```
-
-2. **Configure the IP in .env file:**
-
-   ```bash
-   # Edit .env file and set your IP
-   HOST_IP=192.168.1.100  # Replace with your actual IP
-   ```
-
-3. **Restart the services:**
-   ```bash
-   docker-compose down
-   docker-compose up -d --build
-   ```
-
-### **Access URLs:**
-
-- **Frontend**: http://[SERVER_IP]
-- **Backend API**: http://[SERVER_IP]:3000
+Just open these URLs on any device connected to the same network!
 
 ## 🔧 Useful Commands
 
 ```bash
+# Start/Restart the system
+# Windows:
+start.bat
+# Linux/Mac:
+./start.sh
+
 # View logs
 docker-compose logs -f
 
 # View logs for specific service
 docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f virtual-device
+docker-compose logs -f nginx
+docker-compose logs -f postgres
 
 # Stop services
 docker-compose down
@@ -124,17 +147,19 @@ docker-compose down
 # Stop and remove volumes (WARNING: deletes all data)
 docker-compose down -v
 
-# Rebuild specific service
-docker-compose up -d --build backend
-docker-compose up -d --build frontend
-docker-compose up -d --build virtual-device
-
 # Check service status
 docker-compose ps
 
 # Execute commands in containers
 docker-compose exec backend npm run migration:run
 docker-compose exec backend npm run migration:show
+
+# Access backend shell
+docker-compose exec backend sh
+
+# Force rebuild (if IP didn't change but you want to rebuild anyway)
+docker-compose down
+docker-compose --env-file .env.host up -d --build
 ```
 
 ## 🛠️ Advanced Configuration
@@ -148,21 +173,12 @@ Create a `.env` file to customize settings:
 POSTGRES_DB=track_io
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5432
-
-# Service Ports
-BACKEND_PORT=3000
-FRONTEND_PORT=80
-VIRTUAL_DEVICE_PORT=8080
-
-# Network Configuration
-# Set this to your machine's IP address for network access
-# Leave empty or set to 'localhost' for local-only access
-HOST_IP=192.168.1.100
 
 # Node Environment
 NODE_ENV=production
 ```
+
+**Note:** The `HOST_IP` and `VITE_API_URL` are automatically generated by `start.bat` or `start.sh` and stored in `.env.host`. You don't need to configure them manually!
 
 ### Development vs Production
 
@@ -219,19 +235,25 @@ docker-compose exec backend npm run migration:run
 docker/
 ├── docker-compose.yml           # Main orchestration file
 ├── Dockerfile.backend           # Backend container definition
-├── Dockerfile.frontend          # Frontend container definition
-├── Dockerfile.virtual-device    # Virtual Device container definition
-├── .dockerignore               # Files to ignore during build
-├── .env                        # Environment variables (create from env.example)
-├── env.example                 # Environment variables template
-└── README.md                   # This file
+├── Dockerfile.unified           # Unified frontend + Nginx container
+├── nginx.conf                   # Nginx reverse proxy configuration
+├── start.bat                    # Windows startup script (auto IP detection)
+├── start.sh                     # Linux/Mac startup script (auto IP detection)
+├── restart.bat                  # Quick restart script for Windows
+├── .env                         # Environment variables (create from env.example)
+├── .env.host                    # Auto-generated by start scripts (don't edit)
+├── env.example                  # Environment variables template
+└── README.md                    # This file
 ```
 
 ## 🎯 Key Features
 
-- **Single Command Setup**: `docker-compose up -d --build`
-- **Automatic Dependencies**: All dependencies installed in containers
-- **Database Persistence**: Data survives container restarts
-- **Cross-Platform**: Works on Windows and Linux
-- **Internal Network Ready**: Accessible from other devices on the same network
-- **Easy Updates**: Simple git pull + rebuild process
+- **🚀 One-Command Setup**: Just run `start.bat` or `start.sh`
+- **🌐 Automatic Network Configuration**: Auto-detects IP and configures everything
+- **⚡ Smart Rebuild**: Only rebuilds when IP changes, saving time
+- **🔄 Cross-Platform**: Works on Windows, Linux, and Mac
+- **📡 Network Access Ready**: Other devices can access immediately
+- **🐳 Unified Architecture**: Single Nginx container serves both frontends
+- **🔒 No CORS Issues**: Reverse proxy eliminates CORS problems
+- **💾 Database Persistence**: Data survives container restarts
+- **📦 Easy Updates**: Simple git pull + restart process

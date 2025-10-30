@@ -1,6 +1,9 @@
 # Stage 1: Build dashboard
 FROM node:18-alpine as dashboard-builder
 
+# Recibir la URL del backend como argumento de build
+ARG VITE_API_URL=http://localhost:3000
+
 WORKDIR /app
 
 RUN npm install -g pnpm
@@ -19,12 +22,16 @@ COPY dashboard-test/postcss.config.js ./
 COPY dashboard-test/vite.config.ts ./
 COPY dashboard-test/eslint.config.mjs ./
 
-ENV VITE_API_URL=/api
+# Usar la URL del backend pasada como argumento
+ENV VITE_API_URL=${VITE_API_URL}
 
 RUN npx vite build
 
 # Stage 2: Build virtual-device
 FROM node:18-alpine as virtual-device-builder
+
+# Recibir la URL del backend como argumento de build
+ARG VITE_API_URL=http://localhost:3000
 
 WORKDIR /app
 
@@ -44,7 +51,8 @@ COPY virtual-device/postcss.config.js ./
 COPY virtual-device/vite.config.ts ./
 COPY virtual-device/eslint.config.mjs ./
 
-ENV VITE_API_URL=/api
+# Usar la URL del backend pasada como argumento
+ENV VITE_API_URL=${VITE_API_URL}
 
 RUN npx vite build
 
