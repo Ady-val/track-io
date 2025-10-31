@@ -95,6 +95,16 @@ export class TorretaController {
     };
   }
 
+  @Post(':id/banner-color')
+  @HttpCode(HttpStatus.OK)
+  async setBannerColor(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { color: 'green' | 'yellow' | 'red' }
+  ) {
+    await this.torretaService.setBannerColor(id, body.color);
+    return { ok: true };
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteTorreta(@Param('id', ParseIntPipe) id: number): Promise<void> {

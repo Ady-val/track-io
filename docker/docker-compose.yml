@@ -33,6 +33,14 @@ services:
       DATABASE_NAME: ${POSTGRES_DB:-track_io}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-track_io}
       CORS_ORIGIN: '*'
+      # Modbus configuration (set in docker .env or inline)
+      MODBUS_HOST: ${MODBUS_HOST:-192.168.0.1}
+      MODBUS_PORT: ${MODBUS_PORT:-502}
+      MODBUS_UNIT_ID: ${MODBUS_UNIT_ID:-1}
+      MODBUS_ZERO_BASED_REGISTERS: ${MODBUS_ZERO_BASED_REGISTERS:-true}
+      MODBUS_VERIFY_WRITE: ${MODBUS_VERIFY_WRITE:-false}
+      # Events webhook (Node-RED or other webhook endpoint)
+      EVENTS_WEBHOOK_URL: ${EVENTS_WEBHOOK_URL:-http://host.docker.internal:1880/events}
     ports:
       - "3000:3000"
     depends_on:

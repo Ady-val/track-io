@@ -30,6 +30,25 @@ export class Torreta {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 
+  // Banner config
+  @Column({ name: 'type', type: 'varchar', length: 20, default: 'STANDARD' })
+  type!: 'STANDARD' | 'BANNER';
+
+  @Column({ name: 'mode', type: 'varchar', length: 20, nullable: true })
+  mode?: 'AREA' | 'DEPARTMENT';
+
+  @Column({ name: 'start_register', type: 'integer', nullable: true })
+  startRegister?: number;
+
+  @Column({ name: 'register_count', type: 'integer', nullable: true })
+  registerCount?: number;
+
+  @Column({ name: 'area_id', type: 'integer', nullable: true })
+  areaId?: number;
+
+  @Column({ name: 'department_id', type: 'integer', nullable: true })
+  departmentId?: number;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp with time zone',

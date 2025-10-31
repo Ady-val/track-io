@@ -18,4 +18,8 @@ export class TorretaRepository extends Repository<Torreta> {
   async findByName(name: string): Promise<Torreta | null> {
     return this.findOne({ where: { name } });
   }
+
+  async findAllBannerTorretas(): Promise<Torreta[]> {
+    return this.find({ where: { type: 'BANNER' as any, isActive: true } });
+  }
 }
