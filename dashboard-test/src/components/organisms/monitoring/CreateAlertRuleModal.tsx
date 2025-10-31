@@ -102,6 +102,7 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
               Nombre de la Condición
             </Text>
             <Input
+              autoFocus
               placeholder="Ej: Temperatura Alta Tanque 1"
               value={ruleName}
               variant="bordered"

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Event, EventStatus } from '../entities/event.entity';
 import {
   EventRepository,
@@ -173,8 +173,18 @@ export class TypeOrmEventRepository implements EventRepository {
   }
 
   async findRecentClosedEvents(limit: number): Promise<Event[]> {
+    // Obtener inicio y fin del día actual
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
     return this.repository.find({
-      where: { status: EventStatus.CLOSED },
+      where: {
+        status: EventStatus.CLOSED,
+        closedAt: Between(startOfDay, endOfDay), // Solo eventos cerrados hoy
+      },
       relations: ['area', 'department', 'device', 'deviceSignal'],
       order: { closedAt: 'DESC' },
       take: limit,

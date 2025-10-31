@@ -4,6 +4,9 @@ export type { ButtonProps } from "./Button";
 export { Input } from "./Input";
 export type { InputProps } from "./Input";
 
+export { SearchInput } from "./SearchInput";
+export type { SearchInputProps } from "./SearchInput";
+
 export { Select } from "./Select";
 export type { SelectProps } from "./Select";
 
@@ -33,3 +36,9 @@ export type { CustomScrollbarProps } from "./CustomScrollbar";
 
 export { Checkbox } from "./Checkbox";
 export type { CheckboxProps } from "./Checkbox";
+
+export { ErrorMessage } from "./ErrorMessage";
+export type { ErrorMessageProps } from "./ErrorMessage";
+
+export { ValidationErrorList } from "./ValidationErrorList";
+export type { ValidationErrorListProps } from "./ValidationErrorList";

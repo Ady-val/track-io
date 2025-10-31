@@ -8,7 +8,11 @@ import {
   type Area,
 } from "@/hooks/useCatalogs";
 
+import { useModalError } from "@/hooks/useModalError";
+
 import { Button } from "../../atoms/Button";
+import { ErrorMessage, ValidationErrorList } from "../../atoms";
+import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
 import { FormField } from "../../molecules/FormField";
@@ -24,6 +28,8 @@ export function AreasCatalog() {
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [formData, setFormData] = useState({ name: "" });
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
+
+  const errorHandling = useModalError("Error al procesar la solicitud");
 
   const itemsPerPage = 10;
   const offset = (currentPage - 1) * itemsPerPage;
@@ -60,6 +66,7 @@ export function AreasCatalog() {
   const handleCreate = () => {
     setFormData({ name: "" });
     setFormErrors({});
+    errorHandling.clearErrors();
     setIsCreateModalOpen(true);
   };
 
@@ -67,6 +74,7 @@ export function AreasCatalog() {
     setSelectedArea(area);
     setFormData({ name: area.name });
     setFormErrors({});
+    errorHandling.clearErrors();
     setIsEditModalOpen(true);
   };
 
@@ -78,6 +86,7 @@ export function AreasCatalog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validación del cliente
     const errors: { name?: string } = {};
 
     if (!formData.name.trim()) {
@@ -86,11 +95,16 @@ export function AreasCatalog() {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      errorHandling.setValidationErrors(
+        Object.values(errors).filter((err): err is string => !!err)
+      );
 
       return;
     }
 
     try {
+      errorHandling.clearErrors();
+
       if (isCreateModalOpen) {
         await createAreaMutation.mutateAsync(formData);
         setIsCreateModalOpen(false);
@@ -105,7 +119,7 @@ export function AreasCatalog() {
       setFormData({ name: "" });
       setFormErrors({});
     } catch (error) {
-      console.error("Error submitting form:", error);
+      errorHandling.handleApiError(error, "Error al guardar el área");
     }
   };
 
@@ -124,6 +138,7 @@ export function AreasCatalog() {
   const handleCancel = () => {
     setFormData({ name: "" });
     setFormErrors({});
+    errorHandling.clearErrors();
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedArea(null);
@@ -134,8 +149,7 @@ export function AreasCatalog() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex-1 max-w-lg">
-          <input
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <SearchInput
             placeholder="Buscar áreas..."
             type="text"
             value={searchTerm}
@@ -181,7 +195,20 @@ export function AreasCatalog() {
         onClose={handleCancel}
       >
         <form className="space-y-4" onSubmit={handleSubmit}>
+          {errorHandling.validationErrors.length > 0 && (
+            <ValidationErrorList errors={errorHandling.validationErrors} />
+          )}
+
+          {errorHandling.serverError && (
+            <ErrorMessage
+              isServerError={errorHandling.parsedError?.isServerError ?? false}
+              message={errorHandling.serverError}
+              type="server"
+            />
+          )}
+
           <FormField
+            autoFocus
             required
             error={formErrors.name}
             label="Nombre"
@@ -193,22 +220,29 @@ export function AreasCatalog() {
             }
           />
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
-              size="lg"
+              className="px-6 py-2 font-semibold"
+              color="default"
+              disabled={
+                createAreaMutation.isPending || updateAreaMutation.isPending
+              }
+              size="md"
               type="button"
-              variant="bordered"
-              onClick={handleCancel}
+              variant="solid"
+              onPress={handleCancel}
             >
               Cancelar
             </Button>
             <Button
+              className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
                 createAreaMutation.isPending || updateAreaMutation.isPending
               }
-              size="lg"
+              size="md"
               type="submit"
+              variant="solid"
             >
               {createAreaMutation.isPending || updateAreaMutation.isPending
                 ? "Guardando..."

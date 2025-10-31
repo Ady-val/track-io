@@ -85,6 +85,7 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
               Nombre del Dispositivo
             </label>
             <Input
+              autoFocus
               required
               id="edit-device-name"
               placeholder="Ej: Controlador Principal"

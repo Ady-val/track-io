@@ -71,6 +71,7 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
       {/* Name Input */}
       <div className="mb-4">
         <Input
+          autoFocus
           fullWidth
           required
           isDisabled={isLoading}

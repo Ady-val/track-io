@@ -88,6 +88,7 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
               Nombre del Botón
             </label>
             <Input
+              autoFocus
               required
               id="signal-name"
               placeholder="Ej: Botón 1"

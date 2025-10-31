@@ -150,13 +150,62 @@ Connect to WebSocket at: `ws://localhost:3000`
 
 ## Setup Instructions
 
-### 1. Install Dependencies
+### 🚀 Quick Setup for Development
+
+The easiest way to set up the backend for local development:
+
+**Windows:**
+```batch
+setup-dev.bat
+```
+
+**Linux/Mac:**
+```bash
+chmod +x setup-dev.sh
+./setup-dev.sh
+```
+
+This script will:
+1. ✅ Create `.env` file from `env.example`
+2. ✅ Verify if Docker database is running
+3. ✅ Show you the next steps
+
+### 📋 Manual Setup (Alternative)
+
+#### 1. Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-### 2. Configure Environment
+#### 2. Start the Database
+
+**Using Docker (Recommended):**
+
+The backend connects to the PostgreSQL database running in Docker. Start it with:
+
+```bash
+cd ../docker
+# Windows:
+start.bat
+# Linux/Mac:
+./start.sh
+```
+
+This will start PostgreSQL on `localhost:5432` with:
+- Database: `track_io`
+- User: `postgres`
+- Password: `postgres`
+
+**Using Local PostgreSQL:**
+
+If you prefer a local PostgreSQL installation, make sure it's running and create the database:
+
+```sql
+CREATE DATABASE track_io;
+```
+
+#### 3. Configure Environment
 
 Copy the example environment file:
 
@@ -164,10 +213,10 @@ Copy the example environment file:
 cp env.example .env
 ```
 
-Update the `.env` file with your database configuration:
+The default `.env` configuration works with the Docker database:
 
 ```env
-# Database Configuration
+# Database Configuration (connects to Docker PostgreSQL)
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USERNAME=postgres
@@ -177,34 +226,25 @@ DATABASE_NAME=track_io
 # Application Configuration
 PORT=3000
 NODE_ENV=development
+
+# CORS Configuration (allow dev servers)
+CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost
 ```
 
-### 3. Start the Database
-
-Make sure PostgreSQL is running. You can use the Docker setup from the `database/` folder:
+#### 4. Run Database Migrations
 
 ```bash
-cd ../database
-docker-compose up -d
-```
-
-### 4. Run Database Migrations
-
-```bash
-# Generate a new migration
-pnpm run migration:generate -- src/migrations/MigrationName
-
 # Run pending migrations
 pnpm run migration:run
 
-# Revert last migration
-pnpm run migration:revert
+# Check migration status
+pnpm run migration:show
 ```
 
-### 5. Run the Application
+#### 5. Run the Application
 
 ```bash
-# Development mode with watch
+# Development mode with hot reload
 pnpm run start:dev
 
 # Production mode
@@ -216,6 +256,43 @@ pnpm run start:debug
 ```
 
 The application will be available at `http://localhost:3000`
+
+### 🔄 Development Workflow
+
+Once set up, your typical workflow is:
+
+1. **Start Docker database** (if not running):
+   ```bash
+   cd ../docker && start.bat
+   ```
+
+2. **Start backend in dev mode**:
+   ```bash
+   cd backend-receptor
+   pnpm run start:dev
+   ```
+
+3. **Backend runs on** `http://localhost:3000`
+
+4. **Frontend dev servers** can connect to it:
+   - Dashboard: `http://localhost:5173`
+   - Virtual Device: `http://localhost:5174`
+
+### 🎯 Working with Migrations
+
+```bash
+# Generate a new migration based on entity changes
+pnpm run migration:generate -- src/migrations/MigrationName
+
+# Run pending migrations
+pnpm run migration:run
+
+# Revert last migration
+pnpm run migration:revert
+
+# Show migration status
+pnpm run migration:show
+```
 
 ## Project Structure
 

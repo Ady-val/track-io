@@ -15,6 +15,7 @@ export interface FormFieldProps {
   className?: string;
   options?: Array<{ value: string | number; label: string }>;
   select?: boolean;
+  autoFocus?: boolean;
 }
 
 export function FormField({
@@ -30,6 +31,7 @@ export function FormField({
   className = "",
   options = [],
   select = false,
+  autoFocus = false,
 }: FormFieldProps) {
   const fieldId = `field-${name}`;
 
@@ -60,6 +62,7 @@ export function FormField({
         </Select>
       ) : (
         <Input
+          autoFocus={autoFocus}
           className={
             error
               ? "border-red-500 focus:border-red-500 focus:ring-red-500"

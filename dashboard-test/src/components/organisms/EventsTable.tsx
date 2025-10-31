@@ -1,6 +1,6 @@
 import type { DashboardEventData } from "../../types/dashboard";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 
 import { getEventStatusColor } from "../../config/departmentColors";
 
@@ -17,16 +17,9 @@ export const EventsTable: React.FC<EventsTableProps> = ({
   onEventClick,
   className = "",
 }) => {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const formatTimestamp = (timestamp: Date | string | null | undefined) => {
+    if (!timestamp) return "N/A";
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-  const formatTimestamp = (timestamp: Date | string) => {
     const date = new Date(timestamp);
 
     return date.toLocaleString("es-ES", {
@@ -38,13 +31,21 @@ export const EventsTable: React.FC<EventsTableProps> = ({
     });
   };
 
-  const calculateEventDuration = (startedAt: Date | string) => {
-    const startTime = new Date(startedAt);
-    const duration = Math.floor(
-      (currentTime.getTime() - startTime.getTime()) / 1000
-    );
+  const calculateDuration = (
+    startedAt: Date | string,
+    endedAt?: Date | string | null
+  ) => {
+    if (!endedAt) return "En curso";
 
-    return formatDuration(Math.max(0, duration));
+    const startTime = new Date(startedAt);
+    const endTime = new Date(endedAt);
+    const durationMs = endTime.getTime() - startTime.getTime();
+
+    if (durationMs < 0) return "N/A";
+
+    const seconds = Math.floor(durationMs / 1000);
+
+    return formatDuration(seconds);
   };
 
   const formatDuration = (seconds: number) => {
@@ -91,6 +92,9 @@ export const EventsTable: React.FC<EventsTableProps> = ({
                 Inicio
               </th>
               <th className="px-6 py-4 text-left text-sm font-bold text-slate-200 uppercase tracking-wider">
+                Fin
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-slate-200 uppercase tracking-wider">
                 Duración
               </th>
             </tr>
@@ -128,7 +132,10 @@ export const EventsTable: React.FC<EventsTableProps> = ({
                   {formatTimestamp(event.startedAt)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-lg text-slate-300 font-medium">
-                  {calculateEventDuration(event.startedAt)}
+                  {formatTimestamp(event.endedAt)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-lg text-slate-300 font-medium">
+                  {calculateDuration(event.startedAt, event.endedAt)}
                 </td>
               </tr>
             ))}

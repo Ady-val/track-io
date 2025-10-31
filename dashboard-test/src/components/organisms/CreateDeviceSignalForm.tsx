@@ -93,6 +93,7 @@ export const CreateDeviceSignalForm: React.FC<CreateDeviceSignalFormProps> = ({
       {/* Name Input */}
       <div className="mb-4">
         <Input
+          autoFocus
           fullWidth
           required
           isDisabled={isLoading}

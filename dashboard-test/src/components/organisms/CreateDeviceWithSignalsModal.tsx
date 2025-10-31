@@ -276,6 +276,7 @@ export const CreateDeviceWithSignalsModal: React.FC<
                   Nombre del Dispositivo
                 </label>
                 <Input
+                  autoFocus
                   required
                   id="device-name"
                   placeholder="Ej: Controlador Principal"

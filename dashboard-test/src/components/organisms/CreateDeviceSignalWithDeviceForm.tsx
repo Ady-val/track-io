@@ -134,6 +134,7 @@ export const CreateDeviceSignalWithDeviceForm: React.FC<
         <div className="space-y-4">
           {/* Signal Name Input */}
           <Input
+            autoFocus
             fullWidth
             required
             isDisabled={isLoading}
