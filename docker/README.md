@@ -124,6 +124,41 @@ Once the system is running, other devices on the same network can access it usin
 
 Just open these URLs on any device connected to the same network!
 
+## 💻 Local Development (Without Docker)
+
+If you prefer to run the services locally for development:
+
+### 1. Start only the database with Docker:
+```bash
+cd docker
+start.bat  # This starts PostgreSQL
+```
+
+### 2. Run backend in development mode:
+```bash
+cd backend-receptor
+pnpm run start:dev
+# Backend will run on http://localhost:3000
+```
+
+### 3. Run frontend(s) in development mode:
+```bash
+# Dashboard
+cd dashboard-test
+pnpm run dev
+# Runs on http://localhost:5173
+
+# Virtual Device
+cd virtual-device
+pnpm run dev
+# Runs on http://localhost:5174
+```
+
+**How it works:**
+- Frontends automatically detect the environment
+- In **dev mode** (`pnpm run dev`): Points to `http://localhost:3000`
+- In **Docker build**: Uses the IP detected by `start.bat`
+
 ## 🔧 Useful Commands
 
 ```bash
