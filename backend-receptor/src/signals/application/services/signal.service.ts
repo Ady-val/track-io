@@ -655,10 +655,10 @@ export class SignalService {
 
   private async sendEventWebhook(event: Event, action: 'created' | 'updated' | 'closed'): Promise<void> {
     try {
-      const url =
+      const rawUrl =
         this.configService.get<string>('EVENTS_WEBHOOK_URL') ||
-        // En Windows/macOS, host.docker.internal apunta al host desde Docker
         'http://host.docker.internal:1880/events';
+      const url = this.resolveEndpointUrl(rawUrl);
       const payload = {
         action,
         event: {
@@ -695,6 +695,22 @@ export class SignalService {
         `Failed to send event webhook: ${(error as Error).message}`,
         (error as Error).stack
       );
+    }
+  }
+
+  private resolveEndpointUrl(endpointUrl: string): string {
+    try {
+      const url = new URL(endpointUrl);
+      if (
+        url.hostname === 'localhost' ||
+        url.hostname === '127.0.0.1' ||
+        url.hostname === '::1'
+      ) {
+        url.hostname = 'host.docker.internal';
+      }
+      return url.toString();
+    } catch {
+      return endpointUrl;
     }
   }
 }
