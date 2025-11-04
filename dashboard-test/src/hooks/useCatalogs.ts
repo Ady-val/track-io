@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import apiClient from "../lib/api";
 
-// Types
 export interface Area {
   id: number;
   name: string;
@@ -23,6 +22,7 @@ export interface Torreta {
   id: number;
   name: string;
   description?: string;
+  externalId?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -49,9 +49,16 @@ export interface Receptor {
   deletedAt?: string;
 }
 
-// API Functions
+export interface Email {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 const catalogApi = {
-  // Areas
   getAreas: async (params?: {
     limit?: number;
     offset?: number;
@@ -77,7 +84,6 @@ const catalogApi = {
     return response.data;
   },
 
-  // Departments
   getDepartments: async (params?: {
     limit?: number;
     offset?: number;
@@ -103,20 +109,23 @@ const catalogApi = {
     return response.data;
   },
 
-  // Torretas
   getTorretas: async (params?: { active?: boolean }) => {
     const response = await apiClient.get("/torretas", { params });
 
     return response.data;
   },
-  createTorreta: async (data: { name: string; description?: string }) => {
+  createTorreta: async (data: {
+    name: string;
+    description?: string;
+    externalId?: string;
+  }) => {
     const response = await apiClient.post("/torretas", data);
 
     return response.data;
   },
   updateTorreta: async (
     id: number,
-    data: { name: string; description?: string }
+    data: { name: string; description?: string; externalId?: string }
   ) => {
     const response = await apiClient.put(`/torretas/${id}`, data);
 
@@ -128,7 +137,6 @@ const catalogApi = {
     return response.data;
   },
 
-  // Torreta Colors
   getTorretaColors: async () => {
     const response = await apiClient.get("/torreta-colors");
 
@@ -163,7 +171,6 @@ const catalogApi = {
     return response.data;
   },
 
-  // Receptors
   getReceptors: async (params?: { active?: boolean }) => {
     const response = await apiClient.get("/receptors", { params });
 
@@ -187,9 +194,37 @@ const catalogApi = {
 
     return response.data;
   },
+
+  getEmails: async (params?: {
+    limit?: number;
+    offset?: number;
+    name?: string;
+    email?: string;
+  }) => {
+    const response = await apiClient.get("/emails", { params });
+
+    return response.data;
+  },
+  createEmail: async (data: { name: string; email: string }) => {
+    const response = await apiClient.post("/emails", data);
+
+    return response.data;
+  },
+  updateEmail: async (
+    id: number,
+    data: { name?: string; email?: string }
+  ) => {
+    const response = await apiClient.patch(`/emails/${id}`, data);
+
+    return response.data;
+  },
+  deleteEmail: async (id: number) => {
+    const response = await apiClient.delete(`/emails/${id}`);
+
+    return response.data;
+  },
 };
 
-// Hooks
 export function useAreas(params?: {
   limit?: number;
   offset?: number;
@@ -419,6 +454,57 @@ export function useDeleteReceptor() {
     mutationFn: catalogApi.deleteReceptor,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["receptors"] });
+    },
+  });
+}
+
+export function useEmails(params?: {
+  limit?: number;
+  offset?: number;
+  name?: string;
+  email?: string;
+}) {
+  return useQuery({
+    queryKey: ["emails", params],
+    queryFn: () => catalogApi.getEmails(params),
+  });
+}
+
+export function useCreateEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: catalogApi.createEmail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] });
+    },
+  });
+}
+
+export function useUpdateEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { name?: string; email?: string };
+    }) => catalogApi.updateEmail(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] });
+    },
+  });
+}
+
+export function useDeleteEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: catalogApi.deleteEmail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] });
     },
   });
 }

@@ -139,6 +139,7 @@ export default [
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/interactive-supports-focus": "warn",
       "jsx-a11y/no-static-element-interactions": "warn",
+      "jsx-a11y/no-autofocus": "off",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": "off",
       "import/order": [

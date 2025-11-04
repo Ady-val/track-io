@@ -27,6 +27,7 @@ import { EventAlertLogController } from './controllers/event-alert-log.controlle
 // External dependencies
 import { TypeOrmEventRepository } from '../events/domain/repositories/typeorm-event.repository';
 import { Event } from '../events/domain/entities/event.entity';
+import { TorretaColorsModule } from '../torreta-colors/torreta-colors.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { Event } from '../events/domain/entities/event.entity';
       Event,
     ]),
     HttpModule,
+    TorretaColorsModule,
   ],
   providers: [
     // Repositories

@@ -15,7 +15,9 @@ import {
   FaWifi,
   FaPalette,
   FaBroadcastTower,
+  FaEnvelope,
 } from "react-icons/fa";
+import { MdTraffic } from "react-icons/md";
 
 export interface IconProps {
   name: string;
@@ -36,9 +38,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   activity: FaChartLine,
   building: FaBuilding,
   users: FaUsers,
-  tower: FaWifi,
+  tower: MdTraffic,
   palette: FaPalette,
   radio: FaBroadcastTower,
+  mail: FaEnvelope,
 };
 
 export const Icon: React.FC<IconProps> = ({

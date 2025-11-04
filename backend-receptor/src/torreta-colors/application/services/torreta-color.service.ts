@@ -74,4 +74,8 @@ export class TorretaColorService {
     const color = await this.getTorretaColorById(id);
     await this.torretaColorRepository.remove(color);
   }
+
+  async getTorretaColorByHtmlColor(htmlColor: string): Promise<TorretaColor | null> {
+    return this.torretaColorRepository.findByHtmlColor(htmlColor);
+  }
 }

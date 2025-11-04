@@ -66,6 +66,31 @@ const MESSAGE_TYPES = [
   { value: "email", label: "Email" },
 ];
 
+const getTextColorForBackground = (backgroundColor: string): string => {
+  const hex = backgroundColor.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luminance > 0.5 ? "#000000" : "#ffffff";
+};
+
+const isMessageFormValid = (
+  message: Partial<EscalationMessage> | undefined
+): boolean => {
+  if (!message?.messageType || !message?.targetId) {
+    return false;
+  }
+
+  if (message.messageType === "torreta") {
+    return !!message.color;
+  }
+
+  return !!message.message && message.message.trim().length > 0;
+};
+
 export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
   isOpen,
   onClose,
@@ -79,6 +104,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
     torretas,
     receptors,
     torretaColors,
+    emails,
     saveConfig,
     loadData,
   } = useEscalationConfig({
@@ -300,7 +326,12 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
               }))
           : [];
       case "email":
-        return [{ value: "email:test@example.com", label: "Email de prueba" }];
+        return Array.isArray(emails)
+          ? emails.map((e) => ({
+              value: e.email,
+              label: `${e.name} - ${e.email}`,
+            }))
+          : [];
       default:
         return [];
     }
@@ -543,15 +574,38 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                     <div>
                                       {message.messageType === "torreta" ? (
                                         <div className="flex items-center space-x-2">
-                                          <div
-                                            className="w-4 h-4 rounded border border-slate-400"
-                                            style={{
-                                              backgroundColor: message.color,
-                                            }}
-                                          />
-                                          <Text color="muted" variant="caption">
-                                            {message.color}
-                                          </Text>
+                                          {(() => {
+                                            const torretaColor = Array.isArray(
+                                              torretaColors
+                                            )
+                                              ? torretaColors.find(
+                                                  (c) =>
+                                                    c.deviceColorId ===
+                                                    message.color
+                                                )
+                                              : null;
+                                            return (
+                                              <>
+                                                <div
+                                                  className="w-4 h-4 rounded border border-slate-400"
+                                                  style={{
+                                                    backgroundColor:
+                                                      torretaColor?.htmlColor ||
+                                                      "#000000",
+                                                  }}
+                                                />
+                                                <Text
+                                                  color="muted"
+                                                  variant="caption"
+                                                >
+                                                  {torretaColor
+                                                    ? `${torretaColor.name} - ${torretaColor.deviceColorId}`
+                                                    : message.color ||
+                                                      "Sin color"}
+                                                </Text>
+                                              </>
+                                            );
+                                          })()}
                                         </div>
                                       ) : (
                                         <Text color="muted" variant="caption">
@@ -648,7 +702,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                               {newMessages[level.level]?.messageType ===
                                 "torreta" && (
                                 <Select
-                                  className="w-32"
+                                  className="w-48"
                                   value={newMessages[level.level]?.color ?? ""}
                                   onChange={(e) =>
                                     setNewMessages((prev) => ({
@@ -667,9 +721,15 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                       .map((color) => (
                                         <option
                                           key={color.id}
-                                          value={color.htmlColor}
+                                          value={color.deviceColorId}
+                                          style={{
+                                            backgroundColor: color.htmlColor,
+                                            color: getTextColorForBackground(
+                                              color.htmlColor
+                                            ),
+                                          }}
                                         >
-                                          {color.name}
+                                          {color.name} - {color.deviceColorId}
                                         </option>
                                       ))}
                                 </Select>
@@ -696,8 +756,15 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                               )}
 
                               <Button
-                                className="flex items-center justify-center w-8 h-8 font-semibold"
+                                className={`flex items-center justify-center w-8 h-8 font-semibold ${
+                                  isMessageFormValid(newMessages[level.level])
+                                    ? ""
+                                    : "opacity-50 cursor-not-allowed"
+                                }`}
                                 color="success"
+                                disabled={
+                                  !isMessageFormValid(newMessages[level.level])
+                                }
                                 size="sm"
                                 title="Agregar mensaje"
                                 variant="solid"

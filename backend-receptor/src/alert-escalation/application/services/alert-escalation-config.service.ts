@@ -5,6 +5,8 @@ import { UpdateAlertEscalationConfigDto } from '../dtos/update-alert-escalation-
 import { CreateEscalationConfigWithMessagesDto } from '../dtos/create-escalation-config-with-messages.dto';
 import { SaveEscalationConfigDto } from '../dtos/save-escalation-config.dto';
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
+import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+import { MessageType } from '../../domain/entities/alert-escalation-message.entity';
 
 @Injectable()
 export class AlertEscalationConfigService {
@@ -12,7 +14,8 @@ export class AlertEscalationConfigService {
 
   constructor(
     private readonly alertEscalationConfigRepository: AlertEscalationConfigRepository,
-    private readonly alertEscalationMessageRepository: AlertEscalationMessageRepository
+    private readonly alertEscalationMessageRepository: AlertEscalationMessageRepository,
+    private readonly torretaColorService: TorretaColorService
   ) {}
 
   async create(createDto: CreateAlertEscalationConfigDto) {
@@ -41,8 +44,34 @@ export class AlertEscalationConfigService {
           message: messageDto.message,
         };
 
-        if (messageDto.color) {
-          messageData.color = messageDto.color;
+        // Si es tipo TORRETA y tiene deviceColorId, guardarlo
+        // También soportamos compatibilidad con "color" (hex) si viene del frontend antiguo
+        if (
+          messageDto.messageType === MessageType.TORRETA &&
+          messageDto.deviceColorId
+        ) {
+          messageData.color = messageDto.deviceColorId;
+        } else if (
+          messageDto.messageType === MessageType.TORRETA &&
+          (messageDto as any).color
+        ) {
+          // Compatibilidad: si viene color hexadecimal, convertirlo a deviceColorId
+          const hexColor = (messageDto as any).color as string;
+          const torretaColor =
+            await this.torretaColorService.getTorretaColorByHtmlColor(
+              hexColor.toUpperCase().trim()
+            );
+          if (torretaColor) {
+            messageData.color = torretaColor.deviceColorId;
+            this.logger.log(
+              `Converted hex color "${hexColor}" to deviceColorId "${torretaColor.deviceColorId}"`
+            );
+          } else {
+            this.logger.warn(
+              `Could not convert hex color "${hexColor}" to deviceColorId, saving as is`
+            );
+            messageData.color = hexColor;
+          }
         }
 
         await this.alertEscalationMessageRepository.create(messageData);
@@ -120,8 +149,34 @@ export class AlertEscalationConfigService {
           message: messageDto.message,
         };
 
-        if (messageDto.color) {
-          messageData.color = messageDto.color;
+        // Si es tipo TORRETA y tiene deviceColorId, guardarlo
+        // También soportamos compatibilidad con "color" (hex) si viene del frontend antiguo
+        if (
+          messageDto.messageType === MessageType.TORRETA &&
+          messageDto.deviceColorId
+        ) {
+          messageData.color = messageDto.deviceColorId;
+        } else if (
+          messageDto.messageType === MessageType.TORRETA &&
+          (messageDto as any).color
+        ) {
+          // Compatibilidad: si viene color hexadecimal, convertirlo a deviceColorId
+          const hexColor = (messageDto as any).color as string;
+          const torretaColor =
+            await this.torretaColorService.getTorretaColorByHtmlColor(
+              hexColor.toUpperCase().trim()
+            );
+          if (torretaColor) {
+            messageData.color = torretaColor.deviceColorId;
+            this.logger.log(
+              `Converted hex color "${hexColor}" to deviceColorId "${torretaColor.deviceColorId}"`
+            );
+          } else {
+            this.logger.warn(
+              `Could not convert hex color "${hexColor}" to deviceColorId, saving as is`
+            );
+            messageData.color = hexColor;
+          }
         }
 
         await this.alertEscalationMessageRepository.create(messageData);

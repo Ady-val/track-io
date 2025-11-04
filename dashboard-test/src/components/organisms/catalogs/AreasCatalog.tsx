@@ -7,11 +7,10 @@ import {
   useDeleteArea,
   type Area,
 } from "@/hooks/useCatalogs";
-
 import { useModalError } from "@/hooks/useModalError";
 
-import { Button } from "../../atoms/Button";
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
+import { Button } from "../../atoms/Button";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
@@ -86,7 +85,6 @@ export function AreasCatalog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validación del cliente
     const errors: { name?: string } = {};
 
     if (!formData.name.trim()) {
@@ -145,9 +143,8 @@ export function AreasCatalog() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex-1 max-w-lg">
           <SearchInput
             placeholder="Buscar áreas..."
@@ -166,29 +163,29 @@ export function AreasCatalog() {
         </Button>
       </div>
 
-      {/* Table */}
-      <DataTable
-        columns={columns}
-        data={areas}
-        emptyMessage="No hay áreas registradas"
-        loading={isLoading}
-        maxHeight="max-h-96"
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+      <div className="flex-1 min-h-0 relative">
+        <DataTable
+          columns={columns}
+          data={areas}
+          emptyMessage="No hay áreas registradas"
+          loading={isLoading}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
         />
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex-shrink-0 mt-4">
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       )}
 
-      {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Área" : "Editar Área"}
@@ -254,7 +251,6 @@ export function AreasCatalog() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"

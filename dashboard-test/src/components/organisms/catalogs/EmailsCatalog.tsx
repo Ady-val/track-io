@@ -1,54 +1,58 @@
 import React, { useState } from "react";
 
 import {
-  useReceptors,
-  useCreateReceptor,
-  useUpdateReceptor,
-  useDeleteReceptor,
-  type Receptor,
+  useEmails,
+  useCreateEmail,
+  useUpdateEmail,
+  useDeleteEmail,
+  type Email,
 } from "@/hooks/useCatalogs";
+
 import { useModalError } from "@/hooks/useModalError";
 
-import { ErrorMessage, ValidationErrorList } from "../../atoms";
 import { Button } from "../../atoms/Button";
+import { ErrorMessage, ValidationErrorList } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
 import { FormField } from "../../molecules/FormField";
+import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
 
-export function ReceptorsCatalog() {
+export function EmailsCatalog() {
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedReceptor, setSelectedReceptor] = useState<Receptor | null>(
-    null
-  );
-  const [formData, setFormData] = useState({ externalId: "", name: "" });
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [formData, setFormData] = useState({ name: "", email: "" });
   const [formErrors, setFormErrors] = useState<{
-    externalId?: string;
     name?: string;
+    email?: string;
   }>({});
 
   const errorHandling = useModalError("Error al procesar la solicitud");
 
-  const { data: receptorsData, isLoading } = useReceptors({
-    active: undefined,
+  const itemsPerPage = 10;
+  const offset = (currentPage - 1) * itemsPerPage;
+
+  const { data: emailsData, isLoading } = useEmails({
+    limit: itemsPerPage,
+    offset,
+    name: searchTerm || undefined,
+    email: searchTerm || undefined,
   });
 
-  const createReceptorMutation = useCreateReceptor();
-  const updateReceptorMutation = useUpdateReceptor();
-  const deleteReceptorMutation = useDeleteReceptor();
+  const createEmailMutation = useCreateEmail();
+  const updateEmailMutation = useUpdateEmail();
+  const deleteEmailMutation = useDeleteEmail();
 
-  const receptors = receptorsData?.data ?? [];
-  const filteredReceptors = receptors.filter(
-    (receptor: { name: string; externalId: string }) =>
-      receptor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      receptor.externalId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const emails = emailsData?.data ?? [];
+  const totalItems = emailsData?.total ?? 0;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const columns: Array<TableColumn<Receptor>> = [
+  const columns: Array<TableColumn<Email>> = [
     {
       id: "id",
       label: "ID",
@@ -56,62 +60,52 @@ export function ReceptorsCatalog() {
       width: "80px",
     },
     {
-      id: "externalId",
-      label: "ID Externo",
-      key: "externalId",
-    },
-    {
       id: "name",
       label: "Nombre",
       key: "name",
-      width: "100%",
+      width: "200px",
     },
     {
-      id: "isActive",
-      label: "Estado",
-      key: "isActive",
-      component: (value) => (
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          {value ? "Activo" : "Inactivo"}
-        </span>
-      ),
+      id: "email",
+      label: "Correo Electrónico",
+      key: "email",
+      width: "100%",
     },
   ];
 
   const handleCreate = () => {
-    setFormData({ externalId: "", name: "" });
+    setFormData({ name: "", email: "" });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsCreateModalOpen(true);
   };
 
-  const handleEdit = (receptor: Receptor) => {
-    setSelectedReceptor(receptor);
-    setFormData({ externalId: receptor.externalId, name: receptor.name });
+  const handleEdit = (email: Email) => {
+    setSelectedEmail(email);
+    setFormData({ name: email.name, email: email.email });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = (receptor: Receptor) => {
-    setSelectedReceptor(receptor);
+  const handleDelete = (email: Email) => {
+    setSelectedEmail(email);
     setIsDeleteModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const errors: { externalId?: string; name?: string } = {};
+    const errors: { name?: string; email?: string } = {};
 
-    if (!formData.externalId.trim()) {
-      errors.externalId = "El ID externo es requerido";
-    }
     if (!formData.name.trim()) {
       errors.name = "El nombre es requerido";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "El correo electrónico es requerido";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "El correo electrónico no es válido";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -127,42 +121,42 @@ export function ReceptorsCatalog() {
       errorHandling.clearErrors();
 
       if (isCreateModalOpen) {
-        await createReceptorMutation.mutateAsync(formData);
+        await createEmailMutation.mutateAsync(formData);
         setIsCreateModalOpen(false);
-      } else if (isEditModalOpen && selectedReceptor) {
-        await updateReceptorMutation.mutateAsync({
-          id: selectedReceptor.id,
+      } else if (isEditModalOpen && selectedEmail) {
+        await updateEmailMutation.mutateAsync({
+          id: selectedEmail.id,
           data: formData,
         });
         setIsEditModalOpen(false);
       }
 
-      setFormData({ externalId: "", name: "" });
+      setFormData({ name: "", email: "" });
       setFormErrors({});
     } catch (error) {
-      errorHandling.handleApiError(error, "Error al guardar el receptor");
+      errorHandling.handleApiError(error, "Error al guardar el correo");
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedReceptor) {
+    if (selectedEmail) {
       try {
-        await deleteReceptorMutation.mutateAsync(selectedReceptor.id);
+        await deleteEmailMutation.mutateAsync(selectedEmail.id);
         setIsDeleteModalOpen(false);
-        setSelectedReceptor(null);
+        setSelectedEmail(null);
       } catch (error) {
-        console.error("Error deleting receptor:", error);
+        console.error("Error deleting email:", error);
       }
     }
   };
 
   const handleCancel = () => {
-    setFormData({ externalId: "", name: "" });
+    setFormData({ name: "", email: "" });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
-    setSelectedReceptor(null);
+    setSelectedEmail(null);
   };
 
   return (
@@ -170,7 +164,7 @@ export function ReceptorsCatalog() {
       <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex-1 max-w-lg">
           <SearchInput
-            placeholder="Buscar receptores..."
+            placeholder="Buscar correos..."
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -182,24 +176,36 @@ export function ReceptorsCatalog() {
           size="lg"
           onClick={handleCreate}
         >
-          Crear Receptor
+          Crear Correo
         </Button>
       </div>
 
       <div className="flex-1 min-h-0 relative">
         <DataTable
           columns={columns}
-          data={filteredReceptors}
-          emptyMessage="No hay receptores registrados"
+          data={emails}
+          emptyMessage="No hay correos registrados"
           loading={isLoading}
           onDelete={handleDelete}
           onEdit={handleEdit}
         />
       </div>
 
+      {totalPages > 1 && (
+        <div className="flex-shrink-0 mt-4">
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
+
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
-        title={isCreateModalOpen ? "Crear Receptor" : "Editar Receptor"}
+        title={isCreateModalOpen ? "Crear Correo" : "Editar Correo"}
         onClose={handleCancel}
       >
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -218,25 +224,26 @@ export function ReceptorsCatalog() {
           <FormField
             autoFocus
             required
-            error={formErrors.externalId}
-            label="ID Externo"
-            name="externalId"
-            placeholder="Ingresa el ID externo del receptor"
-            value={formData.externalId}
+            error={formErrors.name}
+            label="Nombre"
+            name="name"
+            placeholder="Ingresa el nombre"
+            value={formData.name}
             onChange={(value) =>
-              setFormData({ ...formData, externalId: value as string })
+              setFormData({ ...formData, name: value as string })
             }
           />
 
           <FormField
             required
-            error={formErrors.name}
-            label="Nombre"
-            name="name"
-            placeholder="Ingresa el nombre del receptor"
-            value={formData.name}
+            error={formErrors.email}
+            label="Correo Electrónico"
+            name="email"
+            placeholder="ejemplo@correo.com"
+            type="email"
+            value={formData.email}
             onChange={(value) =>
-              setFormData({ ...formData, name: value as string })
+              setFormData({ ...formData, email: value as string })
             }
           />
 
@@ -245,8 +252,7 @@ export function ReceptorsCatalog() {
               className="px-6 py-2 font-semibold"
               color="default"
               disabled={
-                createReceptorMutation.isPending ||
-                updateReceptorMutation.isPending
+                createEmailMutation.isPending || updateEmailMutation.isPending
               }
               size="md"
               type="button"
@@ -259,15 +265,13 @@ export function ReceptorsCatalog() {
               className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
-                createReceptorMutation.isPending ||
-                updateReceptorMutation.isPending
+                createEmailMutation.isPending || updateEmailMutation.isPending
               }
               size="md"
               type="submit"
               variant="solid"
             >
-              {createReceptorMutation.isPending ||
-              updateReceptorMutation.isPending
+              {createEmailMutation.isPending || updateEmailMutation.isPending
                 ? "Guardando..."
                 : isCreateModalOpen
                   ? "Crear"
@@ -281,9 +285,9 @@ export function ReceptorsCatalog() {
         cancelText="Cancelar"
         confirmText="Eliminar"
         isOpen={isDeleteModalOpen}
-        loading={deleteReceptorMutation.isPending}
-        message={`¿Estás seguro de querer eliminar "${selectedReceptor?.name}"?`}
-        title="Eliminar Receptor"
+        loading={deleteEmailMutation.isPending}
+        message={`¿Estás seguro de querer eliminar "${selectedEmail?.name}" (${selectedEmail?.email})?`}
+        title="Eliminar Correo"
         variant="danger"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
@@ -291,3 +295,4 @@ export function ReceptorsCatalog() {
     </div>
   );
 }
+

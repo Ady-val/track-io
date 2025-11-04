@@ -350,116 +350,118 @@ export default function RawSignalsPage() {
 
   return (
     <>
-      <TwoColumnLayout
-        footer={
-          <Card>
-            <CardBody className="p-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ConnectionIndicator
-                    connectedText="Conexión WebSocket Activa"
-                    disconnectedText="Desconectado"
-                    isConnected={isConnected}
-                  />
-                  <div className="h-3 w-px bg-slate-600" />
-                  <Text color="muted" variant="small">
-                    new_raw_signal, new_raw_measurement
-                  </Text>
+      <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100% + 48px)', margin: '-24px', padding: '24px' }}>
+        <TwoColumnLayout
+          footer={
+            <Card>
+              <CardBody className="p-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ConnectionIndicator
+                      connectedText="Conexión WebSocket Activa"
+                      disconnectedText="Desconectado"
+                      isConnected={isConnected}
+                    />
+                    <div className="h-3 w-px bg-slate-600" />
+                    <Text color="muted" variant="small">
+                      new_raw_signal, new_raw_measurement
+                    </Text>
+                  </div>
+                  <Button
+                    color="danger"
+                    size="sm"
+                    variant="flat"
+                    onClick={handleClearSignals}
+                  >
+                    Limpiar
+                  </Button>
                 </div>
-                <Button
-                  color="danger"
-                  size="sm"
-                  variant="flat"
-                  onClick={handleClearSignals}
-                >
-                  Limpiar
-                </Button>
-              </div>
-            </CardBody>
-          </Card>
-        }
-        header={
-          <Card>
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <Text className="mb-1" variant="h3">
-                    Señales y Mediciones en Tiempo Real
-                  </Text>
-                  <Text color="muted" variant="caption">
-                    Monitor de datos entrantes vía WebSocket - Distingue entre
-                    signals y measurements
-                  </Text>
+              </CardBody>
+            </Card>
+          }
+          header={
+            <Card>
+              <CardBody className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <Text className="mb-1" variant="h3">
+                      Señales y Mediciones en Tiempo Real
+                    </Text>
+                    <Text color="muted" variant="caption">
+                      Monitor de datos entrantes vía WebSocket - Distingue entre
+                      signals y measurements
+                    </Text>
+                  </div>
+                  <Chip color="primary" size="sm" variant="flat">
+                    {signals.length} registros
+                  </Chip>
                 </div>
-                <Chip color="primary" size="sm" variant="flat">
-                  {signals.length} registros
-                </Chip>
-              </div>
 
-              <SearchBar
-                placeholder="Buscar por ID externo o valor..."
-                value={searchTerm}
-                onChange={setSearchTerm}
-              />
-            </CardBody>
-          </Card>
-        }
-        mainContent={
-          <Card className="bg-slate-700 border-slate-600 flex flex-col h-full">
-            <CardBody className="p-3 flex flex-col h-full overflow-hidden">
-              <SignalDetail
-                device={selectedDevice}
-                deviceSignal={selectedDeviceSignal}
-                formatDate={formatDate}
-                isLoadingDevice={isLoadingDevice}
-                isLoadingDeviceSignal={isLoadingDeviceSignal}
-                isLoadingMeasurement={isLoadingMeasurement}
-                measurement={selectedMeasurement}
-                signal={selectedSignal}
-                onClose={handleCloseDetail}
-                onCreateDevice={() => {
-                  // Si no existe device ni signal, abrir modal combinado
-                  if (!selectedDevice && !selectedDeviceSignal) {
-                    handleOpenCreateModal("deviceAndSignal");
-                  } else {
-                    handleOpenCreateModal("device");
-                  }
-                }}
-                onCreateDeviceSignal={() => {
-                  // Si existe device pero no signal, usar modal con información del device
-                  if (selectedDevice && !selectedDeviceSignal) {
-                    handleOpenCreateModal("deviceSignalWithDevice");
-                  } else {
-                    handleOpenCreateModal("deviceSignal");
-                  }
-                }}
-                onCreateMeasurement={() => handleOpenCreateModal("measurement")}
-              />
-            </CardBody>
-          </Card>
-        }
-        sidebar={
-          <Card className="bg-slate-700 border-slate-600 flex flex-col h-full">
-            <CardBody className="p-3 flex flex-col h-full overflow-hidden">
-              <Text
-                className="mb-2 flex items-center gap-2 flex-shrink-0"
-                variant="caption"
-              >
-                <PiWaveSineBold className="text-blue-400 text-sm" />
-                Lista de Registros
-              </Text>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <SignalList
-                  formatDate={formatDate}
-                  selectedId={selectedSignal?.id}
-                  signals={filteredSignals}
-                  onSelect={handleSelectSignal}
+                <SearchBar
+                  placeholder="Buscar por ID externo o valor..."
+                  value={searchTerm}
+                  onChange={setSearchTerm}
                 />
-              </div>
-            </CardBody>
-          </Card>
-        }
-      />
+              </CardBody>
+            </Card>
+          }
+          mainContent={
+            <Card className="bg-slate-700 border-slate-600 flex flex-col h-full">
+              <CardBody className="p-3 flex flex-col h-full overflow-hidden">
+                <SignalDetail
+                  device={selectedDevice}
+                  deviceSignal={selectedDeviceSignal}
+                  formatDate={formatDate}
+                  isLoadingDevice={isLoadingDevice}
+                  isLoadingDeviceSignal={isLoadingDeviceSignal}
+                  isLoadingMeasurement={isLoadingMeasurement}
+                  measurement={selectedMeasurement}
+                  signal={selectedSignal}
+                  onClose={handleCloseDetail}
+                  onCreateDevice={() => {
+                    // Si no existe device ni signal, abrir modal combinado
+                    if (!selectedDevice && !selectedDeviceSignal) {
+                      handleOpenCreateModal("deviceAndSignal");
+                    } else {
+                      handleOpenCreateModal("device");
+                    }
+                  }}
+                  onCreateDeviceSignal={() => {
+                    // Si existe device pero no signal, usar modal con información del device
+                    if (selectedDevice && !selectedDeviceSignal) {
+                      handleOpenCreateModal("deviceSignalWithDevice");
+                    } else {
+                      handleOpenCreateModal("deviceSignal");
+                    }
+                  }}
+                  onCreateMeasurement={() => handleOpenCreateModal("measurement")}
+                />
+              </CardBody>
+            </Card>
+          }
+          sidebar={
+            <Card className="bg-slate-700 border-slate-600 flex flex-col h-full">
+              <CardBody className="p-3 flex flex-col h-full overflow-hidden">
+                <Text
+                  className="mb-2 flex items-center gap-2 flex-shrink-0"
+                  variant="caption"
+                >
+                  <PiWaveSineBold className="text-blue-400 text-sm" />
+                  Lista de Registros
+                </Text>
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <SignalList
+                    formatDate={formatDate}
+                    selectedId={selectedSignal?.id}
+                    signals={filteredSignals}
+                    onSelect={handleSelectSignal}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+          }
+        />
+      </div>
       <Modal
         isOpen={isModalOpen}
         size="md"

@@ -16,5 +16,5 @@ export class UpdateAlertEscalationMessageDto {
 
   @IsOptional()
   @IsString()
-  color?: string;
+  deviceColorId?: string; // deviceColorId para torretas (ej: "R1", "G1", "Y1")
 }

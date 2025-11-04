@@ -54,3 +54,12 @@ export interface TorretaColor {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Email {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}

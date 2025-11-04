@@ -55,8 +55,8 @@ export class AlertEscalationMessage {
   @Column({ name: 'message', type: 'text' })
   message!: string;
 
-  @Column({ name: 'color', type: 'varchar', length: 7, nullable: true })
-  color?: string; // Para torretas (ej: "#ffff00", "#ff0000")
+  @Column({ name: 'color', type: 'varchar', length: 10, nullable: true })
+  color?: string; // Para torretas: deviceColorId (ej: "R1", "G1", "Y1") - NOTA: Antes se guardaba hex, ahora se guarda deviceColorId
 
   @CreateDateColumn({
     name: 'created_at',

@@ -4,12 +4,12 @@ import type {
   Torreta,
   Receptor,
   TorretaColor,
+  Email,
 } from "../../types/escalation";
 
 const API_BASE_URL = "http://localhost:3000";
 
 export class EscalationService {
-  // Obtener configuración de escalamiento por device y signal
   static async getEscalationConfig(
     deviceId: number,
     deviceSignalId: number
@@ -25,11 +25,9 @@ export class EscalationService {
           const data = await response.json();
           return data;
         } else {
-          // Si la respuesta no es JSON, retornar null
           return null;
         }
       }
-      // Si no hay configuración (404), retornar null
       return null;
     } catch (error) {
       console.error("Error fetching escalation config:", error);
@@ -37,7 +35,6 @@ export class EscalationService {
     }
   }
 
-  // Obtener mensajes de escalamiento por device y signal
   static async getEscalationMessages(
     deviceId: number,
     deviceSignalId: number
@@ -59,13 +56,11 @@ export class EscalationService {
     }
   }
 
-  // Crear o actualizar configuración de escalamiento
   static async saveEscalationConfig(
     config: EscalationConfig,
     messages?: EscalationMessage[]
   ): Promise<EscalationConfig | null> {
     try {
-      // Usar el nuevo endpoint que maneja todo
       const url = `${API_BASE_URL}/alert-escalation-configs/save`;
 
       const payload = {
@@ -82,7 +77,7 @@ export class EscalationService {
               messageType: msg.messageType,
               targetId: msg.targetId,
               message: msg.message,
-              color: msg.color,
+              deviceColorId: msg.color,
             }))
           : [],
       };
@@ -108,7 +103,6 @@ export class EscalationService {
     }
   }
 
-  // Crear mensaje de escalamiento
   static async createEscalationMessage(
     message: EscalationMessage
   ): Promise<EscalationMessage | null> {
@@ -134,7 +128,6 @@ export class EscalationService {
     }
   }
 
-  // Actualizar mensaje de escalamiento
   static async updateEscalationMessage(
     id: number,
     message: EscalationMessage
@@ -161,7 +154,6 @@ export class EscalationService {
     }
   }
 
-  // Eliminar mensaje de escalamiento
   static async deleteEscalationMessage(id: number): Promise<boolean> {
     try {
       const response = await fetch(
@@ -178,7 +170,6 @@ export class EscalationService {
     }
   }
 
-  // Obtener torretas
   static async getTorretas(): Promise<Torreta[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/torretas`);
@@ -186,7 +177,6 @@ export class EscalationService {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const result = await response.json();
-          // El backend devuelve { message: string, data: Torreta[] }
           return result.data || [];
         }
       }
@@ -197,7 +187,6 @@ export class EscalationService {
     }
   }
 
-  // Obtener receptores
   static async getReceptors(): Promise<Receptor[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/receptors`);
@@ -205,7 +194,6 @@ export class EscalationService {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const result = await response.json();
-          // El backend devuelve { message: string, data: Receptor[] }
           return result.data || [];
         }
       }
@@ -216,7 +204,6 @@ export class EscalationService {
     }
   }
 
-  // Obtener colores de torretas
   static async getTorretaColors(): Promise<TorretaColor[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/torreta-colors`);
@@ -230,6 +217,23 @@ export class EscalationService {
       return [];
     } catch (error) {
       console.error("Error fetching torreta colors:", error);
+      return [];
+    }
+  }
+
+  static async getEmails(): Promise<Email[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/emails`);
+      if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const result = await response.json();
+          return result.data || [];
+        }
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching emails:", error);
       return [];
     }
   }

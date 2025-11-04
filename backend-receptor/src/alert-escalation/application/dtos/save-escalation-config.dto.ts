@@ -24,7 +24,7 @@ export class SaveEscalationMessageDto {
 
   @IsOptional()
   @IsString()
-  color?: string;
+  deviceColorId?: string; // deviceColorId para torretas (ej: "R1", "G1", "Y1")
 }
 
 export class SaveEscalationConfigDto {

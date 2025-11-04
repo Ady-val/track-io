@@ -31,7 +31,7 @@ export function DataTable<T extends { id: number | string }>({
   loading = false,
   emptyMessage = "No hay datos disponibles",
   className = "",
-  maxHeight = "max-h-80",
+  maxHeight,
 }: DataTableProps<T>) {
   if (loading) {
     return (
@@ -47,24 +47,102 @@ export function DataTable<T extends { id: number | string }>({
     );
   }
 
+  // When maxHeight is provided, use it directly
+  if (maxHeight) {
+    return (
+      <div
+        className={`overflow-x-auto overflow-y-auto ${maxHeight} ${className}`}
+      >
+        <table
+          className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
+          style={{ tableLayout: "fixed" }}
+        >
+          <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.id}
+                  className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider bg-slate-800"
+                  style={{ width: column.width }}
+                >
+                  {column.label}
+                </th>
+              ))}
+              {(onEdit ?? onDelete) && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider bg-slate-800">
+                  Acciones
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody className="bg-slate-700 divide-y divide-slate-600">
+            {data.map((row) => (
+              <tr key={row.id} className="hover:bg-slate-600">
+                {columns.map((column) => (
+                  <td
+                    key={column.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-slate-200"
+                    style={{ width: column.width }}
+                  >
+                    {column.component
+                      ? column.component(row[column.key], row)
+                      : String(row[column.key] ?? "")}
+                  </td>
+                ))}
+                {(onEdit ?? onDelete) && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      {onEdit && (
+                        <Button
+                          className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
+                          size="sm"
+                          variant="bordered"
+                          onClick={() => onEdit(row)}
+                        >
+                          <Icon className="w-4 h-4" name="edit" />
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
+                          size="sm"
+                          variant="bordered"
+                          onClick={() => onDelete(row)}
+                        >
+                          <Icon className="w-4 h-4" name="trash" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  // When no maxHeight, use full height with proper overflow
   return (
-    <div
-      className={`overflow-x-auto overflow-y-auto ${maxHeight} ${className}`}
-    >
-      <table className="min-w-full bg-slate-700 border border-slate-600 rounded-lg">
-        <thead className="bg-slate-800">
+    <div className={`h-full overflow-y-auto overflow-x-hidden ${className}`}>
+      <table
+        className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
+        style={{ tableLayout: "fixed" }}
+      >
+        <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.id}
-                className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider bg-slate-800"
                 style={{ width: column.width }}
               >
                 {column.label}
               </th>
             ))}
             {(onEdit ?? onDelete) && (
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider bg-slate-800">
                 Acciones
               </th>
             )}
@@ -77,6 +155,7 @@ export function DataTable<T extends { id: number | string }>({
                 <td
                   key={column.id}
                   className="px-6 py-4 whitespace-nowrap text-sm text-slate-200"
+                  style={{ width: column.width }}
                 >
                   {column.component
                     ? column.component(row[column.key], row)

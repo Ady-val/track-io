@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
 import { CreateAlertEscalationMessageDto } from '../dtos/create-alert-escalation-message.dto';
 import { UpdateAlertEscalationMessageDto } from '../dtos/update-alert-escalation-message.dto';
-import { AlertLevel } from '../../domain/entities/alert-escalation-message.entity';
+import {
+  AlertLevel,
+  MessageType,
+} from '../../domain/entities/alert-escalation-message.entity';
 
 @Injectable()
 export class AlertEscalationMessageService {
@@ -16,7 +19,24 @@ export class AlertEscalationMessageService {
     this.logger.log(
       `Creating alert escalation message for config ${createDto.escalationConfigId} and level ${createDto.level}`
     );
-    return await this.alertEscalationMessageRepository.create(createDto);
+
+    // Mapear deviceColorId a color (para compatibilidad con BD)
+    const messageData: any = {
+      escalationConfigId: createDto.escalationConfigId,
+      level: createDto.level,
+      messageType: createDto.messageType,
+      targetId: createDto.targetId,
+      message: createDto.message,
+    };
+
+    if (
+      createDto.messageType === MessageType.TORRETA &&
+      createDto.deviceColorId
+    ) {
+      messageData.color = createDto.deviceColorId;
+    }
+
+    return await this.alertEscalationMessageRepository.create(messageData);
   }
 
   async findAll() {
@@ -50,7 +70,17 @@ export class AlertEscalationMessageService {
 
   async update(id: number, updateDto: UpdateAlertEscalationMessageDto) {
     this.logger.log(`Updating alert escalation message ${id}`);
-    return await this.alertEscalationMessageRepository.update(id, updateDto);
+
+    // Mapear deviceColorId a color (para compatibilidad con BD)
+    const updateData: any = {};
+    if (updateDto.messageType !== undefined)
+      updateData.messageType = updateDto.messageType;
+    if (updateDto.targetId !== undefined) updateData.targetId = updateDto.targetId;
+    if (updateDto.message !== undefined) updateData.message = updateDto.message;
+    if (updateDto.deviceColorId !== undefined)
+      updateData.color = updateDto.deviceColorId;
+
+    return await this.alertEscalationMessageRepository.update(id, updateData);
   }
 
   async delete(id: number) {

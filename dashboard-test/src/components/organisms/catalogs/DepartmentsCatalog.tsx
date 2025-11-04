@@ -145,9 +145,8 @@ export function DepartmentsCatalog() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex-1 max-w-lg">
           <SearchInput
             placeholder="Buscar departamentos..."
@@ -166,29 +165,29 @@ export function DepartmentsCatalog() {
         </Button>
       </div>
 
-      {/* Table */}
-      <DataTable
-        columns={columns}
-        data={departments}
-        emptyMessage="No hay departamentos registrados"
-        loading={isLoading}
-        maxHeight="max-h-96"
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+      <div className="flex-1 min-h-0 relative">
+        <DataTable
+          columns={columns}
+          data={departments}
+          emptyMessage="No hay departamentos registrados"
+          loading={isLoading}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
         />
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex-shrink-0 mt-4">
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       )}
 
-      {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Departamento" : "Editar Departamento"}
@@ -257,7 +256,6 @@ export function DepartmentsCatalog() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"

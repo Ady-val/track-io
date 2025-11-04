@@ -13,14 +13,14 @@ export interface CreateAlertEscalationMessageDto {
   messageType: MessageType;
   targetId: string;
   message: string;
-  color?: string;
+  color?: string; // deviceColorId para torretas (se mantiene el nombre "color" por compatibilidad con BD)
 }
 
 export interface UpdateAlertEscalationMessageDto {
   messageType?: MessageType;
   targetId?: string;
   message?: string;
-  color?: string;
+  color?: string; // deviceColorId para torretas (se mantiene el nombre "color" por compatibilidad con BD)
 }
 
 @Injectable()

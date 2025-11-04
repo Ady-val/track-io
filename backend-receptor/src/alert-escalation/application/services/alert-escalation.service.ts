@@ -11,6 +11,39 @@ import {
 } from '../../domain/entities/alert-escalation-message.entity';
 import { AlertEscalationConfig } from '../../domain/entities/alert-escalation-config.entity';
 import { Event } from '../../../events/domain/entities/event.entity';
+import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+
+/**
+ * Tipo para mensajes de torreta
+ */
+type TorretaPayload = {
+  type: 'torreta';
+  torreta: string; // externalId de la torreta
+  color: string; // deviceColorId
+};
+
+/**
+ * Tipo para mensajes de receptor
+ */
+type ReceptorPayload = {
+  type: 'receptor';
+  capcode: string; // externalId del receptor
+  message: string;
+};
+
+/**
+ * Tipo para mensajes de email
+ */
+type EmailPayload = {
+  type: 'email';
+  email: string; // dirección de correo
+  message: string;
+};
+
+/**
+ * Unión de tipos para el payload según el tipo de mensaje
+ */
+type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertEscalationService {
@@ -20,7 +53,8 @@ export class AlertEscalationService {
     private readonly alertEscalationConfigRepository: AlertEscalationConfigRepository,
     private readonly alertEscalationMessageRepository: AlertEscalationMessageRepository,
     private readonly eventAlertLogRepository: EventAlertLogRepository,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+    private readonly torretaColorService: TorretaColorService
   ) {}
 
   async findConfigByDeviceAndSignal(deviceId: number, deviceSignalId: number) {
@@ -54,24 +88,10 @@ export class AlertEscalationService {
   ): Promise<boolean> {
     try {
       const resolvedUrl = this.resolveEndpointUrl(endpointUrl);
-      const payload = {
-        data: messages.map(msg => ({
-          capcode: msg.targetId,
-          message:
-            msg.messageType === MessageType.TORRETA ? msg.color : msg.message,
-        })),
-      };
+      const payloadData = await this.transformMessagesToPayload(messages);
+      const payload = { data: payloadData };
 
-      this.logger.log(
-        `🚨 ALERT ESCALATION - Sending messages to endpoint ${resolvedUrl}:`
-      );
-      this.logger.log('📤 PAYLOAD TO SEND:', JSON.stringify(payload, null, 2));
-      this.logger.log('🎯 MESSAGES DETAILS:');
-      messages.forEach((msg, index) => {
-        this.logger.log(
-          `  ${index + 1}. Type: ${msg.messageType}, Target: ${msg.targetId}, Message: ${msg.message}, Color: ${msg.color}`
-        );
-      });
+      this.logMessages(messages, resolvedUrl, payload);
 
       try {
         const response = await firstValueFrom(
@@ -99,6 +119,151 @@ export class AlertEscalationService {
       );
       return false;
     }
+  }
+
+  /**
+   * Transforma los mensajes de escalación al formato de payload requerido.
+   * Cada tipo de mensaje tiene su propia estructura específica.
+   * Si un mensaje falla (color no encontrado), se omite pero se registra el error.
+   */
+  private async transformMessagesToPayload(
+    messages: AlertEscalationMessage[]
+  ): Promise<EscalationPayload[]> {
+    const results = await Promise.allSettled(
+      messages.map(msg => this.transformMessage(msg))
+    );
+
+    // Filtrar solo los mensajes exitosos y loggear los que fallaron
+    const successful: EscalationPayload[] = [];
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        successful.push(result.value);
+      } else {
+        const errorMessage =
+          result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason ?? 'Unknown error');
+        this.logger.error(
+          `❌ Failed to transform message ${index + 1}: ${errorMessage}. Message will be skipped.`
+        );
+      }
+    });
+
+    return successful;
+  }
+
+  /**
+   * Transforma un mensaje individual al formato de payload según su tipo.
+   * Cada tipo tiene su propia estructura específica:
+   * - TORRETA: { type: "torreta", torreta: string, color: string }
+   * - RECEPTOR: { type: "receptor", capcode: string, message: string }
+   * - EMAIL: { type: "email", email: string, message: string }
+   */
+  private async transformMessage(
+    msg: AlertEscalationMessage
+  ): Promise<EscalationPayload> {
+    switch (msg.messageType) {
+      case MessageType.TORRETA:
+        return this.transformTorretaMessage(msg);
+
+      case MessageType.RECEPTOR:
+        return {
+          type: 'receptor',
+          capcode: msg.targetId,
+          message: msg.message,
+        };
+
+      case MessageType.EMAIL:
+        return {
+          type: 'email',
+          email: msg.targetId,
+          message: msg.message,
+        };
+
+      default:
+        throw new Error(`Unknown message type: ${String(msg.messageType)}`);
+    }
+  }
+
+  /**
+   * Transforma un mensaje de tipo TORRETA al formato específico.
+   * Maneja la conversión de color hexadecimal a deviceColorId si es necesario.
+   */
+  private async transformTorretaMessage(
+    msg: AlertEscalationMessage
+  ): Promise<TorretaPayload> {
+    if (!msg.color) {
+      throw new Error(
+        `Torreta message ${msg.id} is missing color (deviceColorId)`
+      );
+    }
+
+    // Verificar si msg.color es un deviceColorId válido (formato: letra + número, ej: "R1", "G1")
+    // o si es un hexadecimal (formato: #RRGGBB)
+    const isHexadecimal = msg.color.startsWith('#');
+
+    if (isHexadecimal) {
+      // Compatibilidad: si viene hexadecimal (datos antiguos), convertirlo
+      this.logger.warn(
+        `⚠️ Found hexadecimal color "${msg.color}" in message ${msg.id}. Converting to deviceColorId...`
+      );
+      const normalizedColor = msg.color.toUpperCase().trim();
+      const torretaColor =
+        await this.torretaColorService.getTorretaColorByHtmlColor(
+          normalizedColor
+        );
+
+      if (!torretaColor) {
+        this.logger.error(
+          `❌ Cannot convert hex color "${normalizedColor}" to deviceColorId. Message will be skipped.`
+        );
+        throw new Error(
+          `Torreta hex color "${normalizedColor}" not found. Update message ${msg.id} with a valid deviceColorId.`
+        );
+      }
+
+      this.logger.log(
+        `✅ Converted hex "${normalizedColor}" to deviceColorId "${torretaColor.deviceColorId}"`
+      );
+
+      return {
+        type: 'torreta',
+        torreta: msg.targetId,
+        color: torretaColor.deviceColorId,
+      };
+    }
+
+    // msg.color ya contiene el deviceColorId, usarlo directamente
+    this.logger.debug(
+      `✅ Using deviceColorId "${msg.color}" directly for torreta ${msg.targetId}`
+    );
+
+    return {
+      type: 'torreta',
+      torreta: msg.targetId,
+      color: msg.color, // Ya es deviceColorId (ej: "R1", "G1", "Y1")
+    };
+  }
+
+  /**
+   * Registra los detalles de los mensajes que se enviarán.
+   */
+  private logMessages(
+    messages: AlertEscalationMessage[],
+    endpointUrl: string,
+    payload: { data: EscalationPayload[] }
+  ): void {
+    this.logger.log(
+      `🚨 ALERT ESCALATION - Sending messages to endpoint ${endpointUrl}:`
+    );
+    this.logger.log('📤 PAYLOAD TO SEND:', JSON.stringify(payload, null, 2));
+    this.logger.log('🎯 MESSAGES DETAILS:');
+    messages.forEach((msg, index) => {
+      this.logger.log(
+        `  ${index + 1}. Type: ${msg.messageType}, Target: ${msg.targetId}, Message: ${msg.message}, Color: ${msg.color}`
+      );
+    });
   }
 
   private resolveEndpointUrl(endpointUrl: string): string {

@@ -24,7 +24,11 @@ export function TorretasCatalog() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTorreta, setSelectedTorreta] = useState<Torreta | null>(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    externalId: "",
+  });
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
 
   const errorHandling = useModalError("Error al procesar la solicitud");
@@ -53,7 +57,13 @@ export function TorretasCatalog() {
       id: "name",
       label: "Nombre",
       key: "name",
-      width: "100%",
+    },
+    {
+      id: "externalId",
+      label: "External ID",
+      key: "externalId",
+      width: "200px",
+      component: (value) => value ?? "-",
     },
     {
       id: "description",
@@ -61,24 +71,10 @@ export function TorretasCatalog() {
       key: "description",
       component: (value) => value ?? "-",
     },
-    {
-      id: "isActive",
-      label: "Estado",
-      key: "isActive",
-      component: (value) => (
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          {value ? "Activo" : "Inactivo"}
-        </span>
-      ),
-    },
   ];
 
   const handleCreate = () => {
-    setFormData({ name: "", description: "" });
+    setFormData({ name: "", description: "", externalId: "" });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsCreateModalOpen(true);
@@ -86,7 +82,11 @@ export function TorretasCatalog() {
 
   const handleEdit = (torreta: Torreta) => {
     setSelectedTorreta(torreta);
-    setFormData({ name: torreta.name, description: torreta.description ?? "" });
+    setFormData({
+      name: torreta.name,
+      description: torreta.description ?? "",
+      externalId: torreta.externalId ?? "",
+    });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsEditModalOpen(true);
@@ -129,7 +129,7 @@ export function TorretasCatalog() {
         setIsEditModalOpen(false);
       }
 
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "", description: "", externalId: "" });
       setFormErrors({});
     } catch (error) {
       errorHandling.handleApiError(error, "Error al guardar la torreta");
@@ -149,7 +149,7 @@ export function TorretasCatalog() {
   };
 
   const handleCancel = () => {
-    setFormData({ name: "", description: "" });
+    setFormData({ name: "", description: "", externalId: "" });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsCreateModalOpen(false);
@@ -158,9 +158,8 @@ export function TorretasCatalog() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex-1 max-w-lg">
           <SearchInput
             placeholder="Buscar torretas..."
@@ -179,18 +178,17 @@ export function TorretasCatalog() {
         </Button>
       </div>
 
-      {/* Table */}
-      <DataTable
-        columns={columns}
-        data={filteredTorretas}
-        emptyMessage="No hay torretas registradas"
-        loading={isLoading}
-        maxHeight="max-h-96"
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
+      <div className="flex-1 min-h-0 relative">
+        <DataTable
+          columns={columns}
+          data={filteredTorretas}
+          emptyMessage="No hay torretas registradas"
+          loading={isLoading}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+        />
+      </div>
 
-      {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Torreta" : "Editar Torreta"}
@@ -219,6 +217,16 @@ export function TorretasCatalog() {
             value={formData.name}
             onChange={(value) =>
               setFormData({ ...formData, name: value as string })
+            }
+          />
+
+          <FormField
+            label="External ID"
+            name="externalId"
+            placeholder="Ingresa el External ID de la torreta (opcional)"
+            value={formData.externalId}
+            onChange={(value) =>
+              setFormData({ ...formData, externalId: value as string })
             }
           />
 
@@ -269,7 +277,6 @@ export function TorretasCatalog() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"

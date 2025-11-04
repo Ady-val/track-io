@@ -23,6 +23,7 @@ import { EventsModule } from './events/events.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
 import { AlertEscalationModule } from './alert-escalation/alert-escalation.module';
+import { EmailsModule } from './emails/emails.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 
@@ -70,6 +71,7 @@ import { HttpModule } from '@nestjs/axios';
     DashboardModule,
     AreaDowntimeModule,
     AlertEscalationModule,
+    EmailsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

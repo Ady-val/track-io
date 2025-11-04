@@ -6,6 +6,7 @@ import type {
   Torreta,
   Receptor,
   TorretaColor,
+  Email,
 } from "../types/escalation";
 
 interface UseEscalationConfigProps {
@@ -22,6 +23,7 @@ export const useEscalationConfig = ({
   const [torretas, setTorretas] = useState<Torreta[]>([]);
   const [receptors, setReceptors] = useState<Receptor[]>([]);
   const [torretaColors, setTorretaColors] = useState<TorretaColor[]>([]);
+  const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -39,29 +41,31 @@ export const useEscalationConfig = ({
         torretasData,
         receptorsData,
         torretaColorsData,
+        emailsData,
       ] = await Promise.all([
         EscalationService.getEscalationConfig(deviceId, deviceSignalId),
         EscalationService.getEscalationMessages(deviceId, deviceSignalId),
         EscalationService.getTorretas(),
         EscalationService.getReceptors(),
         EscalationService.getTorretaColors(),
+        EscalationService.getEmails(),
       ]);
 
-      // Siempre establecer los datos, incluso si no hay configuración
       setConfig(configData);
       setMessages(messagesData || []);
       setTorretas(torretasData || []);
       setReceptors(receptorsData || []);
       setTorretaColors(torretaColorsData || []);
+      setEmails(emailsData || []);
       setDataLoaded(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading data");
-      // En caso de error, establecer valores por defecto
       setConfig(null);
       setMessages([]);
       setTorretas([]);
       setReceptors([]);
       setTorretaColors([]);
+      setEmails([]);
     } finally {
       setLoading(false);
     }
@@ -142,7 +146,6 @@ export const useEscalationConfig = ({
   );
 
   useEffect(() => {
-    // Reset dataLoaded cuando cambian los parámetros
     setDataLoaded(false);
   }, [deviceId, deviceSignalId]);
 
@@ -158,6 +161,7 @@ export const useEscalationConfig = ({
     torretas,
     receptors,
     torretaColors,
+    emails,
     loading,
     error,
     loadData,
