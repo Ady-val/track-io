@@ -30,10 +30,8 @@ export class AlertEscalationConfigService {
       `Creating alert escalation config with messages for device ${createDto.deviceId} and signal ${createDto.deviceSignalId}`
     );
 
-    // Crear la configuración
     const config = await this.alertEscalationConfigRepository.create(createDto);
 
-    // Crear los mensajes si existen
     if (createDto.messages && createDto.messages.length > 0) {
       for (const messageDto of createDto.messages) {
         const messageData: any = {
@@ -44,8 +42,6 @@ export class AlertEscalationConfigService {
           message: messageDto.message,
         };
 
-        // Si es tipo TORRETA y tiene deviceColorId, guardarlo
-        // También soportamos compatibilidad con "color" (hex) si viene del frontend antiguo
         if (
           messageDto.messageType === MessageType.TORRETA &&
           messageDto.deviceColorId
@@ -55,7 +51,6 @@ export class AlertEscalationConfigService {
           messageDto.messageType === MessageType.TORRETA &&
           (messageDto as any).color
         ) {
-          // Compatibilidad: si viene color hexadecimal, convertirlo a deviceColorId
           const hexColor = (messageDto as any).color as string;
           const torretaColor =
             await this.torretaColorService.getTorretaColorByHtmlColor(
@@ -86,7 +81,6 @@ export class AlertEscalationConfigService {
       `Saving escalation config for device ${dto.deviceId} and signal ${dto.deviceSignalId}`
     );
 
-    // Buscar si ya existe una configuración para este device y signal
     const existingConfig =
       await this.alertEscalationConfigRepository.findByDeviceAndSignal(
         dto.deviceId,
@@ -95,7 +89,6 @@ export class AlertEscalationConfigService {
 
     let config;
     if (existingConfig) {
-      // Actualizar configuración existente
       const updateData: any = {
         endpointUrl: 'http://host.docker.internal:1880/events',
       };
@@ -114,7 +107,6 @@ export class AlertEscalationConfigService {
         updateData
       );
     } else {
-      // Crear nueva configuración
       const createData: any = {
         deviceId: dto.deviceId,
         deviceSignalId: dto.deviceSignalId,
@@ -133,12 +125,10 @@ export class AlertEscalationConfigService {
       config = await this.alertEscalationConfigRepository.create(createData);
     }
 
-    // Eliminar mensajes existentes para este config
     if (config) {
       await this.alertEscalationMessageRepository.deleteByConfig(config.id);
     }
 
-    // Crear nuevos mensajes si existen
     if (dto.messages && dto.messages.length > 0 && config) {
       for (const messageDto of dto.messages) {
         const messageData: any = {
@@ -149,8 +139,6 @@ export class AlertEscalationConfigService {
           message: messageDto.message,
         };
 
-        // Si es tipo TORRETA y tiene deviceColorId, guardarlo
-        // También soportamos compatibilidad con "color" (hex) si viene del frontend antiguo
         if (
           messageDto.messageType === MessageType.TORRETA &&
           messageDto.deviceColorId
@@ -160,7 +148,6 @@ export class AlertEscalationConfigService {
           messageDto.messageType === MessageType.TORRETA &&
           (messageDto as any).color
         ) {
-          // Compatibilidad: si viene color hexadecimal, convertirlo a deviceColorId
           const hexColor = (messageDto as any).color as string;
           const torretaColor =
             await this.torretaColorService.getTorretaColorByHtmlColor(

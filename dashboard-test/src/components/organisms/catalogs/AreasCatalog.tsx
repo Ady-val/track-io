@@ -17,6 +17,7 @@ import { DataTable, type TableColumn } from "../../molecules/DataTable";
 import { FormField } from "../../molecules/FormField";
 import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
+import { AreaTorretaConfigModal } from "./AreaTorretaConfigModal";
 
 export function AreasCatalog() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +25,11 @@ export function AreasCatalog() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isTorretaConfigModalOpen, setIsTorretaConfigModalOpen] =
+    useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
+  const [selectedAreaForTorreta, setSelectedAreaForTorreta] =
+    useState<Area | null>(null);
   const [formData, setFormData] = useState({ name: "" });
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
 
@@ -47,6 +52,11 @@ export function AreasCatalog() {
   const totalItems = areasData?.total ?? 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
+  const handleTorretaConfig = (area: Area) => {
+    setSelectedAreaForTorreta(area);
+    setIsTorretaConfigModalOpen(true);
+  };
+
   const columns: Array<TableColumn<Area>> = [
     {
       id: "id",
@@ -59,6 +69,22 @@ export function AreasCatalog() {
       label: "Nombre",
       key: "name",
       width: "100%",
+    },
+    {
+      id: "torretas",
+      label: "Torretas",
+      key: "name", // Usamos 'name' como key pero component renderiza el botón
+      width: "120px",
+      component: (_value, row) => (
+        <Button
+          color="primary"
+          size="sm"
+          variant="bordered"
+          onClick={() => handleTorretaConfig(row)}
+        >
+          Configurar
+        </Button>
+      ),
     },
   ];
 
@@ -261,6 +287,15 @@ export function AreasCatalog() {
         variant="danger"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
+      />
+
+      <AreaTorretaConfigModal
+        area={selectedAreaForTorreta}
+        isOpen={isTorretaConfigModalOpen}
+        onClose={() => {
+          setIsTorretaConfigModalOpen(false);
+          setSelectedAreaForTorreta(null);
+        }}
       />
     </div>
   );

@@ -66,7 +66,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
       ...signals,
       { name: "", externalValueId: "", departmentId: "" },
     ]);
-    // Limpiar errores de validación cuando se agrega una señal
     if (validationErrors.length > 0) {
       setValidationErrors([]);
     }
@@ -75,7 +74,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
   const removeSignal = (index: number) => {
     if (signals.length > 1) {
       setSignals(signals.filter((_, i) => i !== index));
-      // Limpiar errores de validación cuando se elimina una señal
       if (validationErrors.length > 0) {
         setValidationErrors([]);
       }
@@ -93,7 +91,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
     if (signal) {
       signal[field] = value;
       setSignals(newSignals);
-      // Limpiar errores de validación cuando se actualiza una señal
       if (validationErrors.length > 0) {
         setValidationErrors([]);
       }
@@ -120,7 +117,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
       (signal) => signal.name && signal.externalValueId && signal.departmentId
     );
 
-    // Validar nombres únicos
     const names = validSignals.map((s) => s.name.trim().toLowerCase());
     const uniqueNames = new Set(names);
 
@@ -128,7 +124,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
       errors.push("No se pueden repetir nombres entre señales");
     }
 
-    // Validar external value IDs únicos
     const externalValueIds = validSignals.map((s) => s.externalValueId.trim());
     const uniqueExternalValueIds = new Set(externalValueIds);
 
@@ -136,7 +131,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
       errors.push("No se pueden repetir External Value ID entre señales");
     }
 
-    // Validar departamentos únicos
     const departmentIds = validSignals.map((s) => s.departmentId);
     const uniqueDepartmentIds = new Set(departmentIds);
 
@@ -153,7 +147,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
     e.preventDefault();
     if (!deviceName || !externalId || !areaId) return;
 
-    // Validar señales antes de enviar
     if (!validateSignals()) {
       return;
     }
@@ -192,7 +185,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
     } catch (error: unknown) {
       console.error("Error creating device with signals:", error);
 
-      // Manejar diferentes tipos de errores del servidor
       if (error && typeof error === "object" && "response" in error) {
         const apiError = error as {
           response?: {
@@ -201,7 +193,6 @@ export const CreateDeviceWithSignalsModal: React.FC<
           };
         };
 
-        // Intentar obtener el mensaje del servidor
         const serverMessage =
           apiError.response?.data?.message ??
           apiError.response?.data?.error ??

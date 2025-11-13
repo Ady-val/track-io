@@ -32,14 +32,12 @@ export function parseApiError(
   error: unknown,
   defaultMessage: string = "Ocurrió un error inesperado. Por favor, intenta nuevamente."
 ): ParsedError {
-  // If error is a string, return it directly
   if (typeof error === "string") {
     return {
       message: error,
     };
   }
 
-  // If error is an Error object with message
   if (error && typeof error === "object" && "message" in error) {
     const errorWithMessage = error as { message: string };
 
@@ -48,19 +46,15 @@ export function parseApiError(
     };
   }
 
-  // If error has a response property (Axios error)
   if (error && typeof error === "object" && "response" in error) {
     const apiError = error as ApiError;
     const status = apiError.response?.status;
 
-    // Try to extract message from response data
     let serverMessage = apiError.response?.data?.message ?? apiError.response?.data?.error;
 
-    // If no message in response, try to get a meaningful message from the error object
     if (!serverMessage && "message" in apiError) {
       const errorMessage = (apiError as { message: string }).message;
 
-      // For Axios errors with status, create a more meaningful message
       if (status) {
         switch (status) {
           case 409:
@@ -92,7 +86,6 @@ export function parseApiError(
     };
   }
 
-  // Fallback for unknown errors
   return {
     message: defaultMessage,
   };

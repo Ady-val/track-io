@@ -13,6 +13,7 @@ export interface Area {
 export interface Department {
   id: number;
   name: string;
+  htmlColor?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -93,12 +94,15 @@ const catalogApi = {
 
     return response.data;
   },
-  createDepartment: async (data: { name: string }) => {
+  createDepartment: async (data: { name: string; htmlColor?: string }) => {
     const response = await apiClient.post("/departments", data);
 
     return response.data;
   },
-  updateDepartment: async (id: number, data: { name: string }) => {
+  updateDepartment: async (
+    id: number,
+    data: { name?: string; htmlColor?: string }
+  ) => {
     const response = await apiClient.patch(`/departments/${id}`, data);
 
     return response.data;
@@ -210,10 +214,7 @@ const catalogApi = {
 
     return response.data;
   },
-  updateEmail: async (
-    id: number,
-    data: { name?: string; email?: string }
-  ) => {
+  updateEmail: async (id: number, data: { name?: string; email?: string }) => {
     const response = await apiClient.patch(`/emails/${id}`, data);
 
     return response.data;
@@ -296,8 +297,13 @@ export function useUpdateDepartment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name: string } }) =>
-      catalogApi.updateDepartment(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { name?: string; htmlColor?: string };
+    }) => catalogApi.updateDepartment(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },

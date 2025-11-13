@@ -20,7 +20,6 @@ export class AlertEscalationMessageService {
       `Creating alert escalation message for config ${createDto.escalationConfigId} and level ${createDto.level}`
     );
 
-    // Mapear deviceColorId a color (para compatibilidad con BD)
     const messageData: any = {
       escalationConfigId: createDto.escalationConfigId,
       level: createDto.level,
@@ -71,7 +70,6 @@ export class AlertEscalationMessageService {
   async update(id: number, updateDto: UpdateAlertEscalationMessageDto) {
     this.logger.log(`Updating alert escalation message ${id}`);
 
-    // Mapear deviceColorId a color (para compatibilidad con BD)
     const updateData: any = {};
     if (updateDto.messageType !== undefined)
       updateData.messageType = updateDto.messageType;

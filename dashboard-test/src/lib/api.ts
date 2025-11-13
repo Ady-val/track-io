@@ -1,7 +1,5 @@
 import axios from "axios";
 
-// En desarrollo local: apunta a localhost:3000
-// En producción (Docker): usa la variable de entorno VITE_API_URL
 const apiBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export const apiClient = axios.create({

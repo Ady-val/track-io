@@ -27,7 +27,7 @@ export function DepartmentsCatalog() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] =
     useState<Department | null>(null);
-  const [formData, setFormData] = useState({ name: "" });
+  const [formData, setFormData] = useState({ name: "", htmlColor: "#ffffff" });
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
 
   const errorHandling = useModalError("Error al procesar la solicitud");
@@ -60,12 +60,25 @@ export function DepartmentsCatalog() {
       id: "name",
       label: "Nombre",
       key: "name",
-      width: "100%",
+    },
+    {
+      id: "htmlColor",
+      label: "Color",
+      key: "htmlColor",
+      component: (value) => (
+        <div className="flex items-center">
+          <div
+            className="w-6 h-6 rounded border border-gray-300 mr-2"
+            style={{ backgroundColor: value || "#ffffff" }}
+          />
+          <span className="font-mono text-sm">{value || "#ffffff"}</span>
+        </div>
+      ),
     },
   ];
 
   const handleCreate = () => {
-    setFormData({ name: "" });
+    setFormData({ name: "", htmlColor: "#ffffff" });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsCreateModalOpen(true);
@@ -73,7 +86,10 @@ export function DepartmentsCatalog() {
 
   const handleEdit = (department: Department) => {
     setSelectedDepartment(department);
-    setFormData({ name: department.name });
+    setFormData({
+      name: department.name,
+      htmlColor: department.htmlColor || "#ffffff",
+    });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsEditModalOpen(true);
@@ -116,7 +132,7 @@ export function DepartmentsCatalog() {
         setIsEditModalOpen(false);
       }
 
-      setFormData({ name: "" });
+      setFormData({ name: "", htmlColor: "#ffffff" });
       setFormErrors({});
     } catch (error) {
       errorHandling.handleApiError(error, "Error al guardar el departamento");
@@ -136,7 +152,7 @@ export function DepartmentsCatalog() {
   };
 
   const handleCancel = () => {
-    setFormData({ name: "" });
+    setFormData({ name: "", htmlColor: "#ffffff" });
     setFormErrors({});
     errorHandling.clearErrors();
     setIsCreateModalOpen(false);
@@ -218,6 +234,35 @@ export function DepartmentsCatalog() {
               setFormData({ ...formData, name: value as string })
             }
           />
+
+          <div className="space-y-2">
+            <label
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              htmlFor="color-input"
+            >
+              Color
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer bg-white dark:bg-slate-800"
+                id="color-input"
+                type="color"
+                value={formData.htmlColor}
+                onChange={(e) =>
+                  setFormData({ ...formData, htmlColor: e.target.value })
+                }
+              />
+              <input
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                placeholder="#ffffff"
+                type="text"
+                value={formData.htmlColor}
+                onChange={(e) =>
+                  setFormData({ ...formData, htmlColor: e.target.value })
+                }
+              />
+            </div>
+          </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button

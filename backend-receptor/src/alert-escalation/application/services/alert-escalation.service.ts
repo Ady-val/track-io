@@ -13,36 +13,24 @@ import { AlertEscalationConfig } from '../../domain/entities/alert-escalation-co
 import { Event } from '../../../events/domain/entities/event.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
 
-/**
- * Tipo para mensajes de torreta
- */
 type TorretaPayload = {
   type: 'torreta';
-  torreta: string; // externalId de la torreta
-  color: string; // deviceColorId
+  torreta: string;
+  color: string;
 };
 
-/**
- * Tipo para mensajes de receptor
- */
 type ReceptorPayload = {
   type: 'receptor';
-  capcode: string; // externalId del receptor
+  capcode: string;
   message: string;
 };
 
-/**
- * Tipo para mensajes de email
- */
 type EmailPayload = {
   type: 'email';
-  email: string; // dirección de correo
+  email: string;
   message: string;
 };
 
-/**
- * Unión de tipos para el payload según el tipo de mensaje
- */
 type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
@@ -121,11 +109,6 @@ export class AlertEscalationService {
     }
   }
 
-  /**
-   * Transforma los mensajes de escalación al formato de payload requerido.
-   * Cada tipo de mensaje tiene su propia estructura específica.
-   * Si un mensaje falla (color no encontrado), se omite pero se registra el error.
-   */
   private async transformMessagesToPayload(
     messages: AlertEscalationMessage[]
   ): Promise<EscalationPayload[]> {
@@ -133,7 +116,6 @@ export class AlertEscalationService {
       messages.map(msg => this.transformMessage(msg))
     );
 
-    // Filtrar solo los mensajes exitosos y loggear los que fallaron
     const successful: EscalationPayload[] = [];
 
     results.forEach((result, index) => {
@@ -153,13 +135,6 @@ export class AlertEscalationService {
     return successful;
   }
 
-  /**
-   * Transforma un mensaje individual al formato de payload según su tipo.
-   * Cada tipo tiene su propia estructura específica:
-   * - TORRETA: { type: "torreta", torreta: string, color: string }
-   * - RECEPTOR: { type: "receptor", capcode: string, message: string }
-   * - EMAIL: { type: "email", email: string, message: string }
-   */
   private async transformMessage(
     msg: AlertEscalationMessage
   ): Promise<EscalationPayload> {
@@ -186,10 +161,6 @@ export class AlertEscalationService {
     }
   }
 
-  /**
-   * Transforma un mensaje de tipo TORRETA al formato específico.
-   * Maneja la conversión de color hexadecimal a deviceColorId si es necesario.
-   */
   private async transformTorretaMessage(
     msg: AlertEscalationMessage
   ): Promise<TorretaPayload> {
@@ -199,12 +170,9 @@ export class AlertEscalationService {
       );
     }
 
-    // Verificar si msg.color es un deviceColorId válido (formato: letra + número, ej: "R1", "G1")
-    // o si es un hexadecimal (formato: #RRGGBB)
     const isHexadecimal = msg.color.startsWith('#');
 
     if (isHexadecimal) {
-      // Compatibilidad: si viene hexadecimal (datos antiguos), convertirlo
       this.logger.warn(
         `⚠️ Found hexadecimal color "${msg.color}" in message ${msg.id}. Converting to deviceColorId...`
       );
@@ -234,7 +202,6 @@ export class AlertEscalationService {
       };
     }
 
-    // msg.color ya contiene el deviceColorId, usarlo directamente
     this.logger.debug(
       `✅ Using deviceColorId "${msg.color}" directly for torreta ${msg.targetId}`
     );
@@ -242,13 +209,10 @@ export class AlertEscalationService {
     return {
       type: 'torreta',
       torreta: msg.targetId,
-      color: msg.color, // Ya es deviceColorId (ej: "R1", "G1", "Y1")
+      color: msg.color,
     };
   }
 
-  /**
-   * Registra los detalles de los mensajes que se enviarán.
-   */
   private logMessages(
     messages: AlertEscalationMessage[],
     endpointUrl: string,
@@ -268,6 +232,7 @@ export class AlertEscalationService {
 
   private resolveEndpointUrl(endpointUrl: string): string {
     try {
+      if (process.env['NODE_ENV'] === 'development') return endpointUrl;
       const url = new URL(endpointUrl);
       if (
         url.hostname === 'localhost' ||
@@ -340,13 +305,11 @@ export class AlertEscalationService {
         return;
       }
 
-      // Enviar mensajes al endpoint
       const success = await this.sendMessagesToEndpoint(
         messages,
         config.endpointUrl
       );
 
-      // Registrar en log
       await this.logAlertSent(
         event.id,
         level,
@@ -401,13 +364,11 @@ export class AlertEscalationService {
         return;
       }
 
-      // Enviar mensajes al endpoint
       const success = await this.sendMessagesToEndpoint(
         messages,
         config.endpointUrl
       );
 
-      // Registrar en log
       await this.logAlertSent(
         event.id,
         AlertLevel.CLOSE,

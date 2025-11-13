@@ -47,7 +47,6 @@ export function DataTable<T extends { id: number | string }>({
     );
   }
 
-  // When maxHeight is provided, use it directly
   if (maxHeight) {
     return (
       <div
@@ -123,7 +122,6 @@ export function DataTable<T extends { id: number | string }>({
     );
   }
 
-  // When no maxHeight, use full height with proper overflow
   return (
     <div className={`h-full overflow-y-auto overflow-x-hidden ${className}`}>
       <table

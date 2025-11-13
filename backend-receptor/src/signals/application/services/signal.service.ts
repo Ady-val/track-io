@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { Signal } from '../../domain/entities/signal.entity';
 import {
   RawSignalRepository,
@@ -20,6 +21,7 @@ import { TypeOrmEventRepository } from '../../../events/domain/repositories/type
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { AreaDowntimeService } from '../../../area-downtime/application/services/area-downtime.service';
 import { AlertCronService } from '../../../alert-escalation/application/services/alert-cron.service';
+import { AreaTorretaSignalService } from '../../../area-torreta-config/application/services/area-torreta-signal.service';
 import type { Event } from '../../../events/domain/entities/event.entity';
 import type { Device } from '../../../devices/domain/entities/device.entity';
 import type { DeviceSignal } from '../../../device-signals/domain/entities/device-signal.entity';
@@ -27,6 +29,7 @@ import type { DeviceSignal } from '../../../device-signals/domain/entities/devic
 @Injectable()
 export class SignalService {
   private readonly logger = new Logger(SignalService.name);
+  private areaTorretaSignalService?: AreaTorretaSignalService;
 
   constructor(
     private readonly rawSignalRepository: RawSignalRepository,
@@ -36,8 +39,26 @@ export class SignalService {
     private readonly eventRepository: TypeOrmEventRepository,
     private readonly webSocketEmitterService: WebSocketEmitterService,
     private readonly areaDowntimeService: AreaDowntimeService,
-    private readonly alertCronService: AlertCronService
+    private readonly alertCronService: AlertCronService,
+    private readonly moduleRef: ModuleRef
   ) {}
+
+  private getAreaTorretaSignalService(): AreaTorretaSignalService {
+    if (!this.areaTorretaSignalService) {
+      const service = this.moduleRef.get(AreaTorretaSignalService, {
+        strict: false,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (!service) {
+        throw new Error('AreaTorretaSignalService provider is not available');
+      }
+
+      this.areaTorretaSignalService = service;
+    }
+
+    return this.areaTorretaSignalService;
+  }
 
   async processSignal(id: string, value: string): Promise<RawSignal> {
     const signal = new Signal(id, value);
@@ -46,7 +67,6 @@ export class SignalService {
     this.logger.log(signal);
 
     try {
-      // 1. Guardar raw signal
       const createDto: CreateRawSignalDto = {
         externalId: id,
         value: value,
@@ -57,10 +77,8 @@ export class SignalService {
         `Raw signal saved to database with ID: ${savedSignal.id}`
       );
 
-      // 2. Procesar signal y relacionar con devices/device-signals
       await this.processSignalWithDeviceRelation(id, value);
 
-      // 3. Manejar lógica de eventos automáticos
       await this.handleEventLogic(id, value);
 
       try {
@@ -149,10 +167,8 @@ export class SignalService {
     value: string
   ): Promise<void> {
     try {
-      // Buscar device por externalId
       const device = await this.deviceRepository.findByExternalId(externalId);
 
-      // Buscar device-signal por externalValueId Y deviceId para evitar colisiones
       const deviceSignal = device
         ? await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
             value,
@@ -162,14 +178,12 @@ export class SignalService {
 
       const processedSignalDto: CreateProcessedSignalDto = {};
 
-      // Si encontramos device, agregar información del device
       if (device) {
         processedSignalDto.deviceId = device.id;
         processedSignalDto.deviceName = device.name;
         this.logger.log(`Found device: ${device.name} (ID: ${device.id})`);
       }
 
-      // Si encontramos device-signal, agregar información del device-signal
       if (deviceSignal) {
         processedSignalDto.deviceSignalId = deviceSignal.id;
         processedSignalDto.deviceSignalName = deviceSignal.name;
@@ -178,7 +192,6 @@ export class SignalService {
         );
       }
 
-      // Guardar processed signal (aunque no encontremos device o device-signal)
       const savedProcessedSignal =
         await this.processedSignalRepository.create(processedSignalDto);
 
@@ -196,7 +209,6 @@ export class SignalService {
         `Error processing signal with device relation: ${(error as Error).message}`,
         (error as Error).stack
       );
-      // No lanzamos el error para que el raw signal se guarde independientemente
     }
   }
 
@@ -256,7 +268,6 @@ export class SignalService {
     }
   }
 
-  // Métodos para señales procesadas
   async getAllProcessedSignals(
     filters?: ProcessedSignalFilters
   ): Promise<{ data: ProcessedSignal[]; total: number }> {
@@ -313,13 +324,11 @@ export class SignalService {
     }
   }
 
-  // Métodos para manejo de eventos automáticos
   private async handleEventLogic(
     externalId: string,
     value: string
   ): Promise<void> {
     try {
-      // Buscar device por externalId
       const device = await this.deviceRepository.findByExternalId(externalId);
 
       if (!device) {
@@ -327,7 +336,6 @@ export class SignalService {
         return;
       }
 
-      // Buscar deviceSignal por externalValueId Y deviceId para evitar colisiones
       const deviceSignal =
         await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
           value,
@@ -345,7 +353,6 @@ export class SignalService {
         `Processing event logic for device: ${device.name}, signal: ${deviceSignal.name}`
       );
 
-      // Lógica de estados de eventos
       const existingOpenEvent =
         await this.eventRepository.findOpenByDeviceAndSignal(
           device.id,
@@ -359,13 +366,10 @@ export class SignalService {
         );
 
       if (existingInProgressEvent) {
-        // Cambiar de in-progress a closed
         await this.closeEvent(existingInProgressEvent);
       } else if (existingOpenEvent) {
-        // Cambiar de open a in-progress
         await this.setEventInProgress(existingOpenEvent);
       } else {
-        // Crear nuevo evento open
         await this.createNewEvent(device, deviceSignal);
       }
     } catch (error) {
@@ -373,7 +377,6 @@ export class SignalService {
         `Error handling event logic: ${(error as Error).message}`,
         (error as Error).stack
       );
-      // No lanzamos el error para que el raw signal se guarde independientemente
     }
   }
 
@@ -395,7 +398,6 @@ export class SignalService {
 
       this.logger.log(`Created new event with ID: ${event.id}`);
 
-      // Manejar lógica de tiempo de paro del área
       try {
         await this.areaDowntimeService.handleEventForAreaDowntime(event);
       } catch (downtimeError) {
@@ -405,7 +407,6 @@ export class SignalService {
         );
       }
 
-      // Emitir evento WebSocket
       this.webSocketEmitterService.emitToAll('new-event', {
         area: event.areaName,
         department: event.departmentName,
@@ -417,6 +418,17 @@ export class SignalService {
       this.logger.log(
         `WebSocket event 'new-event' emitted for event ID: ${event.id}`
       );
+
+      try {
+        await this.getAreaTorretaSignalService().processEventForAreaTorretas(
+          event
+        );
+      } catch (torretaError) {
+        this.logger.error(
+          `Error processing area torreta signals for new event: ${(torretaError as Error).message}`,
+          (torretaError as Error).stack
+        );
+      }
     } catch (error) {
       this.logger.error(
         `Error creating new event: ${(error as Error).message}`,
@@ -434,7 +446,6 @@ export class SignalService {
 
       this.logger.log(`Event ${event.id} set to in-progress`);
 
-      // Manejar lógica de tiempo de paro del área
       try {
         await this.areaDowntimeService.handleEventForAreaDowntime(updatedEvent);
       } catch (downtimeError) {
@@ -444,7 +455,6 @@ export class SignalService {
         );
       }
 
-      // Emitir evento WebSocket
       this.webSocketEmitterService.emitToAll('event-updated', {
         eventId: updatedEvent.id,
         status: updatedEvent.status,
@@ -455,6 +465,17 @@ export class SignalService {
       this.logger.log(
         `WebSocket event 'event-updated' emitted for event ID: ${updatedEvent.id}`
       );
+
+      try {
+        await this.getAreaTorretaSignalService().processEventForAreaTorretas(
+          updatedEvent
+        );
+      } catch (torretaError) {
+        this.logger.error(
+          `Error processing area torreta signals for in-progress event: ${(torretaError as Error).message}`,
+          (torretaError as Error).stack
+        );
+      }
     } catch (error) {
       this.logger.error(
         `Error setting event in progress: ${(error as Error).message}`,
@@ -481,7 +502,6 @@ export class SignalService {
         `Event ${event.id} closed with duration: ${durationSeconds} seconds`
       );
 
-      // Manejar lógica de tiempo de paro del área
       try {
         await this.areaDowntimeService.handleEventForAreaDowntime(updatedEvent);
       } catch (downtimeError) {
@@ -491,7 +511,6 @@ export class SignalService {
         );
       }
 
-      // Emitir evento WebSocket
       this.webSocketEmitterService.emitToAll('closed-event', {
         eventId: updatedEvent.id,
         area: updatedEvent.areaName,
@@ -504,13 +523,23 @@ export class SignalService {
         `WebSocket event 'closed-event' emitted for event ID: ${updatedEvent.id}`
       );
 
-      // NUEVA LÓGICA: Enviar alerta de cierre de evento
       try {
         await this.alertCronService.processClosedEvent(updatedEvent);
       } catch (alertError) {
         this.logger.error(
           `Error processing close event alert: ${(alertError as Error).message}`,
           (alertError as Error).stack
+        );
+      }
+
+      try {
+        await this.getAreaTorretaSignalService().processEventForAreaTorretas(
+          updatedEvent
+        );
+      } catch (torretaError) {
+        this.logger.error(
+          `Error processing area torreta signals for closed event: ${(torretaError as Error).message}`,
+          (torretaError as Error).stack
         );
       }
     } catch (error) {
@@ -535,7 +564,6 @@ export class SignalService {
         return;
       }
 
-      // CRÍTICO: Buscar deviceSignal por externalValueId Y deviceId para evitar colisiones
       const deviceSignal =
         await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
           value,

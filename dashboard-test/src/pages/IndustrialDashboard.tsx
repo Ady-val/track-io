@@ -42,7 +42,6 @@ export const IndustrialDashboard: React.FC = () => {
     return "connected";
   };
 
-  // Actualizar la hora cada segundo
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -51,7 +50,6 @@ export const IndustrialDashboard: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // WebSocket para actualizaciones en tiempo real
   useWebSocketEvent("new-event", () => {
     console.log("Nuevo evento recibido via WebSocket");
     refreshAll();
@@ -69,13 +67,11 @@ export const IndustrialDashboard: React.FC = () => {
 
   const handleAreaClick = (area: string) => {
     console.log("Área clickeada:", area);
-    // Aquí se puede implementar navegación a detalles del área
   };
 
   const handleEventClick = (event: DashboardEventData) => {
     setSelectedEvent(event);
     console.log("Evento clickeado:", event);
-    // Aquí se puede implementar modal de detalles del evento
   };
 
   const handleClosedEventsToggle = async (isExpanded: boolean) => {
@@ -93,7 +89,6 @@ export const IndustrialDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header - Fijo */}
       <div className="flex-shrink-0 pb-4">
         <div className="flex items-center justify-between">
           <div>
@@ -122,7 +117,6 @@ export const IndustrialDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Líneas de Producción - Fijo */}
       <div className="flex-shrink-0 pb-4">
         <h2 className="text-2xl font-bold text-slate-100 mb-6">
           Líneas de Producción
@@ -160,9 +154,7 @@ export const IndustrialDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Contenido con Scroll - Tablas */}
       <div className="flex-1 overflow-y-auto pb-8 dashboard-scrollbar smooth-scroll">
-        {/* Eventos Abiertos */}
         <div className="mb-10">
           {error ? (
             <Card className="bg-slate-700 border-slate-600">
@@ -185,7 +177,6 @@ export const IndustrialDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Eventos En Progreso */}
         <div className="mb-10">
           {error ? (
             <Card className="bg-slate-700 border-slate-600">
@@ -208,7 +199,6 @@ export const IndustrialDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Eventos Cerrados - Colapsible */}
         <CollapsibleSection
           isLoading={isLoadingClosedEvents}
           title="Últimos Eventos Cerrados"

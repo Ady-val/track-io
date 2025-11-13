@@ -15,6 +15,9 @@ export class Department {
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 
+  @Column({ name: 'html_color', type: 'varchar', length: 7, nullable: true })
+  htmlColor?: string;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp with time zone',

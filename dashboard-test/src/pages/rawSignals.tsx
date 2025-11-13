@@ -20,7 +20,6 @@ import { TwoColumnLayout } from "@components/templates";
 
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useWebSocketEvent } from "@/hooks/useWebSocketEvent";
-// import DefaultLayout from "@/layouts/default";
 import deviceSignalService from "@/lib/services/device-signal.service";
 import deviceService from "@/lib/services/device.service";
 import measurementService from "@/lib/services/measurement.service";
@@ -135,7 +134,6 @@ export default function RawSignalsPage() {
     setSelectedDeviceSignal(null);
 
     if (signal.type === "measurement") {
-      // Buscar measurement
       setIsLoadingMeasurement(true);
       try {
         const measurement = await measurementService.getByExternalId(
@@ -150,7 +148,6 @@ export default function RawSignalsPage() {
         setIsLoadingMeasurement(false);
       }
     } else if (signal.type === "signal") {
-      // Buscar device
       setIsLoadingDevice(true);
       try {
         const device = await deviceService.getByExternalId(signal.externalId);
@@ -158,7 +155,6 @@ export default function RawSignalsPage() {
         setSelectedDevice(device);
 
         if (device) {
-          // Si existe el device, buscar deviceSignal y departamentos usados
           setIsLoadingDeviceSignal(true);
           try {
             const deviceSignal =
@@ -169,7 +165,6 @@ export default function RawSignalsPage() {
 
             setSelectedDeviceSignal(deviceSignal);
 
-            // Cargar departamentos ya usados por este dispositivo
             const existingSignals = await deviceSignalService.getByDeviceId(
               device.id
             );
@@ -234,11 +229,9 @@ export default function RawSignalsPage() {
         setSelectedMeasurement(newMeasurement);
         setIsModalOpen(false);
 
-        // Optional: Show success message
         console.log("Measurement created successfully:", newMeasurement);
       } catch (error) {
         console.error("Error creating measurement:", error);
-        // Optional: Show error message to user
       } finally {
         setIsCreatingMeasurement(false);
       }
@@ -258,11 +251,9 @@ export default function RawSignalsPage() {
         setSelectedDevice(newDevice);
         setIsModalOpen(false);
 
-        // Optional: Show success message
         console.log("Device created successfully:", newDevice);
       } catch (error) {
         console.error("Error creating device:", error);
-        // Optional: Show error message to user
       } finally {
         setIsCreatingDevice(false);
       }
@@ -287,14 +278,11 @@ export default function RawSignalsPage() {
         setSelectedDeviceSignal(newDeviceSignal);
         setIsModalOpen(false);
 
-        // Actualizar lista de departamentos usados
         setUsedDepartments((prev) => [...prev, data.departmentId]);
 
-        // Optional: Show success message
         console.log("Device signal created successfully:", newDeviceSignal);
       } catch (error) {
         console.error("Error creating device signal:", error);
-        // Optional: Show error message to user
       } finally {
         setIsCreatingDeviceSignal(false);
       }
@@ -312,12 +300,10 @@ export default function RawSignalsPage() {
       setIsCreatingDevice(true);
 
       try {
-        // Crear dispositivo primero
         const newDevice = await deviceService.create(deviceData);
 
         setSelectedDevice(newDevice);
 
-        // Crear señal con el ID del dispositivo recién creado
         const signalDataWithDevice: CreateDeviceSignalData = {
           ...signalData,
           deviceId: newDevice.id,
@@ -328,19 +314,16 @@ export default function RawSignalsPage() {
 
         setSelectedDeviceSignal(newDeviceSignal);
 
-        // Actualizar lista de departamentos usados
         setUsedDepartments([signalData.departmentId]);
 
         setIsModalOpen(false);
 
-        // Optional: Show success message
         console.log("Device and signal created successfully:", {
           newDevice,
           newDeviceSignal,
         });
       } catch (error) {
         console.error("Error creating device and signal:", error);
-        // Optional: Show error message to user
       } finally {
         setIsCreatingDevice(false);
       }
@@ -419,7 +402,6 @@ export default function RawSignalsPage() {
                   signal={selectedSignal}
                   onClose={handleCloseDetail}
                   onCreateDevice={() => {
-                    // Si no existe device ni signal, abrir modal combinado
                     if (!selectedDevice && !selectedDeviceSignal) {
                       handleOpenCreateModal("deviceAndSignal");
                     } else {
@@ -427,7 +409,6 @@ export default function RawSignalsPage() {
                     }
                   }}
                   onCreateDeviceSignal={() => {
-                    // Si existe device pero no signal, usar modal con información del device
                     if (selectedDevice && !selectedDeviceSignal) {
                       handleOpenCreateModal("deviceSignalWithDevice");
                     } else {

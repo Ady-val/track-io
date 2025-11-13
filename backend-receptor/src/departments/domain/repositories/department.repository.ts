@@ -5,10 +5,12 @@ import { Department } from '../entities/department.entity';
 
 export interface CreateDepartmentDto {
   name: string;
+  htmlColor?: string;
 }
 
 export interface UpdateDepartmentDto {
   name?: string;
+  htmlColor?: string;
 }
 
 export interface DepartmentFilters {

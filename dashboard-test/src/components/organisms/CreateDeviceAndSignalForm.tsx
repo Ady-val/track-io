@@ -37,11 +37,9 @@ export const CreateDeviceAndSignalForm: React.FC<
   onCancel,
   isLoading = false,
 }) => {
-  // Device form state
   const [deviceName, setDeviceName] = useState<string>("");
   const [areaId, setAreaId] = useState<number | string>("");
 
-  // Signal form state
   const [signalName, setSignalName] = useState<string>("");
   const [departmentId, setDepartmentId] = useState<number | string>("");
 
