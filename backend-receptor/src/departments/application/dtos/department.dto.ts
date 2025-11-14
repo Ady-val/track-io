@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, Matches } from 'class-validator';
+import { Exclude, Expose } from 'class-transformer';
 
 export class CreateDepartmentDto {
   @IsString({ message: 'name must be a string' })
@@ -27,10 +28,23 @@ export class UpdateDepartmentDto {
   htmlColor?: string;
 }
 
+@Expose()
 export class DepartmentResponseDto {
+  @Expose()
   id!: number;
+
+  @Expose()
   name!: string;
+
+  @Expose()
+  htmlColor?: string;
+
+  @Expose()
   createdAt!: Date;
+
+  @Expose()
   updatedAt!: Date;
+
+  @Exclude()
   deletedAt?: Date;
 }

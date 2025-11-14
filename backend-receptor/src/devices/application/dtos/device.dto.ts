@@ -6,6 +6,7 @@ import {
   IsPositive,
   IsBoolean,
 } from 'class-validator';
+import { Exclude, Expose } from 'class-transformer';
 
 export class CreateDeviceDto {
   @IsString({ message: 'name must be a string' })
@@ -46,15 +47,33 @@ export class UpdateDeviceDto {
   isVirtualDevice?: boolean;
 }
 
+@Expose()
 export class DeviceResponseDto {
+  @Expose()
   id!: number;
+
+  @Expose()
   name!: string;
+
+  @Expose()
   areaId!: number;
+
+  @Expose()
   externalId!: string;
+
+  @Expose()
   isVirtualDevice!: boolean;
+
+  @Expose()
   createdAt!: Date;
+
+  @Expose()
   updatedAt!: Date;
+
+  @Exclude()
   deletedAt?: Date;
+
+  @Expose()
   area?: {
     id: number;
     name: string;

@@ -12,9 +12,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { AreaService } from '../application/services/area.service';
-import { CreateAreaDto, UpdateAreaDto } from '../application/dtos/area.dto';
-import { Area } from '../domain/entities/area.entity';
+import {
+  CreateAreaDto,
+  UpdateAreaDto,
+  AreaResponseDto,
+} from '../application/dtos/area.dto';
 import { AreaFilters } from '../domain/repositories/area.repository';
 
 @Controller('areas')
@@ -25,13 +29,17 @@ export class AreaController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createAreaDto: CreateAreaDto): Promise<{
     message: string;
-    data: Area;
+    data: AreaResponseDto;
   }> {
     const area = await this.areaService.create(createAreaDto);
+    const areaResponse = plainToInstance(AreaResponseDto, area, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Area created successfully',
-      data: area,
+      data: areaResponse,
     };
   }
 
@@ -44,7 +52,7 @@ export class AreaController {
     includeDeleted?: boolean
   ): Promise<{
     message: string;
-    data: Area[];
+    data: AreaResponseDto[];
     total: number;
     pagination: { limit: number; offset: number; total: number };
   }> {
@@ -55,10 +63,14 @@ export class AreaController {
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
     const { data, total } = await this.areaService.findAll(filters);
+    const areaResponses = plainToInstance(AreaResponseDto, data, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Areas retrieved successfully',
-      data,
+      data: areaResponses,
       total,
       pagination: {
         limit: limit ?? 10,
@@ -84,13 +96,17 @@ export class AreaController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: Area;
+    data: AreaResponseDto;
   }> {
     const area = await this.areaService.findById(id);
+    const areaResponse = plainToInstance(AreaResponseDto, area, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Area retrieved successfully',
-      data: area,
+      data: areaResponse,
     };
   }
 
@@ -100,13 +116,17 @@ export class AreaController {
     @Body() updateAreaDto: UpdateAreaDto
   ): Promise<{
     message: string;
-    data: Area;
+    data: AreaResponseDto;
   }> {
     const area = await this.areaService.update(id, updateAreaDto);
+    const areaResponse = plainToInstance(AreaResponseDto, area, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Area updated successfully',
-      data: area,
+      data: areaResponse,
     };
   }
 
@@ -125,13 +145,17 @@ export class AreaController {
   @Patch(':id/restore')
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: Area;
+    data: AreaResponseDto;
   }> {
     const area = await this.areaService.restore(id);
+    const areaResponse = plainToInstance(AreaResponseDto, area, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Area restored successfully',
-      data: area,
+      data: areaResponse,
     };
   }
 }

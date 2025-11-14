@@ -12,11 +12,12 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { TorretaService } from '../application/services/torreta.service';
-import { Torreta } from '../domain/entities/torreta.entity';
 import {
   CreateTorretaDto,
   UpdateTorretaDto,
+  TorretaResponseDto,
 } from '../application/dtos/torreta.dto';
 
 @Controller('torretas')
@@ -26,29 +27,37 @@ export class TorretaController {
   @Get()
   async getAllTorretas(@Query('active') active?: string): Promise<{
     message: string;
-    data: Torreta[];
+    data: TorretaResponseDto[];
   }> {
     const torretas =
       active === 'true'
         ? await this.torretaService.getActiveTorretas()
         : await this.torretaService.getAllTorretas();
+    const torretaResponses = plainToInstance(TorretaResponseDto, torretas, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Torretas retrieved successfully',
-      data: torretas,
+      data: torretaResponses,
     };
   }
 
   @Get(':id')
   async getTorretaById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: Torreta;
+    data: TorretaResponseDto;
   }> {
     const torreta = await this.torretaService.getTorretaById(id);
+    const torretaResponse = plainToInstance(TorretaResponseDto, torreta, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Torreta found',
-      data: torreta,
+      data: torretaResponse,
     };
   }
 
@@ -56,13 +65,17 @@ export class TorretaController {
   @HttpCode(HttpStatus.CREATED)
   async createTorreta(@Body() createDto: CreateTorretaDto): Promise<{
     message: string;
-    data: Torreta;
+    data: TorretaResponseDto;
   }> {
     const torreta = await this.torretaService.createTorreta(createDto);
+    const torretaResponse = plainToInstance(TorretaResponseDto, torreta, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Torreta created successfully',
-      data: torreta,
+      data: torretaResponse,
     };
   }
 
@@ -72,26 +85,34 @@ export class TorretaController {
     @Body() updateDto: UpdateTorretaDto
   ): Promise<{
     message: string;
-    data: Torreta;
+    data: TorretaResponseDto;
   }> {
     const torreta = await this.torretaService.updateTorreta(id, updateDto);
+    const torretaResponse = plainToInstance(TorretaResponseDto, torreta, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Torreta updated successfully',
-      data: torreta,
+      data: torretaResponse,
     };
   }
 
   @Patch(':id/toggle')
   async toggleTorreta(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: Torreta;
+    data: TorretaResponseDto;
   }> {
     const torreta = await this.torretaService.toggleTorreta(id);
+    const torretaResponse = plainToInstance(TorretaResponseDto, torreta, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: `Torreta ${torreta.isActive ? 'activated' : 'deactivated'} successfully`,
-      data: torreta,
+      data: torretaResponse,
     };
   }
 

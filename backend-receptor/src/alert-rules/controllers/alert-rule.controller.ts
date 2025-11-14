@@ -12,11 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { AlertRuleService } from '../application/services/alert-rule.service';
-import { AlertRule } from '../domain/entities/alert-rule.entity';
 import {
   CreateAlertRuleDto,
   UpdateAlertRuleDto,
+  AlertRuleResponseDto,
 } from '../application/dtos/alert-rule.dto';
 
 interface AlertRuleFilters {
@@ -36,7 +37,7 @@ export class AlertRuleController {
     @Query('mode') mode?: string
   ): Promise<{
     message: string;
-    data: AlertRule[];
+    data: AlertRuleResponseDto[];
     total: number;
   }> {
     const filters: AlertRuleFilters = {};
@@ -46,24 +47,32 @@ export class AlertRuleController {
     if (mode) filters.mode = mode;
 
     const rules = await this.alertRuleService.getAllAlertRules(filters);
+    const alertRuleResponses = plainToInstance(AlertRuleResponseDto, rules, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Alert rules retrieved successfully',
-      data: rules,
-      total: rules.length,
+      data: alertRuleResponses,
+      total: alertRuleResponses.length,
     };
   }
 
   @Get(':id')
   async getAlertRuleById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: AlertRule;
+    data: AlertRuleResponseDto;
   }> {
     const rule = await this.alertRuleService.getAlertRuleById(id);
+    const alertRuleResponse = plainToInstance(AlertRuleResponseDto, rule, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Alert rule found',
-      data: rule,
+      data: alertRuleResponse,
     };
   }
 
@@ -71,13 +80,17 @@ export class AlertRuleController {
   @HttpCode(HttpStatus.CREATED)
   async createAlertRule(@Body() createDto: CreateAlertRuleDto): Promise<{
     message: string;
-    data: AlertRule;
+    data: AlertRuleResponseDto;
   }> {
     const rule = await this.alertRuleService.createAlertRule(createDto);
+    const alertRuleResponse = plainToInstance(AlertRuleResponseDto, rule, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Alert rule created successfully',
-      data: rule,
+      data: alertRuleResponse,
     };
   }
 
@@ -87,26 +100,34 @@ export class AlertRuleController {
     @Body() updateDto: UpdateAlertRuleDto
   ): Promise<{
     message: string;
-    data: AlertRule;
+    data: AlertRuleResponseDto;
   }> {
     const rule = await this.alertRuleService.updateAlertRule(id, updateDto);
+    const alertRuleResponse = plainToInstance(AlertRuleResponseDto, rule, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Alert rule updated successfully',
-      data: rule,
+      data: alertRuleResponse,
     };
   }
 
   @Patch(':id/toggle')
   async toggleAlertRule(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: AlertRule;
+    data: AlertRuleResponseDto;
   }> {
     const rule = await this.alertRuleService.toggleAlertRule(id);
+    const alertRuleResponse = plainToInstance(AlertRuleResponseDto, rule, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: `Alert rule ${rule.isEnabled ? 'enabled' : 'disabled'} successfully`,
-      data: rule,
+      data: alertRuleResponse,
     };
   }
 

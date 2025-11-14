@@ -9,6 +9,7 @@ import {
   ValidateIf,
   Length,
 } from 'class-validator';
+import { Exclude, Expose } from 'class-transformer';
 import { AlertRuleMode } from '../../domain/entities/alert-rule.entity';
 
 interface ValidationObject {
@@ -85,4 +86,51 @@ export class UpdateAlertRuleDto {
   @IsOptional()
   @IsBoolean()
   isEnabled?: boolean;
+}
+
+@Expose()
+export class AlertRuleResponseDto {
+  @Expose()
+  id!: number;
+
+  @Expose()
+  name!: string;
+
+  @Expose()
+  measurementId!: number;
+
+  @Expose()
+  mode!: AlertRuleMode;
+
+  @Expose()
+  operator?: string;
+
+  @Expose()
+  setpoint?: number;
+
+  @Expose()
+  minValue?: number;
+
+  @Expose()
+  maxValue?: number;
+
+  @Expose()
+  isEnabled!: boolean;
+
+  @Expose()
+  createdAt!: Date;
+
+  @Expose()
+  updatedAt!: Date;
+
+  @Exclude()
+  deletedAt?: Date;
+
+  @Expose()
+  measurement?: {
+    id: number;
+    externalId: string;
+    name: string;
+    type: string;
+  };
 }

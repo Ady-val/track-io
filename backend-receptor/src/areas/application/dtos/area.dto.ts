@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { Exclude, Expose } from 'class-transformer';
 
 export class CreateAreaDto {
   @IsString({ message: 'name must be a string' })
@@ -13,10 +14,20 @@ export class UpdateAreaDto {
   name?: string;
 }
 
+@Expose()
 export class AreaResponseDto {
+  @Expose()
   id!: number;
+
+  @Expose()
   name!: string;
+
+  @Expose()
   createdAt!: Date;
+
+  @Expose()
   updatedAt!: Date;
+
+  @Exclude()
   deletedAt?: Date;
 }

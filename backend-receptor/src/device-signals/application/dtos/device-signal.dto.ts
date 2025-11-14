@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsPositive,
 } from 'class-validator';
+import { Exclude, Expose } from 'class-transformer';
 
 export class CreateDeviceSignalDto {
   @IsString({ message: 'name must be a string' })
@@ -46,15 +47,33 @@ export class UpdateDeviceSignalDto {
   externalValueId?: string;
 }
 
+@Expose()
 export class DeviceSignalResponseDto {
+  @Expose()
   id!: number;
+
+  @Expose()
   name!: string;
+
+  @Expose()
   deviceId!: number;
+
+  @Expose()
   departmentId!: number;
+
+  @Expose()
   externalValueId!: string;
+
+  @Expose()
   createdAt!: Date;
+
+  @Expose()
   updatedAt!: Date;
+
+  @Exclude()
   deletedAt?: Date;
+
+  @Expose()
   device?: {
     id: number;
     name: string;
@@ -65,6 +84,8 @@ export class DeviceSignalResponseDto {
       name: string;
     };
   };
+
+  @Expose()
   department?: {
     id: number;
     name: string;

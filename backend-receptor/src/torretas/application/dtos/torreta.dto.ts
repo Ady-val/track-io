@@ -5,6 +5,7 @@ import {
   IsBoolean,
   Length,
 } from 'class-validator';
+import { Exclude, Expose } from 'class-transformer';
 
 export class CreateTorretaDto {
   @IsString()
@@ -47,4 +48,31 @@ export class UpdateTorretaDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+}
+
+@Expose()
+export class TorretaResponseDto {
+  @Expose()
+  id!: number;
+
+  @Expose()
+  name!: string;
+
+  @Expose()
+  description?: string;
+
+  @Expose()
+  externalId?: string;
+
+  @Expose()
+  isActive!: boolean;
+
+  @Expose()
+  createdAt!: Date;
+
+  @Expose()
+  updatedAt!: Date;
+
+  @Exclude()
+  deletedAt?: Date;
 }

@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { DeviceService } from '../application/services/device.service';
 import {
   CreateDeviceDto,
@@ -32,7 +33,11 @@ export class DeviceController {
     data: DeviceResponseDto;
   }> {
     const device = await this.deviceService.create(createDeviceDto);
-    const deviceResponse = DeviceMapper.toResponseDto(device);
+    const deviceResponseDto = DeviceMapper.toResponseDto(device);
+    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Device created successfully',
@@ -64,7 +69,11 @@ export class DeviceController {
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
     const { data, total } = await this.deviceService.findAll(filters);
-    const deviceResponses = DeviceMapper.toResponseDtoArray(data);
+    const deviceResponseDtos = DeviceMapper.toResponseDtoArray(data);
+    const deviceResponses = plainToInstance(DeviceResponseDto, deviceResponseDtos, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Devices retrieved successfully',
@@ -112,7 +121,11 @@ export class DeviceController {
     data: DeviceResponseDto[];
   }> {
     const devices = await this.deviceService.findByAreaId(areaId);
-    const deviceResponses = DeviceMapper.toResponseDtoArray(devices);
+    const deviceResponseDtos = DeviceMapper.toResponseDtoArray(devices);
+    const deviceResponses = plainToInstance(DeviceResponseDto, deviceResponseDtos, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Devices by area retrieved successfully',
@@ -126,7 +139,11 @@ export class DeviceController {
     data: DeviceResponseDto;
   }> {
     const device = await this.deviceService.findByExternalId(externalId);
-    const deviceResponse = DeviceMapper.toResponseDto(device);
+    const deviceResponseDto = DeviceMapper.toResponseDto(device);
+    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Device retrieved successfully',
@@ -140,7 +157,11 @@ export class DeviceController {
     data: DeviceResponseDto;
   }> {
     const device = await this.deviceService.findById(id);
-    const deviceResponse = DeviceMapper.toResponseDto(device);
+    const deviceResponseDto = DeviceMapper.toResponseDto(device);
+    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Device retrieved successfully',
@@ -157,7 +178,11 @@ export class DeviceController {
     data: DeviceResponseDto;
   }> {
     const device = await this.deviceService.update(id, updateDeviceDto);
-    const deviceResponse = DeviceMapper.toResponseDto(device);
+    const deviceResponseDto = DeviceMapper.toResponseDto(device);
+    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Device updated successfully',
@@ -183,7 +208,11 @@ export class DeviceController {
     data: DeviceResponseDto;
   }> {
     const device = await this.deviceService.restore(id);
-    const deviceResponse = DeviceMapper.toResponseDto(device);
+    const deviceResponseDto = DeviceMapper.toResponseDto(device);
+    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Device restored successfully',

@@ -21,6 +21,8 @@ import { AreaDowntimeModule } from './area-downtime/area-downtime.module';
 import { AlertEscalationModule } from './alert-escalation/alert-escalation.module';
 import { AreaTorretaConfigModule } from './area-torreta-config/area-torreta-config.module';
 import { CatalogsGlobalModule } from './common/modules/catalogs-global.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { CatalogsGlobalModule } from './common/modules/catalogs-global.module';
     }),
     CatalogsGlobalModule,
     AreaTorretaConfigModule,
+    UsersModule,
+    AuthModule,
     SignalsModule,
     RawMeasurementsModule,
     MeasurementsModule,

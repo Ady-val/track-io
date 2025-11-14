@@ -13,13 +13,14 @@ import {
   Delete,
   Patch,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { MeasurementService } from '../application/services/measurement.service';
-import { Measurement } from '../domain/entities/measurement.entity';
 import { MeasurementValue } from '../domain/entities/measurement-value.entity';
 import { MeasurementFilters } from '../domain/repositories/measurement.repository';
 import {
   CreateMeasurementDto,
   UpdateMeasurementDto,
+  MeasurementResponseDto,
 } from '../application/dtos/measurement.dto';
 
 @Controller('measurements')
@@ -32,14 +33,22 @@ export class MeasurementController {
     @Body() createMeasurementDto: CreateMeasurementDto
   ): Promise<{
     message: string;
-    data: Measurement;
+    data: MeasurementResponseDto;
   }> {
     const measurement =
       await this.measurementService.createMeasurement(createMeasurementDto);
+    const measurementResponse = plainToInstance(
+      MeasurementResponseDto,
+      measurement,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Measurement created successfully',
-      data: measurement,
+      data: measurementResponse,
     };
   }
 
@@ -51,7 +60,7 @@ export class MeasurementController {
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset?: number
   ): Promise<{
     message: string;
-    data: Measurement[];
+    data: MeasurementResponseDto[];
     total: number;
     pagination: { limit: number; offset: number; total: number };
   }> {
@@ -64,10 +73,18 @@ export class MeasurementController {
 
     const { data, total } =
       await this.measurementService.getAllMeasurements(filters);
+    const measurementResponses = plainToInstance(
+      MeasurementResponseDto,
+      data,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Measurements retrieved successfully',
-      data,
+      data: measurementResponses,
       total,
       pagination: {
         limit: limit ?? 10,
@@ -93,13 +110,21 @@ export class MeasurementController {
   @Get(':id')
   async getMeasurementById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: Measurement;
+    data: MeasurementResponseDto;
   }> {
     const measurement = await this.measurementService.getMeasurementById(id);
+    const measurementResponse = plainToInstance(
+      MeasurementResponseDto,
+      measurement,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Measurement found',
-      data: measurement,
+      data: measurementResponse,
     };
   }
 
@@ -109,16 +134,24 @@ export class MeasurementController {
     @Body() updateMeasurementDto: UpdateMeasurementDto
   ): Promise<{
     message: string;
-    data: Measurement;
+    data: MeasurementResponseDto;
   }> {
     const measurement = await this.measurementService.updateMeasurement(
       id,
       updateMeasurementDto
     );
+    const measurementResponse = plainToInstance(
+      MeasurementResponseDto,
+      measurement,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Measurement updated successfully',
-      data: measurement,
+      data: measurementResponse,
     };
   }
 

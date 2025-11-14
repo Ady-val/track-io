@@ -11,66 +11,72 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { DepartmentService } from '../application/services/department.service';
+import { UserService } from '../application/services/user.service';
 import {
-  CreateDepartmentDto,
-  UpdateDepartmentDto,
-  DepartmentResponseDto,
-} from '../application/dtos/department.dto';
-import { DepartmentFilters } from '../domain/repositories/department.repository';
+  CreateUserDto,
+  UpdateUserDto,
+  UserResponseDto,
+} from '../application/dtos/user.dto';
+import { UserFilters } from '../domain/repositories/user.repository';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
-@Controller('departments')
-export class DepartmentController {
-  constructor(private readonly departmentService: DepartmentService) {}
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createDepartmentDto: CreateDepartmentDto): Promise<{
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createUserDto: CreateUserDto): Promise<{
     message: string;
-    data: DepartmentResponseDto;
+    data: UserResponseDto;
   }> {
-    const department = await this.departmentService.create(createDepartmentDto);
-    const departmentResponse = plainToInstance(DepartmentResponseDto, department, {
+    const user = await this.userService.create(createUserDto);
+    const userResponse = plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
 
     return {
-      message: 'Department created successfully',
-      data: departmentResponse,
+      message: 'User created successfully',
+      data: userResponse,
     };
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(
     @Query('name') name?: string,
+    @Query('username') username?: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset?: number,
     @Query('includeDeleted', new DefaultValuePipe(false))
     includeDeleted?: boolean
   ): Promise<{
     message: string;
-    data: DepartmentResponseDto[];
+    data: UserResponseDto[];
     total: number;
     pagination: { limit: number; offset: number; total: number };
   }> {
-    const filters: DepartmentFilters = {};
+    const filters: UserFilters = {};
     if (name) filters.name = name;
+    if (username) filters.username = username;
     if (limit) filters.limit = limit;
     if (offset) filters.offset = offset;
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
-    const { data, total } = await this.departmentService.findAll(filters);
-    const departmentResponses = plainToInstance(DepartmentResponseDto, data, {
+    const { data, total } = await this.userService.findAll(filters);
+    const userResponses = plainToInstance(UserResponseDto, data, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
 
     return {
-      message: 'Departments retrieved successfully',
-      data: departmentResponses,
+      message: 'Users retrieved successfully',
+      data: userResponses,
       total,
       pagination: {
         limit: limit ?? 10,
@@ -81,84 +87,86 @@ export class DepartmentController {
   }
 
   @Get('count')
+  @UseGuards(JwtAuthGuard)
   async getCount(): Promise<{
     message: string;
     count: number;
   }> {
-    const count = await this.departmentService.getCount();
+    const count = await this.userService.getCount();
 
     return {
-      message: 'Departments count retrieved successfully',
+      message: 'Users count retrieved successfully',
       count,
     };
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: DepartmentResponseDto;
+    data: UserResponseDto;
   }> {
-    const department = await this.departmentService.findById(id);
-    const departmentResponse = plainToInstance(DepartmentResponseDto, department, {
+    const user = await this.userService.findById(id);
+    const userResponse = plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
 
     return {
-      message: 'Department retrieved successfully',
-      data: departmentResponse,
+      message: 'User retrieved successfully',
+      data: userResponse,
     };
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateDepartmentDto: UpdateDepartmentDto
+    @Body() updateUserDto: UpdateUserDto
   ): Promise<{
     message: string;
-    data: DepartmentResponseDto;
+    data: UserResponseDto;
   }> {
-    const department = await this.departmentService.update(
-      id,
-      updateDepartmentDto
-    );
-    const departmentResponse = plainToInstance(DepartmentResponseDto, department, {
+    const user = await this.userService.update(id, updateUserDto);
+    const userResponse = plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
 
     return {
-      message: 'Department updated successfully',
-      data: departmentResponse,
+      message: 'User updated successfully',
+      data: userResponse,
     };
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
-    await this.departmentService.remove(id);
+    await this.userService.remove(id);
 
     return {
-      message: 'Department deleted successfully',
+      message: 'User deleted successfully',
     };
   }
 
   @Patch(':id/restore')
+  @UseGuards(JwtAuthGuard)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: DepartmentResponseDto;
+    data: UserResponseDto;
   }> {
-    const department = await this.departmentService.restore(id);
-    const departmentResponse = plainToInstance(DepartmentResponseDto, department, {
+    const user = await this.userService.restore(id);
+    const userResponse = plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
 
     return {
-      message: 'Department restored successfully',
-      data: departmentResponse,
+      message: 'User restored successfully',
+      data: userResponse,
     };
   }
 }

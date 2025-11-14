@@ -12,12 +12,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { DeviceSignalService } from '../application/services/device-signal.service';
 import {
   CreateDeviceSignalDto,
   UpdateDeviceSignalDto,
+  DeviceSignalResponseDto,
 } from '../application/dtos/device-signal.dto';
-import { DeviceSignal } from '../domain/entities/device-signal.entity';
 import { DeviceSignalFilters } from '../domain/repositories/device-signal.repository';
 
 @Controller('device-signals')
@@ -28,15 +29,23 @@ export class DeviceSignalController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createDeviceSignalDto: CreateDeviceSignalDto): Promise<{
     message: string;
-    data: DeviceSignal;
+    data: DeviceSignalResponseDto;
   }> {
     const deviceSignal = await this.deviceSignalService.create(
       createDeviceSignalDto
     );
+    const deviceSignalResponse = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignal,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signal created successfully',
-      data: deviceSignal,
+      data: deviceSignalResponse,
     };
   }
 
@@ -53,7 +62,7 @@ export class DeviceSignalController {
     includeDeleted?: boolean
   ): Promise<{
     message: string;
-    data: DeviceSignal[];
+    data: DeviceSignalResponseDto[];
     total: number;
     pagination: { limit: number; offset: number; total: number };
   }> {
@@ -67,10 +76,18 @@ export class DeviceSignalController {
     if (includeDeleted) filters.includeDeleted = includeDeleted;
 
     const { data, total } = await this.deviceSignalService.findAll(filters);
+    const deviceSignalResponses = plainToInstance(
+      DeviceSignalResponseDto,
+      data,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signals retrieved successfully',
-      data,
+      data: deviceSignalResponses,
       total,
       pagination: {
         limit: limit ?? 10,
@@ -129,14 +146,22 @@ export class DeviceSignalController {
     @Param('deviceId', ParseIntPipe) deviceId: number
   ): Promise<{
     message: string;
-    data: DeviceSignal[];
+    data: DeviceSignalResponseDto[];
   }> {
     const deviceSignals =
       await this.deviceSignalService.findByDeviceId(deviceId);
+    const deviceSignalResponses = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignals,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signals by device retrieved successfully',
-      data: deviceSignals,
+      data: deviceSignalResponses,
     };
   }
 
@@ -145,14 +170,22 @@ export class DeviceSignalController {
     @Param('departmentId', ParseIntPipe) departmentId: number
   ): Promise<{
     message: string;
-    data: DeviceSignal[];
+    data: DeviceSignalResponseDto[];
   }> {
     const deviceSignals =
       await this.deviceSignalService.findByDepartmentId(departmentId);
+    const deviceSignalResponses = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignals,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signals by department retrieved successfully',
-      data: deviceSignals,
+      data: deviceSignalResponses,
     };
   }
 
@@ -161,27 +194,43 @@ export class DeviceSignalController {
     @Param('externalValueId') externalValueId: string
   ): Promise<{
     message: string;
-    data: DeviceSignal;
+    data: DeviceSignalResponseDto;
   }> {
     const deviceSignal =
       await this.deviceSignalService.findByExternalValueId(externalValueId);
+    const deviceSignalResponse = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignal,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signal retrieved successfully',
-      data: deviceSignal,
+      data: deviceSignalResponse,
     };
   }
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: DeviceSignal;
+    data: DeviceSignalResponseDto;
   }> {
     const deviceSignal = await this.deviceSignalService.findById(id);
+    const deviceSignalResponse = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignal,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signal retrieved successfully',
-      data: deviceSignal,
+      data: deviceSignalResponse,
     };
   }
 
@@ -191,16 +240,24 @@ export class DeviceSignalController {
     @Body() updateDeviceSignalDto: UpdateDeviceSignalDto
   ): Promise<{
     message: string;
-    data: DeviceSignal;
+    data: DeviceSignalResponseDto;
   }> {
     const deviceSignal = await this.deviceSignalService.update(
       id,
       updateDeviceSignalDto
     );
+    const deviceSignalResponse = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignal,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signal updated successfully',
-      data: deviceSignal,
+      data: deviceSignalResponse,
     };
   }
 
@@ -219,13 +276,21 @@ export class DeviceSignalController {
   @Patch(':id/restore')
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
-    data: DeviceSignal;
+    data: DeviceSignalResponseDto;
   }> {
     const deviceSignal = await this.deviceSignalService.restore(id);
+    const deviceSignalResponse = plainToInstance(
+      DeviceSignalResponseDto,
+      deviceSignal,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device signal restored successfully',
-      data: deviceSignal,
+      data: deviceSignalResponse,
     };
   }
 }
