@@ -11,6 +11,7 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { AreaService } from '../application/services/area.service';
@@ -20,13 +21,19 @@ import {
   AreaResponseDto,
 } from '../application/dtos/area.dto';
 import { AreaFilters } from '../domain/repositories/area.repository';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import { Module, Action } from '../../permissions/constants/permissions.constants';
 
 @Controller('areas')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class AreaController {
   constructor(private readonly areaService: AreaService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.AREAS, Action.CREATE)
   async create(@Body() createAreaDto: CreateAreaDto): Promise<{
     message: string;
     data: AreaResponseDto;
@@ -44,6 +51,7 @@ export class AreaController {
   }
 
   @Get()
+  @RequirePermission(Module.AREAS, Action.READ)
   async findAll(
     @Query('name') name?: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
@@ -81,6 +89,7 @@ export class AreaController {
   }
 
   @Get('count')
+  @RequirePermission(Module.AREAS, Action.READ)
   async getCount(): Promise<{
     message: string;
     count: number;
@@ -94,6 +103,7 @@ export class AreaController {
   }
 
   @Get(':id')
+  @RequirePermission(Module.AREAS, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AreaResponseDto;
@@ -111,6 +121,7 @@ export class AreaController {
   }
 
   @Patch(':id')
+  @RequirePermission(Module.AREAS, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAreaDto: UpdateAreaDto
@@ -132,6 +143,7 @@ export class AreaController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.AREAS, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -143,6 +155,7 @@ export class AreaController {
   }
 
   @Patch(':id/restore')
+  @RequirePermission(Module.AREAS, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AreaResponseDto;

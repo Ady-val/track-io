@@ -11,6 +11,7 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { DepartmentService } from '../application/services/department.service';
@@ -20,13 +21,19 @@ import {
   DepartmentResponseDto,
 } from '../application/dtos/department.dto';
 import { DepartmentFilters } from '../domain/repositories/department.repository';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import { Module, Action } from '../../permissions/constants/permissions.constants';
 
 @Controller('departments')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class DepartmentController {
   constructor(private readonly departmentService: DepartmentService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.DEPARTMENTS, Action.CREATE)
   async create(@Body() createDepartmentDto: CreateDepartmentDto): Promise<{
     message: string;
     data: DepartmentResponseDto;
@@ -44,6 +51,7 @@ export class DepartmentController {
   }
 
   @Get()
+  @RequirePermission(Module.DEPARTMENTS, Action.READ)
   async findAll(
     @Query('name') name?: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
@@ -81,6 +89,7 @@ export class DepartmentController {
   }
 
   @Get('count')
+  @RequirePermission(Module.DEPARTMENTS, Action.READ)
   async getCount(): Promise<{
     message: string;
     count: number;
@@ -94,6 +103,7 @@ export class DepartmentController {
   }
 
   @Get(':id')
+  @RequirePermission(Module.DEPARTMENTS, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: DepartmentResponseDto;
@@ -111,6 +121,7 @@ export class DepartmentController {
   }
 
   @Patch(':id')
+  @RequirePermission(Module.DEPARTMENTS, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDepartmentDto: UpdateDepartmentDto
@@ -135,6 +146,7 @@ export class DepartmentController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.DEPARTMENTS, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -146,6 +158,7 @@ export class DepartmentController {
   }
 
   @Patch(':id/restore')
+  @RequirePermission(Module.DEPARTMENTS, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: DepartmentResponseDto;

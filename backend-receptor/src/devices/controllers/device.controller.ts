@@ -11,6 +11,7 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { DeviceService } from '../application/services/device.service';
@@ -21,13 +22,19 @@ import {
 import { DeviceResponseDto } from '../application/dtos/device-response.dto';
 import { DeviceFilters } from '../domain/repositories/device.repository';
 import { DeviceMapper } from '../application/mappers/device.mapper';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import { Module, Action } from '../../permissions/constants/permissions.constants';
 
 @Controller('devices')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.DEVICES, Action.CREATE)
   async create(@Body() createDeviceDto: CreateDeviceDto): Promise<{
     message: string;
     data: DeviceResponseDto;
@@ -46,6 +53,7 @@ export class DeviceController {
   }
 
   @Get()
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findAll(
     @Query('name') name?: string,
     @Query('areaId', new ParseIntPipe({ optional: true })) areaId?: number,
@@ -88,6 +96,7 @@ export class DeviceController {
   }
 
   @Get('count')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async getCount(): Promise<{
     message: string;
     count: number;
@@ -101,6 +110,7 @@ export class DeviceController {
   }
 
   @Get('area/:areaId/count')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async getCountByAreaId(
     @Param('areaId', ParseIntPipe) areaId: number
   ): Promise<{
@@ -116,6 +126,7 @@ export class DeviceController {
   }
 
   @Get('area/:areaId')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findByAreaId(@Param('areaId', ParseIntPipe) areaId: number): Promise<{
     message: string;
     data: DeviceResponseDto[];
@@ -134,6 +145,7 @@ export class DeviceController {
   }
 
   @Get('external/:externalId')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findByExternalId(@Param('externalId') externalId: string): Promise<{
     message: string;
     data: DeviceResponseDto;
@@ -152,6 +164,7 @@ export class DeviceController {
   }
 
   @Get(':id')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: DeviceResponseDto;
@@ -170,6 +183,7 @@ export class DeviceController {
   }
 
   @Patch(':id')
+  @RequirePermission(Module.DEVICES, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDeviceDto: UpdateDeviceDto
@@ -192,6 +206,7 @@ export class DeviceController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.DEVICES, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -203,6 +218,7 @@ export class DeviceController {
   }
 
   @Patch(':id/restore')
+  @RequirePermission(Module.DEVICES, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: DeviceResponseDto;

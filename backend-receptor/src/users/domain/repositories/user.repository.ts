@@ -110,4 +110,12 @@ export class UserRepository {
       .where('user.deletedAt IS NULL')
       .getCount();
   }
+
+  async findByIdWithRoles(id: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id },
+      withDeleted: false,
+      relations: ['roles', 'roles.permissions'],
+    });
+  }
 }

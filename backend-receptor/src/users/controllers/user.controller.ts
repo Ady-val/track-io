@@ -22,14 +22,23 @@ import {
 } from '../application/dtos/user.dto';
 import { UserFilters } from '../domain/repositories/user.repository';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
+import { RoleResponseDto } from '../../permissions/application/dtos/role.dto';
+import { PermissionResponseDto } from '../../permissions/application/dtos/permission.dto';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.CREATE)
   async create(@Body() createUserDto: CreateUserDto): Promise<{
     message: string;
     data: UserResponseDto;
@@ -47,7 +56,7 @@ export class UserController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.READ)
   async findAll(
     @Query('name') name?: string,
     @Query('username') username?: string,
@@ -87,7 +96,7 @@ export class UserController {
   }
 
   @Get('count')
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.READ)
   async getCount(): Promise<{
     message: string;
     count: number;
@@ -101,7 +110,7 @@ export class UserController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: UserResponseDto;
@@ -119,7 +128,7 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto
@@ -141,7 +150,7 @@ export class UserController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -152,8 +161,90 @@ export class UserController {
     };
   }
 
+  @Post(':id/roles')
+  @RequirePermission(Module.USERS, Action.UPDATE)
+  async assignRole(
+    @Param('id', ParseIntPipe) userId: number,
+    @Body() body: { roleId: number }
+  ): Promise<{
+    message: string;
+    data: UserResponseDto;
+  }> {
+    const user = await this.userService.assignRole(userId, body.roleId);
+    const userResponse = plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
+
+    return {
+      message: 'Role assigned to user successfully',
+      data: userResponse,
+    };
+  }
+
+  @Delete(':id/roles/:roleId')
+  @RequirePermission(Module.USERS, Action.UPDATE)
+  async removeRole(
+    @Param('id', ParseIntPipe) userId: number,
+    @Param('roleId', ParseIntPipe) roleId: number
+  ): Promise<{
+    message: string;
+    data: UserResponseDto;
+  }> {
+    const user = await this.userService.removeRole(userId, roleId);
+    const userResponse = plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
+
+    return {
+      message: 'Role removed from user successfully',
+      data: userResponse,
+    };
+  }
+
+  @Get(':id/roles')
+  @RequirePermission(Module.USERS, Action.READ)
+  async getUserRoles(@Param('id', ParseIntPipe) id: number): Promise<{
+    message: string;
+    data: RoleResponseDto[];
+  }> {
+    const roles = await this.userService.getUserRoles(id);
+    const roleResponses = plainToInstance(RoleResponseDto, roles, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
+
+    return {
+      message: 'User roles retrieved successfully',
+      data: roleResponses,
+    };
+  }
+
+  @Get(':id/permissions')
+  @RequirePermission(Module.USERS, Action.READ)
+  async getUserPermissions(@Param('id', ParseIntPipe) id: number): Promise<{
+    message: string;
+    data: PermissionResponseDto[];
+  }> {
+    const permissions = await this.userService.getUserPermissions(id);
+    const permissionResponses = plainToInstance(
+      PermissionResponseDto,
+      permissions,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
+
+    return {
+      message: 'User permissions retrieved successfully',
+      data: permissionResponses,
+    };
+  }
+
   @Patch(':id/restore')
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission(Module.USERS, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: UserResponseDto;

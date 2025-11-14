@@ -6,9 +6,13 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  ManyToMany,
+  JoinTable,
   Index,
 } from 'typeorm';
 import { Session } from '../../../auth/domain/entities/session.entity';
+import { Role } from '../../../permissions/domain/entities/role.entity';
+import { UserRole } from '../../../permissions/domain/entities/user-role.entity';
 
 @Entity('users')
 @Index(['username'], { unique: true })
@@ -49,4 +53,15 @@ export class User {
 
   @OneToMany(() => Session, session => session.user)
   sessions?: Session[];
+
+  @ManyToMany(() => Role, (role) => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles?: Role[];
+
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
+  userRoles?: UserRole[];
 }

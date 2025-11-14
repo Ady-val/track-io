@@ -20,11 +20,8 @@ import { UsersModule } from '../users/users.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret:
-          configService.get<string>('JWT_SECRET') || 'your-secret-key-change-in-production',
-        signOptions: {
-          // No expiration - tokens are unlimited but can be invalidated via sessions
-          // You can add expiration if needed: expiresIn: '30d'
-        },
+          configService.get<string>('JWT_SECRET') ?? 'your-secret-key-change-in-production',
+        signOptions: {},
       }),
       inject: [ConfigService],
     }),

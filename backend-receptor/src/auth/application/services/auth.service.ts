@@ -29,10 +29,8 @@ export class AuthService {
     this.logger.log(`Login attempt for username: ${loginDto.username}`);
 
     try {
-      // Find user by username
       const user = await this.userService.findByUsername(loginDto.username);
 
-      // Validate password
       const isPasswordValid = await this.userService.validatePassword(
         loginDto.password,
         user.password
@@ -45,7 +43,6 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Generate JWT token
       const payload: JwtPayload = {
         sub: user.id,
         username: user.username,
@@ -53,7 +50,6 @@ export class AuthService {
 
       const token = this.jwtService.sign(payload);
 
-      // Create session in database
       await this.sessionRepository.create({
         userId: user.id,
         token,

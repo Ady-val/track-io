@@ -23,6 +23,7 @@ import { AreaTorretaConfigModule } from './area-torreta-config/area-torreta-conf
 import { CatalogsGlobalModule } from './common/modules/catalogs-global.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AuthModule } from './auth/auth.module';
     AreaTorretaConfigModule,
     UsersModule,
     AuthModule,
+    PermissionsModule,
     SignalsModule,
     RawMeasurementsModule,
     MeasurementsModule,

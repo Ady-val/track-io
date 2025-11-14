@@ -12,7 +12,10 @@ import {
 import { AuthService } from '../application/services/auth.service';
 import { LoginDto, LoginResponseDto } from '../application/dtos/auth.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser, CurrentUser as CurrentUserType } from '../decorators/current-user.decorator';
+import {
+  CurrentUser,
+  CurrentUser as CurrentUserType,
+} from '../decorators/current-user.decorator';
 
 interface AuthenticatedRequest {
   headers: { authorization?: string; 'user-agent'?: string };
@@ -25,7 +28,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   private extractTokenFromRequest(req: AuthenticatedRequest): string {
-    const authHeader = req.headers?.authorization;
+    const authHeader = req.headers.authorization;
     if (!authHeader) {
       throw new BadRequestException('Authorization header not found');
     }
@@ -44,8 +47,8 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Request() req: AuthenticatedRequest
   ): Promise<LoginResponseDto> {
-    const ipAddress = req.ip || req.connection?.remoteAddress;
-    const userAgent = req.headers?.['user-agent'];
+    const ipAddress = req.ip ?? req.connection?.remoteAddress;
+    const userAgent = req.headers['user-agent'];
 
     return await this.authService.login(loginDto, ipAddress, userAgent);
   }
@@ -53,7 +56,9 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@Request() req: AuthenticatedRequest): Promise<{ message: string }> {
+  async logout(
+    @Request() req: AuthenticatedRequest
+  ): Promise<{ message: string }> {
     const token = this.extractTokenFromRequest(req);
     await this.authService.logout(token);
 
@@ -90,4 +95,3 @@ export class AuthController {
     };
   }
 }
-
