@@ -4,7 +4,7 @@ import type { DashboardMeasurement } from "@/types/dashboard";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
-export const useDashboardMeasurements = () => {
+export const useDashboardMeasurements = (groupId?: number | null) => {
   const [dashboards, setDashboards] = useState<DashboardMeasurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,12 @@ export const useDashboardMeasurements = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/dashboard-measurements`);
+      const url = new URL(`${API_BASE_URL}/dashboard-measurements`);
+      if (groupId) {
+        url.searchParams.append("groupId", groupId.toString());
+      }
+
+      const response = await fetch(url.toString());
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -36,7 +41,7 @@ export const useDashboardMeasurements = () => {
 
   useEffect(() => {
     fetchDashboards();
-  }, []);
+  }, [groupId]);
 
   return {
     dashboards,

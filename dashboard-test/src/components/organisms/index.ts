@@ -19,6 +19,14 @@ export type { CreateDeviceAndSignalFormProps } from "./CreateDeviceAndSignalForm
 export { CreateDeviceSignalWithDeviceForm } from "./CreateDeviceSignalWithDeviceForm";
 export type { CreateDeviceSignalWithDeviceFormProps } from "./CreateDeviceSignalWithDeviceForm";
 
+export { CreateDashboardGroupModal } from "./CreateDashboardGroupModal";
+export type { CreateDashboardGroupModalProps } from "./CreateDashboardGroupModal";
+
+export { EditDashboardGroupModal } from "./EditDashboardGroupModal";
+export type { EditDashboardGroupModalProps } from "./EditDashboardGroupModal";
+
+export { DeleteDashboardGroupModal } from "./DeleteDashboardGroupModal";
+
 export { CreateDeviceWithSignalsModal } from "./CreateDeviceWithSignalsModal";
 export { EditDeviceModal } from "./EditDeviceModal";
 export { AddSignalModal } from "./AddSignalModal";

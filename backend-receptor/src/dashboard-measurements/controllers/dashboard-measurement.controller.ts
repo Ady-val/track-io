@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -23,9 +24,14 @@ export class DashboardMeasurementController {
   ) {}
 
   @Get()
-  async getAllDashboardMeasurements() {
+  async getAllDashboardMeasurements(
+    @Query('groupId') groupId?: string
+  ) {
+    const groupIdNumber = groupId ? parseInt(groupId, 10) : undefined;
     const dashboards =
-      await this.dashboardMeasurementService.getAllDashboardMeasurements();
+      await this.dashboardMeasurementService.getAllDashboardMeasurements(
+        groupIdNumber
+      );
     return {
       message: 'Dashboard measurements retrieved successfully',
       data: dashboards,

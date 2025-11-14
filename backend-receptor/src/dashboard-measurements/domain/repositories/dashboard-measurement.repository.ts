@@ -19,7 +19,15 @@ export class DashboardMeasurementRepository extends Repository<DashboardMeasurem
 
   async findAllWithMeasurements(): Promise<DashboardMeasurement[]> {
     return this.find({
-      relations: ['measurement'],
+      relations: ['measurement', 'group'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findByGroupId(groupId: number): Promise<DashboardMeasurement[]> {
+    return this.find({
+      where: { groupId },
+      relations: ['measurement', 'group'],
       order: { createdAt: 'DESC' },
     });
   }

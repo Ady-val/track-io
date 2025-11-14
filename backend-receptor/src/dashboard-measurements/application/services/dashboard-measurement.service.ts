@@ -10,15 +10,22 @@ import {
   UpdateDashboardMeasurementDto,
 } from '../dtos/dashboard-measurement.dto';
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
+import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
 
 @Injectable()
 export class DashboardMeasurementService {
   constructor(
     private readonly dashboardMeasurementRepository: DashboardMeasurementRepository,
-    private readonly measurementService: MeasurementService
+    private readonly measurementService: MeasurementService,
+    private readonly groupRepository: DashboardMeasurementGroupRepository
   ) {}
 
-  async getAllDashboardMeasurements(): Promise<DashboardMeasurement[]> {
+  async getAllDashboardMeasurements(
+    groupId?: number
+  ): Promise<DashboardMeasurement[]> {
+    if (groupId) {
+      return this.dashboardMeasurementRepository.findByGroupId(groupId);
+    }
     return this.dashboardMeasurementRepository.findAllWithMeasurements();
   }
 
@@ -48,10 +55,14 @@ export class DashboardMeasurementService {
   async createDashboardMeasurement(
     createDto: CreateDashboardMeasurementDto
   ): Promise<DashboardMeasurement> {
-    // Verificar que el measurement existe
     await this.measurementService.getMeasurementById(createDto.measurementId);
 
-    // Verificar que no exista ya una configuración para este measurement
+    if (createDto.groupId) {
+      await this.groupRepository.findOneOrFail({
+        where: { id: createDto.groupId },
+      });
+    }
+
     const existing =
       await this.dashboardMeasurementRepository.findByMeasurementId(
         createDto.measurementId
@@ -63,7 +74,6 @@ export class DashboardMeasurementService {
       );
     }
 
-    // Validar que minValue < maxValue
     if (createDto.minValue >= createDto.maxValue) {
       throw new BadRequestException('minValue must be less than maxValue');
     }
@@ -78,12 +88,18 @@ export class DashboardMeasurementService {
   ): Promise<DashboardMeasurement> {
     const dashboard = await this.getDashboardMeasurementById(id);
 
-    // Si se está actualizando el measurementId, verificar que existe
     if (updateDto.measurementId) {
       await this.measurementService.getMeasurementById(updateDto.measurementId);
     }
 
-    // Validar que minValue < maxValue si se están actualizando
+    if (updateDto.groupId !== undefined) {
+      if (updateDto.groupId !== null) {
+        await this.groupRepository.findOneOrFail({
+          where: { id: updateDto.groupId },
+        });
+      }
+    }
+
     const newMinValue = updateDto.minValue ?? dashboard.minValue;
     const newMaxValue = updateDto.maxValue ?? dashboard.maxValue;
 

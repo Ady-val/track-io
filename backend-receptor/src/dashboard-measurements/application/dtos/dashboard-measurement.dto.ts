@@ -5,6 +5,10 @@ export class CreateDashboardMeasurementDto {
   @IsNotEmpty()
   measurementId!: number;
 
+  @IsOptional()
+  @IsInt()
+  groupId?: number;
+
   @IsNumber()
   @IsNotEmpty()
   minValue!: number;
@@ -18,6 +22,10 @@ export class UpdateDashboardMeasurementDto {
   @IsOptional()
   @IsInt()
   measurementId?: number;
+
+  @IsOptional()
+  @IsInt()
+  groupId?: number;
 
   @IsOptional()
   @IsNumber()

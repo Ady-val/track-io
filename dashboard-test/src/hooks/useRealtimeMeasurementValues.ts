@@ -1,16 +1,36 @@
 import { useState, useEffect, useCallback } from "react";
 
 import { useWebSocket } from "@/contexts/WebSocketContext";
-import type { MeasurementValueState } from "@/types/dashboard";
+
+interface MeasurementValue {
+  value: number;
+  timestamp: string;
+}
+
+type MeasurementValues = Record<number, MeasurementValue>;
+
+interface WebSocketMessage {
+  data?: {
+    data?: {
+      measurementId?: number;
+      value?: string | number;
+      createdAt?: string;
+    };
+    measurementId?: number;
+    value?: string | number;
+    createdAt?: string;
+  };
+  measurementId?: number;
+  value?: string | number;
+  createdAt?: string;
+}
 
 export const useRealtimeMeasurementValues = () => {
   const { socket } = useWebSocket();
-  const [values, setValues] = useState<MeasurementValueState>(
-    {} as MeasurementValueState
-  );
+  const [values, setValues] = useState<MeasurementValues>({});
   const [history, setHistory] = useState<Record<number, number[]>>({});
 
-  const handleMeasurementValue = useCallback((message: any) => {
+  const handleMeasurementValue = useCallback((message: WebSocketMessage) => {
     console.log("📊 [WebSocket] Received new_measurement_value:", message);
 
     const payload = message.data?.data ?? message.data;
@@ -39,14 +59,16 @@ export const useRealtimeMeasurementValues = () => {
 
     setHistory((prev) => {
       const currentHistory = prev[measurementId] ?? [];
-      const newHistory = [...currentHistory, newValue].slice(-20); // Mantener solo los últimos 20
+      const newHistory = [...currentHistory, newValue].slice(-20);
 
       return {
         ...prev,
         [measurementId]: newHistory,
       };
     });
-  }, []);
+  },
+    []
+  );
 
   useEffect(() => {
     if (!socket) {
@@ -57,7 +79,7 @@ export const useRealtimeMeasurementValues = () => {
 
     console.log("✅ Subscribing to new_measurement_value event");
 
-    const debugListener = (...args: any[]) => {
+    const debugListener = (...args: unknown[]) => {
       console.log("🔔 [DEBUG] Received event:", args);
     };
 
@@ -79,9 +101,9 @@ export const useRealtimeMeasurementValues = () => {
   return {
     values,
     history,
-    getValue: (measurementId: number) => (values as any)[measurementId]?.value,
+    getValue: (measurementId: number) => values[measurementId]?.value,
     getTimestamp: (measurementId: number) =>
-      (values as any)[measurementId]?.timestamp,
+      values[measurementId]?.timestamp,
     getHistory: (measurementId: number) => history[measurementId] ?? [],
   };
 };

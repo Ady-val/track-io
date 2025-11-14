@@ -2,7 +2,10 @@ import { useLocation } from "react-router-dom";
 
 export function useLayoutConfig() {
   const location = useLocation();
-  const compactPaddingRoutes = ["/dashboard/industrial"];
+  const compactPaddingRoutes = [
+    "/dashboard/industrial",
+    "/dashboard/measurements",
+  ];
   const needsCompactPadding = compactPaddingRoutes.includes(location.pathname);
 
   return {

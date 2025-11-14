@@ -9,6 +9,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Measurement } from '../../../measurements/domain/entities/measurement.entity';
+import { DashboardMeasurementGroup } from './dashboard-measurement-group.entity';
 
 @Entity('dashboard_measurements')
 export class DashboardMeasurement {
@@ -17,6 +18,9 @@ export class DashboardMeasurement {
 
   @Column({ name: 'measurement_id' })
   measurementId!: number;
+
+  @Column({ name: 'group_id', nullable: true })
+  groupId?: number;
 
   @Column({ name: 'min_value', type: 'decimal', precision: 10, scale: 2 })
   minValue!: number;
@@ -33,8 +37,15 @@ export class DashboardMeasurement {
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt?: Date;
 
-  // Relations
   @ManyToOne(() => Measurement, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'measurement_id' })
   measurement!: Measurement;
+
+  @ManyToOne(
+    () => DashboardMeasurementGroup,
+    (group) => group.dashboardMeasurements,
+    { onDelete: 'SET NULL' }
+  )
+  @JoinColumn({ name: 'group_id' })
+  group?: DashboardMeasurementGroup;
 }
