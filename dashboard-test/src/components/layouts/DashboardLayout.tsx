@@ -21,7 +21,7 @@ export function DashboardLayout({
 
   return (
     <WebSocketProvider>
-      <div className="flex h-screen bg-slate-900">
+      <div className="flex h-full bg-slate-900">
         <Sidebar />
         <main className="h-full w-full overflow-hidden">
           <div

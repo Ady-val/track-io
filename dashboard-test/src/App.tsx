@@ -23,7 +23,8 @@ import { UsersPage } from "./pages/UsersPage";
 function App() {
   return (
     <ErrorBoundary>
-      <Routes>
+      <div className="min-w-[1280px] min-h-[768px] h-screen w-full overflow-auto">
+        <Routes>
         <Route
           element={
             <PublicRoute>
@@ -141,6 +142,7 @@ function App() {
         </Route>
         <Route element={<NotFoundPage />} path="*" />
       </Routes>
+      </div>
     </ErrorBoundary>
   );
 }
