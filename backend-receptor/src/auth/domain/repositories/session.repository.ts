@@ -56,4 +56,3 @@ export class SessionRepository {
     return !!result.affected && result.affected > 0;
   }
 }
-

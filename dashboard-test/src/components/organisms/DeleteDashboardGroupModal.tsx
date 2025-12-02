@@ -3,11 +3,12 @@ import { useState } from "react";
 
 import { FaExclamationTriangle, FaTrash } from "react-icons/fa";
 
-import { Button } from "../atoms/Button";
-import { Modal } from "./Modal";
-
 import dashboardMeasurementGroupService from "@/lib/services/dashboard-measurement-group.service";
 import type { DashboardMeasurementGroup } from "@/types/dashboard-measurement-group";
+
+import { Button } from "../atoms/Button";
+
+import { Modal } from "./Modal";
 
 interface DeleteDashboardGroupModalProps {
   isOpen: boolean;
@@ -123,4 +124,3 @@ export const DeleteDashboardGroupModal: React.FC<
     </Modal>
   );
 };
-

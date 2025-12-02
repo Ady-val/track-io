@@ -17,4 +17,3 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 
   return <input className={combinedClassName} {...props} />;
 };
-

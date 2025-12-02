@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { PermissionService } from '../application/services/permission.service';
 import { PermissionResponseDto } from '../application/dtos/permission.dto';
@@ -18,7 +13,7 @@ export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
   @Get()
-  @RequirePermission(Module.PERMISSIONS, Action.READ)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.READ)
   async findAll(): Promise<{
     message: string;
     data: PermissionResponseDto[];
@@ -40,11 +35,11 @@ export class PermissionController {
   }
 
   @Get('modules')
-  @RequirePermission(Module.PERMISSIONS, Action.READ)
-  async getModules(): Promise<{
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.READ)
+  getModules(): {
     message: string;
     data: string[];
-  }> {
+  } {
     const modules = this.permissionService.getAllModules();
 
     return {
@@ -54,7 +49,7 @@ export class PermissionController {
   }
 
   @Get('module/:module')
-  @RequirePermission(Module.PERMISSIONS, Action.READ)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.READ)
   async findByModule(@Param('module') module: string): Promise<{
     message: string;
     data: PermissionResponseDto[];
@@ -74,5 +69,14 @@ export class PermissionController {
       data: permissionResponses,
     };
   }
-}
 
+  @Post('initialize')
+  async initialize(): Promise<{
+    message: string;
+  }> {
+    await this.permissionService.initializeDefaultPermissions();
+    return {
+      message: 'Default permissions initialized successfully',
+    };
+  }
+}

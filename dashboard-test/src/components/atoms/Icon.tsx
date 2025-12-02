@@ -12,11 +12,12 @@ import {
   FaChartLine,
   FaBuilding,
   FaUsers,
-  FaWifi,
   FaPalette,
   FaBroadcastTower,
   FaEnvelope,
+  FaLock,
 } from "react-icons/fa";
+import { FaShieldHalved } from "react-icons/fa6";
 import { MdTraffic } from "react-icons/md";
 
 export interface IconProps {
@@ -29,6 +30,8 @@ export interface IconProps {
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   edit: FaEdit,
   trash: FaTrash,
+  lock: FaLock,
+  shield: FaShieldHalved,
   "chevron-left": FaChevronLeft,
   "chevron-right": FaChevronRight,
   "alert-triangle": FaExclamationTriangle,

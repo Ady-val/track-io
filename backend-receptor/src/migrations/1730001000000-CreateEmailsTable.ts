@@ -76,4 +76,3 @@ export class CreateEmailsTable1730001000000 implements MigrationInterface {
     await queryRunner.dropTable('emails');
   }
 }
-

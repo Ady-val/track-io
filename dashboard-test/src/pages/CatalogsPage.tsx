@@ -4,10 +4,10 @@ import { Card } from "../components/atoms/Card";
 import { Icon } from "../components/atoms/Icon";
 import { AreasCatalog } from "../components/organisms/catalogs/AreasCatalog";
 import { DepartmentsCatalog } from "../components/organisms/catalogs/DepartmentsCatalog";
+import { EmailsCatalog } from "../components/organisms/catalogs/EmailsCatalog";
 import { ReceptorsCatalog } from "../components/organisms/catalogs/ReceptorsCatalog";
 import { TorretaColorsCatalog } from "../components/organisms/catalogs/TorretaColorsCatalog";
 import { TorretasCatalog } from "../components/organisms/catalogs/TorretasCatalog";
-import { EmailsCatalog } from "../components/organisms/catalogs/EmailsCatalog";
 
 type CatalogId =
   | "areas"
@@ -17,17 +17,21 @@ type CatalogId =
   | "receptors"
   | "emails";
 
+const allCatalogs = [
+  { id: "areas" as CatalogId, name: "Áreas", icon: "building" },
+  { id: "departments" as CatalogId, name: "Departamentos", icon: "users" },
+  { id: "torretas" as CatalogId, name: "Torretas", icon: "tower" },
+  {
+    id: "torreta-colors" as CatalogId,
+    name: "Colores de Torreta",
+    icon: "palette",
+  },
+  { id: "receptors" as CatalogId, name: "Receptores", icon: "radio" },
+  { id: "emails" as CatalogId, name: "Correos", icon: "mail" },
+] as const;
+
 export function CatalogsPage() {
   const [activeCatalog, setActiveCatalog] = useState<CatalogId>("areas");
-
-  const allCatalogs = [
-    { id: "areas", name: "Áreas", icon: "building" },
-    { id: "departments", name: "Departamentos", icon: "users" },
-    { id: "torretas", name: "Torretas", icon: "tower" },
-    { id: "torreta-colors", name: "Colores de Torreta", icon: "palette" },
-    { id: "receptors", name: "Receptores", icon: "radio" },
-    { id: "emails", name: "Correos", icon: "mail" },
-  ] as const;
 
   const renderCatalog = () => {
     switch (activeCatalog) {
@@ -72,7 +76,7 @@ export function CatalogsPage() {
                     ? "border-blue-500 text-blue-400"
                     : "border-transparent text-slate-400 hover:text-white hover:border-slate-500"
                 }`}
-                onClick={() => setActiveCatalog(catalog.id as CatalogId)}
+                onClick={() => setActiveCatalog(catalog.id)}
               >
                 <div className="flex items-center">
                   <Icon className="w-5 h-5 mr-2" name={catalog.icon} />

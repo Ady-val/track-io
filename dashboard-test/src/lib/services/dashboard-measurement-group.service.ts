@@ -27,9 +27,10 @@ class DashboardMeasurementGroupService {
 
   async getById(id: number): Promise<DashboardMeasurementGroup | null> {
     try {
-      const response = await apiClient.get<DashboardMeasurementGroupSingleResponse>(
-        `${this.baseUrl}/${id}`
-      );
+      const response =
+        await apiClient.get<DashboardMeasurementGroupSingleResponse>(
+          `${this.baseUrl}/${id}`
+        );
 
       return response.data.data || null;
     } catch (error) {
@@ -42,10 +43,11 @@ class DashboardMeasurementGroupService {
   async create(
     data: CreateDashboardMeasurementGroupData
   ): Promise<DashboardMeasurementGroup> {
-    const response = await apiClient.post<DashboardMeasurementGroupSingleResponse>(
-      this.baseUrl,
-      data
-    );
+    const response =
+      await apiClient.post<DashboardMeasurementGroupSingleResponse>(
+        this.baseUrl,
+        data
+      );
 
     return response.data.data;
   }
@@ -54,10 +56,11 @@ class DashboardMeasurementGroupService {
     id: number,
     data: UpdateDashboardMeasurementGroupData
   ): Promise<DashboardMeasurementGroup> {
-    const response = await apiClient.put<DashboardMeasurementGroupSingleResponse>(
-      `${this.baseUrl}/${id}`,
-      data
-    );
+    const response =
+      await apiClient.put<DashboardMeasurementGroupSingleResponse>(
+        `${this.baseUrl}/${id}`,
+        data
+      );
 
     return response.data.data;
   }
@@ -70,5 +73,3 @@ class DashboardMeasurementGroupService {
 const dashboardMeasurementGroupService = new DashboardMeasurementGroupService();
 
 export default dashboardMeasurementGroupService;
-
-

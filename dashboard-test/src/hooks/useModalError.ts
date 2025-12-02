@@ -1,10 +1,6 @@
 import { useState, useCallback } from "react";
 
-import {
-  parseApiError,
-  extractErrorMessage,
-  type ParsedError,
-} from "@/lib/utils/errorHandler";
+import { parseApiError, type ParsedError } from "@/lib/utils/errorHandler";
 
 export interface UseModalErrorReturn {
   serverError: string;
@@ -21,7 +17,9 @@ export interface UseModalErrorReturn {
  * Hook for managing modal errors consistently
  * Provides state and utilities for handling API errors and validation errors
  */
-export function useModalError(defaultServerMessage?: string): UseModalErrorReturn {
+export function useModalError(
+  defaultServerMessage?: string
+): UseModalErrorReturn {
   const [serverError, setServerError] = useState<string>("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [parsedError, setParsedError] = useState<ParsedError | null>(null);
@@ -39,7 +37,9 @@ export function useModalError(defaultServerMessage?: string): UseModalErrorRetur
   const handleApiError = useCallback(
     (error: unknown, customDefaultMessage?: string) => {
       const defaultMessage =
-        customDefaultMessage ?? defaultServerMessage ?? "Ocurrió un error inesperado.";
+        customDefaultMessage ??
+        defaultServerMessage ??
+        "Ocurrió un error inesperado.";
       const parsed = parseApiError(error, defaultMessage);
 
       setParsedError(parsed);
@@ -86,6 +86,7 @@ export function useFormErrorHandling<T>(
       try {
         errorHandling.clearErrors();
         const data = await submitFn();
+
         onSuccess?.(data);
 
         return data;
@@ -104,4 +105,3 @@ export function useFormErrorHandling<T>(
     handleSubmit,
   };
 }
-

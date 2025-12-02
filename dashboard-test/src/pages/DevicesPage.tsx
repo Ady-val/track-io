@@ -16,10 +16,13 @@ import {
   DeleteSignalModal,
   EscalationConfigModal,
 } from "../components/organisms";
+import { Module, Action } from "../constants/permissions";
 import { useDevices } from "../hooks/useDevices";
+import { useHasPermission } from "../hooks/useHasPermission";
 
 export const DevicesPage: React.FC = () => {
   const { data, isLoading, error, refetch } = useDevices({ limit: 50 });
+  const hasCreatePermission = useHasPermission(Module.DEVICES, Action.CREATE);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditDeviceModalOpen, setIsEditDeviceModalOpen] = useState(false);
   const [isAddSignalModalOpen, setIsAddSignalModalOpen] = useState(false);
@@ -52,15 +55,17 @@ export const DevicesPage: React.FC = () => {
               </Text>
             </div>
           </div>
-          <Button
-            className="flex items-center space-x-2"
-            color="primary"
-            variant="solid"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            <FaPlus className="w-4 h-4" />
-            <span>Agregar Dispositivo</span>
-          </Button>
+          {hasCreatePermission && (
+            <Button
+              className="flex items-center space-x-2"
+              color="primary"
+              variant="solid"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <FaPlus className="w-4 h-4" />
+              <span>Agregar Dispositivo</span>
+            </Button>
+          )}
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { AlertMessageService } from '../application/services/alert-message.service';
 import { AlertMessage } from '../domain/entities/alert-message.entity';
@@ -16,13 +17,22 @@ import {
   CreateAlertMessageDto,
   UpdateAlertMessageDto,
 } from '../application/dtos/alert-message.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller()
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class AlertMessageController {
   constructor(private readonly alertMessageService: AlertMessageService) {}
 
   // Get all messages (general endpoint)
   @Get('messages')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getAllAlertMessages(): Promise<{
     message: string;
     data: AlertMessage[];
@@ -37,6 +47,7 @@ export class AlertMessageController {
 
   // Get single message
   @Get('messages/:id')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getAlertMessageById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AlertMessage;
@@ -51,6 +62,7 @@ export class AlertMessageController {
 
   // Get messages for a specific alert rule
   @Get('alert-rules/:ruleId/messages')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getMessagesByAlertRuleId(
     @Param('ruleId', ParseIntPipe) ruleId: number
   ): Promise<{
@@ -69,6 +81,7 @@ export class AlertMessageController {
   // Create message for an alert rule
   @Post('alert-rules/:ruleId/messages')
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.CREATE)
   async createAlertMessage(
     @Param('ruleId', ParseIntPipe) ruleId: number,
     @Body() createDto: CreateAlertMessageDto
@@ -89,6 +102,7 @@ export class AlertMessageController {
 
   // Update message
   @Patch('messages/:id')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.UPDATE)
   async updateAlertMessage(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateAlertMessageDto
@@ -110,6 +124,7 @@ export class AlertMessageController {
   // Duplicate message
   @Post('messages/:id/duplicate')
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.CREATE)
   async duplicateAlertMessage(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AlertMessage;
@@ -126,6 +141,7 @@ export class AlertMessageController {
   // Delete message
   @Delete('messages/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.DELETE)
   async deleteAlertMessage(
     @Param('id', ParseIntPipe) id: number
   ): Promise<void> {

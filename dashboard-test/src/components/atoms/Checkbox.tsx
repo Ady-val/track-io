@@ -47,11 +47,11 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   return (
     <label className={classes}>
       <input
-        type="checkbox"
         checked={isSelected}
-        onChange={(e) => onValueChange?.(e.target.checked)}
-        disabled={isDisabled}
         className={`${checkboxSizeClasses[size]} rounded border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-2`}
+        disabled={isDisabled}
+        type="checkbox"
+        onChange={(e) => onValueChange?.(e.target.checked)}
       />
       {children}
     </label>

@@ -41,10 +41,7 @@ export class DashboardMeasurementGroupService {
   async createGroup(
     createDto: CreateDashboardMeasurementGroupDto
   ): Promise<DashboardMeasurementGroup> {
-    if (
-      !createDto.dashboardMeasurements ||
-      createDto.dashboardMeasurements.length === 0
-    ) {
+    if (createDto.dashboardMeasurements.length === 0) {
       throw new BadRequestException(
         'At least one dashboard measurement is required'
       );
@@ -70,7 +67,7 @@ export class DashboardMeasurementGroupService {
       });
       const savedGroup = await queryRunner.manager.save(group);
 
-      const dashboardMeasurements = createDto.dashboardMeasurements.map((dm) =>
+      const dashboardMeasurements = createDto.dashboardMeasurements.map(dm =>
         this.dashboardMeasurementRepository.create({
           measurementId: dm.measurementId,
           minValue: dm.minValue,
@@ -134,7 +131,7 @@ export class DashboardMeasurementGroupService {
         }
 
         const newDashboardMeasurements = updateDto.dashboardMeasurements.map(
-          (dm) =>
+          dm =>
             this.dashboardMeasurementRepository.create({
               measurementId: dm.measurementId,
               minValue: dm.minValue,
@@ -162,4 +159,3 @@ export class DashboardMeasurementGroupService {
     await this.groupRepository.softDelete(id);
   }
 }
-

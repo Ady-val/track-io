@@ -1,5 +1,3 @@
-import { useState, useEffect, useCallback } from "react";
-import { EscalationService } from "../lib/services/escalation.service";
 import type {
   EscalationConfig,
   EscalationMessage,
@@ -8,6 +6,10 @@ import type {
   TorretaColor,
   Email,
 } from "../types/escalation";
+
+import { useState, useEffect, useCallback } from "react";
+
+import { EscalationService } from "../lib/services/escalation.service";
 
 interface UseEscalationConfigProps {
   deviceId: number;
@@ -81,13 +83,17 @@ export const useEscalationConfig = ({
           configData,
           messagesData
         );
+
         if (savedConfig) {
           setConfig(savedConfig);
+
           return savedConfig;
         }
+
         return null;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error saving config");
+
         return null;
       }
     },
@@ -98,6 +104,7 @@ export const useEscalationConfig = ({
     async (message: EscalationMessage): Promise<boolean> => {
       try {
         let savedMessage;
+
         if (message.id) {
           savedMessage = await EscalationService.updateEscalationMessage(
             message.id,
@@ -116,11 +123,14 @@ export const useEscalationConfig = ({
               return [...prev, savedMessage];
             }
           });
+
           return true;
         }
+
         return false;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error saving message");
+
         return false;
       }
     },
@@ -132,13 +142,17 @@ export const useEscalationConfig = ({
       try {
         const success =
           await EscalationService.deleteEscalationMessage(messageId);
+
         if (success) {
           setMessages((prev) => prev.filter((m) => m.id !== messageId));
+
           return true;
         }
+
         return false;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error deleting message");
+
         return false;
       }
     },

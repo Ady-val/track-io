@@ -24,7 +24,10 @@ import { DeviceSignalFilters } from '../domain/repositories/device-signal.reposi
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../permissions/guards/permission.guard';
 import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
-import { Module, Action } from '../../permissions/constants/permissions.constants';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('device-signals')
 @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -33,7 +36,7 @@ export class DeviceSignalController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.CREATE)
+  @RequirePermission(Module.DEVICES, Action.CREATE)
   async create(@Body() createDeviceSignalDto: CreateDeviceSignalDto): Promise<{
     message: string;
     data: DeviceSignalResponseDto;
@@ -57,7 +60,7 @@ export class DeviceSignalController {
   }
 
   @Get()
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findAll(
     @Query('name') name?: string,
     @Query('deviceId', new ParseIntPipe({ optional: true })) deviceId?: number,
@@ -106,7 +109,7 @@ export class DeviceSignalController {
   }
 
   @Get('count')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async getCount(): Promise<{
     message: string;
     count: number;
@@ -120,7 +123,7 @@ export class DeviceSignalController {
   }
 
   @Get('device/:deviceId/count')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async getCountByDeviceId(
     @Param('deviceId', ParseIntPipe) deviceId: number
   ): Promise<{
@@ -136,7 +139,7 @@ export class DeviceSignalController {
   }
 
   @Get('department/:departmentId/count')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async getCountByDepartmentId(
     @Param('departmentId', ParseIntPipe) departmentId: number
   ): Promise<{
@@ -153,7 +156,7 @@ export class DeviceSignalController {
   }
 
   @Get('device/:deviceId')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findByDeviceId(
     @Param('deviceId', ParseIntPipe) deviceId: number
   ): Promise<{
@@ -178,7 +181,7 @@ export class DeviceSignalController {
   }
 
   @Get('department/:departmentId')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findByDepartmentId(
     @Param('departmentId', ParseIntPipe) departmentId: number
   ): Promise<{
@@ -203,7 +206,7 @@ export class DeviceSignalController {
   }
 
   @Get('external/:externalValueId')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findByExternalValueId(
     @Param('externalValueId') externalValueId: string
   ): Promise<{
@@ -228,7 +231,7 @@ export class DeviceSignalController {
   }
 
   @Get(':id')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.READ)
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: DeviceSignalResponseDto;
@@ -250,7 +253,7 @@ export class DeviceSignalController {
   }
 
   @Patch(':id')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.UPDATE)
+  @RequirePermission(Module.DEVICES, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDeviceSignalDto: UpdateDeviceSignalDto
@@ -279,7 +282,7 @@ export class DeviceSignalController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.DELETE)
+  @RequirePermission(Module.DEVICES, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -291,7 +294,7 @@ export class DeviceSignalController {
   }
 
   @Patch(':id/restore')
-  @RequirePermission(Module.DEVICE_SIGNALS, Action.UPDATE)
+  @RequirePermission(Module.DEVICES, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: DeviceSignalResponseDto;

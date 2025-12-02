@@ -25,7 +25,10 @@ import { DeviceMapper } from '../application/mappers/device.mapper';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../permissions/guards/permission.guard';
 import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
-import { Module, Action } from '../../permissions/constants/permissions.constants';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('devices')
 @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -41,10 +44,14 @@ export class DeviceController {
   }> {
     const device = await this.deviceService.create(createDeviceDto);
     const deviceResponseDto = DeviceMapper.toResponseDto(device);
-    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponse = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDto,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device created successfully',
@@ -78,10 +85,14 @@ export class DeviceController {
 
     const { data, total } = await this.deviceService.findAll(filters);
     const deviceResponseDtos = DeviceMapper.toResponseDtoArray(data);
-    const deviceResponses = plainToInstance(DeviceResponseDto, deviceResponseDtos, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponses = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDtos,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Devices retrieved successfully',
@@ -133,10 +144,14 @@ export class DeviceController {
   }> {
     const devices = await this.deviceService.findByAreaId(areaId);
     const deviceResponseDtos = DeviceMapper.toResponseDtoArray(devices);
-    const deviceResponses = plainToInstance(DeviceResponseDto, deviceResponseDtos, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponses = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDtos,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Devices by area retrieved successfully',
@@ -152,10 +167,14 @@ export class DeviceController {
   }> {
     const device = await this.deviceService.findByExternalId(externalId);
     const deviceResponseDto = DeviceMapper.toResponseDto(device);
-    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponse = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDto,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device retrieved successfully',
@@ -171,10 +190,14 @@ export class DeviceController {
   }> {
     const device = await this.deviceService.findById(id);
     const deviceResponseDto = DeviceMapper.toResponseDto(device);
-    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponse = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDto,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device retrieved successfully',
@@ -193,10 +216,14 @@ export class DeviceController {
   }> {
     const device = await this.deviceService.update(id, updateDeviceDto);
     const deviceResponseDto = DeviceMapper.toResponseDto(device);
-    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponse = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDto,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device updated successfully',
@@ -225,10 +252,14 @@ export class DeviceController {
   }> {
     const device = await this.deviceService.restore(id);
     const deviceResponseDto = DeviceMapper.toResponseDto(device);
-    const deviceResponse = plainToInstance(DeviceResponseDto, deviceResponseDto, {
-      excludeExtraneousValues: true,
-      enableImplicitConversion: true,
-    });
+    const deviceResponse = plainToInstance(
+      DeviceResponseDto,
+      deviceResponseDto,
+      {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      }
+    );
 
     return {
       message: 'Device restored successfully',

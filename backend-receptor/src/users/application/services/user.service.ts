@@ -17,6 +17,7 @@ import {
 } from '../../domain/repositories/user.repository';
 import { ADMIN_USERNAME } from '../../../permissions/constants/permissions.constants';
 import { Role } from '../../../permissions/domain/entities/role.entity';
+import { PermissionService } from '../../../permissions/application/services/permission.service';
 
 @Injectable()
 export class UserService {
@@ -27,7 +28,8 @@ export class UserService {
     @InjectRepository(User)
     private readonly userTypeOrmRepository: Repository<User>,
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>
+    private readonly roleRepository: Repository<Role>,
+    private readonly permissionService: PermissionService
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -355,7 +357,34 @@ export class UserService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
+      if (user.username === ADMIN_USERNAME) {
+        const allPermissions = await this.permissionService.findAll();
+        return allPermissions.map(permission => {
+          const permData: {
+            id: number;
+            module: string;
+            action: string;
+            description?: string;
+          } = {
+            id: permission.id,
+            module: permission.module,
+            action: permission.action,
+          };
+          if (permission.description !== undefined) {
+            permData.description = permission.description;
+          }
+          return permData;
+        });
+      }
+
       if (!user.roles || user.roles.length === 0) {
+        return [];
+      }
+
+      // Filter out soft-deleted roles as a security measure
+      const activeRoles = user.roles.filter(role => !role.deletedAt);
+
+      if (activeRoles.length === 0) {
         return [];
       }
 
@@ -363,7 +392,7 @@ export class UserService {
         number,
         { id: number; module: string; action: string; description?: string }
       >();
-      for (const role of user.roles) {
+      for (const role of activeRoles) {
         if (role.permissions) {
           for (const permission of role.permissions) {
             const permData: {

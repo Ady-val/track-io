@@ -16,9 +16,11 @@ import {
   DeleteDashboardGroupModal,
 } from "@components/organisms";
 
+import { Module, Action } from "@/constants/permissions";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useDashboardMeasurementGroups } from "@/hooks/useDashboardMeasurementGroups";
 import { useDashboardMeasurements } from "@/hooks/useDashboardMeasurements";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useRealtimeMeasurementValues } from "@/hooks/useRealtimeMeasurementValues";
 import dashboardMeasurementGroupService from "@/lib/services/dashboard-measurement-group.service";
 import type {
@@ -33,6 +35,19 @@ export default function DashboardMeasurementsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isUpdatingGroup, setIsUpdatingGroup] = useState(false);
+
+  const hasCreatePermission = useHasPermission(
+    Module.MEASUREMENTS,
+    Action.CREATE
+  );
+  const hasUpdatePermission = useHasPermission(
+    Module.MEASUREMENTS,
+    Action.UPDATE
+  );
+  const hasDeletePermission = useHasPermission(
+    Module.MEASUREMENTS,
+    Action.DELETE
+  );
 
   const {
     groups,
@@ -135,37 +150,43 @@ export default function DashboardMeasurementsPage() {
                 </div>
                 {selectedGroupId ? (
                   <>
-                    <Button
-                      className="text-white"
-                      color="warning"
-                      size="md"
-                      variant="solid"
-                      onPress={() => setIsEditModalOpen(true)}
-                    >
-                      <FaEdit className="mr-2" />
-                      Editar
-                    </Button>
-                    <Button
-                      className="text-white"
-                      color="danger"
-                      size="md"
-                      variant="solid"
-                      onPress={() => setIsDeleteModalOpen(true)}
-                    >
-                      <FaTrash className="mr-2" />
-                      Eliminar
-                    </Button>
+                    {hasUpdatePermission && (
+                      <Button
+                        className="text-white"
+                        color="warning"
+                        size="md"
+                        variant="solid"
+                        onPress={() => setIsEditModalOpen(true)}
+                      >
+                        <FaEdit className="mr-2" />
+                        Editar
+                      </Button>
+                    )}
+                    {hasDeletePermission && (
+                      <Button
+                        className="text-white"
+                        color="danger"
+                        size="md"
+                        variant="solid"
+                        onPress={() => setIsDeleteModalOpen(true)}
+                      >
+                        <FaTrash className="mr-2" />
+                        Eliminar
+                      </Button>
+                    )}
                   </>
                 ) : (
-                  <Button
-                    color="primary"
-                    size="md"
-                    variant="solid"
-                    onPress={() => setIsCreateModalOpen(true)}
-                  >
-                    <FaPlus className="mr-2" />
-                    Crear Grupo
-                  </Button>
+                  hasCreatePermission && (
+                    <Button
+                      color="primary"
+                      size="md"
+                      variant="solid"
+                      onPress={() => setIsCreateModalOpen(true)}
+                    >
+                      <FaPlus className="mr-2" />
+                      Crear Grupo
+                    </Button>
+                  )
                 )}
               </div>
             </div>

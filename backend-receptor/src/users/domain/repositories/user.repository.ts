@@ -112,10 +112,12 @@ export class UserRepository {
   }
 
   async findByIdWithRoles(id: number): Promise<User | null> {
-    return await this.userRepository.findOne({
-      where: { id },
-      withDeleted: false,
-      relations: ['roles', 'roles.permissions'],
-    });
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id = :id', { id })
+      .andWhere('user.deletedAt IS NULL')
+      .leftJoinAndSelect('user.roles', 'role', 'role.deletedAt IS NULL')
+      .leftJoinAndSelect('role.permissions', 'permission')
+      .getOne();
   }
 }

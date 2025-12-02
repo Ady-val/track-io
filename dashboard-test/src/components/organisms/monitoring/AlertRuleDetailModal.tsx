@@ -5,6 +5,8 @@ import { FaPencil, FaTrash, FaChevronDown, FaChevronUp } from "react-icons/fa6";
 
 import { Button, Text, Chip, Input, Select } from "@components/atoms";
 
+import { Module, Action } from "@/constants/permissions";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import type {
   AlertRule,
   Sensor,
@@ -92,6 +94,19 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
   });
   const [collapsedMessages, setCollapsedMessages] = useState(false);
 
+  const hasUpdatePermission = useHasPermission(
+    Module.MEASUREMENT_ALERTS,
+    Action.UPDATE
+  );
+  const hasDeletePermission = useHasPermission(
+    Module.MEASUREMENT_ALERTS,
+    Action.DELETE
+  );
+  const hasCreateMessagePermission = useHasPermission(
+    Module.MEASUREMENT_ALERTS,
+    Action.CREATE
+  );
+
   useEffect(() => {
     if (rule) {
       setRuleName(rule.name);
@@ -174,24 +189,28 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
           </div>
 
           <div className="flex gap-2">
-            <Button
-              color="primary"
-              size="sm"
-              startContent={<FaPencil className="w-3.5 h-3.5" />}
-              variant="solid"
-              onClick={() => setIsEditing(true)}
-            >
-              Editar
-            </Button>
-            <Button
-              color="danger"
-              size="sm"
-              startContent={<FaTrash className="w-3.5 h-3.5" />}
-              variant="solid"
-              onClick={() => onDelete(rule.id)}
-            >
-              Eliminar
-            </Button>
+            {hasUpdatePermission && (
+              <Button
+                color="primary"
+                size="sm"
+                startContent={<FaPencil className="w-3.5 h-3.5" />}
+                variant="solid"
+                onClick={() => setIsEditing(true)}
+              >
+                Editar
+              </Button>
+            )}
+            {hasDeletePermission && (
+              <Button
+                color="danger"
+                size="sm"
+                startContent={<FaTrash className="w-3.5 h-3.5" />}
+                variant="solid"
+                onClick={() => onDelete(rule.id)}
+              >
+                Eliminar
+              </Button>
+            )}
           </div>
         </div>
 
@@ -419,18 +438,20 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                 {rule.mensajes?.length ?? 0}
               </Chip>
             </div>
-            <Button
-              className="text-white"
-              color="success"
-              size="sm"
-              startContent={
-                <span className="text-white text-lg font-bold">+</span>
-              }
-              variant="solid"
-              onClick={() => setShowAddMessageForm(true)}
-            >
-              Agregar
-            </Button>
+            {hasCreateMessagePermission && (
+              <Button
+                className="text-white"
+                color="success"
+                size="sm"
+                startContent={
+                  <span className="text-white text-lg font-bold">+</span>
+                }
+                variant="solid"
+                onClick={() => setShowAddMessageForm(true)}
+              >
+                Agregar
+              </Button>
+            )}
           </div>
 
           {!collapsedMessages && (

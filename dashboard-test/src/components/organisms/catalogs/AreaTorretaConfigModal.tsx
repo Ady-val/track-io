@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaTrash, FaEdit, FaTimes } from "react-icons/fa";
+
+import { FaPlus, FaTrash, FaEdit } from "react-icons/fa";
+
+import {
+  useAreaTorretaConfigs,
+  useCreateAreaTorretaConfig,
+  useUpdateAreaTorretaConfig,
+  useDeleteAreaTorretaConfig,
+} from "@/hooks/useAreaTorretaConfig";
 import { type Area } from "@/hooks/useCatalogs";
-import { useAreaTorretaConfigs, useCreateAreaTorretaConfig, useUpdateAreaTorretaConfig, useDeleteAreaTorretaConfig } from "@/hooks/useAreaTorretaConfig";
 import { useTorretas } from "@/hooks/useCatalogs";
-import { Button } from "../../atoms/Button";
-import { Text } from "../../atoms/Text";
-import { Modal } from "../Modal";
-import { FormField } from "../../molecules/FormField";
 import { useModalError } from "@/hooks/useModalError";
 import type { AreaTorretaConfig } from "@/lib/services/areaTorretaConfig.service";
+
+import { Button } from "../../atoms/Button";
+import { Text } from "../../atoms/Text";
+import { FormField } from "../../molecules/FormField";
+import { Modal } from "../Modal";
 
 interface AreaTorretaConfigModalProps {
   isOpen: boolean;
@@ -22,7 +30,9 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   area,
 }) => {
   const [isAddMode, setIsAddMode] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<AreaTorretaConfig | null>(null);
+  const [editingConfig, setEditingConfig] = useState<AreaTorretaConfig | null>(
+    null
+  );
   const [formData, setFormData] = useState({
     torretaExternalId: "",
     configurationType: "area" as "area" | "department",
@@ -36,9 +46,8 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
 
   const errorHandling = useModalError("Error al procesar la solicitud");
 
-  const { data: configs = [], isLoading: configsLoading } = useAreaTorretaConfigs(
-    area?.id ?? 0
-  );
+  const { data: configs = [], isLoading: configsLoading } =
+    useAreaTorretaConfigs(area?.id ?? 0);
   const { data: torretasData } = useTorretas({ active: true });
   const torretas = torretasData?.data ?? [];
 
@@ -49,7 +58,8 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   const availableTorretas = torretas.filter(
     (torreta) =>
       torreta.externalId &&
-      (!editingConfig || torreta.externalId === editingConfig.torretaExternalId) &&
+      (!editingConfig ||
+        torreta.externalId === editingConfig.torretaExternalId) &&
       !configs.some(
         (config) =>
           config.torretaExternalId === torreta.externalId &&
@@ -102,7 +112,8 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const errors: { torretaExternalId?: string; configurationType?: string } = {};
+    const errors: { torretaExternalId?: string; configurationType?: string } =
+      {};
 
     if (!formData.torretaExternalId) {
       errors.torretaExternalId = "La torreta es requerida";
@@ -114,6 +125,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+
       return;
     }
 
@@ -144,6 +156,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
         error instanceof Error
           ? error.message
           : "Error al guardar la configuración";
+
       setLocalError(errorMessage);
       errorHandling.handleApiError(error, errorMessage);
     } finally {
@@ -173,6 +186,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
           error instanceof Error
             ? error.message
             : "Error al eliminar la configuración";
+
         setLocalError(errorMessage);
         errorHandling.handleApiError(error, errorMessage);
       } finally {
@@ -183,6 +197,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
 
   const getTorretaName = (externalId: string) => {
     const torreta = torretas.find((t) => t.externalId === externalId);
+
     return torreta?.name ?? externalId;
   };
 
@@ -191,9 +206,9 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
       size="lg"
       title={`Configurar Torretas - ${area.name}`}
+      onClose={onClose}
     >
       <div className="space-y-6">
         {localError && (
@@ -222,10 +237,10 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
             </Text>
             <Button
               color="primary"
+              disabled={isAddMode || !!editingConfig}
               size="sm"
               variant="solid"
               onPress={handleAdd}
-              disabled={isAddMode || !!editingConfig}
             >
               <FaPlus className="mr-2" />
               Agregar
@@ -235,7 +250,8 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
           {configs.length === 0 && !configsLoading ? (
             <div className="text-center py-8">
               <Text color="muted" variant="body">
-                No hay configuraciones. Haz clic en "Agregar" para crear una.
+                No hay configuraciones. Haz clic en &quot;Agregar&quot; para
+                crear una.
               </Text>
             </div>
           ) : (
@@ -262,26 +278,24 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
                     <Button
                       className="flex items-center justify-center w-8 h-8 font-semibold"
                       color="warning"
+                      disabled={isAddMode || !!editingConfig}
                       size="sm"
                       title="Editar configuración"
                       variant="solid"
                       onPress={() => handleEdit(config)}
-                      disabled={isAddMode || !!editingConfig}
                     >
                       <FaEdit className="w-4 h-4 text-white" />
                     </Button>
                     <Button
                       className="flex items-center justify-center w-8 h-8 font-semibold"
                       color="danger"
+                      disabled={
+                        isAddMode || !!editingConfig || deleteMutation.isPending
+                      }
                       size="sm"
                       title="Eliminar configuración"
                       variant="solid"
                       onPress={() => handleDelete(config)}
-                      disabled={
-                        isAddMode ||
-                        !!editingConfig ||
-                        deleteMutation.isPending
-                      }
                     >
                       <FaTrash className="w-4 h-4" />
                     </Button>
@@ -317,38 +331,35 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <FormField
-                label="Torreta"
-                name="torretaExternalId"
                 required
                 select
                 disabled={!!editingConfig}
-                value={formData.torretaExternalId}
-                onChange={(value) =>
-                  setFormData({ ...formData, torretaExternalId: value as string })
-                }
+                error={formErrors.torretaExternalId}
+                label="Torreta"
+                name="torretaExternalId"
                 options={availableTorretas
                   .filter((t) => t.externalId)
                   .map((torreta) => ({
                     value: torreta.externalId!,
                     label: `${torreta.name} (${torreta.externalId})`,
                   }))}
-                error={formErrors.torretaExternalId}
-              />
-
-              <FormField
-                label="Tipo de Configuración"
-                name="configurationType"
-                required
-                select
-                value={formData.configurationType}
+                value={formData.torretaExternalId}
                 onChange={(value) =>
                   setFormData({
                     ...formData,
-                    configurationType: value as "area" | "department",
+                    torretaExternalId: value as string,
                   })
                 }
+              />
+
+              <FormField
+                required
+                select
+                error={formErrors.configurationType}
+                label="Tipo de Configuración"
+                name="configurationType"
                 options={[
                   {
                     value: "area",
@@ -360,18 +371,24 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
                       "Por Departamento (Color del departamento del evento)",
                   },
                 ]}
-                error={formErrors.configurationType}
+                value={formData.configurationType}
+                onChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    configurationType: value as "area" | "department",
+                  })
+                }
               />
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-600">
                 <Button
                   color="default"
-                  type="button"
-                  variant="solid"
-                  onPress={handleCancel}
                   disabled={
                     createMutation.isPending || updateMutation.isPending
                   }
+                  type="button"
+                  variant="solid"
+                  onPress={handleCancel}
                 >
                   Cancelar
                 </Button>
@@ -397,4 +414,3 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
     </Modal>
   );
 };
-

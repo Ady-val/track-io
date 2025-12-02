@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ReceptorService } from '../application/services/receptor.service';
 import { Receptor } from '../domain/entities/receptor.entity';
@@ -18,8 +19,16 @@ import {
   CreateReceptorDto,
   UpdateReceptorDto,
 } from '../application/dtos/receptor.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('receptors')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class ReceptorController {
   constructor(private readonly receptorService: ReceptorService) {}
 
@@ -70,6 +79,7 @@ export class ReceptorController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.CATALOGS, Action.CREATE)
   async createReceptor(@Body() createDto: CreateReceptorDto): Promise<{
     message: string;
     data: Receptor;
@@ -83,6 +93,7 @@ export class ReceptorController {
   }
 
   @Put(':id')
+  @RequirePermission(Module.CATALOGS, Action.UPDATE)
   async updateReceptor(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateReceptorDto
@@ -99,6 +110,7 @@ export class ReceptorController {
   }
 
   @Patch(':id/toggle')
+  @RequirePermission(Module.CATALOGS, Action.UPDATE)
   async toggleReceptor(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: Receptor;
@@ -113,6 +125,7 @@ export class ReceptorController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.CATALOGS, Action.DELETE)
   async deleteReceptor(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.receptorService.deleteReceptor(id);
   }

@@ -8,10 +8,7 @@ import { AreaTorretaSignalService } from './application/services/area-torreta-si
 import { TypeOrmAreaTorretaConfigRepository } from './domain/repositories/typeorm-area-torreta-config.repository';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([AreaTorretaConfig]),
-    HttpModule,
-  ],
+  imports: [TypeOrmModule.forFeature([AreaTorretaConfig]), HttpModule],
   controllers: [AreaTorretaConfigController],
   providers: [
     AreaTorretaConfigService,
@@ -29,4 +26,3 @@ import { TypeOrmAreaTorretaConfigRepository } from './domain/repositories/typeor
   ],
 })
 export class AreaTorretaConfigModule {}
-

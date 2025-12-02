@@ -1,4 +1,4 @@
-import { EventStatus } from '../../../events/domain/entities/event.entity';
+import type { EventStatus } from '../../../events/domain/entities/event.entity';
 
 export interface DowntimeEvent {
   id: number;

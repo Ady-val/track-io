@@ -46,15 +46,8 @@ export class AlertEvaluationService {
       );
 
       if (rulesForMeasurement.length === 0) {
-        this.logger.debug(
-          `No active alert rules for measurement ID: ${measurement.id}`
-        );
         return;
       }
-
-      this.logger.log(
-        `Evaluating ${rulesForMeasurement.length} rules for measurement: ${measurement.name}`
-      );
 
       // 4. Evaluar cada regla
       for (const rule of rulesForMeasurement) {
@@ -83,8 +76,7 @@ export class AlertEvaluationService {
       return await this.measurementService.getMeasurementByExternalId(
         externalId
       );
-    } catch (_error) {
-      this.logger.debug(`No measurement found for externalId: ${externalId}`);
+    } catch {
       return null;
     }
   }
@@ -154,8 +146,6 @@ export class AlertEvaluationService {
 
     const conditionResult = this.buildConditionResult(rule, value);
 
-    this.logger.warn(`🚨 ALERT TRIGGERED: ${rule.name} - ${conditionResult}`);
-
     try {
       const messages = await this.alertMessageService.getMessagesByAlertRuleId(
         rule.id
@@ -171,7 +161,7 @@ export class AlertEvaluationService {
         messagesTriggered: messageIds,
       });
 
-      this.triggerNotifications(rule, messages, value);
+      this.triggerNotifications(rule, messages);
 
       // Emitir evento WebSocket de alerta disparada
       this.webSocketEmitterService.emitToAll('alert_triggered', {
@@ -218,61 +208,23 @@ export class AlertEvaluationService {
    * Dispara notificaciones según el tipo de mensaje
    */
   private triggerNotifications(
-    rule: AlertRule,
-    messages: AlertMessage[],
-    value: number
+    _rule: AlertRule,
+    messages: AlertMessage[]
   ): void {
     for (const message of messages) {
-      const { receptorType, messageData } = message;
-
-      this.logger.log(
-        `📤 Triggering ${receptorType} notification for rule: ${rule.name}`
-      );
+      const { receptorType } = message;
 
       switch (receptorType) {
         case ReceptorType.TELEGRAM:
-          // TODO: Implementar servicio de Telegram
-          // eslint-disable-next-line no-console
-          console.log('📱 TELEGRAM:', {
-            title: messageData.telegram?.title,
-            text: messageData.telegram?.text,
-            value,
-            ruleName: rule.name,
-          });
           break;
 
         case ReceptorType.TORRETA:
-          // TODO: Implementar servicio de control de torreta
-          // eslint-disable-next-line no-console
-          console.log('🚨 TORRETA:', {
-            torretaId: messageData.torreta?.torretaId,
-            colorId: messageData.torreta?.colorId,
-            value,
-            ruleName: rule.name,
-          });
           break;
 
         case ReceptorType.CORREO:
-          // TODO: Implementar servicio de envío de correo
-          // eslint-disable-next-line no-console
-          console.log('📧 CORREO:', {
-            emails: messageData.correo?.emails,
-            subject: messageData.correo?.subject,
-            message: messageData.correo?.message,
-            value,
-            ruleName: rule.name,
-          });
           break;
 
         case ReceptorType.RECEPTOR:
-          // TODO: Implementar servicio de envío a receptor
-          // eslint-disable-next-line no-console
-          console.log('📟 RECEPTOR:', {
-            receptorId: messageData.receptor?.receptorId,
-            message: messageData.receptor?.message,
-            value,
-            ruleName: rule.name,
-          });
           break;
 
         default:

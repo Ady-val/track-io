@@ -30,4 +30,3 @@ export class EmailResponseDto {
   updatedAt!: Date;
   deletedAt?: Date;
 }
-

@@ -54,7 +54,7 @@ export class User {
   @OneToMany(() => Session, session => session.user)
   sessions?: Session[];
 
-  @ManyToMany(() => Role, (role) => role.users)
+  @ManyToMany(() => Role, role => role.users)
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
@@ -62,6 +62,6 @@ export class User {
   })
   roles?: Role[];
 
-  @OneToMany(() => UserRole, (userRole) => userRole.user)
+  @OneToMany(() => UserRole, userRole => userRole.user)
   userRoles?: UserRole[];
 }

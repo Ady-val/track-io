@@ -7,7 +7,7 @@ import type {
   Email,
 } from "../../types/escalation";
 
-const API_BASE_URL = "http://localhost:3000";
+import apiClient from "../api";
 
 export class EscalationService {
   static async getEscalationConfig(
@@ -15,22 +15,14 @@ export class EscalationService {
     deviceSignalId: number
   ): Promise<EscalationConfig | null> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/alert-escalation-configs/device/${deviceId}/signal/${deviceSignalId}`
+      const response = await apiClient.get<EscalationConfig>(
+        `/alert-escalation-configs/device/${deviceId}/signal/${deviceSignalId}`
       );
 
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const data = await response.json();
-          return data;
-        } else {
-          return null;
-        }
-      }
-      return null;
+      return response.data;
     } catch (error) {
       console.error("Error fetching escalation config:", error);
+
       return null;
     }
   }
@@ -40,18 +32,14 @@ export class EscalationService {
     deviceSignalId: number
   ): Promise<EscalationMessage[]> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/alert-escalation-messages/device/${deviceId}/signal/${deviceSignalId}`
+      const response = await apiClient.get<EscalationMessage[]>(
+        `/alert-escalation-messages/device/${deviceId}/signal/${deviceSignalId}`
       );
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          return await response.json();
-        }
-      }
-      return [];
+
+      return response.data;
     } catch (error) {
       console.error("Error fetching escalation messages:", error);
+
       return [];
     }
   }
@@ -61,8 +49,6 @@ export class EscalationService {
     messages?: EscalationMessage[]
   ): Promise<EscalationConfig | null> {
     try {
-      const url = `${API_BASE_URL}/alert-escalation-configs/save`;
-
       const payload = {
         deviceId: config.deviceId,
         deviceSignalId: config.deviceSignalId,
@@ -82,23 +68,15 @@ export class EscalationService {
           : [],
       };
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await apiClient.post<EscalationConfig>(
+        "/alert-escalation-configs/save",
+        payload
+      );
 
-      if (response.ok) {
-        return await response.json();
-      } else {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        return null;
-      }
+      return response.data;
     } catch (error) {
       console.error("Error saving escalation config:", error);
+
       return null;
     }
   }
@@ -107,23 +85,15 @@ export class EscalationService {
     message: EscalationMessage
   ): Promise<EscalationMessage | null> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/alert-escalation-messages`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(message),
-        }
+      const response = await apiClient.post<EscalationMessage>(
+        "/alert-escalation-messages",
+        message
       );
 
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      return response.data;
     } catch (error) {
       console.error("Error creating escalation message:", error);
+
       return null;
     }
   }
@@ -133,107 +103,86 @@ export class EscalationService {
     message: EscalationMessage
   ): Promise<EscalationMessage | null> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/alert-escalation-messages/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(message),
-        }
+      const response = await apiClient.put<EscalationMessage>(
+        `/alert-escalation-messages/${id}`,
+        message
       );
 
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      return response.data;
     } catch (error) {
       console.error("Error updating escalation message:", error);
+
       return null;
     }
   }
 
   static async deleteEscalationMessage(id: number): Promise<boolean> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/alert-escalation-messages/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      await apiClient.delete(`/alert-escalation-messages/${id}`);
 
-      return response.ok;
+      return true;
     } catch (error) {
       console.error("Error deleting escalation message:", error);
+
       return false;
     }
   }
 
   static async getTorretas(): Promise<Torreta[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/torretas`);
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const result = await response.json();
-          return result.data || [];
-        }
-      }
-      return [];
+      const response = await apiClient.get<{
+        message: string;
+        data: Torreta[];
+      }>("/torretas");
+
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching torretas:", error);
+
       return [];
     }
   }
 
   static async getReceptors(): Promise<Receptor[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/receptors`);
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const result = await response.json();
-          return result.data || [];
-        }
-      }
-      return [];
+      const response = await apiClient.get<{
+        message: string;
+        data: Receptor[];
+      }>("/receptors");
+
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching receptors:", error);
+
       return [];
     }
   }
 
   static async getTorretaColors(): Promise<TorretaColor[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/torreta-colors`);
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const result = await response.json();
-          return result.data || [];
-        }
-      }
-      return [];
+      const response = await apiClient.get<{
+        message: string;
+        data: TorretaColor[];
+      }>("/torreta-colors");
+
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching torreta colors:", error);
+
       return [];
     }
   }
 
   static async getEmails(): Promise<Email[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/emails`);
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const result = await response.json();
-          return result.data || [];
-        }
-      }
-      return [];
+      const response = await apiClient.get<{ message: string; data: Email[] }>(
+        "/emails"
+      );
+
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching emails:", error);
+
       return [];
     }
   }

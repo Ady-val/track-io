@@ -1,7 +1,13 @@
 export interface EscalationMessage {
   id?: number;
   escalationConfigId?: number;
-  level: "alert" | "warning" | "escalation1" | "escalation2" | "escalation3" | "close";
+  level:
+    | "alert"
+    | "warning"
+    | "escalation1"
+    | "escalation2"
+    | "escalation3"
+    | "close";
   messageType: "torreta" | "receptor" | "email";
   targetId: string;
   message: string;
@@ -25,7 +31,13 @@ export interface EscalationConfig {
 }
 
 export interface EscalationLevel {
-  level: "alert" | "warning" | "escalation1" | "escalation2" | "escalation3" | "close";
+  level:
+    | "alert"
+    | "warning"
+    | "escalation1"
+    | "escalation2"
+    | "escalation3"
+    | "close";
   label: string;
   delayMinutes: number;
   messages: EscalationMessage[];

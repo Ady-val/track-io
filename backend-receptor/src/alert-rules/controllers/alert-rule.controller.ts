@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { AlertRuleService } from '../application/services/alert-rule.service';
@@ -19,6 +20,13 @@ import {
   UpdateAlertRuleDto,
   AlertRuleResponseDto,
 } from '../application/dtos/alert-rule.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 interface AlertRuleFilters {
   measurementId?: number;
@@ -27,10 +35,12 @@ interface AlertRuleFilters {
 }
 
 @Controller('alert-rules')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class AlertRuleController {
   constructor(private readonly alertRuleService: AlertRuleService) {}
 
   @Get()
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getAllAlertRules(
     @Query('measurementId') measurementId?: string,
     @Query('isEnabled') isEnabled?: string,
@@ -60,6 +70,7 @@ export class AlertRuleController {
   }
 
   @Get(':id')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getAlertRuleById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AlertRuleResponseDto;
@@ -78,6 +89,7 @@ export class AlertRuleController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.CREATE)
   async createAlertRule(@Body() createDto: CreateAlertRuleDto): Promise<{
     message: string;
     data: AlertRuleResponseDto;
@@ -95,6 +107,7 @@ export class AlertRuleController {
   }
 
   @Put(':id')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.UPDATE)
   async updateAlertRule(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateAlertRuleDto
@@ -115,6 +128,7 @@ export class AlertRuleController {
   }
 
   @Patch(':id/toggle')
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.UPDATE)
   async toggleAlertRule(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AlertRuleResponseDto;
@@ -133,6 +147,7 @@ export class AlertRuleController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.MEASUREMENT_ALERTS, Action.DELETE)
   async deleteAlertRule(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.alertRuleService.deleteAlertRule(id);
   }

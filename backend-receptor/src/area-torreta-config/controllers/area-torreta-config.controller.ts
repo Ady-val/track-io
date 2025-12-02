@@ -25,9 +25,7 @@ export class AreaTorretaConfigController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() createDto: CreateAreaTorretaConfigDto
-  ): Promise<{
+  async create(@Body() createDto: CreateAreaTorretaConfigDto): Promise<{
     message: string;
     data: AreaTorretaConfig;
   }> {
@@ -39,9 +37,7 @@ export class AreaTorretaConfigController {
   }
 
   @Get('area/:areaId')
-  async findAllByArea(
-    @Param('areaId', ParseIntPipe) areaId: number
-  ): Promise<{
+  async findAllByArea(@Param('areaId', ParseIntPipe) areaId: number): Promise<{
     message: string;
     data: AreaTorretaConfig[];
   }> {
@@ -53,9 +49,7 @@ export class AreaTorretaConfigController {
   }
 
   @Get(':id')
-  async findById(
-    @Param('id', ParseIntPipe) id: number
-  ): Promise<{
+  async findById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: AreaTorretaConfig;
   }> {
@@ -87,4 +81,3 @@ export class AreaTorretaConfigController {
     await this.areaTorretaConfigService.delete(id);
   }
 }
-

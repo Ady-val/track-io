@@ -6,11 +6,13 @@ import { User } from './domain/entities/user.entity';
 import { UserRepository } from './domain/repositories/user.repository';
 import { AuthModule } from '../auth/auth.module';
 import { Role } from '../permissions/domain/entities/role.entity';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role]),
     forwardRef(() => AuthModule),
+    forwardRef(() => PermissionsModule),
   ],
   controllers: [UserController],
   providers: [

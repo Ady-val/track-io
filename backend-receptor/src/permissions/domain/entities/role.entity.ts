@@ -7,18 +7,16 @@ import {
   DeleteDateColumn,
   ManyToMany,
   JoinTable,
-  Index,
 } from 'typeorm';
 import { Permission } from './permission.entity';
 import { User } from '../../../users/domain/entities/user.entity';
 
 @Entity('roles')
-@Index(['name'], { unique: true })
 export class Role {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255 })
   name!: string;
 
   @Column({ type: 'text', nullable: true })
@@ -43,7 +41,7 @@ export class Role {
   })
   deletedAt?: Date;
 
-  @ManyToMany(() => Permission, (permission) => permission.roles)
+  @ManyToMany(() => Permission, permission => permission.roles)
   @JoinTable({
     name: 'role_permissions',
     joinColumn: { name: 'role_id', referencedColumnName: 'id' },
@@ -51,7 +49,6 @@ export class Role {
   })
   permissions?: Permission[];
 
-  @ManyToMany(() => User, (user) => user.roles)
+  @ManyToMany(() => User, user => user.roles)
   users?: User[];
 }
-

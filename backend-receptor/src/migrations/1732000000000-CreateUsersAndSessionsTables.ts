@@ -189,4 +189,3 @@ export class CreateUsersAndSessionsTables1732000000000
     await queryRunner.dropTable('users');
   }
 }
-

@@ -26,4 +26,3 @@ export const ValidationErrorList: React.FC<ValidationErrorListProps> = ({
     </div>
   );
 };
-

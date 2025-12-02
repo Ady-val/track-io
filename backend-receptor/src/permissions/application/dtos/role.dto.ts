@@ -34,7 +34,9 @@ export class UpdateRoleDto {
 
 export class AssignPermissionsDto {
   @IsArray({ message: 'permissionIds must be an array' })
-  @ArrayMinSize(1, { message: 'permissionIds must contain at least one permission' })
+  @ArrayMinSize(1, {
+    message: 'permissionIds must contain at least one permission',
+  })
   @IsInt({ each: true, message: 'Each permissionId must be an integer' })
   permissionIds!: number[];
 }
@@ -83,4 +85,3 @@ export class RoleResponseDto {
   @Exclude()
   deletedAt?: Date;
 }
-

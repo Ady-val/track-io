@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Email } from '../../domain/entities/email.entity';
 import {
   EmailRepository,
@@ -72,7 +68,10 @@ export class EmailService {
     try {
       await this.findById(id);
 
-      const updatedEmail = await this.emailRepository.update(id, updateEmailDto);
+      const updatedEmail = await this.emailRepository.update(
+        id,
+        updateEmailDto
+      );
       if (!updatedEmail) {
         throw new NotFoundException(`Email with ID ${id} not found`);
       }
@@ -157,4 +156,3 @@ export class EmailService {
     }
   }
 }
-

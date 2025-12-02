@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import areaTorretaConfigService, {
-  type AreaTorretaConfig,
   type CreateAreaTorretaConfigDto,
   type UpdateAreaTorretaConfigDto,
 } from "@/lib/services/areaTorretaConfig.service";
@@ -60,4 +60,3 @@ export const useDeleteAreaTorretaConfig = () => {
     },
   });
 };
-

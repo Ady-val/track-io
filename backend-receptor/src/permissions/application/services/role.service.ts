@@ -176,13 +176,10 @@ export class RoleService {
     try {
       await this.findById(roleId);
 
-      const permissions = await this.permissionRepository.findByIds(
-        permissionIds
-      );
+      const permissions =
+        await this.permissionRepository.findByIds(permissionIds);
       if (permissions.length !== permissionIds.length) {
-        throw new NotFoundException(
-          'One or more permissions not found'
-        );
+        throw new NotFoundException('One or more permissions not found');
       }
 
       const role = await this.roleRepository.assignPermissions(
@@ -193,9 +190,7 @@ export class RoleService {
         throw new NotFoundException(`Role with ID ${roleId} not found`);
       }
 
-      this.logger.log(
-        `Permissions assigned successfully to role ${roleId}`
-      );
+      this.logger.log(`Permissions assigned successfully to role ${roleId}`);
       return role;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -228,9 +223,7 @@ export class RoleService {
         throw new NotFoundException(`Role with ID ${roleId} not found`);
       }
 
-      this.logger.log(
-        `Permissions removed successfully from role ${roleId}`
-      );
+      this.logger.log(`Permissions removed successfully from role ${roleId}`);
       return role;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -260,4 +253,3 @@ export class RoleService {
     }
   }
 }
-

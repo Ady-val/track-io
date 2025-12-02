@@ -31,21 +31,13 @@ export const useRealtimeMeasurementValues = () => {
   const [history, setHistory] = useState<Record<number, number[]>>({});
 
   const handleMeasurementValue = useCallback((message: WebSocketMessage) => {
-    console.log("📊 [WebSocket] Received new_measurement_value:", message);
-
     const payload = message.data?.data ?? message.data;
 
     if (!payload?.measurementId) {
-      console.error("⚠️ Invalid message format:", message);
-
       return;
     }
 
     const { measurementId, value, createdAt } = payload;
-
-    console.log(
-      `📊 Updating measurementId ${measurementId} with value ${value}`
-    );
 
     const newValue = parseFloat(value);
 
@@ -66,44 +58,25 @@ export const useRealtimeMeasurementValues = () => {
         [measurementId]: newHistory,
       };
     });
-  },
-    []
-  );
+  }, []);
 
   useEffect(() => {
     if (!socket) {
-      console.log("⚠️ Socket not available yet");
-
       return;
     }
-
-    console.log("✅ Subscribing to new_measurement_value event");
-
-    const debugListener = (...args: unknown[]) => {
-      console.log("🔔 [DEBUG] Received event:", args);
-    };
-
-    socket.onAny(debugListener);
 
     socket.on("new_measurement_value", handleMeasurementValue);
 
     return () => {
-      console.log("🔌 Unsubscribing from new_measurement_value event");
-      socket.offAny(debugListener);
       socket.off("new_measurement_value", handleMeasurementValue);
     };
   }, [socket, handleMeasurementValue]);
-
-  useEffect(() => {
-    console.log("📊 Current measurement values state:", values);
-  }, [values]);
 
   return {
     values,
     history,
     getValue: (measurementId: number) => values[measurementId]?.value,
-    getTimestamp: (measurementId: number) =>
-      values[measurementId]?.timestamp,
+    getTimestamp: (measurementId: number) => values[measurementId]?.timestamp,
     getHistory: (measurementId: number) => history[measurementId] ?? [],
   };
 };

@@ -73,7 +73,8 @@ export class AlertEscalationMessageService {
     const updateData: any = {};
     if (updateDto.messageType !== undefined)
       updateData.messageType = updateDto.messageType;
-    if (updateDto.targetId !== undefined) updateData.targetId = updateDto.targetId;
+    if (updateDto.targetId !== undefined)
+      updateData.targetId = updateDto.targetId;
     if (updateDto.message !== undefined) updateData.message = updateDto.message;
     if (updateDto.deviceColorId !== undefined)
       updateData.color = updateDto.deviceColorId;

@@ -124,10 +124,10 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
           </Text>
         </div>
         <Checkbox
-          isSelected={isVirtualDevice}
-          onValueChange={setIsVirtualDevice}
           color="primary"
+          isSelected={isVirtualDevice}
           size="md"
+          onValueChange={setIsVirtualDevice}
         >
           <Text color="secondary" variant="small">
             Dispositivo Virtual (para computadora)

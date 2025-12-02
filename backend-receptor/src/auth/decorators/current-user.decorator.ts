@@ -1,4 +1,4 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 
 export interface CurrentUser {
   id: number;
@@ -11,4 +11,3 @@ export const CurrentUser = createParamDecorator(
     return request.user;
   }
 );
-

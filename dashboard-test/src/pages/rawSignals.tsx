@@ -333,7 +333,14 @@ export default function RawSignalsPage() {
 
   return (
     <>
-      <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100% + 48px)', margin: '-24px', padding: '24px' }}>
+      <div
+        className="flex flex-col overflow-hidden"
+        style={{
+          height: "calc(100% + 48px)",
+          margin: "-24px",
+          padding: "24px",
+        }}
+      >
         <TwoColumnLayout
           footer={
             <Card>
@@ -415,7 +422,9 @@ export default function RawSignalsPage() {
                       handleOpenCreateModal("deviceSignal");
                     }
                   }}
-                  onCreateMeasurement={() => handleOpenCreateModal("measurement")}
+                  onCreateMeasurement={() =>
+                    handleOpenCreateModal("measurement")
+                  }
                 />
               </CardBody>
             </Card>

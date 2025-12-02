@@ -43,9 +43,7 @@ class AreaTorretaConfigService {
     return response.data.data;
   }
 
-  async create(
-    data: CreateAreaTorretaConfigDto
-  ): Promise<AreaTorretaConfig> {
+  async create(data: CreateAreaTorretaConfigDto): Promise<AreaTorretaConfig> {
     try {
       const response = await apiClient.post<{
         message: string;
@@ -54,10 +52,10 @@ class AreaTorretaConfigService {
 
       return response.data.data;
     } catch (error: any) {
-      console.error('Error creating area torreta config:', error);
+      console.error("Error creating area torreta config:", error);
       if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
       }
       throw error;
     }

@@ -1,16 +1,23 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 
-import { FaFloppyDisk, FaXmark, FaPlus, FaTrash, FaGaugeHigh } from "react-icons/fa6";
+import {
+  FaFloppyDisk,
+  FaXmark,
+  FaPlus,
+  FaTrash,
+  FaGaugeHigh,
+} from "react-icons/fa6";
 
 import { Button, Input, Select, Text } from "@components/atoms";
-import { Modal } from "./Modal";
 
 import { useMeasurements } from "@/hooks/useMeasurements";
 import type {
   DashboardMeasurementGroup,
   UpdateDashboardMeasurementGroupData,
 } from "@/types/dashboard-measurement-group";
+
+import { Modal } from "./Modal";
 
 export interface EditDashboardGroupModalProps {
   isOpen: boolean;
@@ -72,12 +79,15 @@ export const EditDashboardGroupModal: React.FC<
     value: string
   ) => {
     const updated = [...measurements];
+
     updated[index] = { ...updated[index], [field]: value };
     setMeasurements(updated);
 
     const errorKey = `${index}-${field}`;
+
     if (errors[errorKey]) {
       const newErrors = { ...errors };
+
       delete newErrors[errorKey];
       setErrors(newErrors);
     }
@@ -118,6 +128,7 @@ export const EditDashboardGroupModal: React.FC<
     });
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -202,8 +213,8 @@ export const EditDashboardGroupModal: React.FC<
             <Button
               color="primary"
               size="sm"
-              variant="flat"
               type="button"
+              variant="flat"
               onPress={handleAddMeasurement}
             >
               <FaPlus className="mr-2" />
@@ -225,8 +236,8 @@ export const EditDashboardGroupModal: React.FC<
                     <Button
                       color="danger"
                       size="sm"
-                      variant="flat"
                       type="button"
+                      variant="flat"
                       onPress={() => handleRemoveMeasurement(index)}
                     >
                       <FaTrash className="w-3 h-3" />
@@ -365,5 +376,3 @@ export const EditDashboardGroupModal: React.FC<
     </Modal>
   );
 };
-
-

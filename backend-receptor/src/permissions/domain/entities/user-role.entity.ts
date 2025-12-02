@@ -25,7 +25,7 @@ export class UserRole {
   })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (user) => user.userRoles, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, user => user.userRoles, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
@@ -33,4 +33,3 @@ export class UserRole {
   @JoinColumn({ name: 'role_id' })
   role?: Role;
 }
-

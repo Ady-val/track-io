@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   HttpCode,
@@ -47,7 +48,8 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Request() req: AuthenticatedRequest
   ): Promise<LoginResponseDto> {
-    const ipAddress = req.ip ?? req.connection?.remoteAddress;
+    // Use || instead of ?? to handle empty strings as falsy and fall back to connection.remoteAddress
+    const ipAddress = req.ip || req.connection?.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
     return await this.authService.login(loginDto, ipAddress, userAgent);
@@ -92,6 +94,36 @@ export class AuthController {
 
     return {
       message: 'All other sessions closed successfully',
+    };
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getCurrentUser(@CurrentUser() user: CurrentUserType): Promise<{
+    message: string;
+    data: {
+      user: {
+        id: number;
+        name: string;
+        username: string;
+      };
+      permissions: Array<{
+        id: number;
+        module: string;
+        action: string;
+        description?: string;
+      }>;
+    };
+  }> {
+    const userPermissions = await this.authService.getUserPermissions(user.id);
+    const userData = await this.authService.getUserData(user.id);
+
+    return {
+      message: 'Current user retrieved successfully',
+      data: {
+        user: userData,
+        permissions: userPermissions,
+      },
     };
   }
 }

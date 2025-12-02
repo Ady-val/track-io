@@ -2,16 +2,12 @@ export enum Module {
   AREAS = 'areas',
   DEPARTMENTS = 'departments',
   DEVICES = 'devices',
-  DEVICE_SIGNALS = 'device-signals',
   MEASUREMENTS = 'measurements',
   SIGNALS = 'signals',
   RAW_MEASUREMENTS = 'raw-measurements',
-  DASHBOARD_MEASUREMENTS = 'dashboard-measurements',
   MESSAGE_GROUPS = 'message-groups',
-  ALERT_RULES = 'alert-rules',
-  ALERT_MESSAGES = 'alert-messages',
+  MEASUREMENT_ALERTS = 'measurement-alerts',
   ALERT_TRIGGERS = 'alert-triggers',
-  ALERT_ESCALATION = 'alert-escalation',
   AREA_DOWNTIME = 'area-downtime',
   AREA_TORRETA_CONFIG = 'area-torreta-config',
   TORRETAS = 'torretas',
@@ -21,8 +17,8 @@ export enum Module {
   EMAILS = 'emails',
   USERS = 'users',
   DASHBOARD = 'dashboard',
-  ROLES = 'roles',
-  PERMISSIONS = 'permissions',
+  ROLES_AND_PERMISSIONS = 'roles-and-permissions',
+  CATALOGS = 'catalogs',
 }
 
 export enum Action {
@@ -33,4 +29,3 @@ export enum Action {
 }
 
 export const ADMIN_USERNAME = 'ADMIN';
-

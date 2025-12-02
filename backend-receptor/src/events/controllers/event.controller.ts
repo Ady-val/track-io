@@ -32,7 +32,6 @@ export class EventController {
       if (statuses.length === 1) {
         filters.status = status as EventStatus;
       } else {
-        // Para múltiples statuses, filtrar después de obtener todos
         const allEvents = await this.eventRepository.findAll(filters);
         return allEvents.filter(event => statuses.includes(event.status));
       }
@@ -71,7 +70,7 @@ export class EventController {
       };
     }
 
-    if (event.status === 'closed') {
+    if (event.status === EventStatus.CLOSED) {
       return {
         message: 'El evento ya está cerrado',
         success: false,

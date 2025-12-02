@@ -92,12 +92,10 @@ export class DashboardMeasurementService {
       await this.measurementService.getMeasurementById(updateDto.measurementId);
     }
 
-    if (updateDto.groupId !== undefined) {
-      if (updateDto.groupId !== null) {
-        await this.groupRepository.findOneOrFail({
-          where: { id: updateDto.groupId },
-        });
-      }
+    if (updateDto.groupId !== undefined && updateDto.groupId !== null) {
+      await this.groupRepository.findOneOrFail({
+        where: { id: updateDto.groupId },
+      });
     }
 
     const newMinValue = updateDto.minValue ?? dashboard.minValue;

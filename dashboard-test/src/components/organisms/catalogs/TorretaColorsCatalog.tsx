@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { Module, Action } from "@/constants/permissions";
 import {
   useTorretaColors,
   useCreateTorretaColor,
@@ -7,6 +8,7 @@ import {
   useDeleteTorretaColor,
   type TorretaColor,
 } from "@/hooks/useCatalogs";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useModalError } from "@/hooks/useModalError";
 
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
@@ -18,6 +20,9 @@ import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function TorretaColorsCatalog() {
+  const hasCreate = useHasPermission(Module.CATALOGS, Action.CREATE);
+  const hasUpdate = useHasPermission(Module.CATALOGS, Action.UPDATE);
+  const hasDelete = useHasPermission(Module.CATALOGS, Action.DELETE);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -174,8 +179,8 @@ export function TorretaColorsCatalog() {
         await deleteColorMutation.mutateAsync(selectedColor.id);
         setIsDeleteModalOpen(false);
         setSelectedColor(null);
-      } catch (error) {
-        console.error("Error deleting color:", error);
+      } catch {
+        errorHandling.setError("Error al eliminar el color");
       }
     }
   };
@@ -205,14 +210,16 @@ export function TorretaColorsCatalog() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button
-          className="ml-4"
-          color="primary"
-          size="lg"
-          onClick={handleCreate}
-        >
-          Crear Color
-        </Button>
+        {hasCreate && (
+          <Button
+            className="ml-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+          >
+            Crear Color
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -221,8 +228,8 @@ export function TorretaColorsCatalog() {
           data={filteredColors}
           emptyMessage="No hay colores registrados"
           loading={isLoading}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onDelete={hasDelete ? handleDelete : undefined}
+          onEdit={hasUpdate ? handleEdit : undefined}
         />
       </div>
 

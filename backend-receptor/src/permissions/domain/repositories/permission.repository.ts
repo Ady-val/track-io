@@ -63,11 +63,16 @@ export class PermissionRepository {
   async findByMultipleModulesAndActions(
     permissions: Array<{ module: Module | string; action: Action | string }>
   ): Promise<Permission[]> {
-    const queryBuilder = this.permissionRepository.createQueryBuilder('permission');
+    const queryBuilder =
+      this.permissionRepository.createQueryBuilder('permission');
 
     permissions.forEach((perm, index) => {
       queryBuilder.orWhere(
-        '(permission.module = :module' + index + ' AND permission.action = :action' + index + ')',
+        '(permission.module = :module' +
+          index +
+          ' AND permission.action = :action' +
+          index +
+          ')',
         {
           [`module${index}`]: perm.module,
           [`action${index}`]: perm.action,
@@ -78,4 +83,3 @@ export class PermissionRepository {
     return await queryBuilder.getMany();
   }
 }
-

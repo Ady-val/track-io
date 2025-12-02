@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { Module, Action } from "@/constants/permissions";
 import {
   useReceptors,
   useCreateReceptor,
@@ -7,6 +8,7 @@ import {
   useDeleteReceptor,
   type Receptor,
 } from "@/hooks/useCatalogs";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useModalError } from "@/hooks/useModalError";
 
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
@@ -18,6 +20,9 @@ import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function ReceptorsCatalog() {
+  const hasCreate = useHasPermission(Module.CATALOGS, Action.CREATE);
+  const hasUpdate = useHasPermission(Module.CATALOGS, Action.UPDATE);
+  const hasDelete = useHasPermission(Module.CATALOGS, Action.DELETE);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -150,8 +155,8 @@ export function ReceptorsCatalog() {
         await deleteReceptorMutation.mutateAsync(selectedReceptor.id);
         setIsDeleteModalOpen(false);
         setSelectedReceptor(null);
-      } catch (error) {
-        console.error("Error deleting receptor:", error);
+      } catch {
+        errorHandling.setError("Error al eliminar el receptor");
       }
     }
   };
@@ -176,14 +181,16 @@ export function ReceptorsCatalog() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button
-          className="ml-4"
-          color="primary"
-          size="lg"
-          onClick={handleCreate}
-        >
-          Crear Receptor
-        </Button>
+        {hasCreate && (
+          <Button
+            className="ml-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+          >
+            Crear Receptor
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -192,8 +199,8 @@ export function ReceptorsCatalog() {
           data={filteredReceptors}
           emptyMessage="No hay receptores registrados"
           loading={isLoading}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onDelete={hasDelete ? handleDelete : undefined}
+          onEdit={hasUpdate ? handleEdit : undefined}
         />
       </div>
 

@@ -41,4 +41,3 @@ export class UpdateAreaTorretaConfigDto {
   @IsBoolean()
   isActive?: boolean;
 }
-

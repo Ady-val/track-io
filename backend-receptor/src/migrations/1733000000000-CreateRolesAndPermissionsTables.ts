@@ -85,7 +85,6 @@ export class CreateRolesAndPermissionsTables1733000000000
             type: 'varchar',
             length: '255',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'description',
@@ -114,15 +113,23 @@ export class CreateRolesAndPermissionsTables1733000000000
       true
     );
 
-    // Create index on roles name
-    await queryRunner.createIndex(
-      'roles',
-      new TableIndex({
-        name: 'IDX_ROLES_NAME',
-        columnNames: ['name'],
-        isUnique: true,
-      })
-    );
+    // Verificar si el índice ya existe antes de crearlo
+    const rolesIndexExists = await queryRunner.query(`
+      SELECT EXISTS (
+        SELECT FROM pg_indexes 
+        WHERE schemaname = 'public' 
+        AND indexname = 'IDX_ROLES_NAME_UNIQUE'
+      );
+    `);
+
+    if (!rolesIndexExists[0]?.exists) {
+      // Crear índice parcial único directamente (solo para roles no eliminados)
+      await queryRunner.query(`
+        CREATE UNIQUE INDEX "IDX_ROLES_NAME_UNIQUE" 
+        ON roles (name) 
+        WHERE deleted_at IS NULL;
+      `);
+    }
 
     // Create user_roles table (junction table)
     await queryRunner.createTable(
@@ -262,30 +269,20 @@ export class CreateRolesAndPermissionsTables1733000000000
 
     // Insert default permissions for all modules
     const modules = [
-      'areas',
-      'departments',
+      'catalogs', // Unifica areas, departments, torretas, torreta-colors, receptors, emails
       'devices',
-      'device-signals',
       'measurements',
       'signals',
       'raw-measurements',
-      'dashboard-measurements',
       'message-groups',
-      'alert-rules',
-      'alert-messages',
+      'measurement-alerts',
       'alert-triggers',
-      'alert-escalation',
       'area-downtime',
       'area-torreta-config',
-      'torretas',
-      'torreta-colors',
-      'receptors',
       'events',
-      'emails',
       'users',
       'dashboard',
-      'roles',
-      'permissions',
+      'roles-and-permissions',
     ];
 
     const actions = ['create', 'read', 'update', 'delete'];
@@ -293,10 +290,12 @@ export class CreateRolesAndPermissionsTables1733000000000
     for (const module of modules) {
       for (const action of actions) {
         const description = `Permission to ${action} ${module}`;
+        // Use parameterized query to prevent SQL injection
         await queryRunner.query(
           `INSERT INTO permissions (module, action, description, created_at, updated_at)
-           VALUES ('${module}', '${action}', '${description.replace(/'/g, "''")}', NOW(), NOW())
-           ON CONFLICT (module, action) DO NOTHING`
+           VALUES ($1, $2, $3, NOW(), NOW())
+           ON CONFLICT (module, action) DO NOTHING`,
+          [module, action, description]
         );
       }
     }
@@ -310,4 +309,3 @@ export class CreateRolesAndPermissionsTables1733000000000
     await queryRunner.dropTable('permissions');
   }
 }
-

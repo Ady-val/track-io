@@ -113,7 +113,7 @@ export class RoleRepository {
     const permissions = await this.roleRepository.manager.find<Permission>(
       Permission,
       {
-        where: permissionIds.map((id) => ({ id })),
+        where: permissionIds.map(id => ({ id })),
       }
     );
 
@@ -126,19 +126,18 @@ export class RoleRepository {
     permissionIds: number[]
   ): Promise<Role | null> {
     const role = await this.findById(roleId, true);
-    if (!role || !role.permissions) {
+    if (!role?.permissions) {
       return null;
     }
 
     role.permissions = role.permissions.filter(
-      (permission) => !permissionIds.includes(permission.id)
+      permission => !permissionIds.includes(permission.id)
     );
     return await this.roleRepository.save(role);
   }
 
-  async getPermissionsByRoleId(roleId: number): Promise<any[]> {
+  async getPermissionsByRoleId(roleId: number): Promise<Permission[]> {
     const role = await this.findById(roleId, true);
     return role?.permissions || [];
   }
 }
-

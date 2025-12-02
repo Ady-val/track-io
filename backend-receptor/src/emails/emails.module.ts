@@ -12,4 +12,3 @@ import { EmailRepository } from './domain/repositories/email.repository';
   exports: [EmailService, EmailRepository],
 })
 export class EmailsModule {}
-

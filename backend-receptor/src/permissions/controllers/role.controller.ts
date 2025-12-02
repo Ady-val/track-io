@@ -35,7 +35,7 @@ export class RoleController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermission(Module.ROLES, Action.CREATE)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.CREATE)
   async create(@Body() createRoleDto: CreateRoleDto): Promise<{
     message: string;
     data: RoleResponseDto;
@@ -53,7 +53,7 @@ export class RoleController {
   }
 
   @Get()
-  @RequirePermission(Module.ROLES, Action.READ)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.READ)
   async findAll(
     @Query('name') name?: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
@@ -91,7 +91,7 @@ export class RoleController {
   }
 
   @Get(':id')
-  @RequirePermission(Module.ROLES, Action.READ)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: RoleResponseDto;
@@ -109,7 +109,7 @@ export class RoleController {
   }
 
   @Patch(':id')
-  @RequirePermission(Module.ROLES, Action.UPDATE)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto
@@ -131,7 +131,7 @@ export class RoleController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequirePermission(Module.ROLES, Action.DELETE)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -143,7 +143,7 @@ export class RoleController {
   }
 
   @Patch(':id/restore')
-  @RequirePermission(Module.ROLES, Action.UPDATE)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: RoleResponseDto;
@@ -161,7 +161,7 @@ export class RoleController {
   }
 
   @Post(':id/permissions')
-  @RequirePermission(Module.ROLES, Action.UPDATE)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.UPDATE)
   async assignPermissions(
     @Param('id', ParseIntPipe) id: number,
     @Body() assignPermissionsDto: AssignPermissionsDto
@@ -185,7 +185,7 @@ export class RoleController {
   }
 
   @Delete(':id/permissions')
-  @RequirePermission(Module.ROLES, Action.UPDATE)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.UPDATE)
   async removePermissions(
     @Param('id', ParseIntPipe) id: number,
     @Body() assignPermissionsDto: AssignPermissionsDto
@@ -209,7 +209,7 @@ export class RoleController {
   }
 
   @Get(':id/permissions')
-  @RequirePermission(Module.ROLES, Action.READ)
+  @RequirePermission(Module.ROLES_AND_PERMISSIONS, Action.READ)
   async getPermissions(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: PermissionResponseDto[];
@@ -230,4 +230,3 @@ export class RoleController {
     };
   }
 }
-

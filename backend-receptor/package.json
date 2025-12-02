@@ -30,9 +30,11 @@
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:show": "npm run typeorm -- migration:show",
     "schema:sync": "npm run typeorm -- schema:sync",
-    "schema:drop": "npm run typeorm -- schema:drop"
+    "schema:drop": "npm run typeorm -- schema:drop",
+    "fix:roles-constraint": "ts-node scripts/fix-roles-unique-constraint.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -53,10 +55,12 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.16.3",
     "react-chartjs-2": "^5.3.0",
+    "react-hook-form": "^7.66.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
-    "typeorm": "^0.3.27"
+    "typeorm": "^0.3.27",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

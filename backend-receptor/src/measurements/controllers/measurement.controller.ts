@@ -12,6 +12,7 @@ import {
   Put,
   Delete,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { MeasurementService } from '../application/services/measurement.service';
@@ -22,13 +23,22 @@ import {
   UpdateMeasurementDto,
   MeasurementResponseDto,
 } from '../application/dtos/measurement.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('measurements')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class MeasurementController {
   constructor(private readonly measurementService: MeasurementService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.MEASUREMENTS, Action.CREATE)
   async createMeasurement(
     @Body() createMeasurementDto: CreateMeasurementDto
   ): Promise<{
@@ -53,6 +63,7 @@ export class MeasurementController {
   }
 
   @Get()
+  @RequirePermission(Module.MEASUREMENTS, Action.READ)
   async getAllMeasurements(
     @Query('externalId') externalId?: string,
     @Query('type') type?: string,
@@ -73,14 +84,10 @@ export class MeasurementController {
 
     const { data, total } =
       await this.measurementService.getAllMeasurements(filters);
-    const measurementResponses = plainToInstance(
-      MeasurementResponseDto,
-      data,
-      {
-        excludeExtraneousValues: true,
-        enableImplicitConversion: true,
-      }
-    );
+    const measurementResponses = plainToInstance(MeasurementResponseDto, data, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
 
     return {
       message: 'Measurements retrieved successfully',
@@ -95,6 +102,7 @@ export class MeasurementController {
   }
 
   @Get('count')
+  @RequirePermission(Module.MEASUREMENTS, Action.READ)
   async getMeasurementsCount(): Promise<{
     message: string;
     count: number;
@@ -108,6 +116,7 @@ export class MeasurementController {
   }
 
   @Get(':id')
+  @RequirePermission(Module.MEASUREMENTS, Action.READ)
   async getMeasurementById(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: MeasurementResponseDto;
@@ -129,6 +138,7 @@ export class MeasurementController {
   }
 
   @Put(':id')
+  @RequirePermission(Module.MEASUREMENTS, Action.UPDATE)
   async updateMeasurement(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMeasurementDto: UpdateMeasurementDto
@@ -157,6 +167,7 @@ export class MeasurementController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.MEASUREMENTS, Action.DELETE)
   async deleteMeasurement(
     @Param('id', ParseIntPipe) id: number
   ): Promise<void> {
@@ -165,6 +176,7 @@ export class MeasurementController {
 
   @Patch(':id/restore')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission(Module.MEASUREMENTS, Action.UPDATE)
   async restoreMeasurement(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -176,6 +188,7 @@ export class MeasurementController {
   }
 
   @Get(':id/values')
+  @RequirePermission(Module.MEASUREMENTS, Action.READ)
   async getMeasurementValues(
     @Param('id', ParseIntPipe) id: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number

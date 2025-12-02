@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { Module, Action } from "@/constants/permissions";
 import {
   useTorretas,
   useCreateTorreta,
@@ -7,11 +8,11 @@ import {
   useDeleteTorreta,
   type Torreta,
 } from "@/hooks/useCatalogs";
-
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useModalError } from "@/hooks/useModalError";
 
-import { Button } from "../../atoms/Button";
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
+import { Button } from "../../atoms/Button";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
@@ -19,6 +20,9 @@ import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function TorretasCatalog() {
+  const hasCreate = useHasPermission(Module.CATALOGS, Action.CREATE);
+  const hasUpdate = useHasPermission(Module.CATALOGS, Action.UPDATE);
+  const hasDelete = useHasPermission(Module.CATALOGS, Action.DELETE);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -142,8 +146,8 @@ export function TorretasCatalog() {
         await deleteTorretaMutation.mutateAsync(selectedTorreta.id);
         setIsDeleteModalOpen(false);
         setSelectedTorreta(null);
-      } catch (error) {
-        console.error("Error deleting torreta:", error);
+      } catch {
+        errorHandling.setError("Error al eliminar la torreta");
       }
     }
   };
@@ -168,14 +172,16 @@ export function TorretasCatalog() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button
-          className="ml-4"
-          color="primary"
-          size="lg"
-          onClick={handleCreate}
-        >
-          Crear Torreta
-        </Button>
+        {hasCreate && (
+          <Button
+            className="ml-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+          >
+            Crear Torreta
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -184,8 +190,8 @@ export function TorretasCatalog() {
           data={filteredTorretas}
           emptyMessage="No hay torretas registradas"
           loading={isLoading}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onDelete={hasDelete ? handleDelete : undefined}
+          onEdit={hasUpdate ? handleEdit : undefined}
         />
       </div>
 

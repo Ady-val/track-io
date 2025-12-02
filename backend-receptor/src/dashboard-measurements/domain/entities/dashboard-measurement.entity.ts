@@ -43,7 +43,7 @@ export class DashboardMeasurement {
 
   @ManyToOne(
     () => DashboardMeasurementGroup,
-    (group) => group.dashboardMeasurements,
+    group => group.dashboardMeasurements,
     { onDelete: 'SET NULL' }
   )
   @JoinColumn({ name: 'group_id' })

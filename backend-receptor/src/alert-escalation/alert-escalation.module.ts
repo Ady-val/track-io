@@ -20,7 +20,7 @@ import { AlertEscalationConfigController } from './controllers/alert-escalation-
 import { AlertEscalationMessageController } from './controllers/alert-escalation-message.controller';
 import { EventAlertLogController } from './controllers/event-alert-log.controller';
 
-import { TypeOrmEventRepository } from '../events/domain/repositories/typeorm-event.repository';
+import { EventsModule } from '../events/events.module';
 import { Event } from '../events/domain/entities/event.entity';
 
 @Module({
@@ -31,13 +31,13 @@ import { Event } from '../events/domain/entities/event.entity';
       EventAlertLog,
       Event,
     ]),
+    EventsModule,
     HttpModule,
   ],
   providers: [
     AlertEscalationConfigRepository,
     AlertEscalationMessageRepository,
     EventAlertLogRepository,
-    TypeOrmEventRepository,
 
     AlertEscalationService,
     AlertCronService,

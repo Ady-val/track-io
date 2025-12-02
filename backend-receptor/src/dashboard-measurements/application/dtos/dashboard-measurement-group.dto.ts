@@ -49,5 +49,3 @@ export class UpdateDashboardMeasurementGroupDto {
   @Type(() => DashboardMeasurementItemDto)
   dashboardMeasurements?: DashboardMeasurementItemDto[];
 }
-
-

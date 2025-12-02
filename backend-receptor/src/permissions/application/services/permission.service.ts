@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { Permission } from '../../domain/entities/permission.entity';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
 import { CreatePermissionDto } from '../dtos/permission.dto';
@@ -8,9 +13,7 @@ import { Module, Action } from '../../constants/permissions.constants';
 export class PermissionService {
   private readonly logger = new Logger(PermissionService.name);
 
-  constructor(
-    private readonly permissionRepository: PermissionRepository
-  ) {}
+  constructor(private readonly permissionRepository: PermissionRepository) {}
 
   async create(createPermissionDto: CreatePermissionDto): Promise<Permission> {
     this.logger.log(
@@ -23,16 +26,17 @@ export class PermissionService {
         createPermissionDto.action
       );
     if (existingPermission) {
-      throw new NotFoundException(
+      throw new ConflictException(
         `Permission ${createPermissionDto.module}:${createPermissionDto.action} already exists`
       );
     }
 
     try {
-      const permission = await this.permissionRepository.create(
-        createPermissionDto
+      const permission =
+        await this.permissionRepository.create(createPermissionDto);
+      this.logger.log(
+        `Permission created successfully with ID: ${permission.id}`
       );
-      this.logger.log(`Permission created successfully with ID: ${permission.id}`);
       return permission;
     } catch (error) {
       this.logger.error(
@@ -79,9 +83,7 @@ export class PermissionService {
       action
     );
     if (!permission) {
-      throw new NotFoundException(
-        `Permission ${module}:${action} not found`
-      );
+      throw new NotFoundException(`Permission ${module}:${action} not found`);
     }
     return permission;
   }
@@ -122,4 +124,3 @@ export class PermissionService {
     this.logger.log('Default permissions initialized');
   }
 }
-

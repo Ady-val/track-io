@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Global, Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -11,6 +11,7 @@ import { SessionRepository } from './domain/repositories/session.repository';
 import { Session } from './domain/entities/session.entity';
 import { UsersModule } from '../users/users.module';
 
+@Global()
 @Module({
   imports: [
     forwardRef(() => UsersModule),
@@ -18,11 +19,15 @@ import { UsersModule } from '../users/users.module';
     TypeOrmModule.forFeature([Session]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret:
-          configService.get<string>('JWT_SECRET') ?? 'your-secret-key-change-in-production',
-        signOptions: {},
-      }),
+      useFactory: (configService: ConfigService) => {
+        const jwtSecret =
+          configService.get<string>('JWT_SECRET') ||
+          'your-secret-key-change-in-production';
+        return {
+          secret: jwtSecret,
+          signOptions: {},
+        };
+      },
       inject: [ConfigService],
     }),
   ],
@@ -31,4 +36,3 @@ import { UsersModule } from '../users/users.module';
   exports: [AuthService, JwtStrategy, JwtAuthGuard, SessionRepository],
 })
 export class AuthModule {}
-

@@ -47,17 +47,15 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const currentSocket = socketRef.current;
 
     const onConnect = () => {
-      console.log("[WebSocket] Connected");
       setIsConnected(true);
     };
 
     const onDisconnect = () => {
-      console.log("[WebSocket] Disconnected");
       setIsConnected(false);
     };
 
-    const onConnectError = (error: Error) => {
-      console.error("[WebSocket] Connection error:", error);
+    const onConnectError = () => {
+      setIsConnected(false);
     };
 
     currentSocket.on("connect", onConnect);

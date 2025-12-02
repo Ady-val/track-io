@@ -5,9 +5,7 @@ import {
   TableIndex,
 } from 'typeorm';
 
-export class CreateRawSignalsTable1704067420000
-  implements MigrationInterface
-{
+export class CreateRawSignalsTable1704067420000 implements MigrationInterface {
   name = 'CreateRawSignalsTable1704067420000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -90,11 +88,15 @@ export class CreateRawSignalsTable1704067420000
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop the trigger
-    await queryRunner.query(`DROP TRIGGER IF EXISTS update_raw_signals_updated_at ON raw_signals;`);
-    
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS update_raw_signals_updated_at ON raw_signals;`
+    );
+
     // Drop the trigger function
-    await queryRunner.query(`DROP FUNCTION IF EXISTS update_updated_at_column();`);
-    
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS update_updated_at_column();`
+    );
+
     // Drop the table
     await queryRunner.dropTable('raw_signals');
   }

@@ -47,12 +47,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
       this.logger.error(`JWT validation error: ${errorName} - ${errorMessage}`);
 
-      if (error instanceof UnauthorizedException) {
-        throw new UnauthorizedException(
-          `JWT validation failed: ${errorMessage}. Please verify JWT_SECRET matches and token is valid.`
-        );
-      }
-
+      // Check for specific JWT error messages first, regardless of exception type
       if (
         errorMessage.includes('expired') ||
         errorMessage.includes('jwt expired')
@@ -67,7 +62,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         );
       } else if (errorMessage.includes('jwt malformed')) {
         throw new UnauthorizedException('Malformed token');
+      } else if (error instanceof UnauthorizedException) {
+        // Handle other UnauthorizedException cases
+        throw new UnauthorizedException(
+          `JWT validation failed: ${errorMessage}. Please verify JWT_SECRET matches and token is valid.`
+        );
       } else {
+        // Handle any other errors
         throw new UnauthorizedException(
           `Token validation failed: ${errorMessage}`
         );

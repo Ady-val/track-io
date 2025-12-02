@@ -584,6 +584,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                                     message.color
                                                 )
                                               : null;
+
                                             return (
                                               <>
                                                 <div
@@ -721,13 +722,13 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                       .map((color) => (
                                         <option
                                           key={color.id}
-                                          value={color.deviceColorId}
                                           style={{
                                             backgroundColor: color.htmlColor,
                                             color: getTextColorForBackground(
                                               color.htmlColor
                                             ),
                                           }}
+                                          value={color.deviceColorId}
                                         >
                                           {color.name} - {color.deviceColorId}
                                         </option>

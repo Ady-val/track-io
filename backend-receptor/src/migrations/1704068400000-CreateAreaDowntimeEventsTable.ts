@@ -143,9 +143,15 @@ export class CreateAreaDowntimeEventsTable1704068400000
     await queryRunner.dropTable('area_downtime_events');
 
     // Agregar de vuelta el campo related_events (aunque no será usado)
-    await queryRunner.query(`
-      ALTER TABLE area_downtimes 
-      ADD COLUMN related_events jsonb
-    `);
+    const hasRelatedEventsColumn = await queryRunner.hasColumn(
+      'area_downtimes',
+      'related_events'
+    );
+    if (!hasRelatedEventsColumn) {
+      await queryRunner.query(`
+        ALTER TABLE area_downtimes 
+        ADD COLUMN related_events jsonb
+      `);
+    }
   }
 }

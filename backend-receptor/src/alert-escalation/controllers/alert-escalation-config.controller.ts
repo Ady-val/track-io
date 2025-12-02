@@ -9,14 +9,23 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { AlertEscalationConfigService } from '../application/services/alert-escalation-config.service';
 import { CreateAlertEscalationConfigDto } from '../application/dtos/create-alert-escalation-config.dto';
 import { UpdateAlertEscalationConfigDto } from '../application/dtos/update-alert-escalation-config.dto';
 import { CreateEscalationConfigWithMessagesDto } from '../application/dtos/create-escalation-config-with-messages.dto';
 import { SaveEscalationConfigDto } from '../application/dtos/save-escalation-config.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('alert-escalation-configs')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class AlertEscalationConfigController {
   constructor(
     private readonly alertEscalationConfigService: AlertEscalationConfigService
@@ -24,12 +33,14 @@ export class AlertEscalationConfigController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.DEVICES, Action.CREATE)
   async create(@Body() createDto: CreateAlertEscalationConfigDto) {
     return await this.alertEscalationConfigService.create(createDto);
   }
 
   @Post('with-messages')
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.DEVICES, Action.CREATE)
   async createWithMessages(
     @Body() createDto: CreateEscalationConfigWithMessagesDto
   ) {
@@ -40,6 +51,7 @@ export class AlertEscalationConfigController {
 
   @Post('save')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission(Module.DEVICES, Action.CREATE)
   async saveEscalationConfig(@Body() saveDto: SaveEscalationConfigDto) {
     return await this.alertEscalationConfigService.saveEscalationConfig(
       saveDto
@@ -47,16 +59,19 @@ export class AlertEscalationConfigController {
   }
 
   @Get()
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findAll() {
     return await this.alertEscalationConfigService.findAll();
   }
 
   @Get(':id')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.alertEscalationConfigService.findById(id);
   }
 
   @Get('device/:deviceId/signal/:deviceSignalId')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async findByDeviceAndSignal(
     @Param('deviceId', ParseIntPipe) deviceId: number,
     @Param('deviceSignalId', ParseIntPipe) deviceSignalId: number
@@ -68,6 +83,7 @@ export class AlertEscalationConfigController {
   }
 
   @Put(':id')
+  @RequirePermission(Module.DEVICES, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateAlertEscalationConfigDto
@@ -77,11 +93,13 @@ export class AlertEscalationConfigController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.DEVICES, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.alertEscalationConfigService.delete(id);
   }
 
   @Get('count/total')
+  @RequirePermission(Module.DEVICES, Action.READ)
   async getCount() {
     const count = await this.alertEscalationConfigService.count();
     return { count };

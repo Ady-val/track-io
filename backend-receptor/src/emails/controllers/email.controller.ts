@@ -11,18 +11,28 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { EmailService } from '../application/services/email.service';
 import { CreateEmailDto, UpdateEmailDto } from '../application/dtos/email.dto';
 import { Email } from '../domain/entities/email.entity';
 import { EmailFilters } from '../domain/repositories/email.repository';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('emails')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.CATALOGS, Action.CREATE)
   async create(@Body() createEmailDto: CreateEmailDto): Promise<{
     message: string;
     data: Email;
@@ -97,6 +107,7 @@ export class EmailController {
   }
 
   @Patch(':id')
+  @RequirePermission(Module.CATALOGS, Action.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateEmailDto: UpdateEmailDto
@@ -114,6 +125,7 @@ export class EmailController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.CATALOGS, Action.DELETE)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
   }> {
@@ -125,6 +137,7 @@ export class EmailController {
   }
 
   @Patch(':id/restore')
+  @RequirePermission(Module.CATALOGS, Action.UPDATE)
   async restore(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: Email;
@@ -137,4 +150,3 @@ export class EmailController {
     };
   }
 }
-

@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { TorretaService } from '../application/services/torreta.service';
@@ -19,8 +20,16 @@ import {
   UpdateTorretaDto,
   TorretaResponseDto,
 } from '../application/dtos/torreta.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('torretas')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class TorretaController {
   constructor(private readonly torretaService: TorretaService) {}
 
@@ -63,6 +72,7 @@ export class TorretaController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.CATALOGS, Action.CREATE)
   async createTorreta(@Body() createDto: CreateTorretaDto): Promise<{
     message: string;
     data: TorretaResponseDto;
@@ -80,6 +90,7 @@ export class TorretaController {
   }
 
   @Put(':id')
+  @RequirePermission(Module.CATALOGS, Action.UPDATE)
   async updateTorreta(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateTorretaDto
@@ -100,6 +111,7 @@ export class TorretaController {
   }
 
   @Patch(':id/toggle')
+  @RequirePermission(Module.CATALOGS, Action.UPDATE)
   async toggleTorreta(@Param('id', ParseIntPipe) id: number): Promise<{
     message: string;
     data: TorretaResponseDto;
@@ -118,6 +130,7 @@ export class TorretaController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission(Module.CATALOGS, Action.DELETE)
   async deleteTorreta(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.torretaService.deleteTorreta(id);
   }

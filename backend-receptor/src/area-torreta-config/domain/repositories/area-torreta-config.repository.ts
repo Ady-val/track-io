@@ -1,4 +1,4 @@
-import {
+import type {
   AreaTorretaConfig,
   TorretaConfigurationType,
 } from '../entities/area-torreta-config.entity';

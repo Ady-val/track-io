@@ -48,5 +48,3 @@ export interface UpdateDashboardMeasurementGroupData {
   name?: string;
   dashboardMeasurements?: DashboardMeasurementItemInput[];
 }
-
-

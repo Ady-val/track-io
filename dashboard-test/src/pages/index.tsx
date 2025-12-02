@@ -13,6 +13,7 @@ import {
 import { DataEmptyState } from "@/components/molecules/DataEmptyState";
 import { DataErrorState } from "@/components/molecules/DataErrorState";
 import { NotificationToast } from "@/components/molecules/NotificationToast";
+import { Module, Action } from "@/constants/permissions";
 import {
   useCreateAlertMessage,
   useUpdateAlertMessage,
@@ -25,6 +26,7 @@ import {
   useDeleteAlertRule,
   useToggleAlertRule,
 } from "@/hooks/useAlertRules";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useMonitoringConditions } from "@/hooks/useMonitoringConditions";
 import { useNotifications } from "@/hooks/useNotifications";
 import type {
@@ -40,6 +42,11 @@ function AlertRules() {
   const [selectedRule, setSelectedRule] = useState<AlertRule | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+
+  const hasCreatePermission = useHasPermission(
+    Module.MEASUREMENT_ALERTS,
+    Action.CREATE
+  );
 
   const {
     alertRules,
@@ -300,22 +307,30 @@ function AlertRules() {
     return (
       <div className="p-6">
         <PageHeader
-          action={{
-            label: "Agregar Condición",
-            icon: <FaTriangleExclamation className="w-5 h-5" />,
-            onClick: handleOpenCreateModal,
-          }}
+          action={
+            hasCreatePermission
+              ? {
+                  label: "Agregar Condición",
+                  icon: <FaTriangleExclamation className="w-5 h-5" />,
+                  onClick: handleOpenCreateModal,
+                }
+              : undefined
+          }
           description="Administra las reglas que definen cuándo se activan las alertas"
           title="Monitoreo de Condiciones"
         />
 
         <div className="mt-6">
           <DataEmptyState
-            action={{
-              label: "Crear Primera Regla",
-              onClick: handleOpenCreateModal,
-              variant: "primary",
-            }}
+            action={
+              hasCreatePermission
+                ? {
+                    label: "Crear Primera Regla",
+                    onClick: handleOpenCreateModal,
+                    variant: "primary",
+                  }
+                : undefined
+            }
             description="No se han configurado reglas de alerta para monitorear las condiciones de los equipos."
             icon={FaTriangleExclamation}
             title="Aún no existen condiciones de alerta"
@@ -350,11 +365,15 @@ function AlertRules() {
   return (
     <div className="p-6">
       <PageHeader
-        action={{
-          label: "Agregar Condición",
-          icon: <FaTriangleExclamation className="w-5 h-5" />,
-          onClick: handleOpenCreateModal,
-        }}
+        action={
+          hasCreatePermission
+            ? {
+                label: "Agregar Condición",
+                icon: <FaTriangleExclamation className="w-5 h-5" />,
+                onClick: handleOpenCreateModal,
+              }
+            : undefined
+        }
         description="Administra las reglas que definen cuándo se activan las alertas"
         title="Monitoreo de Condiciones"
       />

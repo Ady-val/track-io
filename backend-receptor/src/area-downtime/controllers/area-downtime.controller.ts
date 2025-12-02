@@ -9,6 +9,7 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { AreaDowntimeService } from '../application/services/area-downtime.service';
 import { AreaDowntimeMappingService } from '../application/services/area-downtime-mapping.service';
@@ -19,8 +20,16 @@ import type {
   AreaDowntimeResponse,
   DowntimeEvent,
 } from '../application/types/area-downtime.types';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PermissionGuard } from '../../permissions/guards/permission.guard';
+import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
+import {
+  Module,
+  Action,
+} from '../../permissions/constants/permissions.constants';
 
 @Controller('area-downtime')
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class AreaDowntimeController {
   constructor(
     private readonly areaDowntimeService: AreaDowntimeService,
@@ -29,6 +38,7 @@ export class AreaDowntimeController {
   ) {}
 
   @Get()
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async getAllAreaDowntimes(
     @Query('areaId', new DefaultValuePipe(undefined)) areaId?: number,
     @Query('isActive', new DefaultValuePipe(undefined)) isActive?: boolean,
@@ -67,6 +77,7 @@ export class AreaDowntimeController {
   }
 
   @Get('area/:areaId')
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async getDowntimeHistoryForArea(
     @Param('areaId', ParseIntPipe) areaId: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
@@ -94,6 +105,7 @@ export class AreaDowntimeController {
   }
 
   @Get('area/:areaId/active')
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async getActiveDowntimeForArea(
     @Param('areaId', ParseIntPipe) areaId: number
   ): Promise<{
@@ -116,6 +128,7 @@ export class AreaDowntimeController {
   }
 
   @Get('area/:areaId/status')
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async checkAreaDowntimeStatus(
     @Param('areaId', ParseIntPipe) areaId: number
   ): Promise<{
@@ -135,6 +148,7 @@ export class AreaDowntimeController {
 
   @Post('area/:areaId/start')
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.AREA_DOWNTIME, Action.CREATE)
   async startDowntime(
     @Param('areaId', ParseIntPipe) areaId: number,
     @Body() body: { relatedEventIds?: number[] }
@@ -155,6 +169,7 @@ export class AreaDowntimeController {
 
   @Post('area/:areaId/end')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission(Module.AREA_DOWNTIME, Action.UPDATE)
   async endDowntime(@Param('areaId', ParseIntPipe) areaId: number): Promise<{
     message: string;
     success: boolean;
@@ -170,6 +185,7 @@ export class AreaDowntimeController {
   }
 
   @Get('count')
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async getAreaDowntimeCount(
     @Query('areaId', new DefaultValuePipe(undefined)) areaId?: number,
     @Query('isActive', new DefaultValuePipe(undefined)) isActive?: boolean
@@ -190,6 +206,7 @@ export class AreaDowntimeController {
   }
 
   @Get(':downtimeId/events')
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async getRelatedEventsForDowntime(
     @Param('downtimeId', ParseIntPipe) downtimeId: number
   ): Promise<{
@@ -209,6 +226,7 @@ export class AreaDowntimeController {
   }
 
   @Get('event/:eventId/downtime')
+  @RequirePermission(Module.AREA_DOWNTIME, Action.READ)
   async getDowntimeForEvent(
     @Param('eventId', ParseIntPipe) eventId: number
   ): Promise<{

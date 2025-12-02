@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 
-import type { DashboardMeasurementGroup } from "@/types/dashboard-measurement-group";
-
 import dashboardMeasurementGroupService from "@/lib/services/dashboard-measurement-group.service";
+import type { DashboardMeasurementGroup } from "@/types/dashboard-measurement-group";
 
 export const useDashboardMeasurementGroups = () => {
   const [groups, setGroups] = useState<DashboardMeasurementGroup[]>([]);
@@ -39,5 +38,3 @@ export const useDashboardMeasurementGroups = () => {
     refetch: fetchGroups,
   };
 };
-
-

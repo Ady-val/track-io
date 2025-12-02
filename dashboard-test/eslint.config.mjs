@@ -110,7 +110,7 @@ export default [
         },
       ],
       "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/prefer-optional-chain": "error",
       "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",

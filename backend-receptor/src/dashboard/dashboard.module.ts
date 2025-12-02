@@ -8,7 +8,3 @@ import { DashboardService } from './application/services/dashboard.service';
   exports: [DashboardService],
 })
 export class DashboardModule {}
-
-
-
-

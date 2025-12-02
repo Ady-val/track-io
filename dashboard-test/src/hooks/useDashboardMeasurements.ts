@@ -1,33 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
+import apiClient from "@/lib/api";
 import type { DashboardMeasurement } from "@/types/dashboard";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export const useDashboardMeasurements = (groupId?: number | null) => {
   const [dashboards, setDashboards] = useState<DashboardMeasurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboards = async () => {
+  const fetchDashboards = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const url = new URL(`${API_BASE_URL}/dashboard-measurements`);
-      if (groupId) {
-        url.searchParams.append("groupId", groupId.toString());
-      }
+      const response = await apiClient.get<{
+        message: string;
+        data: DashboardMeasurement[];
+        total: number;
+      }>("/dashboard-measurements", {
+        params: groupId ? { groupId: groupId.toString() } : {},
+      });
 
-      const response = await fetch(url.toString());
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      setDashboards(result.data ?? []);
+      setDashboards(response.data.data ?? []);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch dashboards";
@@ -37,11 +31,11 @@ export const useDashboardMeasurements = (groupId?: number | null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
     fetchDashboards();
-  }, [groupId]);
+  }, [fetchDashboards]);
 
   return {
     dashboards,

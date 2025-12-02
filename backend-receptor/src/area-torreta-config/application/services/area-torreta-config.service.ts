@@ -21,9 +21,7 @@ export class AreaTorretaConfigService {
   private torretaRepository?: TorretaRepository;
   private areaTorretaConfigRepository?: TypeOrmAreaTorretaConfigRepository;
 
-  constructor(
-    private readonly moduleRef: ModuleRef
-  ) {}
+  constructor(private readonly moduleRef: ModuleRef) {}
 
   private getAreaTorretaConfigRepository(): TypeOrmAreaTorretaConfigRepository {
     if (!this.areaTorretaConfigRepository) {
@@ -32,7 +30,9 @@ export class AreaTorretaConfigService {
       });
 
       if (!repo) {
-        throw new Error('TypeOrmAreaTorretaConfigRepository provider is not available');
+        throw new Error(
+          'TypeOrmAreaTorretaConfigRepository provider is not available'
+        );
       }
 
       this.areaTorretaConfigRepository = repo;
@@ -78,9 +78,7 @@ export class AreaTorretaConfigService {
   ): Promise<AreaTorretaConfig> {
     const area = await this.getAreaRepository().findById(createDto.areaId);
     if (!area) {
-      throw new NotFoundException(
-        `Area with ID ${createDto.areaId} not found`
-      );
+      throw new NotFoundException(`Area with ID ${createDto.areaId} not found`);
     }
 
     const torreta = await this.getTorretaRepository().findOne({
@@ -92,10 +90,11 @@ export class AreaTorretaConfigService {
       );
     }
 
-    const existing = await this.getAreaTorretaConfigRepository().findByAreaAndTorreta(
-      createDto.areaId,
-      createDto.torretaExternalId
-    );
+    const existing =
+      await this.getAreaTorretaConfigRepository().findByAreaAndTorreta(
+        createDto.areaId,
+        createDto.torretaExternalId
+      );
     if (existing) {
       throw new ConflictException(
         `Configuration already exists for area ${createDto.areaId} and torreta ${createDto.torretaExternalId}`
@@ -103,9 +102,8 @@ export class AreaTorretaConfigService {
     }
 
     try {
-      const config = await this.getAreaTorretaConfigRepository().createConfig(
-        createDto
-      );
+      const config =
+        await this.getAreaTorretaConfigRepository().createConfig(createDto);
       this.logger.log(
         `Created area torreta config for area ${createDto.areaId} and torreta ${createDto.torretaExternalId}`
       );

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { Module, Action } from "@/constants/permissions";
 import {
   useAreas,
   useCreateArea,
@@ -7,6 +8,7 @@ import {
   useDeleteArea,
   type Area,
 } from "@/hooks/useCatalogs";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useModalError } from "@/hooks/useModalError";
 
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
@@ -17,9 +19,13 @@ import { DataTable, type TableColumn } from "../../molecules/DataTable";
 import { FormField } from "../../molecules/FormField";
 import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
+
 import { AreaTorretaConfigModal } from "./AreaTorretaConfigModal";
 
 export function AreasCatalog() {
+  const hasCreate = useHasPermission(Module.CATALOGS, Action.CREATE);
+  const hasUpdate = useHasPermission(Module.CATALOGS, Action.UPDATE);
+  const hasDelete = useHasPermission(Module.CATALOGS, Action.DELETE);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -153,8 +159,8 @@ export function AreasCatalog() {
         await deleteAreaMutation.mutateAsync(selectedArea.id);
         setIsDeleteModalOpen(false);
         setSelectedArea(null);
-      } catch (error) {
-        console.error("Error deleting area:", error);
+      } catch {
+        errorHandling.handleError();
       }
     }
   };
@@ -179,14 +185,16 @@ export function AreasCatalog() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button
-          className="ml-4"
-          color="primary"
-          size="lg"
-          onClick={handleCreate}
-        >
-          Crear Área
-        </Button>
+        {hasCreate && (
+          <Button
+            className="ml-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+          >
+            Crear Área
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -195,8 +203,8 @@ export function AreasCatalog() {
           data={areas}
           emptyMessage="No hay áreas registradas"
           loading={isLoading}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onDelete={hasDelete ? handleDelete : undefined}
+          onEdit={hasUpdate ? handleEdit : undefined}
         />
       </div>
 

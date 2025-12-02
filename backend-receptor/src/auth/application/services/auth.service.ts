@@ -159,5 +159,25 @@ export class AuthService {
       return null;
     }
   }
-}
 
+  async getUserPermissions(
+    userId: number
+  ): Promise<
+    Array<{ id: number; module: string; action: string; description?: string }>
+  > {
+    return await this.userService.getUserPermissions(userId);
+  }
+
+  async getUserData(userId: number): Promise<{
+    id: number;
+    name: string;
+    username: string;
+  }> {
+    const user = await this.userService.findById(userId);
+    return {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+    };
+  }
+}

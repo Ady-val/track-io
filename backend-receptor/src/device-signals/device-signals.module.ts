@@ -8,9 +8,13 @@ import { DeviceRepository } from '../devices/domain/repositories/device.reposito
 import { DepartmentRepository } from '../departments/domain/repositories/department.repository';
 import { Device } from '../devices/domain/entities/device.entity';
 import { Department } from '../departments/domain/entities/department.entity';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DeviceSignal, Device, Department])],
+  imports: [
+    TypeOrmModule.forFeature([DeviceSignal, Device, Department]),
+    PermissionsModule,
+  ],
   controllers: [DeviceSignalController],
   providers: [
     DeviceSignalService,

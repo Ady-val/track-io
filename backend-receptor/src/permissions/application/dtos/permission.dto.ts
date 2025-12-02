@@ -34,4 +34,3 @@ export class PermissionResponseDto {
   @Expose()
   updatedAt!: Date;
 }
-

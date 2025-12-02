@@ -4,10 +4,17 @@ export class RefactorAlertMessagesTable1704067800000
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-      ALTER TABLE alert_messages 
-      ADD COLUMN message_data jsonb;
-    `);
+    const hasMessageData = await queryRunner.hasColumn(
+      'alert_messages',
+      'message_data'
+    );
+
+    if (!hasMessageData) {
+      await queryRunner.query(`
+        ALTER TABLE alert_messages 
+        ADD COLUMN message_data jsonb;
+      `);
+    }
 
     await queryRunner.query(`
       UPDATE alert_messages 
@@ -49,29 +56,75 @@ export class RefactorAlertMessagesTable1704067800000
       WHERE receptor_type = 'generico';
     `);
 
-    // Drop old columns
-    await queryRunner.query(`
-      ALTER TABLE alert_messages 
-      DROP COLUMN receptor_id,
-      DROP COLUMN receptor_name,
-      DROP COLUMN message_content;
-    `);
+    // Drop old columns (verificar si existen antes de eliminarlas)
+    const hasReceptorId = await queryRunner.hasColumn(
+      'alert_messages',
+      'receptor_id'
+    );
+    const hasReceptorName = await queryRunner.hasColumn(
+      'alert_messages',
+      'receptor_name'
+    );
+    const hasMessageContent = await queryRunner.hasColumn(
+      'alert_messages',
+      'message_content'
+    );
 
-    // Set message_data as NOT NULL
-    await queryRunner.query(`
-      ALTER TABLE alert_messages 
-      ALTER COLUMN message_data SET NOT NULL;
-    `);
+    if (hasReceptorId || hasReceptorName || hasMessageContent) {
+      const columnsToDrop: string[] = [];
+      if (hasReceptorId) columnsToDrop.push('DROP COLUMN receptor_id');
+      if (hasReceptorName) columnsToDrop.push('DROP COLUMN receptor_name');
+      if (hasMessageContent) columnsToDrop.push('DROP COLUMN message_content');
+
+      if (columnsToDrop.length > 0) {
+        await queryRunner.query(`
+          ALTER TABLE alert_messages 
+          ${columnsToDrop.join(',\n      ')};
+        `);
+      }
+    }
+
+    // Set message_data as NOT NULL (solo si la columna existe y es nullable)
+    const alertMessagesTable = await queryRunner.getTable('alert_messages');
+    const messageDataColumn =
+      alertMessagesTable?.findColumnByName('message_data');
+    if (messageDataColumn?.isNullable) {
+      await queryRunner.query(`
+        ALTER TABLE alert_messages 
+        ALTER COLUMN message_data SET NOT NULL;
+      `);
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Add back old columns
-    await queryRunner.query(`
-      ALTER TABLE alert_messages 
-      ADD COLUMN receptor_id varchar(255),
-      ADD COLUMN receptor_name varchar(255),
-      ADD COLUMN message_content text;
-    `);
+    // Add back old columns (verificar si existen antes de agregarlas)
+    const hasReceptorId = await queryRunner.hasColumn(
+      'alert_messages',
+      'receptor_id'
+    );
+    const hasReceptorName = await queryRunner.hasColumn(
+      'alert_messages',
+      'receptor_name'
+    );
+    const hasMessageContent = await queryRunner.hasColumn(
+      'alert_messages',
+      'message_content'
+    );
+
+    const columnsToAdd: string[] = [];
+    if (!hasReceptorId)
+      columnsToAdd.push('ADD COLUMN receptor_id varchar(255)');
+    if (!hasReceptorName)
+      columnsToAdd.push('ADD COLUMN receptor_name varchar(255)');
+    if (!hasMessageContent)
+      columnsToAdd.push('ADD COLUMN message_content text');
+
+    if (columnsToAdd.length > 0) {
+      await queryRunner.query(`
+        ALTER TABLE alert_messages 
+        ${columnsToAdd.join(',\n      ')};
+      `);
+    }
 
     // Migrate data back (best effort)
     await queryRunner.query(`
@@ -89,10 +142,16 @@ export class RefactorAlertMessagesTable1704067800000
         );
     `);
 
-    // Drop new column
-    await queryRunner.query(`
-      ALTER TABLE alert_messages 
-      DROP COLUMN message_data;
-    `);
+    // Drop new column (verificar si existe antes de eliminarla)
+    const hasMessageData = await queryRunner.hasColumn(
+      'alert_messages',
+      'message_data'
+    );
+    if (hasMessageData) {
+      await queryRunner.query(`
+        ALTER TABLE alert_messages 
+        DROP COLUMN message_data;
+      `);
+    }
   }
 }

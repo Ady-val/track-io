@@ -12,6 +12,8 @@ import {
   FaCog,
 } from "react-icons/fa";
 
+import { Module, Action } from "../../constants/permissions";
+import { useHasPermission } from "../../hooks/useHasPermission";
 import { Button } from "../atoms/Button";
 import { Spinner } from "../atoms/Spinner";
 
@@ -47,6 +49,9 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
   onDeleteSignal,
   onConfigureEscalation,
 }) => {
+  const hasUpdatePermission = useHasPermission(Module.DEVICES, Action.UPDATE);
+  const hasDeletePermission = useHasPermission(Module.DEVICES, Action.DELETE);
+  const hasCreatePermission = useHasPermission(Module.DEVICES, Action.CREATE);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   const toggleRow = (id: number) => {
@@ -127,36 +132,42 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap text-center w-32">
                     <div className="flex items-center justify-center space-x-1">
-                      <Button
-                        className="flex items-center justify-center w-8 h-8 font-semibold text-white"
-                        color="warning"
-                        size="sm"
-                        title="Editar dispositivo"
-                        variant="solid"
-                        onPress={() => onEditDevice?.(device)}
-                      >
-                        <FaEdit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        className="flex items-center justify-center w-8 h-8 font-semibold"
-                        color="primary"
-                        size="sm"
-                        title="Agregar señal"
-                        variant="solid"
-                        onPress={() => onAddSignal?.(device)}
-                      >
-                        <FaPlus className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        className="flex items-center justify-center w-8 h-8 font-semibold"
-                        color="danger"
-                        size="sm"
-                        title="Eliminar dispositivo"
-                        variant="solid"
-                        onPress={() => onDeleteDevice?.(device)}
-                      >
-                        <FaTrash className="w-4 h-4" />
-                      </Button>
+                      {hasUpdatePermission && (
+                        <Button
+                          className="flex items-center justify-center w-8 h-8 font-semibold text-white"
+                          color="warning"
+                          size="sm"
+                          title="Editar dispositivo"
+                          variant="solid"
+                          onPress={() => onEditDevice?.(device)}
+                        >
+                          <FaEdit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {hasCreatePermission && (
+                        <Button
+                          className="flex items-center justify-center w-8 h-8 font-semibold"
+                          color="primary"
+                          size="sm"
+                          title="Agregar señal"
+                          variant="solid"
+                          onPress={() => onAddSignal?.(device)}
+                        >
+                          <FaPlus className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {hasDeletePermission && (
+                        <Button
+                          className="flex items-center justify-center w-8 h-8 font-semibold"
+                          color="danger"
+                          size="sm"
+                          title="Eliminar dispositivo"
+                          variant="solid"
+                          onPress={() => onDeleteDevice?.(device)}
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -221,45 +232,51 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
                                       </td>
                                       <td className="px-2 py-3 text-center w-32">
                                         <div className="flex items-center justify-center space-x-1">
-                                          <Button
-                                            className="flex items-center justify-center w-8 h-8 font-semibold text-white"
-                                            color="warning"
-                                            size="sm"
-                                            title="Editar señal"
-                                            variant="solid"
-                                            onPress={() =>
-                                              onEditSignal?.(signal, device)
-                                            }
-                                          >
-                                            <FaEdit className="w-4 h-4" />
-                                          </Button>
-                                          <Button
-                                            className="flex items-center justify-center w-8 h-8 font-semibold"
-                                            color="primary"
-                                            size="sm"
-                                            title="Configurar escalamientos"
-                                            variant="solid"
-                                            onPress={() =>
-                                              onConfigureEscalation?.(
-                                                signal,
-                                                device
-                                              )
-                                            }
-                                          >
-                                            <FaCog className="w-4 h-4" />
-                                          </Button>
-                                          <Button
-                                            className="flex items-center justify-center w-8 h-8 font-semibold"
-                                            color="danger"
-                                            size="sm"
-                                            title="Eliminar señal"
-                                            variant="solid"
-                                            onPress={() =>
-                                              onDeleteSignal?.(signal, device)
-                                            }
-                                          >
-                                            <FaTrash className="w-4 h-4" />
-                                          </Button>
+                                          {hasUpdatePermission && (
+                                            <Button
+                                              className="flex items-center justify-center w-8 h-8 font-semibold text-white"
+                                              color="warning"
+                                              size="sm"
+                                              title="Editar señal"
+                                              variant="solid"
+                                              onPress={() =>
+                                                onEditSignal?.(signal, device)
+                                              }
+                                            >
+                                              <FaEdit className="w-4 h-4" />
+                                            </Button>
+                                          )}
+                                          {hasUpdatePermission && (
+                                            <Button
+                                              className="flex items-center justify-center w-8 h-8 font-semibold"
+                                              color="primary"
+                                              size="sm"
+                                              title="Configurar escalamientos"
+                                              variant="solid"
+                                              onPress={() =>
+                                                onConfigureEscalation?.(
+                                                  signal,
+                                                  device
+                                                )
+                                              }
+                                            >
+                                              <FaCog className="w-4 h-4" />
+                                            </Button>
+                                          )}
+                                          {hasDeletePermission && (
+                                            <Button
+                                              className="flex items-center justify-center w-8 h-8 font-semibold"
+                                              color="danger"
+                                              size="sm"
+                                              title="Eliminar señal"
+                                              variant="solid"
+                                              onPress={() =>
+                                                onDeleteSignal?.(signal, device)
+                                              }
+                                            >
+                                              <FaTrash className="w-4 h-4" />
+                                            </Button>
+                                          )}
                                         </div>
                                       </td>
                                     </tr>

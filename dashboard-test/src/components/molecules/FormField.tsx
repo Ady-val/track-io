@@ -63,11 +63,13 @@ export function FormField({
       ) : (
         <Input
           autoFocus={autoFocus}
-          className={
-            error
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : ""
-          }
+          classNames={{
+            inputWrapper: error
+              ? "bg-slate-700 border-slate-600 hover:border-slate-500 focus-within:border-red-500 border-red-500"
+              : "bg-slate-700 border-slate-600 hover:border-slate-500 focus-within:border-blue-500",
+            input: "!text-white placeholder:text-slate-400",
+            label: "!text-white text-sm",
+          }}
           disabled={disabled}
           id={fieldId}
           name={name}
@@ -75,6 +77,7 @@ export function FormField({
           required={required}
           type={type}
           value={String(value)}
+          variant="bordered"
           onChange={(e) => onChange(e.target.value)}
         />
       )}

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { Module, Action } from "@/constants/permissions";
 import {
   useDepartments,
   useCreateDepartment,
@@ -7,11 +8,11 @@ import {
   useDeleteDepartment,
   type Department,
 } from "@/hooks/useCatalogs";
-
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useModalError } from "@/hooks/useModalError";
 
-import { Button } from "../../atoms/Button";
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
+import { Button } from "../../atoms/Button";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
@@ -20,6 +21,9 @@ import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
 
 export function DepartmentsCatalog() {
+  const hasCreate = useHasPermission(Module.CATALOGS, Action.CREATE);
+  const hasUpdate = useHasPermission(Module.CATALOGS, Action.UPDATE);
+  const hasDelete = useHasPermission(Module.CATALOGS, Action.DELETE);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -145,8 +149,8 @@ export function DepartmentsCatalog() {
         await deleteDepartmentMutation.mutateAsync(selectedDepartment.id);
         setIsDeleteModalOpen(false);
         setSelectedDepartment(null);
-      } catch (error) {
-        console.error("Error deleting department:", error);
+      } catch {
+        errorHandling.setError("Error al eliminar el departamento");
       }
     }
   };
@@ -171,14 +175,16 @@ export function DepartmentsCatalog() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button
-          className="ml-4"
-          color="primary"
-          size="lg"
-          onClick={handleCreate}
-        >
-          Crear Departamento
-        </Button>
+        {hasCreate && (
+          <Button
+            className="ml-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+          >
+            Crear Departamento
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -187,8 +193,8 @@ export function DepartmentsCatalog() {
           data={departments}
           emptyMessage="No hay departamentos registrados"
           loading={isLoading}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onDelete={hasDelete ? handleDelete : undefined}
+          onEdit={hasUpdate ? handleEdit : undefined}
         />
       </div>
 

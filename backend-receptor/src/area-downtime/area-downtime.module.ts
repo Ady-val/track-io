@@ -10,9 +10,7 @@ import { AreaDowntimeController } from './controllers/area-downtime.controller';
 import { Event } from '../events/domain/entities/event.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([AreaDowntime, AreaDowntimeEvent, Event]),
-  ],
+  imports: [TypeOrmModule.forFeature([AreaDowntime, AreaDowntimeEvent, Event])],
   controllers: [AreaDowntimeController],
   providers: [
     AreaDowntimeService,
@@ -27,4 +25,3 @@ import { Event } from '../events/domain/entities/event.entity';
   ],
 })
 export class AreaDowntimeModule {}
-

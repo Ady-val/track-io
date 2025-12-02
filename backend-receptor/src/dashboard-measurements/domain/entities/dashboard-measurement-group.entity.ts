@@ -28,8 +28,7 @@ export class DashboardMeasurementGroup {
 
   @OneToMany(
     () => DashboardMeasurement,
-    (dashboardMeasurement) => dashboardMeasurement.group
+    dashboardMeasurement => dashboardMeasurement.group
   )
   dashboardMeasurements!: DashboardMeasurement[];
 }
-

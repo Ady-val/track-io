@@ -50,7 +50,8 @@ export function parseApiError(
     const apiError = error as ApiError;
     const status = apiError.response?.status;
 
-    let serverMessage = apiError.response?.data?.message ?? apiError.response?.data?.error;
+    let serverMessage =
+      apiError.response?.data?.message ?? apiError.response?.data?.error;
 
     if (!serverMessage && "message" in apiError) {
       const errorMessage = (apiError as { message: string }).message;
@@ -154,4 +155,3 @@ export function getUserFriendlyMessage(error: unknown): string {
 
   return parsed.message;
 }
-

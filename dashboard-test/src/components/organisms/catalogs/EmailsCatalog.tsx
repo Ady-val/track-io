@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { Module, Action } from "@/constants/permissions";
 import {
   useEmails,
   useCreateEmail,
@@ -7,11 +8,11 @@ import {
   useDeleteEmail,
   type Email,
 } from "@/hooks/useCatalogs";
-
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useModalError } from "@/hooks/useModalError";
 
-import { Button } from "../../atoms/Button";
 import { ErrorMessage, ValidationErrorList } from "../../atoms";
+import { Button } from "../../atoms/Button";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
@@ -20,6 +21,9 @@ import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
 
 export function EmailsCatalog() {
+  const hasCreate = useHasPermission(Module.CATALOGS, Action.CREATE);
+  const hasUpdate = useHasPermission(Module.CATALOGS, Action.UPDATE);
+  const hasDelete = useHasPermission(Module.CATALOGS, Action.DELETE);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -144,8 +148,8 @@ export function EmailsCatalog() {
         await deleteEmailMutation.mutateAsync(selectedEmail.id);
         setIsDeleteModalOpen(false);
         setSelectedEmail(null);
-      } catch (error) {
-        console.error("Error deleting email:", error);
+      } catch {
+        errorHandling.setError("Error al eliminar el email");
       }
     }
   };
@@ -170,14 +174,16 @@ export function EmailsCatalog() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button
-          className="ml-4"
-          color="primary"
-          size="lg"
-          onClick={handleCreate}
-        >
-          Crear Correo
-        </Button>
+        {hasCreate && (
+          <Button
+            className="ml-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+          >
+            Crear Correo
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -186,8 +192,8 @@ export function EmailsCatalog() {
           data={emails}
           emptyMessage="No hay correos registrados"
           loading={isLoading}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onDelete={hasDelete ? handleDelete : undefined}
+          onEdit={hasUpdate ? handleEdit : undefined}
         />
       </div>
 
@@ -295,4 +301,3 @@ export function EmailsCatalog() {
     </div>
   );
 }
-
