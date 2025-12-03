@@ -143,7 +143,7 @@ export const CreateDeviceSignalForm: React.FC<CreateDeviceSignalFormProps> = ({
           color="default"
           disabled={isLoading}
           size="md"
-          variant="flat"
+          variant="solid"
           onClick={onCancel}
         >
           <FaXmark className="mr-2" />

@@ -305,7 +305,7 @@ function AlertRules() {
 
   if (alertRules.length === 0) {
     return (
-      <div className="p-6">
+      <div className="flex flex-col h-full p-6">
         <PageHeader
           action={
             hasCreatePermission
@@ -320,7 +320,7 @@ function AlertRules() {
           title="Monitoreo de Condiciones"
         />
 
-        <div className="mt-6">
+        <div className="mt-6 flex-1 overflow-y-auto dark-scrollbar pr-2">
           <DataEmptyState
             action={
               hasCreatePermission
@@ -363,7 +363,7 @@ function AlertRules() {
   }
 
   return (
-    <div className="p-6">
+    <div className="flex flex-col h-full p-6">
       <PageHeader
         action={
           hasCreatePermission
@@ -378,7 +378,7 @@ function AlertRules() {
         title="Monitoreo de Condiciones"
       />
 
-      <div className="mt-6">
+      <div className="mt-6 flex-1 overflow-y-auto dark-scrollbar pr-2">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {alertRules.map((rule) => (
             <CompactAlertCard

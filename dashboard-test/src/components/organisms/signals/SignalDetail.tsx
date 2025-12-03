@@ -91,7 +91,7 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-600 flex-shrink-0">
         <Text variant="h3">Detalles del Registro</Text>
-        <Button color="default" size="sm" variant="flat" onClick={onClose}>
+        <Button color="default" size="md" variant="solid" onClick={onClose}>
           Cerrar
         </Button>
       </div>
@@ -256,8 +256,8 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
                           <Button
                             className="w-full"
                             color="primary"
-                            size="sm"
-                            variant="flat"
+                            size="md"
+                            variant="solid"
                             onClick={onCreateDevice}
                           >
                             <FaPlus className="mr-2" />
@@ -380,8 +380,8 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
                           <Button
                             className="w-full"
                             color="primary"
-                            size="sm"
-                            variant="flat"
+                            size="md"
+                            variant="solid"
                             onClick={onCreateDeviceSignal}
                           >
                             <FaPlus className="mr-2" />
@@ -516,8 +516,8 @@ export const SignalDetail: React.FC<SignalDetailProps> = ({
                   <Button
                     className="w-full"
                     color="primary"
-                    size="sm"
-                    variant="flat"
+                    size="md"
+                    variant="solid"
                     onClick={onCreateMeasurement}
                   >
                     <FaPlus className="mr-2" />

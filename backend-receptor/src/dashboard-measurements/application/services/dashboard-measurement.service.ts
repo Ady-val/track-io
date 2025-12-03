@@ -63,17 +63,6 @@ export class DashboardMeasurementService {
       });
     }
 
-    const existing =
-      await this.dashboardMeasurementRepository.findByMeasurementId(
-        createDto.measurementId
-      );
-
-    if (existing) {
-      throw new BadRequestException(
-        `Dashboard configuration already exists for measurement ID ${createDto.measurementId}`
-      );
-    }
-
     if (createDto.minValue >= createDto.maxValue) {
       throw new BadRequestException('minValue must be less than maxValue');
     }

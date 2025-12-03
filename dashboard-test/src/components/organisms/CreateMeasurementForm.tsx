@@ -112,7 +112,7 @@ export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({
           color="default"
           disabled={isLoading}
           size="md"
-          variant="flat"
+          variant="solid"
           onClick={onCancel}
         >
           <FaXmark className="mr-2" />

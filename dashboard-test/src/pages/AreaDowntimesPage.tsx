@@ -29,16 +29,16 @@ export const AreaDowntimesPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden pb-8">
+      <div className="flex-1 flex flex-col min-h-0 pb-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+          <div className="flex-shrink-0 mb-6 p-4 bg-red-900/50 border border-red-700 rounded-lg">
             <Text color="danger">
               Error al cargar los datos: {error.message}
             </Text>
           </div>
         )}
 
-        <div className="h-full">
+        <div className="flex-1 min-h-0">
           <AreaDowntimesTable
             className="h-full"
             data={data?.data ?? []}

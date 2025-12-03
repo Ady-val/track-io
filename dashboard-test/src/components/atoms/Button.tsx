@@ -11,3 +11,5 @@ export interface ButtonProps extends HeroUIButtonProps {
 export const Button: React.FC<ButtonProps> = ({ children, ...props }) => {
   return <HeroUIButton {...props}>{children}</HeroUIButton>;
 };
+
+Button.displayName = "Button";

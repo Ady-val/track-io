@@ -9,12 +9,11 @@ import { SearchBar, ConnectionIndicator } from "@components/molecules";
 import {
   SignalList,
   SignalDetail,
-  Modal,
-  CreateMeasurementForm,
-  CreateDeviceForm,
-  CreateDeviceSignalForm,
-  CreateDeviceAndSignalForm,
-  CreateDeviceSignalWithDeviceForm,
+  CreateMeasurementModal,
+  CreateDeviceModal,
+  CreateDeviceSignalModal,
+  CreateDeviceAndSignalModal,
+  CreateDeviceSignalWithDeviceModal,
 } from "@components/organisms";
 import { TwoColumnLayout } from "@components/templates";
 
@@ -55,14 +54,15 @@ export default function RawSignalsPage() {
   const [isLoadingDeviceSignal, setIsLoadingDeviceSignal] =
     useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [modalType, setModalType] = useState<
-    | "measurement"
-    | "device"
-    | "deviceSignal"
-    | "deviceAndSignal"
-    | "deviceSignalWithDevice"
-  >("measurement");
+  const [isMeasurementModalOpen, setIsMeasurementModalOpen] =
+    useState<boolean>(false);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState<boolean>(false);
+  const [isDeviceSignalModalOpen, setIsDeviceSignalModalOpen] =
+    useState<boolean>(false);
+  const [isDeviceAndSignalModalOpen, setIsDeviceAndSignalModalOpen] =
+    useState<boolean>(false);
+  const [isDeviceSignalWithDeviceModalOpen, setIsDeviceSignalWithDeviceModalOpen] =
+    useState<boolean>(false);
   const [usedDepartments, setUsedDepartments] = useState<number[]>([]);
   const [isCreatingMeasurement, setIsCreatingMeasurement] =
     useState<boolean>(false);
@@ -195,26 +195,6 @@ export default function RawSignalsPage() {
     setSelectedMeasurement(null);
     setSelectedDevice(null);
     setSelectedDeviceSignal(null);
-    setIsModalOpen(false);
-  }, []);
-
-  const handleOpenCreateModal = useCallback(
-    (
-      type:
-        | "measurement"
-        | "device"
-        | "deviceSignal"
-        | "deviceAndSignal"
-        | "deviceSignalWithDevice"
-    ) => {
-      setModalType(type);
-      setIsModalOpen(true);
-    },
-    []
-  );
-
-  const handleCloseCreateModal = useCallback(() => {
-    setIsModalOpen(false);
   }, []);
 
   const handleCreateMeasurement = useCallback(
@@ -227,7 +207,7 @@ export default function RawSignalsPage() {
         const newMeasurement = await measurementService.create(data);
 
         setSelectedMeasurement(newMeasurement);
-        setIsModalOpen(false);
+        setIsMeasurementModalOpen(false);
 
         console.log("Measurement created successfully:", newMeasurement);
       } catch (error) {
@@ -249,7 +229,7 @@ export default function RawSignalsPage() {
         const newDevice = await deviceService.create(data);
 
         setSelectedDevice(newDevice);
-        setIsModalOpen(false);
+        setIsDeviceModalOpen(false);
 
         console.log("Device created successfully:", newDevice);
       } catch (error) {
@@ -276,7 +256,7 @@ export default function RawSignalsPage() {
         const newDeviceSignal = await deviceSignalService.create(data);
 
         setSelectedDeviceSignal(newDeviceSignal);
-        setIsModalOpen(false);
+        setIsDeviceSignalModalOpen(false);
 
         setUsedDepartments((prev) => [...prev, data.departmentId]);
 
@@ -316,7 +296,7 @@ export default function RawSignalsPage() {
 
         setUsedDepartments([signalData.departmentId]);
 
-        setIsModalOpen(false);
+        setIsDeviceAndSignalModalOpen(false);
 
         console.log("Device and signal created successfully:", {
           newDevice,
@@ -359,8 +339,8 @@ export default function RawSignalsPage() {
                   </div>
                   <Button
                     color="danger"
-                    size="sm"
-                    variant="flat"
+                    size="md"
+                    variant="solid"
                     onClick={handleClearSignals}
                   >
                     Limpiar
@@ -410,21 +390,19 @@ export default function RawSignalsPage() {
                   onClose={handleCloseDetail}
                   onCreateDevice={() => {
                     if (!selectedDevice && !selectedDeviceSignal) {
-                      handleOpenCreateModal("deviceAndSignal");
+                      setIsDeviceAndSignalModalOpen(true);
                     } else {
-                      handleOpenCreateModal("device");
+                      setIsDeviceModalOpen(true);
                     }
                   }}
                   onCreateDeviceSignal={() => {
                     if (selectedDevice && !selectedDeviceSignal) {
-                      handleOpenCreateModal("deviceSignalWithDevice");
+                      setIsDeviceSignalWithDeviceModalOpen(true);
                     } else {
-                      handleOpenCreateModal("deviceSignal");
+                      setIsDeviceSignalModalOpen(true);
                     }
                   }}
-                  onCreateMeasurement={() =>
-                    handleOpenCreateModal("measurement")
-                  }
+                  onCreateMeasurement={() => setIsMeasurementModalOpen(true)}
                 />
               </CardBody>
             </Card>
@@ -452,70 +430,60 @@ export default function RawSignalsPage() {
           }
         />
       </div>
-      <Modal
-        isOpen={isModalOpen}
-        size="md"
-        title={
-          modalType === "measurement"
-            ? "Crear Nuevo Dispositivo de Medición"
-            : modalType === "device"
-              ? "Crear Nuevo Dispositivo"
-              : modalType === "deviceSignal"
-                ? "Crear Nueva Señal del Dispositivo"
-                : modalType === "deviceAndSignal"
-                  ? "Crear Dispositivo y Señal"
-                  : "Crear Señal para Dispositivo Existente"
-        }
-        onClose={handleCloseCreateModal}
-      >
-        {selectedSignal && modalType === "measurement" && (
-          <CreateMeasurementForm
+
+      {/* Modals */}
+      {selectedSignal && (
+        <>
+          <CreateMeasurementModal
             externalId={selectedSignal.externalId}
+            isOpen={isMeasurementModalOpen}
             isLoading={isCreatingMeasurement}
-            onCancel={handleCloseCreateModal}
+            onClose={() => setIsMeasurementModalOpen(false)}
             onSubmit={handleCreateMeasurement}
           />
-        )}
-        {selectedSignal && modalType === "device" && (
-          <CreateDeviceForm
+
+          <CreateDeviceModal
             externalId={selectedSignal.externalId}
+            isOpen={isDeviceModalOpen}
             isLoading={isCreatingDevice}
-            onCancel={handleCloseCreateModal}
+            onClose={() => setIsDeviceModalOpen(false)}
             onSubmit={handleCreateDevice}
           />
-        )}
-        {selectedSignal && selectedDevice && modalType === "deviceSignal" && (
-          <CreateDeviceSignalForm
-            deviceId={selectedDevice.id}
-            deviceName={selectedDevice.name}
-            externalValueId={selectedSignal.value}
-            isLoading={isCreatingDeviceSignal}
-            onCancel={handleCloseCreateModal}
-            onSubmit={handleCreateDeviceSignal}
-          />
-        )}
-        {selectedSignal && modalType === "deviceAndSignal" && (
-          <CreateDeviceAndSignalForm
-            externalId={selectedSignal.externalId}
-            externalValueId={selectedSignal.value}
-            isLoading={isCreatingDevice}
-            onCancel={handleCloseCreateModal}
-            onSubmit={handleCreateDeviceAndSignal}
-          />
-        )}
-        {selectedSignal &&
-          selectedDevice &&
-          modalType === "deviceSignalWithDevice" && (
-            <CreateDeviceSignalWithDeviceForm
-              device={selectedDevice}
+
+          {selectedDevice && (
+            <CreateDeviceSignalModal
+              deviceId={selectedDevice.id}
+              deviceName={selectedDevice.name}
               externalValueId={selectedSignal.value}
+              isOpen={isDeviceSignalModalOpen}
               isLoading={isCreatingDeviceSignal}
-              usedDepartments={usedDepartments}
-              onCancel={handleCloseCreateModal}
+              onClose={() => setIsDeviceSignalModalOpen(false)}
               onSubmit={handleCreateDeviceSignal}
             />
           )}
-      </Modal>
+
+          <CreateDeviceAndSignalModal
+            externalId={selectedSignal.externalId}
+            externalValueId={selectedSignal.value}
+            isOpen={isDeviceAndSignalModalOpen}
+            isLoading={isCreatingDevice}
+            onClose={() => setIsDeviceAndSignalModalOpen(false)}
+            onSubmit={handleCreateDeviceAndSignal}
+          />
+
+          {selectedDevice && (
+            <CreateDeviceSignalWithDeviceModal
+              device={selectedDevice}
+              externalValueId={selectedSignal.value}
+              isOpen={isDeviceSignalWithDeviceModalOpen}
+              isLoading={isCreatingDeviceSignal}
+              usedDepartments={usedDepartments}
+              onClose={() => setIsDeviceSignalWithDeviceModalOpen(false)}
+              onSubmit={handleCreateDeviceSignal}
+            />
+          )}
+        </>
+      )}
     </>
   );
 }

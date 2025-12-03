@@ -50,13 +50,14 @@ export function DataTable<T extends { id: number | string }>({
   if (maxHeight) {
     return (
       <div
-        className={`overflow-x-auto overflow-y-auto ${maxHeight} ${className}`}
+        className={`flex flex-col ${maxHeight} ${className}`}
       >
-        <table
-          className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
-          style={{ tableLayout: "fixed" }}
-        >
-          <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
+        <div className="flex-1 overflow-x-auto overflow-y-auto table-scrollbar">
+          <table
+            className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
+            style={{ tableLayout: "fixed" }}
+          >
+            <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
             <tr>
               {columns.map((column) => (
                 <th
@@ -118,17 +119,19 @@ export function DataTable<T extends { id: number | string }>({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`h-full overflow-y-auto overflow-x-hidden ${className}`}>
-      <table
-        className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
-        style={{ tableLayout: "fixed" }}
-      >
-        <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
+    <div className={`h-full flex flex-col ${className}`}>
+      <div className="flex-1 overflow-y-auto overflow-x-auto table-scrollbar">
+        <table
+          className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
+          style={{ tableLayout: "fixed" }}
+        >
+          <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
           <tr>
             {columns.map((column) => (
               <th
@@ -190,6 +193,7 @@ export function DataTable<T extends { id: number | string }>({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

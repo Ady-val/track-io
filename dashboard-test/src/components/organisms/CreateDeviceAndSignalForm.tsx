@@ -232,7 +232,7 @@ export const CreateDeviceAndSignalForm: React.FC<
           color="default"
           disabled={isLoading}
           size="md"
-          variant="flat"
+          variant="solid"
           onClick={onCancel}
         >
           <FaXmark className="mr-2" />

@@ -85,11 +85,11 @@ export const DevicesTable: React.FC<DevicesTableProps> = ({
 
   return (
     <div
-      className={`bg-slate-900 rounded-xl shadow-lg overflow-hidden border-2 border-slate-700 ${className}`}
+      className={`bg-slate-900 rounded-xl shadow-lg overflow-hidden border-2 border-slate-700 flex flex-col ${className}`}
     >
-      <div className="overflow-x-auto table-scrollbar">
+      <div className="flex-1 overflow-y-auto overflow-x-auto table-scrollbar">
         <table className="w-full">
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800 sticky top-0 z-10">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-bold text-slate-200 uppercase tracking-wider">
                 Dispositivo
