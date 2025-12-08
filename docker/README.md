@@ -1,128 +1,170 @@
 # Track.IO - Docker Setup
 
-## 📚 Documentación Adicional
+Guía de instalación y uso del sistema Track.IO con Docker.
 
-- **[DEBIAN_SETUP.md](./DEBIAN_SETUP.md)** - Guía básica para preparar Debian desde cero
-- **[PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md)** - Guía detallada de configuración en producción
-- **[TROUBLESHOOTING_NETWORK.md](./TROUBLESHOOTING_NETWORK.md)** - Solución de problemas de red
-- **[TROUBLESHOOTING_PORTS.md](./TROUBLESHOOTING_PORTS.md)** - Solución de problemas de puertos en uso
+---
 
-## 🚀 Quick Start
+## 📋 Requisitos Previos
 
-### First Time Setup
+- **Docker Desktop** (Windows/Mac) o **Docker Engine + Docker Compose** (Linux)
+- **Git** (para clonar el repositorio)
+- **4GB RAM mínimo** (8GB recomendado)
+- **10GB espacio en disco** libre
 
-1. **Clone the repository and navigate to docker directory:**
+---
 
-   ```bash
-   git clone <repository-url>
-   cd track-io/docker
-   ```
+## 🪟 Instalación en Windows
 
-2. **Configure environment variables (optional):**
+### Paso 1: Instalar Docker Desktop
 
-   ```bash
-   cp env.example .env
-   # Edit .env file if you need custom settings
-   ```
+1. Descarga Docker Desktop desde: https://www.docker.com/products/docker-desktop
+2. Ejecuta el instalador y sigue las instrucciones
+3. Reinicia tu computadora cuando se solicite
+4. Abre Docker Desktop y espera a que inicie completamente
 
-3. **Start the complete system:**
+### Paso 2: Verificar Instalación
 
-   **Windows:**
-   ```batch
-   start.bat
-   ```
+Abre PowerShell o CMD y ejecuta:
 
-   **Linux/Mac:**
-   ```bash
-   chmod +x start.sh
-   ./start.sh
-   ```
+```powershell
+docker --version
+docker compose version
+```
 
-   The script will automatically:
-   - ✅ Detect your machine's IP address
-   - ✅ Configure the system for network access
-   - ✅ Build and start all services
-   - ✅ Show you the access URLs
+Deberías ver las versiones instaladas.
 
-4. **Run database migrations (first time only):**
-   ```bash
-   docker compose exec backend npm run migration:run
-   ```
-   
-   **Note:** Migrations run automatically on first start, but you can run them manually if needed.
+### Paso 3: Clonar el Repositorio
 
-**That's it!** The system is now running and accessible from any device on your network!
+```powershell
+git clone <URL_DEL_REPOSITORIO>
+cd track-io/docker
+```
 
-## 📋 Services
+### Paso 4: Iniciar el Sistema
 
-After running `start.bat` or `start.sh`, you'll see the access URLs:
+```powershell
+start.bat
+```
 
-### Local Access (same machine):
+El script automáticamente:
+- ✅ Detecta la IP de tu equipo
+- ✅ Configura el sistema para acceso en red
+- ✅ Construye e inicia todos los servicios
+- ✅ Muestra las URLs de acceso
+
+**⏱️ Tiempo estimado:** 5-10 minutos en la primera ejecución
+
+---
+
+## 🐧 Instalación en Linux (Debian/Ubuntu)
+
+### Paso 1: Instalar Docker
+
+```bash
+# Actualizar el sistema
+sudo apt update
+sudo apt upgrade -y
+
+# Instalar dependencias
+sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+
+# Agregar clave GPG de Docker
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Agregar repositorio de Docker
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Instalar Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Agregar tu usuario al grupo docker (para no usar sudo)
+sudo usermod -aG docker $USER
+
+# Cerrar sesión y volver a iniciar sesión para aplicar cambios
+```
+
+### Paso 2: Verificar Instalación
+
+```bash
+docker --version
+docker compose version
+```
+
+### Paso 3: Clonar el Repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd track-io/docker
+```
+
+### Paso 4: Iniciar el Sistema
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+El script automáticamente:
+- ✅ Detecta la IP de tu equipo
+- ✅ Configura el sistema para acceso en red
+- ✅ Construye e inicia todos los servicios
+- ✅ Muestra las URLs de acceso
+
+**⏱️ Tiempo estimado:** 5-10 minutos en la primera ejecución
+
+---
+
+## 🍎 Instalación en macOS
+
+### Paso 1: Instalar Docker Desktop
+
+1. Descarga Docker Desktop desde: https://www.docker.com/products/docker-desktop
+2. Abre el archivo `.dmg` descargado
+3. Arrastra Docker a la carpeta Applications
+4. Abre Docker Desktop desde Applications
+5. Espera a que Docker inicie completamente
+
+### Paso 2: Verificar Instalación
+
+Abre Terminal y ejecuta:
+
+```bash
+docker --version
+docker compose version
+```
+
+### Paso 3: Clonar el Repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd track-io/docker
+```
+
+### Paso 4: Iniciar el Sistema
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+---
+
+## 🌐 Acceso al Sistema
+
+Después de ejecutar `start.bat` o `start.sh`, verás las URLs de acceso:
+
+### Acceso Local (misma computadora):
 - **Dashboard**: http://localhost
 - **Virtual Device**: http://localhost/virtual-device
 - **Backend API**: http://localhost:3000
 
-### Network Access (other devices):
-- **Dashboard**: http://[YOUR_IP]
-- **Virtual Device**: http://[YOUR_IP]/virtual-device
-- **Backend API**: http://[YOUR_IP]:3000
+### Acceso en Red Local (otros dispositivos):
+- **Dashboard**: http://[TU_IP]
+- **Virtual Device**: http://[TU_IP]/virtual-device
+- **Backend API**: http://[TU_IP]:3000
 
-The scripts automatically detect your IP and configure everything!
-
-## 🔄 Updating the System
-
-### When you pull new code changes:
-
-```bash
-# 1. Pull latest changes
-git pull
-
-# 2. Rebuild and restart services
-cd docker
-
-# Windows:
-start.bat
-
-# Linux/Mac:
-./start.sh
-
-# 3. If there are new migrations, run them
-docker compose exec backend npm run migration:run
-```
-
-**Note:** The `start.bat` or `start.sh` script automatically detects if your IP changed and only rebuilds if necessary, making subsequent starts much faster!
-
-## 🌐 Network Access
-
-### ✨ Automatic Configuration
-
-The system **automatically configures itself for network access** when you run `start.bat` or `start.sh`. No manual configuration needed!
-
-**How it works:**
-1. The script detects your machine's IP address (e.g., 192.168.1.100)
-2. Builds the frontend applications with the correct API URL
-3. Exposes services on all network interfaces
-4. Shows you the access URLs for both local and network access
-
-### 🔄 When You Change Networks
-
-If you switch from WiFi to Ethernet (or vice versa), just run `start.bat` or `start.sh` again:
-
-```batch
-# Windows
-start.bat
-
-# Linux/Mac
-./start.sh
-```
-
-The script will detect the new IP and rebuild only if necessary.
-
-### 📱 Accessing from Other Devices
-
-Once the system is running, other devices on the same network can access it using the IP shown in the terminal:
-
-**Example:**
+**Ejemplo:**
 ```
 🌐 URLs de acceso:
    [Acceso en Red Local]
@@ -131,175 +173,188 @@ Once the system is running, other devices on the same network can access it usin
      Backend API:     http://192.168.1.100:3000
 ```
 
-Just open these URLs on any device connected to the same network!
+---
 
-## 💻 Local Development (Without Docker)
+## 🔧 Comandos Útiles
 
-If you prefer to run the services locally for development:
+### Ver logs en tiempo real
 
-### 1. Start only the database with Docker:
 ```bash
-cd docker
-start.bat  # This starts PostgreSQL
+# Todos los servicios
+docker compose logs -f
+
+# Solo backend
+docker compose logs -f backend
+
+# Solo nginx
+docker compose logs -f nginx
+
+# Solo postgres
+docker compose logs -f postgres
 ```
 
-### 2. Run backend in development mode:
+### Detener servicios
+
 ```bash
-cd backend-receptor
-pnpm run start:dev
-# Backend will run on http://localhost:3000
+docker compose down
 ```
 
-### 3. Run frontend(s) in development mode:
-```bash
-# Dashboard
-cd dashboard-test
-pnpm run dev
-# Runs on http://localhost:5173
+### Reiniciar servicios
 
-# Virtual Device
-cd virtual-device
-pnpm run dev
-# Runs on http://localhost:5174
+```bash
+# Windows
+start.bat
+
+# Linux/Mac
+./start.sh
 ```
 
-**How it works:**
-- Frontends automatically detect the environment
-- In **dev mode** (`pnpm run dev`): Points to `http://localhost:3000`
-- In **Docker build**: Uses the IP detected by `start.bat`
-
-## 🔧 Useful Commands
-
-**Note:** The script `start.sh` automatically detects whether you have Docker Compose V2 (`docker compose`) or V1 (`docker-compose`) installed. The commands below use `docker compose` (V2), but you can replace with `docker-compose` if you have V1.
+### Ver estado de los servicios
 
 ```bash
-# Start/Restart the system
+docker compose ps
+```
+
+### Acceder a la consola del backend
+
+```bash
+docker compose exec backend sh
+```
+
+### Ejecutar migraciones manualmente
+
+```bash
+docker compose exec backend npm run migration:run
+```
+
+---
+
+## 🔄 Actualizar el Sistema
+
+Cuando hay cambios en el código:
+
+```bash
+# 1. Actualizar código
+git pull
+
+# 2. Reiniciar servicios
 # Windows:
 start.bat
+
 # Linux/Mac:
 ./start.sh
 
-# View logs
-docker compose logs -f
-
-# View logs for specific service
-docker compose logs -f backend
-docker compose logs -f nginx
-docker compose logs -f postgres
-
-# Stop services
-docker compose down
-
-# Stop and remove volumes (WARNING: deletes all data)
-docker compose down -v
-
-# Check service status
-docker compose ps
-
-# Execute commands in containers
+# 3. Si hay nuevas migraciones, ejecutarlas
 docker compose exec backend npm run migration:run
-docker compose exec backend npm run migration:show
-
-# Access backend shell
-docker compose exec backend sh
-
-# Force rebuild (if IP didn't change but you want to rebuild anyway)
-docker compose down
-docker compose --env-file .env.host up -d --build
 ```
 
-## 🛠️ Advanced Configuration
+**Nota:** El script detecta automáticamente si la IP cambió y solo reconstruye si es necesario.
 
-### Environment Variables (Optional)
+---
 
-Create a `.env` file to customize settings:
+## 🚨 Solución de Problemas
 
-```env
-# Database Configuration
-POSTGRES_DB=track_io
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
+### Error: "port is already allocated"
 
-# Node Environment
-NODE_ENV=production
-```
-
-**Note:** The `HOST_IP` and `VITE_API_URL` are automatically generated by `start.bat` or `start.sh` and stored in `.env.host`. You don't need to configure them manually!
-
-### Development vs Production
-
-- **Development**: Uses `NODE_ENV=development` for detailed logging
-- **Production**: Uses `NODE_ENV=production` for optimized performance
-
-## 🚨 Troubleshooting
-
-### Common Issues:
-
-1. **Port already in use:**
-
-   ```bash
-   # Check what's using the port
-   netstat -ano | findstr :3000
-   netstat -ano | findstr :80
-   ```
-
-2. **Database connection issues:**
-
-   ```bash
-   # Check database logs
-   docker compose logs postgres
-   ```
-
-3. **Backend not starting:**
-
-   ```bash
-   # Check backend logs
-   docker compose logs backend
-   ```
-
-4. **Frontend not loading:**
-   ```bash
-   # Check frontend logs
-   docker compose logs nginx
-   ```
-
-### Reset Everything:
+El puerto 3000 o 80 está en uso. Solución:
 
 ```bash
-# Stop and remove everything
-docker compose down -v
-docker system prune -a -f
+# Detener todos los contenedores
+docker compose down
 
-# Start fresh
-docker compose up -d --build
-docker compose exec backend npm run migration:run
+# Ver qué está usando el puerto
+# Windows:
+netstat -ano | findstr :3000
+
+# Linux/Mac:
+sudo lsof -i :3000
+sudo netstat -tuln | grep :3000
+
+# Eliminar contenedores huérfanos
+docker ps -a | grep track_io | awk '{print $1}' | xargs docker rm -f
 ```
 
-## 📁 Project Structure
+### Error: "Cannot connect to Docker daemon"
+
+Docker no está corriendo. Solución:
+
+**Windows/Mac:** Abre Docker Desktop
+
+**Linux:**
+```bash
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+### Los servicios no inician
+
+```bash
+# Ver logs de errores
+docker compose logs
+
+# Verificar estado
+docker compose ps
+
+# Reiniciar desde cero
+docker compose down -v
+./start.sh  # o start.bat
+```
+
+### El frontend no carga
+
+```bash
+# Verificar que nginx esté corriendo
+docker compose ps nginx
+
+# Ver logs de nginx
+docker compose logs nginx
+
+# Verificar que el backend responda
+curl http://localhost:3000
+```
+
+---
+
+## 📁 Estructura de Archivos
 
 ```
 docker/
-├── docker-compose.yml           # Main orchestration file
-├── Dockerfile.backend           # Backend container definition
-├── Dockerfile.unified           # Unified frontend + Nginx container
-├── nginx.conf                   # Nginx reverse proxy configuration
-├── start.bat                    # Windows startup script (auto IP detection)
-├── start.sh                     # Linux/Mac startup script (auto IP detection)
-├── restart.bat                  # Quick restart script for Windows
-├── .env                         # Environment variables (create from env.example)
-├── .env.host                    # Auto-generated by start scripts (don't edit)
-├── env.example                  # Environment variables template
-└── README.md                    # This file
+├── docker-compose.yml    # Configuración principal de Docker
+├── Dockerfile.backend    # Dockerfile del backend
+├── Dockerfile.unified    # Dockerfile de Nginx + frontends
+├── nginx.conf            # Configuración de Nginx
+├── start.bat             # Script de inicio para Windows
+├── start.sh              # Script de inicio para Linux/Mac
+├── get-ip.ps1            # Script PowerShell para detectar IP (Windows)
+└── README.md             # Este archivo
 ```
 
-## 🎯 Key Features
+---
 
-- **🚀 One-Command Setup**: Just run `start.bat` or `start.sh`
-- **🌐 Automatic Network Configuration**: Auto-detects IP and configures everything
-- **⚡ Smart Rebuild**: Only rebuilds when IP changes, saving time
-- **🔄 Cross-Platform**: Works on Windows, Linux, and Mac
-- **📡 Network Access Ready**: Other devices can access immediately
-- **🐳 Unified Architecture**: Single Nginx container serves both frontends
-- **🔒 No CORS Issues**: Reverse proxy eliminates CORS problems
-- **💾 Database Persistence**: Data survives container restarts
-- **📦 Easy Updates**: Simple git pull + restart process
+## ✨ Características
+
+- **🚀 Un solo comando**: Solo ejecuta `start.bat` o `start.sh`
+- **🌐 Configuración automática de red**: Detecta IP y configura todo automáticamente
+- **⚡ Reconstrucción inteligente**: Solo reconstruye cuando la IP cambia
+- **🔄 Reinicio automático**: Los contenedores se inician automáticamente al reiniciar el equipo
+- **📡 Acceso en red**: Otros dispositivos pueden acceder inmediatamente
+- **💾 Persistencia de datos**: Los datos sobreviven a reinicios de contenedores
+- **🔒 Sin problemas de CORS**: Proxy reverso elimina problemas de CORS
+
+---
+
+## 📝 Notas Importantes
+
+- **Primera ejecución**: Puede tardar 5-10 minutos mientras descarga imágenes y compila
+- **Reinicio del equipo**: Los contenedores se iniciarán automáticamente gracias a `restart: always`
+- **Cambio de red**: Si cambias de WiFi a Ethernet, ejecuta `start.bat` o `start.sh` de nuevo
+- **Migraciones**: Se ejecutan automáticamente al iniciar, no necesitas ejecutarlas manualmente
+
+---
+
+## 🆘 ¿Necesitas Ayuda?
+
+1. Verifica que Docker esté corriendo: `docker ps`
+2. Revisa los logs: `docker compose logs -f`
+3. Verifica el estado: `docker compose ps`
+4. Reinicia desde cero: `docker compose down -v && ./start.sh`

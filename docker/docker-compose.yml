@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: track_io_postgres
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-track_io}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -24,7 +24,7 @@ services:
       context: ../backend-receptor
       dockerfile: ../docker/Dockerfile.backend
     container_name: track_io_backend
-    restart: unless-stopped
+    restart: always
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
@@ -51,7 +51,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}  # URL del backend para los frontends
     container_name: track_io_nginx
-    restart: unless-stopped
+    restart: always
     ports:
       - "0.0.0.0:80:80"  # Exponer en todas las interfaces de red para acceso remoto
     depends_on:
