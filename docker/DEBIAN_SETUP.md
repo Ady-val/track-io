@@ -39,7 +39,7 @@ curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o 
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
 
-### 2.4. Instalar Docker Engine
+### 2.4. Instalar Docker Engine (incluye Docker Compose V2)
 
 ```bash
 sudo apt update
@@ -54,6 +54,16 @@ docker --version
 
 Deberías ver algo como: `Docker version 24.x.x`
 
+### 2.6. Verificar Docker Compose V2
+
+```bash
+docker compose version
+```
+
+Deberías ver algo como: `Docker Compose version v2.x.x`
+
+**Nota:** Docker Compose V2 viene incluido con Docker. El comando es `docker compose` (con espacio), no `docker-compose` (con guión).
+
 ---
 
 ## 👤 Paso 3: Configurar Usuario para Docker (Opcional pero Recomendado)
@@ -65,22 +75,6 @@ sudo usermod -aG docker $USER
 ```
 
 **⚠️ IMPORTANTE:** Cierra sesión y vuelve a iniciar sesión para que los cambios surtan efecto.
-
----
-
-## 📦 Paso 4: Instalar Docker Compose (si no está incluido)
-
-Docker Compose V2 ya viene incluido con Docker, pero si necesitas la versión standalone:
-
-```bash
-sudo apt install -y docker-compose
-```
-
-Verificar:
-
-```bash
-docker compose version
-```
 
 ---
 
@@ -164,20 +158,34 @@ Abre `http://localhost` en tu navegador para verificar.
 ### Ver el estado de los servicios
 
 ```bash
+# Docker Compose V2 (recomendado)
 docker compose ps
+
+# O si tienes V1 instalado
+docker-compose ps
 ```
 
 ### Ver los logs
 
 ```bash
+# Docker Compose V2
 docker compose logs -f
+
+# O si tienes V1 instalado
+docker-compose logs -f
 ```
 
 ### Detener los servicios
 
 ```bash
+# Docker Compose V2
 docker compose down
+
+# O si tienes V1 instalado
+docker-compose down
 ```
+
+**Nota:** El script `start.sh` detecta automáticamente qué versión tienes instalada.
 
 ### Reiniciar los servicios
 
@@ -224,22 +232,26 @@ sudo netstat -tulpn | grep :3000
 # 1. Actualizar sistema
 sudo apt update && sudo apt upgrade -y
 
-# 2. Instalar Docker
+# 2. Instalar Docker (incluye Docker Compose V2)
 sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
 curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-# 3. Agregar usuario a grupo docker
+# 3. Verificar instalación
+docker --version
+docker compose version
+
+# 4. Agregar usuario a grupo docker
 sudo usermod -aG docker $USER
 
-# 4. Cerrar sesión y volver a iniciar sesión
+# 5. Cerrar sesión y volver a iniciar sesión
 
-# 5. Ir a la carpeta docker
+# 6. Ir a la carpeta docker
 cd track-io/docker
 
-# 6. Dar permisos y ejecutar
+# 7. Dar permisos y ejecutar
 chmod +x start.sh
 ./start.sh
 ```

@@ -45,8 +45,10 @@
 
 4. **Run database migrations (first time only):**
    ```bash
-   docker-compose exec backend npm run migration:run
+   docker compose exec backend npm run migration:run
    ```
+   
+   **Note:** Migrations run automatically on first start, but you can run them manually if needed.
 
 **That's it!** The system is now running and accessible from any device on your network!
 
@@ -84,7 +86,7 @@ start.bat
 ./start.sh
 
 # 3. If there are new migrations, run them
-docker-compose exec backend npm run migration:run
+docker compose exec backend npm run migration:run
 ```
 
 **Note:** The `start.bat` or `start.sh` script automatically detects if your IP changed and only rebuilds if necessary, making subsequent starts much faster!
@@ -167,6 +169,8 @@ pnpm run dev
 
 ## 🔧 Useful Commands
 
+**Note:** The script `start.sh` automatically detects whether you have Docker Compose V2 (`docker compose`) or V1 (`docker-compose`) installed. The commands below use `docker compose` (V2), but you can replace with `docker-compose` if you have V1.
+
 ```bash
 # Start/Restart the system
 # Windows:
@@ -175,32 +179,32 @@ start.bat
 ./start.sh
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # View logs for specific service
-docker-compose logs -f backend
-docker-compose logs -f nginx
-docker-compose logs -f postgres
+docker compose logs -f backend
+docker compose logs -f nginx
+docker compose logs -f postgres
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes (WARNING: deletes all data)
-docker-compose down -v
+docker compose down -v
 
 # Check service status
-docker-compose ps
+docker compose ps
 
 # Execute commands in containers
-docker-compose exec backend npm run migration:run
-docker-compose exec backend npm run migration:show
+docker compose exec backend npm run migration:run
+docker compose exec backend npm run migration:show
 
 # Access backend shell
-docker-compose exec backend sh
+docker compose exec backend sh
 
 # Force rebuild (if IP didn't change but you want to rebuild anyway)
-docker-compose down
-docker-compose --env-file .env.host up -d --build
+docker compose down
+docker compose --env-file .env.host up -d --build
 ```
 
 ## 🛠️ Advanced Configuration
@@ -242,32 +246,32 @@ NODE_ENV=production
 
    ```bash
    # Check database logs
-   docker-compose logs postgres
+   docker compose logs postgres
    ```
 
 3. **Backend not starting:**
 
    ```bash
    # Check backend logs
-   docker-compose logs backend
+   docker compose logs backend
    ```
 
 4. **Frontend not loading:**
    ```bash
    # Check frontend logs
-   docker-compose logs frontend
+   docker compose logs nginx
    ```
 
 ### Reset Everything:
 
 ```bash
 # Stop and remove everything
-docker-compose down -v
+docker compose down -v
 docker system prune -a -f
 
 # Start fresh
-docker-compose up -d --build
-docker-compose exec backend npm run migration:run
+docker compose up -d --build
+docker compose exec backend npm run migration:run
 ```
 
 ## 📁 Project Structure

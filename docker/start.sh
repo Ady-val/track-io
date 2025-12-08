@@ -49,14 +49,31 @@ EOF
 
 echo ""
 echo "🐳 Iniciando Docker Compose..."
-docker-compose down
+
+# Detectar qué comando de Docker Compose está disponible
+# Docker Compose V2 usa "docker compose" (con espacio)
+# Docker Compose V1 usa "docker-compose" (con guión)
+if docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+    echo "   Usando Docker Compose V2 (docker compose)"
+elif docker-compose version &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+    echo "   Usando Docker Compose V1 (docker-compose)"
+else
+    echo "❌ Error: Docker Compose no está instalado"
+    echo "   Por favor, instala Docker Compose antes de continuar"
+    exit 1
+fi
+
+# Detener servicios existentes
+$COMPOSE_CMD down
 
 if [ $REBUILD_NEEDED -eq 1 ]; then
     echo "   Reconstruyendo servicios con nueva IP..."
-    docker-compose --env-file .env.host up -d --build
+    $COMPOSE_CMD --env-file .env.host up -d --build
 else
     echo "   Iniciando servicios sin rebuild..."
-    docker-compose --env-file .env.host up -d
+    $COMPOSE_CMD --env-file .env.host up -d
 fi
 
 if [ $? -ne 0 ]; then
