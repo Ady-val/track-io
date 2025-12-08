@@ -30,13 +30,17 @@ COPY tsconfig.build.json ./
 COPY nest-cli.json ./
 COPY ormconfig.ts ./
 COPY eslint.config.mjs ./
+COPY scripts/ ./scripts/
 
 # Build the NestJS application
 RUN pnpm run build
 
+# Make start script executable
+RUN chmod +x scripts/start-with-migrations.sh
+
 # Expose the application port
 EXPOSE 3000
 
-# Start the application with crypto support flag
-# The --experimental-global-webcrypto flag is required for crypto operations
-CMD ["node", "--experimental-global-webcrypto", "dist/main.js"]
+# Start the application with migrations
+# The script runs migrations before starting the app
+CMD ["./scripts/start-with-migrations.sh"]

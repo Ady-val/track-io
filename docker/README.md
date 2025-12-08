@@ -1,5 +1,11 @@
 # Track.IO - Docker Setup
 
+## 📚 Documentación Adicional
+
+- **[DEBIAN_SETUP.md](./DEBIAN_SETUP.md)** - Guía básica para preparar Debian desde cero
+- **[PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md)** - Guía detallada de configuración en producción
+- **[TROUBLESHOOTING_NETWORK.md](./TROUBLESHOOTING_NETWORK.md)** - Solución de problemas de red
+
 ## 🚀 Quick Start
 
 ### First Time Setup

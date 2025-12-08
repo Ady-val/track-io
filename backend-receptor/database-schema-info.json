@@ -1,0 +1,3097 @@
+{
+  "alert_escalation_configs": {
+    "tableName": "alert_escalation_configs",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('alert_escalation_configs_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_signal_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "endpoint_url",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": "'http://host.docker.internal:1880/events'::character varying",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "warning_delay_minutes",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "20",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "escalation1_delay_minutes",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "40",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "escalation2_delay_minutes",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "60",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "escalation3_delay_minutes",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "80",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_active",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "true",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_c9b642a4086e6363cab0901e1b",
+        "indexDefinition": "CREATE INDEX \"IDX_c9b642a4086e6363cab0901e1b\" ON public.alert_escalation_configs USING btree (device_id, device_signal_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_79c8239b424123e404468573736",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_79c8239b424123e404468573736\" ON public.alert_escalation_configs USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_999c32cef1e577fce2fe641937f",
+        "columnName": "device_id",
+        "referencedTable": "devices",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_2f21064dae7fb9293aa9fc3a1cb",
+        "columnName": "device_signal_id",
+        "referencedTable": "device_signals",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_79c8239b424123e404468573736",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "alert_escalation_messages": {
+    "tableName": "alert_escalation_messages",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('alert_escalation_messages_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "escalation_config_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "level",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "message_type",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "target_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "message",
+        "dataType": "text",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "color",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_2d02d63d98c6af79dc5a726086",
+        "indexDefinition": "CREATE INDEX \"IDX_2d02d63d98c6af79dc5a726086\" ON public.alert_escalation_messages USING btree (escalation_config_id, level)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_b849470c357b3797f22aa9b2f79",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_b849470c357b3797f22aa9b2f79\" ON public.alert_escalation_messages USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_380ffe6dcafcc59bca79c47356c",
+        "columnName": "escalation_config_id",
+        "referencedTable": "alert_escalation_configs",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_b849470c357b3797f22aa9b2f79",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "alert_messages": {
+    "tableName": "alert_messages",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('alert_messages_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "alert_rule_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "message_group_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "status",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": "'pending'::character varying",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "message_data",
+        "dataType": "jsonb",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "receptor_type",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_4a4e49ddf951730b1c738d67f0",
+        "indexDefinition": "CREATE INDEX \"IDX_4a4e49ddf951730b1c738d67f0\" ON public.alert_messages USING btree (message_group_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_80ca17694ec7a8b9cc594e85dc",
+        "indexDefinition": "CREATE INDEX \"IDX_80ca17694ec7a8b9cc594e85dc\" ON public.alert_messages USING btree (alert_rule_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_91104b28b5e7270b1f458baf29d",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_91104b28b5e7270b1f458baf29d\" ON public.alert_messages USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_80ca17694ec7a8b9cc594e85dc5",
+        "columnName": "alert_rule_id",
+        "referencedTable": "alert_rules",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_4a4e49ddf951730b1c738d67f0f",
+        "columnName": "message_group_id",
+        "referencedTable": "message_groups",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_91104b28b5e7270b1f458baf29d",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "alert_rules": {
+    "tableName": "alert_rules",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('alert_rules_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "measurement_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "operator",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "setpoint",
+        "dataType": "numeric",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "min_value",
+        "dataType": "numeric",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "max_value",
+        "dataType": "numeric",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_enabled",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "true",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "mode",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_1ddba8ccca45992666cb6df5b4",
+        "indexDefinition": "CREATE INDEX \"IDX_1ddba8ccca45992666cb6df5b4\" ON public.alert_rules USING btree (is_enabled)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_da336467c8ec98e4bbea00d3a1",
+        "indexDefinition": "CREATE INDEX \"IDX_da336467c8ec98e4bbea00d3a1\" ON public.alert_rules USING btree (measurement_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_ae580564f087ffab9d229225aec",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_ae580564f087ffab9d229225aec\" ON public.alert_rules USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_da336467c8ec98e4bbea00d3a1d",
+        "columnName": "measurement_id",
+        "referencedTable": "measurements",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_ae580564f087ffab9d229225aec",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "alert_triggers": {
+    "tableName": "alert_triggers",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('alert_triggers_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "alert_rule_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "raw_measurement_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "measurement_value",
+        "dataType": "numeric",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "condition_result",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "messages_triggered",
+        "dataType": "jsonb",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "triggered_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_0c3572311eb8de37ddfe5d3f5a",
+        "indexDefinition": "CREATE INDEX \"IDX_0c3572311eb8de37ddfe5d3f5a\" ON public.alert_triggers USING btree (triggered_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_1136cfe7c51a69bc96e330fa61",
+        "indexDefinition": "CREATE INDEX \"IDX_1136cfe7c51a69bc96e330fa61\" ON public.alert_triggers USING btree (raw_measurement_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_f3bf362170aa0b64fda5224996",
+        "indexDefinition": "CREATE INDEX \"IDX_f3bf362170aa0b64fda5224996\" ON public.alert_triggers USING btree (alert_rule_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_8a7ba06f20359a3ed5a86f5c3fc",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_8a7ba06f20359a3ed5a86f5c3fc\" ON public.alert_triggers USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_f3bf362170aa0b64fda52249967",
+        "columnName": "alert_rule_id",
+        "referencedTable": "alert_rules",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_1136cfe7c51a69bc96e330fa613",
+        "columnName": "raw_measurement_id",
+        "referencedTable": "raw_measurements",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_8a7ba06f20359a3ed5a86f5c3fc",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "area_downtime_events": {
+    "tableName": "area_downtime_events",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('area_downtime_events_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "area_downtime_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "event_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "added_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_d1d081d3635a744e1dbc474145",
+        "indexDefinition": "CREATE INDEX \"IDX_d1d081d3635a744e1dbc474145\" ON public.area_downtime_events USING btree (area_downtime_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_d46062d2e3da26b0c2954ba3fe",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_d46062d2e3da26b0c2954ba3fe\" ON public.area_downtime_events USING btree (area_downtime_id, event_id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "IDX_d9db4daf7eb6bcd7a5c15627df",
+        "indexDefinition": "CREATE INDEX \"IDX_d9db4daf7eb6bcd7a5c15627df\" ON public.area_downtime_events USING btree (event_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_146b0ce2d2c12006fe7c08a3be3",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_146b0ce2d2c12006fe7c08a3be3\" ON public.area_downtime_events USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_d1d081d3635a744e1dbc474145c",
+        "columnName": "area_downtime_id",
+        "referencedTable": "area_downtimes",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_d9db4daf7eb6bcd7a5c15627df9",
+        "columnName": "event_id",
+        "referencedTable": "events",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_146b0ce2d2c12006fe7c08a3be3",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "area_downtimes": {
+    "tableName": "area_downtimes",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('area_downtimes_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "area_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "start_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_active",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "true",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "ends_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_3801e0557569bd118e745688f2",
+        "indexDefinition": "CREATE INDEX \"IDX_3801e0557569bd118e745688f2\" ON public.area_downtimes USING btree (area_id, is_active)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_9c5466e08a808d7f905bd69ddb",
+        "indexDefinition": "CREATE INDEX \"IDX_9c5466e08a808d7f905bd69ddb\" ON public.area_downtimes USING btree (start_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_cf1714e4bbc4dd45a16dff2d1a",
+        "indexDefinition": "CREATE INDEX \"IDX_cf1714e4bbc4dd45a16dff2d1a\" ON public.area_downtimes USING btree (area_id, start_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_4a859704ff188213ab0ebc9f112",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_4a859704ff188213ab0ebc9f112\" ON public.area_downtimes USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_cfa5642b0f902bcff97cc510dc0",
+        "columnName": "area_id",
+        "referencedTable": "areas",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_4a859704ff188213ab0ebc9f112",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "area_torreta_configs": {
+    "tableName": "area_torreta_configs",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('area_torreta_configs_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "area_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "torreta_external_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "configuration_type",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": "'area'::area_torreta_configs_configuration_type_enum",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_active",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "true",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_3c64b80558cc8acf5faeace99e",
+        "indexDefinition": "CREATE INDEX \"IDX_3c64b80558cc8acf5faeace99e\" ON public.area_torreta_configs USING btree (area_id, torreta_external_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_a572cdf64e107b5760c8e2e2cc9",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_a572cdf64e107b5760c8e2e2cc9\" ON public.area_torreta_configs USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_a572cdf64e107b5760c8e2e2cc9",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "areas": {
+    "tableName": "areas",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('areas_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_5110493f6342f34c978c084d0d6",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_5110493f6342f34c978c084d0d6\" ON public.areas USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_5110493f6342f34c978c084d0d6",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "dashboard_measurement_groups": {
+    "tableName": "dashboard_measurement_groups",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('dashboard_measurement_groups_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp without time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp without time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp without time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_3e29d56265beb83ccef56456138",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_3e29d56265beb83ccef56456138\" ON public.dashboard_measurement_groups USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_3e29d56265beb83ccef56456138",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "dashboard_measurements": {
+    "tableName": "dashboard_measurements",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('dashboard_measurements_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "measurement_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "min_value",
+        "dataType": "numeric",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "max_value",
+        "dataType": "numeric",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp without time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp without time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp without time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "group_id",
+        "dataType": "integer",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "dashboard_measurements_pkey",
+        "indexDefinition": "CREATE UNIQUE INDEX dashboard_measurements_pkey ON public.dashboard_measurements USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_2456ed5ee32bef9d660e48c76ae",
+        "columnName": "measurement_id",
+        "referencedTable": "measurements",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_2bb0061b7a024dd22808392f835",
+        "columnName": "group_id",
+        "referencedTable": "dashboard_measurement_groups",
+        "referencedColumn": "id",
+        "onDelete": "SET NULL",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "dashboard_measurements_pkey",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "departments": {
+    "tableName": "departments",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('departments_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "html_color",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_839517a681a86bb84cbcc6a1e9d",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_839517a681a86bb84cbcc6a1e9d\" ON public.departments USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_839517a681a86bb84cbcc6a1e9d",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "device_signals": {
+    "tableName": "device_signals",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('device_signals_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "department_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_value_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_5ac17ff4517bf7b7b7ed963259",
+        "indexDefinition": "CREATE INDEX \"IDX_5ac17ff4517bf7b7b7ed963259\" ON public.device_signals USING btree (external_value_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_74346cf864661ab7ab828b91d0",
+        "indexDefinition": "CREATE INDEX \"IDX_74346cf864661ab7ab828b91d0\" ON public.device_signals USING btree (device_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_d7a1571e860158fb67e485b74c",
+        "indexDefinition": "CREATE INDEX \"IDX_d7a1571e860158fb67e485b74c\" ON public.device_signals USING btree (department_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_342891b4b8b3c855caa741eefab",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_342891b4b8b3c855caa741eefab\" ON public.device_signals USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_74346cf864661ab7ab828b91d00",
+        "columnName": "device_id",
+        "referencedTable": "devices",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_d7a1571e860158fb67e485b74c1",
+        "columnName": "department_id",
+        "referencedTable": "departments",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_342891b4b8b3c855caa741eefab",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "devices": {
+    "tableName": "devices",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('devices_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "area_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_virtual_device",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "false",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_a5f9c9ea439843d910175526ca",
+        "indexDefinition": "CREATE INDEX \"IDX_a5f9c9ea439843d910175526ca\" ON public.devices USING btree (external_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_b1514758245c12daf43486dd1f0",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_b1514758245c12daf43486dd1f0\" ON public.devices USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_a5f9c9ea439843d910175526ca9",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_a5f9c9ea439843d910175526ca9\" ON public.devices USING btree (external_id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_91080dacf9231b7c3839480669d",
+        "columnName": "area_id",
+        "referencedTable": "areas",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_b1514758245c12daf43486dd1f0",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_a5f9c9ea439843d910175526ca9",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (external_id)"
+      }
+    ]
+  },
+  "emails": {
+    "tableName": "emails",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('emails_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "email",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_a54dcebef8d05dca7e839749571",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_a54dcebef8d05dca7e839749571\" ON public.emails USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_a54dcebef8d05dca7e839749571",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "event_alert_logs": {
+    "tableName": "event_alert_logs",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('event_alert_logs_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "event_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "level",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "sent_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "messages_sent",
+        "dataType": "jsonb",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "success",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "error_message",
+        "dataType": "text",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "endpoint_url",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_4c56ae856a134f5813650f8682",
+        "indexDefinition": "CREATE INDEX \"IDX_4c56ae856a134f5813650f8682\" ON public.event_alert_logs USING btree (sent_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_f1aacd16d718156f031d723c8c",
+        "indexDefinition": "CREATE INDEX \"IDX_f1aacd16d718156f031d723c8c\" ON public.event_alert_logs USING btree (event_id, level)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_ef2286c9cc4bcdd5d8fca16c5a8",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_ef2286c9cc4bcdd5d8fca16c5a8\" ON public.event_alert_logs USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_154124e1291122eafe7baaba518",
+        "columnName": "event_id",
+        "referencedTable": "events",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_ef2286c9cc4bcdd5d8fca16c5a8",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "events": {
+    "tableName": "events",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('events_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "area_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "area_name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "department_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "department_name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_signal_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_signal_name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "status",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": "'open'::events_status_enum",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "in_progress_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "closed_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "duration_seconds",
+        "dataType": "integer",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "virtual_device",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "false",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "reason",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "comment",
+        "dataType": "text",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_03dcebc1ab44daa177ae9479c4",
+        "indexDefinition": "CREATE INDEX \"IDX_03dcebc1ab44daa177ae9479c4\" ON public.events USING btree (status)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_451bbcd8d5b2291c714f287704",
+        "indexDefinition": "CREATE INDEX \"IDX_451bbcd8d5b2291c714f287704\" ON public.events USING btree (area_id, department_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_56d8f7a41dccbdf84daceca22e",
+        "indexDefinition": "CREATE INDEX \"IDX_56d8f7a41dccbdf84daceca22e\" ON public.events USING btree (device_id, device_signal_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_7ebab07668bb225b6a04782a7d",
+        "indexDefinition": "CREATE INDEX \"IDX_7ebab07668bb225b6a04782a7d\" ON public.events USING btree (created_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_40731c7151fe4be3116e45ddf73",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_40731c7151fe4be3116e45ddf73\" ON public.events USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_7f3b739a288133551e2df419b90",
+        "columnName": "area_id",
+        "referencedTable": "areas",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_f4e9377ad537819a7d8de9f225f",
+        "columnName": "department_id",
+        "referencedTable": "departments",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_677f1dbebfe5223c39d15f229ef",
+        "columnName": "device_id",
+        "referencedTable": "devices",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_d74bf9f2580adc55d9ccdee6e6e",
+        "columnName": "device_signal_id",
+        "referencedTable": "device_signals",
+        "referencedColumn": "id",
+        "onDelete": "NO ACTION",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_40731c7151fe4be3116e45ddf73",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "measurement_values": {
+    "tableName": "measurement_values",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('measurement_values_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "measurement_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "value",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_2264dcb86ec1f11aeda90acc35",
+        "indexDefinition": "CREATE INDEX \"IDX_2264dcb86ec1f11aeda90acc35\" ON public.measurement_values USING btree (created_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_e95444731f8bd9ed4dd30c019f",
+        "indexDefinition": "CREATE INDEX \"IDX_e95444731f8bd9ed4dd30c019f\" ON public.measurement_values USING btree (measurement_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_4c1097399c7fca441d0a1da10bd",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_4c1097399c7fca441d0a1da10bd\" ON public.measurement_values USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_e95444731f8bd9ed4dd30c019f9",
+        "columnName": "measurement_id",
+        "referencedTable": "measurements",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_4c1097399c7fca441d0a1da10bd",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "measurements": {
+    "tableName": "measurements",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('measurements_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "type",
+        "dataType": "USER-DEFINED",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_e19784041b690e754745403328",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_e19784041b690e754745403328\" ON public.measurements USING btree (external_id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_3c0e7812563f27fd68e8271661b",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_3c0e7812563f27fd68e8271661b\" ON public.measurements USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_e19784041b690e7547454033285",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_e19784041b690e7547454033285\" ON public.measurements USING btree (external_id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_3c0e7812563f27fd68e8271661b",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_e19784041b690e7547454033285",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (external_id)"
+      }
+    ]
+  },
+  "message_groups": {
+    "tableName": "message_groups",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('message_groups_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "color",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "description",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "order",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "0",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_4c2ab511d6f33545f79966c7f8",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_4c2ab511d6f33545f79966c7f8\" ON public.message_groups USING btree (name)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_d1b23101a05f540c1f9f5c7150f",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_d1b23101a05f540c1f9f5c7150f\" ON public.message_groups USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_4c2ab511d6f33545f79966c7f8b",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_4c2ab511d6f33545f79966c7f8b\" ON public.message_groups USING btree (name)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_d1b23101a05f540c1f9f5c7150f",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_4c2ab511d6f33545f79966c7f8b",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (name)"
+      }
+    ]
+  },
+  "migrations": {
+    "tableName": "migrations",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('migrations_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "timestamp",
+        "dataType": "bigint",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_8c82d7f526340ab734260ea46be",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_8c82d7f526340ab734260ea46be\" ON public.migrations USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_8c82d7f526340ab734260ea46be",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "permissions": {
+    "tableName": "permissions",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('permissions_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "module",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "action",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "description",
+        "dataType": "text",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_35ddf0f00aaedd9b4bd19f1f49",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_35ddf0f00aaedd9b4bd19f1f49\" ON public.permissions USING btree (module, action)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_920331560282b8bd21bb02290df",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_920331560282b8bd21bb02290df\" ON public.permissions USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_920331560282b8bd21bb02290df",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "processed_signals": {
+    "tableName": "processed_signals",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('processed_signals_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_id",
+        "dataType": "integer",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_name",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_signal_id",
+        "dataType": "integer",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_signal_name",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_5c108156ae29b9097b74edfdb3",
+        "indexDefinition": "CREATE INDEX \"IDX_5c108156ae29b9097b74edfdb3\" ON public.processed_signals USING btree (device_signal_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_93b54ef1d9226919b1a8cd9fde",
+        "indexDefinition": "CREATE INDEX \"IDX_93b54ef1d9226919b1a8cd9fde\" ON public.processed_signals USING btree (created_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_dce23dfb71368c6c946557f704",
+        "indexDefinition": "CREATE INDEX \"IDX_dce23dfb71368c6c946557f704\" ON public.processed_signals USING btree (device_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_97accfdf819bbf5a0174cd8186a",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_97accfdf819bbf5a0174cd8186a\" ON public.processed_signals USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_97accfdf819bbf5a0174cd8186a",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "raw_measurements": {
+    "tableName": "raw_measurements",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('raw_measurements_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "value",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "virtual_device",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "false",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "reason",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "comment",
+        "dataType": "text",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_4abffbc4e6ffb091fe6c709dcd",
+        "indexDefinition": "CREATE INDEX \"IDX_4abffbc4e6ffb091fe6c709dcd\" ON public.raw_measurements USING btree (external_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_86e1fec57e8de37b5dcfbe456e",
+        "indexDefinition": "CREATE INDEX \"IDX_86e1fec57e8de37b5dcfbe456e\" ON public.raw_measurements USING btree (created_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_f7b6011852c0d461d7b611cbd30",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_f7b6011852c0d461d7b611cbd30\" ON public.raw_measurements USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_f7b6011852c0d461d7b611cbd30",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "raw_signals": {
+    "tableName": "raw_signals",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('raw_signals_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "value",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_3ca8a4e72a5aeaa8abb913b226",
+        "indexDefinition": "CREATE INDEX \"IDX_3ca8a4e72a5aeaa8abb913b226\" ON public.raw_signals USING btree (external_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_dd85ddc3a07a2ba9f9151f5ae0",
+        "indexDefinition": "CREATE INDEX \"IDX_dd85ddc3a07a2ba9f9151f5ae0\" ON public.raw_signals USING btree (created_at)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_ef43303d2c5f8cd6bea7788b5de",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_ef43303d2c5f8cd6bea7788b5de\" ON public.raw_signals USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_ef43303d2c5f8cd6bea7788b5de",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "receptors": {
+    "tableName": "receptors",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('receptors_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_active",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "true",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_741976319eb6c7c258c5c79e46",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_741976319eb6c7c258c5c79e46\" ON public.receptors USING btree (external_id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_6b102542cbaa660d10c6f52bc81",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_6b102542cbaa660d10c6f52bc81\" ON public.receptors USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_741976319eb6c7c258c5c79e463",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_741976319eb6c7c258c5c79e463\" ON public.receptors USING btree (external_id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_6b102542cbaa660d10c6f52bc81",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_741976319eb6c7c258c5c79e463",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (external_id)"
+      }
+    ]
+  },
+  "role_permissions": {
+    "tableName": "role_permissions",
+    "columns": [
+      {
+        "columnName": "role_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "permission_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_17022daf3f885f7d35423e9971",
+        "indexDefinition": "CREATE INDEX \"IDX_17022daf3f885f7d35423e9971\" ON public.role_permissions USING btree (permission_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_178199805b901ccd220ab7740e",
+        "indexDefinition": "CREATE INDEX \"IDX_178199805b901ccd220ab7740e\" ON public.role_permissions USING btree (role_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_25d24010f53bb80b78e412c9656",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_25d24010f53bb80b78e412c9656\" ON public.role_permissions USING btree (role_id, permission_id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_178199805b901ccd220ab7740ec",
+        "columnName": "role_id",
+        "referencedTable": "roles",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_17022daf3f885f7d35423e9971e",
+        "columnName": "permission_id",
+        "referencedTable": "permissions",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_25d24010f53bb80b78e412c9656",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (role_id, permission_id)"
+      }
+    ]
+  },
+  "roles": {
+    "tableName": "roles",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('roles_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "description",
+        "dataType": "text",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_c1433d71a4838793a49dcad46ab",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_c1433d71a4838793a49dcad46ab\" ON public.roles USING btree (id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_c1433d71a4838793a49dcad46ab",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "sessions": {
+    "tableName": "sessions",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('sessions_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "user_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "token",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "ip_address",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "user_agent",
+        "dataType": "text",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_085d540d9f418cfbdc7bd55bb1",
+        "indexDefinition": "CREATE INDEX \"IDX_085d540d9f418cfbdc7bd55bb1\" ON public.sessions USING btree (user_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_e9f62f5dcb8a54b84234c9e7a0",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_e9f62f5dcb8a54b84234c9e7a0\" ON public.sessions USING btree (token)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_3238ef96f18b355b671619111bc",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_3238ef96f18b355b671619111bc\" ON public.sessions USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_e9f62f5dcb8a54b84234c9e7a06",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_e9f62f5dcb8a54b84234c9e7a06\" ON public.sessions USING btree (token)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_085d540d9f418cfbdc7bd55bb19",
+        "columnName": "user_id",
+        "referencedTable": "users",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_3238ef96f18b355b671619111bc",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_e9f62f5dcb8a54b84234c9e7a06",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (token)"
+      }
+    ]
+  },
+  "torreta_colors": {
+    "tableName": "torreta_colors",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('torreta_colors_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "html_color",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "device_color_id",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "order",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "0",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_ad75c8b03881dc1b82dfc5872c",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_ad75c8b03881dc1b82dfc5872c\" ON public.torreta_colors USING btree (name)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_258b5b1ccc9c16c99dd93add8cb",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_258b5b1ccc9c16c99dd93add8cb\" ON public.torreta_colors USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_ad75c8b03881dc1b82dfc5872c4",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_ad75c8b03881dc1b82dfc5872c4\" ON public.torreta_colors USING btree (name)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_258b5b1ccc9c16c99dd93add8cb",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_ad75c8b03881dc1b82dfc5872c4",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (name)"
+      }
+    ]
+  },
+  "torretas": {
+    "tableName": "torretas",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('torretas_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "description",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "is_active",
+        "dataType": "boolean",
+        "isNullable": "NO",
+        "columnDefault": "true",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "external_id",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "PK_d866caa03ab564870cf79423fb7",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_d866caa03ab564870cf79423fb7\" ON public.torretas USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_9daf28dcfb4b712261c1247c675",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_9daf28dcfb4b712261c1247c675\" ON public.torretas USING btree (external_id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_d866caa03ab564870cf79423fb7",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_9daf28dcfb4b712261c1247c675",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (external_id)"
+      }
+    ]
+  },
+  "user_roles": {
+    "tableName": "user_roles",
+    "columns": [
+      {
+        "columnName": "user_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "role_id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_87b8888186ca9769c960e92687",
+        "indexDefinition": "CREATE INDEX \"IDX_87b8888186ca9769c960e92687\" ON public.user_roles USING btree (user_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "IDX_b23c65e50a758245a33ee35fda",
+        "indexDefinition": "CREATE INDEX \"IDX_b23c65e50a758245a33ee35fda\" ON public.user_roles USING btree (role_id)",
+        "isUnique": false
+      },
+      {
+        "indexName": "PK_23ed6f04fe43066df08379fd034",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_23ed6f04fe43066df08379fd034\" ON public.user_roles USING btree (user_id, role_id)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [
+      {
+        "constraintName": "FK_87b8888186ca9769c960e926870",
+        "columnName": "user_id",
+        "referencedTable": "users",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      },
+      {
+        "constraintName": "FK_b23c65e50a758245a33ee35fda1",
+        "columnName": "role_id",
+        "referencedTable": "roles",
+        "referencedColumn": "id",
+        "onDelete": "CASCADE",
+        "onUpdate": "NO ACTION"
+      }
+    ],
+    "constraints": [
+      {
+        "constraintName": "PK_23ed6f04fe43066df08379fd034",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (user_id, role_id)"
+      }
+    ]
+  },
+  "users": {
+    "tableName": "users",
+    "columns": [
+      {
+        "columnName": "id",
+        "dataType": "integer",
+        "isNullable": "NO",
+        "columnDefault": "nextval('users_id_seq'::regclass)",
+        "isPrimaryKey": true,
+        "isUnique": false
+      },
+      {
+        "columnName": "name",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "username",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": true
+      },
+      {
+        "columnName": "password",
+        "dataType": "character varying",
+        "isNullable": "NO",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_by",
+        "dataType": "character varying",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "created_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "updated_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "NO",
+        "columnDefault": "now()",
+        "isPrimaryKey": false,
+        "isUnique": false
+      },
+      {
+        "columnName": "deleted_at",
+        "dataType": "timestamp with time zone",
+        "isNullable": "YES",
+        "columnDefault": null,
+        "isPrimaryKey": false,
+        "isUnique": false
+      }
+    ],
+    "indexes": [
+      {
+        "indexName": "IDX_fe0bb3f6520ee0469504521e71",
+        "indexDefinition": "CREATE UNIQUE INDEX \"IDX_fe0bb3f6520ee0469504521e71\" ON public.users USING btree (username)",
+        "isUnique": true
+      },
+      {
+        "indexName": "PK_a3ffb1c0c8416b9fc6f907b7433",
+        "indexDefinition": "CREATE UNIQUE INDEX \"PK_a3ffb1c0c8416b9fc6f907b7433\" ON public.users USING btree (id)",
+        "isUnique": true
+      },
+      {
+        "indexName": "UQ_fe0bb3f6520ee0469504521e710",
+        "indexDefinition": "CREATE UNIQUE INDEX \"UQ_fe0bb3f6520ee0469504521e710\" ON public.users USING btree (username)",
+        "isUnique": true
+      }
+    ],
+    "foreignKeys": [],
+    "constraints": [
+      {
+        "constraintName": "PK_a3ffb1c0c8416b9fc6f907b7433",
+        "constraintType": "PRIMARY KEY",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "constraintName": "UQ_fe0bb3f6520ee0469504521e710",
+        "constraintType": "UNIQUE",
+        "definition": "UNIQUE (username)"
+      }
+    ]
+  }
+}

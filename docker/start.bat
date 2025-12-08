@@ -1,18 +1,14 @@
 @echo off
+setlocal enabledelayedexpansion
 echo 🚀 Track.IO - Iniciando servicios...
 
 echo.
 echo 🔍 Detectando IP del equipo...
 
-REM Detectar la IP del adaptador de red activo
-for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /R /C:"IPv4.*192\.168\." /C:"IPv4.*10\." /C:"IPv4.*172\."') do (
-    set HOST_IP=%%a
-    goto :ip_found
-)
-
-:ip_found
-REM Limpiar espacios en blanco
-set HOST_IP=%HOST_IP: =%
+REM Detectar la IP del adaptador de red activo usando script PowerShell dedicado
+REM El script get-ip.ps1 prioriza 192.168.x.x, luego 10.x.x.x, luego 172.16-31.x.x
+set HOST_IP=
+for /f "delims=" %%a in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0get-ip.ps1"') do set "HOST_IP=%%a"
 
 if "%HOST_IP%"=="" (
     echo ❌ No se pudo detectar la IP del equipo

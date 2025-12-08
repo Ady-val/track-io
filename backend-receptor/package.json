@@ -29,9 +29,13 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:show": "npm run typeorm -- migration:show",
+    "migration:reset": "npm run migration:revert && npm run migration:run",
     "schema:sync": "npm run typeorm -- schema:sync",
     "schema:drop": "npm run typeorm -- schema:drop",
-    "fix:roles-constraint": "ts-node scripts/fix-roles-unique-constraint.ts"
+    "generate:initial-migration": "ts-node scripts/generate-initial-migration.ts",
+    "db:start": "cd ../docker && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres",
+    "db:stop": "cd ../docker && docker-compose -f docker-compose.yml -f docker-compose.dev.yml down",
+    "db:restart": "pnpm run db:stop && pnpm run db:start"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

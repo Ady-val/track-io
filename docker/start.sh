@@ -6,7 +6,18 @@ echo ""
 echo "🔍 Detectando IP del equipo..."
 
 # Detectar la IP del adaptador de red activo (prioriza redes privadas)
-HOST_IP=$(hostname -I | grep -oE '(192\.168\.[0-9]{1,3}\.[0-9]{1,3}|10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})' | head -n 1)
+# Primero intenta con hostname -I (Linux)
+HOST_IP=$(hostname -I 2>/dev/null | grep -oE '(192\.168\.[0-9]{1,3}\.[0-9]{1,3}|10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})' | head -n 1)
+
+# Si no funciona, intenta con ip route (Linux)
+if [ -z "$HOST_IP" ]; then
+    HOST_IP=$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K[0-9.]+' | head -n 1)
+fi
+
+# Si aún no funciona, intenta con ifconfig (macOS/Linux)
+if [ -z "$HOST_IP" ]; then
+    HOST_IP=$(ifconfig 2>/dev/null | grep -oE 'inet (192\.168\.[0-9]{1,3}\.[0-9]{1,3}|10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})' | grep -oE '(192\.168\.[0-9]{1,3}\.[0-9]{1,3}|10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})' | head -n 1)
+fi
 
 if [ -z "$HOST_IP" ]; then
     echo "❌ No se pudo detectar la IP del equipo"

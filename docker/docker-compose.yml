@@ -42,6 +42,7 @@ services:
         condition: service_healthy
     networks:
       - track_io_network
+    # Migrations are automatically run by start-with-migrations.sh script
 
   nginx:
     build:

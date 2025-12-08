@@ -69,13 +69,13 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal */}
       <div
-        className={`relative w-full ${sizeClasses[size]} animate-in fade-in zoom-in-95 duration-200`}
+        className={`relative w-full ${sizeClasses[size]} max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200`}
       >
-        <Card className="bg-slate-800 border-slate-600 shadow-2xl">
-          <CardBody className="p-0">
+        <Card className="bg-slate-800 border-slate-600 shadow-2xl flex flex-col h-full max-h-[85vh]">
+          <CardBody className="p-0 flex flex-col h-full overflow-hidden">
             {/* Header - Minimalista */}
             {!hideHeader && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 flex-shrink-0">
                 {typeof title === "string" ? (
                   <Text className="text-lg font-medium" variant="h4">
                     {title}
@@ -93,7 +93,11 @@ export const Modal: React.FC<ModalProps> = ({
             )}
 
             {/* Content */}
-            <div className={hideHeader ? "p-6" : "p-6"}>{children}</div>
+            <div
+              className={`${hideHeader ? "p-6" : "p-6"} flex flex-col flex-1 min-h-0 overflow-hidden max-h-full`}
+            >
+              {children}
+            </div>
           </CardBody>
         </Card>
       </div>

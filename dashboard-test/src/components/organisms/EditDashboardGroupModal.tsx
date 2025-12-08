@@ -31,6 +31,7 @@ export interface EditDashboardGroupModalProps {
 }
 
 interface MeasurementItem {
+  id?: number;
   measurementId: string;
   minValue: string;
   maxValue: string;
@@ -61,9 +62,13 @@ export const EditDashboardGroupModal: React.FC<
   }, [group, isOpen]);
 
   const handleAddMeasurement = () => {
+    const tempId =
+      measurements.length > 0
+        ? Math.min(...measurements.map((m) => m.id || 0)) - 1
+        : -1;
     setMeasurements([
       ...measurements,
-      { measurementId: "", minValue: "", maxValue: "" },
+      { id: tempId, measurementId: "", minValue: "", maxValue: "" },
     ]);
   };
 
@@ -75,12 +80,16 @@ export const EditDashboardGroupModal: React.FC<
 
   const handleMeasurementChange = (
     index: number,
-    field: keyof MeasurementItem,
+    field: "measurementId" | "minValue" | "maxValue",
     value: string
   ) => {
     const updated = [...measurements];
+    const currentItem = updated[index];
 
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = {
+      ...currentItem,
+      [field]: value,
+    } as MeasurementItem;
     setMeasurements(updated);
 
     const errorKey = `${index}-${field}`;
@@ -157,6 +166,7 @@ export const EditDashboardGroupModal: React.FC<
       setGroupName(group.name);
       setMeasurements(
         group.dashboardMeasurements.map((dm) => ({
+          id: dm.id,
           measurementId: dm.measurementId.toString(),
           minValue: dm.minValue.toString(),
           maxValue: dm.maxValue.toString(),
@@ -179,177 +189,192 @@ export const EditDashboardGroupModal: React.FC<
       title="Editar Grupo de Dashboard Measurements"
       onClose={handleClose}
     >
-      <form onSubmit={handleSubmit}>
-        {/* Group Name */}
-        <div className="mb-6">
-          <Input
-            autoFocus
-            fullWidth
-            required
-            isDisabled={isLoading}
-            label="Nombre del Grupo"
-            labelPlacement="outside"
-            placeholder="Ej: Grupo de Temperaturas"
-            size="md"
-            startContent={<FaGaugeHigh className="text-slate-400" />}
-            type="text"
-            value={groupName}
-            variant="bordered"
-            onChange={(e) => setGroupName(e.target.value)}
-          />
-          {errors.name && (
-            <Text className="mt-1" color="danger" variant="caption">
-              {errors.name}
-            </Text>
-          )}
-        </div>
-
-        {/* Measurements List */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <Text color="secondary" variant="small">
-              Measurements del Grupo
-            </Text>
-            <Button
-              color="primary"
-              size="sm"
-              type="button"
-              variant="flat"
-              onPress={handleAddMeasurement}
-            >
-              <FaPlus className="mr-2" />
-              Agregar Measurement
-            </Button>
+      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        {/* Scrollable Content Area */}
+        <div
+          className="overflow-y-auto overflow-x-hidden pr-2 -mr-2 pb-4"
+          style={{ maxHeight: "calc(85vh - 280px)" }}
+        >
+          {/* Group Name */}
+          <div className="mb-6">
+            <Input
+              autoFocus
+              fullWidth
+              required
+              isDisabled={isLoading}
+              label="Nombre del Grupo"
+              labelPlacement="outside"
+              placeholder="Ej: Grupo de Temperaturas"
+              size="md"
+              startContent={<FaGaugeHigh className="text-slate-400" />}
+              type="text"
+              value={groupName}
+              variant="bordered"
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+            {errors.name && (
+              <Text className="mt-1" color="danger" variant="caption">
+                {errors.name}
+              </Text>
+            )}
           </div>
 
-          <div className="space-y-4">
-            {measurements.map((measurement, index) => (
-              <div
-                key={index}
-                className="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
+          {/* Measurements List */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <Text color="secondary" variant="small">
+                Measurements del Grupo
+              </Text>
+              <Button
+                color="primary"
+                size="sm"
+                type="button"
+                variant="flat"
+                onPress={handleAddMeasurement}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <Text color="secondary" variant="small">
-                    Measurement {index + 1}
-                  </Text>
-                  {measurements.length > 1 && (
-                    <Button
-                      color="danger"
-                      size="sm"
-                      type="button"
-                      variant="flat"
-                      onPress={() => handleRemoveMeasurement(index)}
-                    >
-                      <FaTrash className="w-3 h-3" />
-                    </Button>
-                  )}
-                </div>
+                <FaPlus className="mr-2" />
+                Agregar Measurement
+              </Button>
+            </div>
 
-                <div className="space-y-3">
-                  {/* Measurement Select */}
-                  <div>
-                    <Select
-                      fullWidth
-                      required
-                      disabled={isLoading || measurementsLoading}
-                      label="Measurement"
-                      labelPlacement="outside"
-                      placeholder="Seleccionar measurement"
-                      size="md"
-                      value={measurement.measurementId}
-                      variant="bordered"
-                      onChange={(e) =>
-                        handleMeasurementChange(
-                          index,
-                          "measurementId",
-                          e.target.value
-                        )
-                      }
-                    >
-                      <option value="">Seleccionar...</option>
-                      {availableMeasurements.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name} ({m.externalId}) - {m.type}
-                        </option>
-                      ))}
-                    </Select>
-                    {errors[`${index}-measurementId`] && (
-                      <Text className="mt-1" color="danger" variant="caption">
-                        {errors[`${index}-measurementId`]}
-                      </Text>
+            <div className="space-y-4">
+              {measurements.map((measurement, index) => (
+                <div
+                  key={measurement.id ?? `temp-${index}`}
+                  className="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <Text color="secondary" variant="small">
+                      Measurement {index + 1}
+                    </Text>
+                    {measurements.length > 1 && (
+                      <Button
+                        color="danger"
+                        size="sm"
+                        type="button"
+                        variant="flat"
+                        onPress={() => handleRemoveMeasurement(index)}
+                      >
+                        <FaTrash className="w-3 h-3" />
+                      </Button>
                     )}
                   </div>
 
-                  {/* Min and Max Values */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-3">
+                    {/* Measurement Select */}
                     <div>
-                      <Input
+                      <Text
+                        className="mb-2 text-sm text-slate-300"
+                        variant="small"
+                      >
+                        Measurement
+                      </Text>
+                      <Select
                         fullWidth
                         required
-                        isDisabled={isLoading}
-                        label="Valor Mínimo"
-                        labelPlacement="outside"
-                        placeholder="0"
-                        size="md"
-                        type="number"
-                        value={measurement.minValue}
-                        variant="bordered"
+                        disabled={isLoading || measurementsLoading}
+                        value={measurement.measurementId}
                         onChange={(e) =>
                           handleMeasurementChange(
                             index,
-                            "minValue",
+                            "measurementId",
                             e.target.value
                           )
                         }
-                      />
-                      {errors[`${index}-minValue`] && (
+                      >
+                        <option value="">Seleccionar...</option>
+                        {availableMeasurements.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name} ({m.externalId}) - {m.type}
+                          </option>
+                        ))}
+                      </Select>
+                      {errors[`${index}-measurementId`] && (
                         <Text className="mt-1" color="danger" variant="caption">
-                          {errors[`${index}-minValue`]}
+                          {errors[`${index}-measurementId`]}
                         </Text>
                       )}
                     </div>
 
-                    <div>
-                      <Input
-                        fullWidth
-                        required
-                        isDisabled={isLoading}
-                        label="Valor Máximo"
-                        labelPlacement="outside"
-                        placeholder="100"
-                        size="md"
-                        type="number"
-                        value={measurement.maxValue}
-                        variant="bordered"
-                        onChange={(e) =>
-                          handleMeasurementChange(
-                            index,
-                            "maxValue",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {errors[`${index}-maxValue`] && (
-                        <Text className="mt-1" color="danger" variant="caption">
-                          {errors[`${index}-maxValue`]}
-                        </Text>
-                      )}
+                    {/* Min and Max Values */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Input
+                          fullWidth
+                          required
+                          isDisabled={isLoading}
+                          label="Valor Mínimo"
+                          labelPlacement="outside"
+                          placeholder="0"
+                          size="md"
+                          type="number"
+                          value={measurement.minValue}
+                          variant="bordered"
+                          onChange={(e) =>
+                            handleMeasurementChange(
+                              index,
+                              "minValue",
+                              e.target.value
+                            )
+                          }
+                        />
+                        {errors[`${index}-minValue`] && (
+                          <Text
+                            className="mt-1"
+                            color="danger"
+                            variant="caption"
+                          >
+                            {errors[`${index}-minValue`]}
+                          </Text>
+                        )}
+                      </div>
+
+                      <div>
+                        <Input
+                          fullWidth
+                          required
+                          isDisabled={isLoading}
+                          label="Valor Máximo"
+                          labelPlacement="outside"
+                          placeholder="100"
+                          size="md"
+                          type="number"
+                          value={measurement.maxValue}
+                          variant="bordered"
+                          onChange={(e) =>
+                            handleMeasurementChange(
+                              index,
+                              "maxValue",
+                              e.target.value
+                            )
+                          }
+                        />
+                        {errors[`${index}-maxValue`] && (
+                          <Text
+                            className="mt-1"
+                            color="danger"
+                            variant="caption"
+                          >
+                            {errors[`${index}-maxValue`]}
+                          </Text>
+                        )}
+                      </div>
                     </div>
+
+                    {errors[`${index}-range`] && (
+                      <Text color="danger" variant="caption">
+                        {errors[`${index}-range`]}
+                      </Text>
+                    )}
                   </div>
-
-                  {errors[`${index}-range`] && (
-                    <Text color="danger" variant="caption">
-                      {errors[`${index}-range`]}
-                    </Text>
-                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-600">
+        {/* Fixed Actions Footer */}
+        <div className="flex items-center justify-end gap-2 pt-4 pb-2 border-t border-slate-600 flex-shrink-0 mt-auto">
           <Button
             color="default"
             disabled={isLoading}

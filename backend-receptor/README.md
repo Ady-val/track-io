@@ -23,22 +23,19 @@ Backend service for receiving and processing signals with PostgreSQL database in
 
 ### Postman Collection
 
-This project includes a complete Postman collection with all API endpoints. You can find the following files in the `backend-receptor` directory:
+This project includes a complete Postman collection with all API endpoints. You can find the following files in the `docs/` directory:
 
-- **`Track.IO-API.postman_collection.json`** - Complete API collection
-- **`Track.IO-Development.postman_environment.json`** - Development environment
-- **`Track.IO-Production.postman_environment.json`** - Production environment template
-- **`POSTMAN_GUIDE.md`** - Complete guide for using the Postman collection
+- **`docs/Track.IO-API.postman_collection.json`** - Complete API collection
+- **`docs/Track.IO-Development.postman_environment.json`** - Development environment
+- **`docs/Track.IO-Production.postman_environment.json`** - Production environment template
 
 ### Quick Import
 
 1. Open Postman
 2. Click **Import** → **File**
-3. Select `Track.IO-API.postman_collection.json`
-4. Select the environment files
+3. Select `docs/Track.IO-API.postman_collection.json`
+4. Select the environment files from `docs/`
 5. Start testing!
-
-For detailed instructions, see [POSTMAN_GUIDE.md](./POSTMAN_GUIDE.md)
 
 ## Modules & Endpoints
 
@@ -152,37 +149,32 @@ Connect to WebSocket at: `ws://localhost:3000`
 
 ### 🚀 Quick Setup for Development
 
-The easiest way to set up the backend for local development:
+1. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
 
-**Windows:**
-```batch
-setup-dev.bat
-```
+2. **Configure environment:**
+   ```bash
+   cp env.example .env
+   ```
+   The `.env` file is already configured for development with `DATABASE_NAME=track_iq_dev`
 
-**Linux/Mac:**
-```bash
-chmod +x setup-dev.sh
-./setup-dev.sh
-```
+3. **Start database:**
+   ```bash
+   pnpm run db:start
+   ```
+   This starts PostgreSQL with database `track_iq_dev` for development.
 
-This script will:
-1. ✅ Create `.env` file from `env.example`
-2. ✅ Verify if Docker database is running
-3. ✅ Show you the next steps
+4. **Start application:**
+   ```bash
+   pnpm run start:dev
+   ```
+   TypeORM automatically creates all tables in development. No migrations needed! 🎉
 
-### 📋 Manual Setup (Alternative)
+### 🚀 Production Setup
 
-#### 1. Install Dependencies
-
-```bash
-pnpm install
-```
-
-#### 2. Start the Database
-
-**Using Docker (Recommended):**
-
-The backend connects to the PostgreSQL database running in Docker. Start it with:
+For production deployment, use the Docker Compose setup:
 
 ```bash
 cd ../docker
@@ -192,106 +184,30 @@ start.bat
 ./start.sh
 ```
 
-This will start PostgreSQL on `localhost:5432` with:
-- Database: `track_io`
-- User: `postgres`
-- Password: `postgres`
+This starts all services (PostgreSQL `track_io`, backend, nginx) with migrations running automatically.
 
-**Using Local PostgreSQL:**
-
-If you prefer a local PostgreSQL installation, make sure it's running and create the database:
-
-```sql
-CREATE DATABASE track_io;
-```
-
-#### 3. Configure Environment
-
-Copy the example environment file:
+### 📊 Database Commands
 
 ```bash
-cp env.example .env
+# Start development database
+pnpm run db:start
+
+# Stop development database
+pnpm run db:stop
+
+# Restart development database
+pnpm run db:restart
 ```
 
-The default `.env` configuration works with the Docker database:
+### 🔄 Migrations
 
-```env
-# Database Configuration (connects to Docker PostgreSQL)
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=postgres
-DATABASE_NAME=track_io
+**Development:** TypeORM uses `synchronize: true` - tables are created automatically.
 
-# Application Configuration
-PORT=3000
-NODE_ENV=development
-
-# CORS Configuration (allow dev servers)
-CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost
-```
-
-#### 4. Run Database Migrations
-
+**Production:** Migrations run automatically in Docker. For manual execution:
 ```bash
-# Run pending migrations
-pnpm run migration:run
-
-# Check migration status
-pnpm run migration:show
-```
-
-#### 5. Run the Application
-
-```bash
-# Development mode with hot reload
-pnpm run start:dev
-
-# Production mode
-pnpm run build
-pnpm run start:prod
-
-# Debug mode
-pnpm run start:debug
-```
-
-The application will be available at `http://localhost:3000`
-
-### 🔄 Development Workflow
-
-Once set up, your typical workflow is:
-
-1. **Start Docker database** (if not running):
-   ```bash
-   cd ../docker && start.bat
-   ```
-
-2. **Start backend in dev mode**:
-   ```bash
-   cd backend-receptor
-   pnpm run start:dev
-   ```
-
-3. **Backend runs on** `http://localhost:3000`
-
-4. **Frontend dev servers** can connect to it:
-   - Dashboard: `http://localhost:5173`
-   - Virtual Device: `http://localhost:5174`
-
-### 🎯 Working with Migrations
-
-```bash
-# Generate a new migration based on entity changes
-pnpm run migration:generate -- src/migrations/MigrationName
-
-# Run pending migrations
-pnpm run migration:run
-
-# Revert last migration
-pnpm run migration:revert
-
-# Show migration status
-pnpm run migration:show
+pnpm run migration:run      # Run pending migrations
+pnpm run migration:show    # Show migration status
+pnpm run migration:revert  # Revert last migration
 ```
 
 ## Project Structure
@@ -337,11 +253,13 @@ backend-receptor/
 │   ├── migrations/               # Database migrations
 │   ├── app.module.ts            # Main application module
 │   └── main.ts                  # Application entry point
-├── Track.IO-API.postman_collection.json
-├── Track.IO-Development.postman_environment.json
-├── Track.IO-Production.postman_environment.json
-├── POSTMAN_GUIDE.md
-├── MIGRATIONS.md
+├── docs/                        # Documentation and Postman files
+│   ├── DATABASE_SCHEMA.md
+│   ├── DEVELOPMENT.md
+│   ├── MIGRATION_GUIDE.md
+│   ├── Track.IO-API.postman_collection.json
+│   ├── Track.IO-Development.postman_environment.json
+│   └── Track.IO-Production.postman_environment.json
 └── README.md
 ```
 
@@ -398,7 +316,12 @@ pnpm run format
 # Check formatting
 pnpm run format:check
 
-# Database migrations
+# Database
+pnpm run db:start          # Start development database
+pnpm run db:stop           # Stop development database
+pnpm run db:restart        # Restart development database
+
+# Migrations
 pnpm run migration:generate -- src/migrations/MigrationName
 pnpm run migration:run
 pnpm run migration:revert

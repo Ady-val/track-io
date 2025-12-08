@@ -61,8 +61,10 @@ export default function RawSignalsPage() {
     useState<boolean>(false);
   const [isDeviceAndSignalModalOpen, setIsDeviceAndSignalModalOpen] =
     useState<boolean>(false);
-  const [isDeviceSignalWithDeviceModalOpen, setIsDeviceSignalWithDeviceModalOpen] =
-    useState<boolean>(false);
+  const [
+    isDeviceSignalWithDeviceModalOpen,
+    setIsDeviceSignalWithDeviceModalOpen,
+  ] = useState<boolean>(false);
   const [usedDepartments, setUsedDepartments] = useState<number[]>([]);
   const [isCreatingMeasurement, setIsCreatingMeasurement] =
     useState<boolean>(false);
