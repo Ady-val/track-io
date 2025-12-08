@@ -65,8 +65,81 @@ else
     exit 1
 fi
 
-# Detener servicios existentes
+# Detener servicios existentes y limpiar contenedores huérfanos
+echo "   Deteniendo servicios existentes..."
 $COMPOSE_CMD down
+
+# Verificar y limpiar contenedores huérfanos que puedan estar usando los puertos
+echo "   Verificando contenedores huérfanos..."
+for container in track_io_backend track_io_nginx track_io_postgres; do
+    if docker ps -a --filter "name=$container" --format "{{.Names}}" 2>/dev/null | grep -q "$container"; then
+        echo "   Eliminando contenedor $container huérfano..."
+        docker rm -f "$container" 2>/dev/null || true
+    fi
+done
+
+# Verificar si el puerto 3000 está en uso
+PORT_IN_USE=false
+if command -v lsof >/dev/null 2>&1 && lsof -i :3000 >/dev/null 2>&1; then
+    PORT_IN_USE=true
+elif command -v netstat >/dev/null 2>&1 && netstat -tuln 2>/dev/null | grep -q ":3000 "; then
+    PORT_IN_USE=true
+elif command -v ss >/dev/null 2>&1 && ss -tuln 2>/dev/null | grep -q ":3000 "; then
+    PORT_IN_USE=true
+fi
+
+if [ "$PORT_IN_USE" = true ]; then
+    echo "   ⚠️  Advertencia: El puerto 3000 está en uso"
+    echo "   Intentando liberar el puerto..."
+    
+    # Intentar detener cualquier contenedor usando el puerto 3000
+    CONTAINERS_USING_PORT=$(docker ps --filter "publish=3000" --format "{{.ID}}" 2>/dev/null)
+    if [ -n "$CONTAINERS_USING_PORT" ]; then
+        echo "$CONTAINERS_USING_PORT" | while read -r container_id; do
+            docker stop "$container_id" 2>/dev/null || true
+            docker rm -f "$container_id" 2>/dev/null || true
+        done
+    fi
+    
+    # También buscar contenedores detenidos
+    STOPPED_CONTAINERS=$(docker ps -a --filter "publish=3000" --format "{{.ID}}" 2>/dev/null)
+    if [ -n "$STOPPED_CONTAINERS" ]; then
+        echo "$STOPPED_CONTAINERS" | while read -r container_id; do
+            docker rm -f "$container_id" 2>/dev/null || true
+        done
+    fi
+    
+    # Esperar un momento para que el puerto se libere
+    sleep 2
+    
+    # Verificar nuevamente
+    PORT_STILL_IN_USE=false
+    if command -v lsof >/dev/null 2>&1 && lsof -i :3000 >/dev/null 2>&1; then
+        PORT_STILL_IN_USE=true
+    elif command -v netstat >/dev/null 2>&1 && netstat -tuln 2>/dev/null | grep -q ":3000 "; then
+        PORT_STILL_IN_USE=true
+    elif command -v ss >/dev/null 2>&1 && ss -tuln 2>/dev/null | grep -q ":3000 "; then
+        PORT_STILL_IN_USE=true
+    fi
+    
+    if [ "$PORT_STILL_IN_USE" = true ]; then
+        echo "   ❌ El puerto 3000 aún está en uso"
+        echo ""
+        echo "   Soluciones:"
+        echo "   1. Ver qué está usando el puerto:"
+        echo "      sudo lsof -i :3000"
+        echo "      sudo netstat -tuln | grep 3000"
+        echo ""
+        echo "   2. Detener contenedores manualmente:"
+        echo "      docker ps -a | grep track_io"
+        echo "      docker rm -f <container_id>"
+        echo ""
+        echo "   3. O cambiar el puerto en docker-compose.yml"
+        exit 1
+    else
+        echo "   ✅ Puerto 3000 liberado correctamente"
+    fi
+fi
 
 if [ $REBUILD_NEEDED -eq 1 ]; then
     echo "   Reconstruyendo servicios con nueva IP..."
