@@ -47,6 +47,7 @@ start.bat
 ```
 
 El script automáticamente:
+
 - ✅ Detecta la IP de tu equipo
 - ✅ Configura el sistema para acceso en red
 - ✅ Construye e inicia todos los servicios
@@ -106,6 +107,7 @@ chmod +x start.sh
 ```
 
 El script automáticamente:
+
 - ✅ Detecta la IP de tu equipo
 - ✅ Configura el sistema para acceso en red
 - ✅ Construye e inicia todos los servicios
@@ -155,16 +157,19 @@ chmod +x start.sh
 Después de ejecutar `start.bat` o `start.sh`, verás las URLs de acceso:
 
 ### Acceso Local (misma computadora):
+
 - **Dashboard**: http://localhost
 - **Virtual Device**: http://localhost/virtual-device
 - **Backend API**: http://localhost:3000
 
 ### Acceso en Red Local (otros dispositivos):
+
 - **Dashboard**: http://[TU_IP]
 - **Virtual Device**: http://[TU_IP]/virtual-device
 - **Backend API**: http://[TU_IP]:3000
 
 **Ejemplo:**
+
 ```
 🌐 URLs de acceso:
    [Acceso en Red Local]
@@ -281,6 +286,7 @@ Docker no está corriendo. Solución:
 **Windows/Mac:** Abre Docker Desktop
 
 **Linux:**
+
 ```bash
 sudo systemctl start docker
 sudo systemctl enable docker
