@@ -13,11 +13,9 @@ export class AlertCronService {
     private readonly alertEscalationService: AlertEscalationService
   ) {}
 
-  // Cron job que se ejecuta cada segundo
-  @Cron('* * * * * *') // Cada segundo
+  @Cron('* * * * * *')
   async processOpenEvents(): Promise<void> {
     try {
-      // 1. Obtener todos los eventos activos (OPEN e IN_PROGRESS)
       const openEvents = await this.eventRepository.findOpenEvents();
 
       for (const event of openEvents) {
@@ -41,10 +39,9 @@ export class AlertCronService {
         );
 
       if (!config) {
-        return; // No hay configuración para este evento
+        return;
       }
 
-      // 2. Calcular tiempo transcurrido desde la creación del evento
       const timeElapsedMinutes = Math.floor(
         (new Date().getTime() - event.createdAt.getTime()) / (1000 * 60)
       );
@@ -67,13 +64,11 @@ export class AlertCronService {
     }
   }
 
-  // Método para procesar evento cerrado (llamado desde SignalService)
   async processClosedEvent(event: Event): Promise<void> {
     try {
       this.logger.log(
         `🔄 PROCESSING CLOSED EVENT: ${event.id} for device ${event.deviceId}, signal ${event.deviceSignalId}`
       );
-      // Buscar configuración de escalamiento
       const config =
         await this.alertEscalationService.findConfigByDeviceAndSignal(
           event.deviceId,
@@ -84,13 +79,12 @@ export class AlertCronService {
         this.logger.warn(
           `No escalation config found for device ${event.deviceId}, signal ${event.deviceSignalId}`
         );
-        return; // No hay configuración para este evento
+        return;
       }
 
       this.logger.log(
         `✅ Found escalation config ${config.id} for closed event ${event.id}`
       );
-      // Enviar alerta de cierre
       await this.alertEscalationService.sendCloseEventAlert(event, config);
     } catch (error) {
       this.logger.error(`Error processing closed event ${event.id}:`, error);

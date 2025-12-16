@@ -1,9 +1,10 @@
 import type React from "react";
 
-import { Modal } from "./Modal";
-import { CreateDeviceSignalWithDeviceForm } from "./CreateDeviceSignalWithDeviceForm";
 import type { Device } from "@/types/device";
 import type { CreateDeviceSignalData } from "@/types/device-signal";
+
+import { CreateDeviceSignalWithDeviceForm } from "./CreateDeviceSignalWithDeviceForm";
+import { Modal } from "./Modal";
 
 export interface CreateDeviceSignalWithDeviceModalProps {
   isOpen: boolean;
@@ -36,18 +37,11 @@ export const CreateDeviceSignalWithDeviceModal: React.FC<
       <CreateDeviceSignalWithDeviceForm
         device={device}
         externalValueId={externalValueId}
-        usedDepartments={usedDepartments}
         isLoading={isLoading}
+        usedDepartments={usedDepartments}
         onCancel={onClose}
         onSubmit={onSubmit}
       />
     </Modal>
   );
 };
-
-
-
-
-
-
-

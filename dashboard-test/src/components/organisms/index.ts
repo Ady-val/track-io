@@ -56,7 +56,6 @@ export type { AreasGridProps } from "./AreasGrid";
 export { AreaDowntimesTable } from "./AreaDowntimesTable";
 export { DevicesTable } from "./DevicesTable";
 
-// Catalog components
 export { AreasCatalog } from "./catalogs/AreasCatalog";
 export { DepartmentsCatalog } from "./catalogs/DepartmentsCatalog";
 export { TorretasCatalog } from "./catalogs/TorretasCatalog";

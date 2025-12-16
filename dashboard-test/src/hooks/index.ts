@@ -40,5 +40,4 @@ export { useRealtimeMeasurementValues } from "./useRealtimeMeasurementValues";
 export { useSocket } from "./useSocket";
 export { useWebSocketEvent } from "./useWebSocketEvent";
 
-// Catalog hooks
 export * from "./useCatalogs";

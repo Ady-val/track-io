@@ -30,7 +30,6 @@ import {
 export class AlertMessageController {
   constructor(private readonly alertMessageService: AlertMessageService) {}
 
-  // Get all messages (general endpoint)
   @Get('messages')
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getAllAlertMessages(): Promise<{
@@ -45,7 +44,6 @@ export class AlertMessageController {
     };
   }
 
-  // Get single message
   @Get('messages/:id')
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getAlertMessageById(@Param('id', ParseIntPipe) id: number): Promise<{
@@ -60,7 +58,6 @@ export class AlertMessageController {
     };
   }
 
-  // Get messages for a specific alert rule
   @Get('alert-rules/:ruleId/messages')
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.READ)
   async getMessagesByAlertRuleId(
@@ -78,7 +75,6 @@ export class AlertMessageController {
     };
   }
 
-  // Create message for an alert rule
   @Post('alert-rules/:ruleId/messages')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.CREATE)
@@ -100,7 +96,6 @@ export class AlertMessageController {
     };
   }
 
-  // Update message
   @Patch('messages/:id')
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.UPDATE)
   async updateAlertMessage(
@@ -121,7 +116,6 @@ export class AlertMessageController {
     };
   }
 
-  // Duplicate message
   @Post('messages/:id/duplicate')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.CREATE)
@@ -138,7 +132,6 @@ export class AlertMessageController {
     };
   }
 
-  // Delete message
   @Delete('messages/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.DELETE)

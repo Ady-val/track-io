@@ -1,9 +1,10 @@
 import type React from "react";
 
-import { Modal } from "./Modal";
-import { CreateDeviceAndSignalForm } from "./CreateDeviceAndSignalForm";
 import type { CreateDeviceData } from "@/types/device";
 import type { CreateDeviceSignalData } from "@/types/device-signal";
+
+import { CreateDeviceAndSignalForm } from "./CreateDeviceAndSignalForm";
+import { Modal } from "./Modal";
 
 export interface CreateDeviceAndSignalModalProps {
   isOpen: boolean;
@@ -44,10 +45,3 @@ export const CreateDeviceAndSignalModal: React.FC<
     </Modal>
   );
 };
-
-
-
-
-
-
-

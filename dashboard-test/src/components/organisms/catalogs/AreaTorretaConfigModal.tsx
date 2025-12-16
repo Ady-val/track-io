@@ -8,7 +8,7 @@ import {
   useUpdateAreaTorretaConfig,
   useDeleteAreaTorretaConfig,
 } from "@/hooks/useAreaTorretaConfig";
-import { type Area } from "@/hooks/useCatalogs";
+import { type Area, type Torreta } from "@/hooks/useCatalogs";
 import { useTorretas } from "@/hooks/useCatalogs";
 import { useModalError } from "@/hooks/useModalError";
 import type { AreaTorretaConfig } from "@/lib/services/areaTorretaConfig.service";
@@ -56,7 +56,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   const deleteMutation = useDeleteAreaTorretaConfig();
 
   const availableTorretas = torretas.filter(
-    (torreta) =>
+    (torreta: Torreta) =>
       torreta.externalId &&
       (!editingConfig ||
         torreta.externalId === editingConfig.torretaExternalId) &&
@@ -196,7 +196,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   };
 
   const getTorretaName = (externalId: string) => {
-    const torreta = torretas.find((t) => t.externalId === externalId);
+    const torreta = torretas.find((t: Torreta) => t.externalId === externalId);
 
     return torreta?.name ?? externalId;
   };
@@ -340,8 +340,8 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
                 label="Torreta"
                 name="torretaExternalId"
                 options={availableTorretas
-                  .filter((t) => t.externalId)
-                  .map((torreta) => ({
+                  .filter((t: Torreta) => t.externalId)
+                  .map((torreta: Torreta) => ({
                     value: torreta.externalId!,
                     label: `${torreta.name} (${torreta.externalId})`,
                   }))}

@@ -21,7 +21,6 @@ class DeviceService {
     if (filters?.offset) params.append("offset", filters.offset.toString());
     if (filters?.includeDeleted) params.append("includeDeleted", "true");
 
-    // Always include relations for devices page
     params.append("includeRelations", "true");
 
     const queryString = params.toString();

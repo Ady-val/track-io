@@ -147,7 +147,6 @@ const socket = io('http://localhost:3000');
 
 // Escuchar el evento de nuevo signal
 socket.on('new_raw_signal', message => {
-  console.log('Nuevo signal recibido:', message);
   // message.data contiene los datos del signal
 });
 
@@ -156,9 +155,7 @@ socket.on('new_raw_signal', message => {
 // socket.on(WEBSOCKET_EVENTS.NEW_RAW_SIGNAL, message => { ... });
 
 // Escuchar eventos personalizados
-socket.on('system_message', message => {
-  console.log('Mensaje del sistema:', message);
-});
+socket.on('system_message', message => {});
 ```
 
 ## Logs

@@ -66,6 +66,7 @@ export const EditDashboardGroupModal: React.FC<
       measurements.length > 0
         ? Math.min(...measurements.map((m) => m.id || 0)) - 1
         : -1;
+
     setMeasurements([
       ...measurements,
       { id: tempId, measurementId: "", minValue: "", maxValue: "" },
@@ -189,7 +190,7 @@ export const EditDashboardGroupModal: React.FC<
       title="Editar Grupo de Dashboard Measurements"
       onClose={handleClose}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <form className="flex flex-col h-full" onSubmit={handleSubmit}>
         {/* Scrollable Content Area */}
         <div
           className="overflow-y-auto overflow-x-hidden pr-2 -mr-2 pb-4"

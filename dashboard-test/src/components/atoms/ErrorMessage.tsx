@@ -22,7 +22,6 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
       case "validation":
         return "Errores de validación:";
       case "server":
-        // Only show "Error del servidor" for 500+ errors
         return isServerError ? "Error del servidor:" : "Error:";
       default:
         return "Error:";

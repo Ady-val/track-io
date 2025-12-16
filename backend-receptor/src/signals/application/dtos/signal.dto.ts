@@ -10,7 +10,6 @@ export class SignalDto {
   value!: string;
 }
 
-// DTO para el endpoint de dispositivos virtuales. Los campos extra son opcionales
 export class VirtualDeviceSignalDto extends SignalDto {
   @IsString({ message: 'reason must be a string' })
   @IsOptional()

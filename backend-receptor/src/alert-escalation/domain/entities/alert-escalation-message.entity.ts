@@ -50,13 +50,13 @@ export class AlertEscalationMessage {
   messageType!: MessageType;
 
   @Column({ name: 'target_id', type: 'varchar', length: 255 })
-  targetId!: string; // externalId de torreta, receptor o email
+  targetId!: string;
 
   @Column({ name: 'message', type: 'text' })
   message!: string;
 
   @Column({ name: 'color', type: 'varchar', length: 10, nullable: true })
-  color?: string; // Para torretas: deviceColorId (ej: "R1", "G1", "Y1") - NOTA: Antes se guardaba hex, ahora se guarda deviceColorId
+  color?: string;
 
   @CreateDateColumn({
     name: 'created_at',
@@ -77,7 +77,6 @@ export class AlertEscalationMessage {
   })
   deletedAt?: Date;
 
-  // Relations
   @ManyToOne(() => AlertEscalationConfig)
   @JoinColumn({ name: 'escalation_config_id' })
   escalationConfig?: AlertEscalationConfig;

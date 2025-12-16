@@ -180,7 +180,7 @@ export function TorretaColorsCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedColor(null);
       } catch {
-        errorHandling.setError("Error al eliminar el color");
+        errorHandling.setServerError("Error al eliminar el color");
       }
     }
   };

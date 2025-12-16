@@ -41,6 +41,8 @@ export const DepartmentCard: React.FC<DepartmentCardProps> = ({
   return (
     <div
       className="hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -48,35 +50,22 @@ export const DepartmentCard: React.FC<DepartmentCardProps> = ({
           handleClick();
         }
       }}
-      role="button"
-      tabIndex={0}
     >
       <Card>
         <div className="text-center space-y-4">
           <div
             className={`w-16 h-16 ${getBackgroundColor()} rounded-full flex items-center justify-center mx-auto`}
           >
-            <Text
-              className="text-white"
-              color="primary"
-              variant="h3"
-            >
+            <Text className="text-white" color="primary" variant="h3">
               {deviceSignal.departmentName.charAt(0).toUpperCase()}
             </Text>
           </div>
 
           <div>
-            <Text
-              className="font-semibold"
-              color="primary"
-              variant="h4"
-            >
+            <Text className="font-semibold" color="primary" variant="h4">
               {deviceSignal.departmentName}
             </Text>
-            <Text
-              color="muted"
-              variant="caption"
-            >
+            <Text color="muted" variant="caption">
               {deviceSignal.name}
             </Text>
           </div>

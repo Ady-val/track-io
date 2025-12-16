@@ -34,7 +34,7 @@ export const CreateDashboardGroupModal: React.FC<
 > = ({ isOpen, onClose, onSubmit, isLoading = false }) => {
   const [groupName, setGroupName] = useState<string>("");
   const [measurements, setMeasurements] = useState<MeasurementItem[]>([
-    { measurementId: "", minValue: "", maxValue: "" },
+    { measurementId: "", minValue: "", maxValue: "" } as MeasurementItem,
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -61,7 +61,7 @@ export const CreateDashboardGroupModal: React.FC<
   ) => {
     const updated = [...measurements];
 
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: value } as MeasurementItem;
     setMeasurements(updated);
 
     const errorKey = `${index}-${field}`;
@@ -220,12 +220,7 @@ export const CreateDashboardGroupModal: React.FC<
                       fullWidth
                       required
                       disabled={isLoading || measurementsLoading}
-                      label="Measurement"
-                      labelPlacement="outside"
-                      placeholder="Seleccionar measurement"
-                      size="md"
                       value={measurement.measurementId}
-                      variant="bordered"
                       onChange={(e) =>
                         handleMeasurementChange(
                           index,
@@ -236,7 +231,7 @@ export const CreateDashboardGroupModal: React.FC<
                     >
                       <option value="">Seleccionar...</option>
                       {availableMeasurements.map((m) => (
-                        <option key={m.id} value={m.id}>
+                        <option key={m.id} value={String(m.id)}>
                           {m.name} ({m.externalId}) - {m.type}
                         </option>
                       ))}

@@ -63,10 +63,7 @@ export const SignalModal: React.FC<SignalModalProps> = ({
       <div className="space-y-4">
         {deviceSignal && requireReason && (
           <div>
-            <Text
-              className="text-gray-700"
-              variant="body"
-            >
+            <Text className="text-gray-700" variant="body">
               Departamento: <strong>{deviceSignal.departmentName}</strong>
             </Text>
           </div>
@@ -75,28 +72,22 @@ export const SignalModal: React.FC<SignalModalProps> = ({
         {requireReason && (
           <div>
             <label
-              htmlFor="reason-select"
               className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="reason-select"
             >
               Motivo *
             </label>
             <Select
-              id="reason-select"
               fullWidth
+              id="reason-select"
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
             >
-              <option
-                disabled
-                value=""
-              >
+              <option disabled value="">
                 Selecciona un motivo
               </option>
               {REASONS.map((reason) => (
-                <option
-                  key={reason.value}
-                  value={reason.value}
-                >
+                <option key={reason.value} value={reason.value}>
                   {reason.label}
                 </option>
               ))}
@@ -115,28 +106,17 @@ export const SignalModal: React.FC<SignalModalProps> = ({
 
         {error && (
           <div className="p-3 bg-red-50 border border-red-300 rounded-md">
-            <Text
-              color="danger"
-              variant="small"
-            >
+            <Text color="danger" variant="small">
               {error}
             </Text>
           </div>
         )}
 
         <div className="flex justify-end space-x-3 pt-4">
-          <Button
-            color="default"
-            isDisabled={isLoading}
-            onPress={handleClose}
-          >
+          <Button color="default" isDisabled={isLoading} onPress={handleClose}>
             Cancelar
           </Button>
-          <Button
-            color="primary"
-            isLoading={isLoading}
-            onPress={handleConfirm}
-          >
+          <Button color="primary" isLoading={isLoading} onPress={handleConfirm}>
             Aceptar
           </Button>
         </div>

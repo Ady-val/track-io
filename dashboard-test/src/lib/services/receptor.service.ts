@@ -6,7 +6,6 @@ class ReceptorService {
   private readonly baseUrl = "/receptors";
 
   async getAll(): Promise<Receptor[]> {
-    console.log("getAll");
     const response = await apiClient.get<ReceptorsResponse>(this.baseUrl);
 
     return response.data.data;

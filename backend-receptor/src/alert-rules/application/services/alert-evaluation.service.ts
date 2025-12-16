@@ -29,18 +29,14 @@ export class AlertEvaluationService {
 
   async evaluateMeasurement(rawMeasurement: RawMeasurement): Promise<void> {
     try {
-      // 1. Buscar measurement por externalId
       const measurement = await this.getMeasurement(rawMeasurement.externalId);
 
-      // Guard clause: si no hay measurement, no evaluar
       if (!measurement) {
         return;
       }
 
-      // 2. Obtener todas las AlertRules activas
       const allActiveRules = await this.alertRuleService.getEnabledAlertRules();
 
-      // 3. Filtrar reglas para este measurement
       const rulesForMeasurement = allActiveRules.filter(
         r => r.measurementId === measurement.id
       );
@@ -49,7 +45,6 @@ export class AlertEvaluationService {
         return;
       }
 
-      // 4. Evaluar cada regla
       for (const rule of rulesForMeasurement) {
         const triggered = this.evaluateCondition(rule, rawMeasurement.value);
 
@@ -65,10 +60,6 @@ export class AlertEvaluationService {
     }
   }
 
-  /**
-   * Obtiene un measurement por su externalId
-   * @returns Measurement si existe, null si no existe o hay error
-   */
   private async getMeasurement(
     externalId: string
   ): Promise<Measurement | null> {
@@ -81,9 +72,6 @@ export class AlertEvaluationService {
     }
   }
 
-  /**
-   * Evalúa si una regla se cumple con un valor dado
-   */
   private evaluateCondition(rule: AlertRule, valueStr: string): boolean {
     const value = parseFloat(valueStr);
 
@@ -163,7 +151,6 @@ export class AlertEvaluationService {
 
       this.triggerNotifications(rule, messages);
 
-      // Emitir evento WebSocket de alerta disparada
       this.webSocketEmitterService.emitToAll('alert_triggered', {
         type: 'alert',
         data: {
@@ -182,9 +169,6 @@ export class AlertEvaluationService {
     }
   }
 
-  /**
-   * Construye descripción legible del resultado de la condición
-   */
   private buildConditionResult(rule: AlertRule, value: number): string {
     switch (rule.mode) {
       case AlertRuleMode.SETPOINT:
@@ -204,9 +188,6 @@ export class AlertEvaluationService {
     }
   }
 
-  /**
-   * Dispara notificaciones según el tipo de mensaje
-   */
   private triggerNotifications(
     _rule: AlertRule,
     messages: AlertMessage[]

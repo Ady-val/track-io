@@ -149,8 +149,9 @@ export function DepartmentsCatalog() {
         await deleteDepartmentMutation.mutateAsync(selectedDepartment.id);
         setIsDeleteModalOpen(false);
         setSelectedDepartment(null);
-      } catch {
-        errorHandling.setError("Error al eliminar el departamento");
+      } catch (error) {
+        errorHandling.setServerError("Error al eliminar el departamento");
+        errorHandling.handleApiError(error);
       }
     }
   };

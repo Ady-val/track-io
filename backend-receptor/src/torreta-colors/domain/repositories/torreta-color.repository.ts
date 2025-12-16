@@ -22,10 +22,8 @@ export class TorretaColorRepository extends Repository<TorretaColor> {
   }
 
   async findByHtmlColor(htmlColor: string): Promise<TorretaColor | null> {
-    // Normalizar el color: uppercase y trim
     const normalizedColor = htmlColor.toUpperCase().trim();
 
-    // Buscar con case-insensitive usando query builder para mayor flexibilidad
     return this.createQueryBuilder('torretaColor')
       .where('UPPER(TRIM(torretaColor.htmlColor)) = :color', {
         color: normalizedColor,

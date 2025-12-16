@@ -25,17 +25,18 @@ export class AreaTorretaConfigService {
 
   private getAreaTorretaConfigRepository(): TypeOrmAreaTorretaConfigRepository {
     if (!this.areaTorretaConfigRepository) {
-      const repo = this.moduleRef.get(TypeOrmAreaTorretaConfigRepository, {
-        strict: false,
-      });
-
-      if (!repo) {
+      const repository = this.moduleRef.get(
+        TypeOrmAreaTorretaConfigRepository,
+        {
+          strict: false,
+        }
+      );
+      if (!repository) {
         throw new Error(
           'TypeOrmAreaTorretaConfigRepository provider is not available'
         );
       }
-
-      this.areaTorretaConfigRepository = repo;
+      this.areaTorretaConfigRepository = repository;
     }
 
     return this.areaTorretaConfigRepository;
@@ -43,15 +44,13 @@ export class AreaTorretaConfigService {
 
   private getAreaRepository(): AreaRepository {
     if (!this.areaRepository) {
-      const repo = this.moduleRef.get(AreaRepository, {
+      const repository = this.moduleRef.get(AreaRepository, {
         strict: false,
       });
-
-      if (!repo) {
+      if (!repository) {
         throw new Error('AreaRepository provider is not available');
       }
-
-      this.areaRepository = repo;
+      this.areaRepository = repository;
     }
 
     return this.areaRepository;
@@ -59,15 +58,13 @@ export class AreaTorretaConfigService {
 
   private getTorretaRepository(): TorretaRepository {
     if (!this.torretaRepository) {
-      const repo = this.moduleRef.get(TorretaRepository, {
+      const repository = this.moduleRef.get(TorretaRepository, {
         strict: false,
       });
-
-      if (!repo) {
+      if (!repository) {
         throw new Error('TorretaRepository provider is not available');
       }
-
-      this.torretaRepository = repo;
+      this.torretaRepository = repository;
     }
 
     return this.torretaRepository;

@@ -43,12 +43,12 @@ export class AlertEscalationConfigService {
         };
 
         if (
-          messageDto.messageType === MessageType.TORRETA &&
+          (messageDto.messageType as MessageType) === MessageType.TORRETA &&
           messageDto.deviceColorId
         ) {
           messageData.color = messageDto.deviceColorId;
         } else if (
-          messageDto.messageType === MessageType.TORRETA &&
+          (messageDto.messageType as MessageType) === MessageType.TORRETA &&
           (messageDto as any).color
         ) {
           const hexColor = (messageDto as any).color as string;
@@ -140,12 +140,12 @@ export class AlertEscalationConfigService {
         };
 
         if (
-          messageDto.messageType === MessageType.TORRETA &&
+          (messageDto.messageType as MessageType) === MessageType.TORRETA &&
           messageDto.deviceColorId
         ) {
           messageData.color = messageDto.deviceColorId;
         } else if (
-          messageDto.messageType === MessageType.TORRETA &&
+          (messageDto.messageType as MessageType) === MessageType.TORRETA &&
           (messageDto as any).color
         ) {
           const hexColor = (messageDto as any).color as string;

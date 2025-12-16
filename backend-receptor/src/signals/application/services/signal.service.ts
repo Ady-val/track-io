@@ -48,11 +48,9 @@ export class SignalService {
       const service = this.moduleRef.get(AreaTorretaSignalService, {
         strict: false,
       });
-
       if (!service) {
         throw new Error('AreaTorretaSignalService provider is not available');
       }
-
       this.areaTorretaSignalService = service;
     }
 

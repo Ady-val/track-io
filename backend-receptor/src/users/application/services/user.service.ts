@@ -381,7 +381,6 @@ export class UserService {
         return [];
       }
 
-      // Filter out soft-deleted roles as a security measure
       const activeRoles = user.roles.filter(role => !role.deletedAt);
 
       if (activeRoles.length === 0) {

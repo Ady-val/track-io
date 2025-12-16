@@ -30,7 +30,7 @@ export class EventAlertLog {
   sentAt!: Date;
 
   @Column({ name: 'messages_sent', type: 'jsonb' })
-  messagesSent!: any[]; // Array de mensajes enviados
+  messagesSent!: any[];
 
   @Column({ name: 'success', type: 'boolean' })
   success!: boolean;
@@ -41,7 +41,6 @@ export class EventAlertLog {
   @Column({ name: 'endpoint_url', type: 'varchar', length: 500 })
   endpointUrl!: string;
 
-  // Relations
   @ManyToOne(() => Event)
   @JoinColumn({ name: 'event_id' })
   event?: Event;

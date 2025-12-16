@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 import { useModalError } from "@/hooks/useModalError";
 import {
@@ -49,7 +49,10 @@ export function PermissionMatrix({
 
   const rolePermissions = rolePermissionsData?.data ?? [];
   const rolePermissionIdsArray = useMemo(
-    () => rolePermissions.map((p) => p.id).sort((a, b) => a - b),
+    () =>
+      rolePermissions
+        .map((p: Permission) => p.id)
+        .sort((a: number, b: number) => a - b),
     [rolePermissions]
   );
 
@@ -138,25 +141,27 @@ export function PermissionMatrix({
       const currentIds = new Set(rolePermissionIdsArray);
       const newIds = new Set(selectedPermissions);
 
-      const toAdd = Array.from(newIds).filter((id) => !currentIds.has(id));
-      const toRemove = Array.from(currentIds).filter((id) => !newIds.has(id));
+      const toAdd = Array.from(newIds);
+      const toAddFiltered = toAdd.filter((id: number) => !currentIds.has(id));
+      const toRemove = Array.from(currentIds) as number[];
+      const toRemoveFiltered = toRemove.filter((id: number) => !newIds.has(id));
 
       const promises: Array<Promise<unknown>> = [];
 
-      if (toAdd.length > 0) {
+      if (toAddFiltered.length > 0) {
         promises.push(
           assignPermissionsMutation.mutateAsync({
             roleId: role.id,
-            permissionIds: toAdd,
+            permissionIds: toAddFiltered,
           })
         );
       }
 
-      if (toRemove.length > 0) {
+      if (toRemoveFiltered.length > 0) {
         promises.push(
           removePermissionsMutation.mutateAsync({
             roleId: role.id,
-            permissionIds: toRemove,
+            permissionIds: toRemoveFiltered,
           })
         );
       }

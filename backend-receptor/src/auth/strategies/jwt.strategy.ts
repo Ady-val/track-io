@@ -15,8 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
   constructor(configService: ConfigService) {
-    // Use || instead of ?? to handle empty strings as falsy and fall back to default
-    // Empty JWT secrets are security risks and should trigger the fallback
     const jwtSecret =
       configService.get<string>('JWT_SECRET') ||
       'your-secret-key-change-in-production';

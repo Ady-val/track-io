@@ -34,17 +34,10 @@ export const DepartmentGrid: React.FC<DepartmentGridProps> = ({
   if (deviceSignals.length === 0) {
     return (
       <div className="text-center py-12">
-        <Text
-          color="muted"
-          variant="h4"
-        >
+        <Text color="muted" variant="h4">
           No hay departamentos disponibles
         </Text>
-        <Text
-          className="mt-2"
-          color="muted"
-          variant="body"
-        >
+        <Text className="mt-2" color="muted" variant="body">
           Este dispositivo no tiene señales configuradas
         </Text>
       </div>
@@ -54,16 +47,10 @@ export const DepartmentGrid: React.FC<DepartmentGridProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Text
-          className="text-slate-100"
-          variant="h3"
-        >
+        <Text className="text-slate-100" variant="h3">
           Departamentos
         </Text>
-        <Text
-          color="muted"
-          variant="body"
-        >
+        <Text color="muted" variant="body">
           {deviceSignals.length} departamento
           {deviceSignals.length !== 1 ? "s" : ""}
         </Text>

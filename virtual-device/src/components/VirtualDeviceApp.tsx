@@ -19,12 +19,12 @@ export const VirtualDeviceApp: React.FC = () => {
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<DeviceSignal | null>(
-    null
+    null,
   );
   const [events, setEvents] = useState<Map<number, any>>(new Map());
 
   const selectedDevice = devices.find(
-    (device) => device.id === selectedDeviceId
+    (device) => device.id === selectedDeviceId,
   );
 
   const fetchEvents = async () => {
@@ -48,9 +48,7 @@ export const VirtualDeviceApp: React.FC = () => {
         if (eventsArray && eventsArray.length > 0) {
           newEvents.set(signal.id, eventsArray[0]);
         }
-      } catch {
-        // Silently handle errors
-      }
+      } catch {}
     }
 
     setEvents(newEvents);
@@ -81,7 +79,7 @@ export const VirtualDeviceApp: React.FC = () => {
         selectedDevice,
         selectedSignal,
         reason || "",
-        comment
+        comment,
       );
 
       setShowModal(false);
@@ -90,9 +88,7 @@ export const VirtualDeviceApp: React.FC = () => {
       setTimeout(() => {
         fetchEvents();
       }, 1500);
-    } catch {
-      // Silently handle errors
-    }
+    } catch {}
   };
 
   const handleModalClose = () => {
@@ -109,11 +105,7 @@ export const VirtualDeviceApp: React.FC = () => {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <Spinner size="lg" />
-          <Text
-            className="mt-4"
-            color="muted"
-            variant="h4"
-          >
+          <Text className="mt-4" color="muted" variant="h4">
             Cargando aplicación...
           </Text>
         </div>
@@ -125,17 +117,10 @@ export const VirtualDeviceApp: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <Text
-            className="mb-2"
-            color="danger"
-            variant="h4"
-          >
+          <Text className="mb-2" color="danger" variant="h4">
             Error al cargar la aplicación
           </Text>
-          <Text
-            color="muted"
-            variant="body"
-          >
+          <Text color="muted" variant="body">
             {error}
           </Text>
         </div>
@@ -146,20 +131,12 @@ export const VirtualDeviceApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-8 flex items-start justify-between gap-4">
           <div className="flex-1">
-            <Text
-              className="text-slate-100 font-bold"
-              variant="h1"
-            >
+            <Text className="text-slate-100 font-bold" variant="h1">
               Virtual Device Simulator
             </Text>
-            <Text
-              className="mt-2"
-              color="muted"
-              variant="body"
-            >
+            <Text className="mt-2" color="muted" variant="body">
               Simula el envío de datos desde dispositivos virtuales
             </Text>
           </div>
@@ -173,14 +150,12 @@ export const VirtualDeviceApp: React.FC = () => {
           </div>
         </div>
 
-        {/* Device Info */}
         {selectedDevice && (
           <div className="mb-8">
             <DeviceInfo device={selectedDevice} />
           </div>
         )}
 
-        {/* Department Grid */}
         {selectedDevice && (
           <DepartmentGrid
             deviceSignals={selectedDevice.deviceSignals || []}
@@ -200,20 +175,12 @@ export const VirtualDeviceApp: React.FC = () => {
           onConfirm={handleModalConfirm}
         />
 
-        {/* No device selected message */}
         {!selectedDevice && !isLoading && (
           <div className="text-center py-12">
-            <Text
-              color="muted"
-              variant="h4"
-            >
+            <Text color="muted" variant="h4">
               Selecciona un dispositivo virtual para comenzar
             </Text>
-            <Text
-              className="mt-2"
-              color="muted"
-              variant="body"
-            >
+            <Text className="mt-2" color="muted" variant="body">
               Elige un dispositivo de la lista para ver sus departamentos
               disponibles
             </Text>

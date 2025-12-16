@@ -28,7 +28,6 @@ export class CreateAlertRuleDto {
   @IsEnum(AlertRuleMode)
   mode!: AlertRuleMode;
 
-  // Campos para modo setpoint
   @ValidateIf((o: ValidationObject) => o.mode === AlertRuleMode.SETPOINT)
   @IsString()
   @IsNotEmpty()
@@ -38,7 +37,6 @@ export class CreateAlertRuleDto {
   @IsNumber()
   setpoint?: number;
 
-  // Campos para modo window
   @ValidateIf((o: ValidationObject) => o.mode === AlertRuleMode.WINDOW)
   @IsNumber()
   minValue?: number;

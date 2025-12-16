@@ -173,7 +173,6 @@ export class TypeOrmEventRepository implements EventRepository {
   }
 
   async findRecentClosedEvents(limit: number): Promise<Event[]> {
-    // Obtener inicio y fin del día actual
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -183,7 +182,7 @@ export class TypeOrmEventRepository implements EventRepository {
     return this.repository.find({
       where: {
         status: EventStatus.CLOSED,
-        closedAt: Between(startOfDay, endOfDay), // Solo eventos cerrados hoy
+        closedAt: Between(startOfDay, endOfDay),
       },
       relations: ['area', 'department', 'device', 'deviceSignal'],
       order: { closedAt: 'DESC' },
@@ -192,7 +191,6 @@ export class TypeOrmEventRepository implements EventRepository {
   }
 
   async getDashboardData(): Promise<DashboardData[]> {
-    // Esta implementación será más compleja, por ahora retornamos datos básicos
     const events = await this.repository.find({
       relations: ['area', 'department'],
       order: { createdAt: 'DESC' },
@@ -208,7 +206,7 @@ export class TypeOrmEventRepository implements EventRepository {
         areaMap.set(areaName, {
           area: areaName,
           departments: [],
-          eventsTime: '0h 0m 0s', // TODO: Calcular tiempo real
+          eventsTime: '0h 0m 0s',
         });
       }
 

@@ -33,18 +33,18 @@ export class AreaTorretaSignalService {
 
   private getAreaTorretaConfigRepository(): TypeOrmAreaTorretaConfigRepository {
     if (!this.areaTorretaConfigRepository) {
-      const repo = this.moduleRef.get(TypeOrmAreaTorretaConfigRepository, {
-        strict: false,
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!repo) {
+      const repository = this.moduleRef.get(
+        TypeOrmAreaTorretaConfigRepository,
+        {
+          strict: false,
+        }
+      );
+      if (!repository) {
         throw new Error(
           'TypeOrmAreaTorretaConfigRepository provider is not available'
         );
       }
-
-      this.areaTorretaConfigRepository = repo;
+      this.areaTorretaConfigRepository = repository;
     }
 
     return this.areaTorretaConfigRepository;
@@ -52,15 +52,13 @@ export class AreaTorretaSignalService {
 
   private getEventRepository(): TypeOrmEventRepository {
     if (!this.eventRepository) {
-      const repo = this.moduleRef.get(TypeOrmEventRepository, {
+      const repository = this.moduleRef.get(TypeOrmEventRepository, {
         strict: false,
       });
-
-      if (!repo) {
+      if (!repository) {
         throw new Error('TypeOrmEventRepository provider is not available');
       }
-
-      this.eventRepository = repo;
+      this.eventRepository = repository;
     }
 
     return this.eventRepository;
@@ -68,15 +66,13 @@ export class AreaTorretaSignalService {
 
   private getDepartmentRepository(): DepartmentRepository {
     if (!this.departmentRepository) {
-      const repo = this.moduleRef.get(DepartmentRepository, {
+      const repository = this.moduleRef.get(DepartmentRepository, {
         strict: false,
       });
-
-      if (!repo) {
+      if (!repository) {
         throw new Error('DepartmentRepository provider is not available');
       }
-
-      this.departmentRepository = repo;
+      this.departmentRepository = repository;
     }
 
     return this.departmentRepository;
@@ -87,11 +83,9 @@ export class AreaTorretaSignalService {
       const service = this.moduleRef.get(TorretaColorService, {
         strict: false,
       });
-
       if (!service) {
         throw new Error('TorretaColorService provider is not available');
       }
-
       this.torretaColorService = service;
     }
 

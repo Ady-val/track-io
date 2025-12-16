@@ -26,7 +26,6 @@ export class EventController {
     if (deviceId) filters.deviceId = parseInt(deviceId, 10);
     if (deviceSignalId) filters.deviceSignalId = parseInt(deviceSignalId, 10);
 
-    // Si hay status, manejar múltiples valores separados por coma
     if (status) {
       const statuses = status.split(',');
       if (statuses.length === 1) {

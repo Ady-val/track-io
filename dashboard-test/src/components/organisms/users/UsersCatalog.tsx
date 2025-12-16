@@ -155,7 +155,7 @@ export function UsersCatalog() {
     if (isEditModalOpen && selectedUser && userRoles.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        roleIds: userRoles.map((r) => r.id),
+        roleIds: userRoles.map((r: { id: number }) => r.id),
       }));
     }
   }, [isEditModalOpen, selectedUser, userRoles]);
@@ -262,25 +262,30 @@ export function UsersCatalog() {
           },
         });
 
-        const currentRoleIds = new Set(userRoles.map((r) => r.id));
+        const currentRoleIds = new Set(
+          userRoles.map((r: { id: number }) => r.id)
+        );
         const newRoleIds = new Set(formData.roleIds);
 
-        const toAdd = formData.roleIds.filter((id) => !currentRoleIds.has(id));
-        const toRemove = Array.from(currentRoleIds).filter(
-          (id) => !newRoleIds.has(id)
+        const toAdd = formData.roleIds.filter(
+          (id: number) => !currentRoleIds.has(id)
+        );
+        const toRemove = Array.from(currentRoleIds) as number[];
+        const toRemoveFiltered = toRemove.filter(
+          (id: number) => !newRoleIds.has(id)
         );
 
         for (const roleId of toAdd) {
           await assignRoleMutation.mutateAsync({
             userId: selectedUser.id,
-            roleId,
+            roleId: Number(roleId),
           });
         }
 
-        for (const roleId of toRemove) {
+        for (const roleId of toRemoveFiltered) {
           await removeRoleMutation.mutateAsync({
             userId: selectedUser.id,
-            roleId,
+            roleId: Number(roleId),
           });
         }
 
@@ -495,12 +500,18 @@ export function UsersCatalog() {
                   No hay roles disponibles
                 </option>
               ) : (
-                allRoles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}{" "}
-                    {role.description ? `- ${role.description}` : ""}
-                  </option>
-                ))
+                allRoles.map(
+                  (role: {
+                    id: number;
+                    name: string;
+                    description?: string;
+                  }) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}{" "}
+                      {role.description ? `- ${role.description}` : ""}
+                    </option>
+                  )
+                )
               )}
             </Select>
             <p className="text-xs text-slate-400">
@@ -593,12 +604,18 @@ export function UsersCatalog() {
                   No hay roles disponibles
                 </option>
               ) : (
-                allRoles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}{" "}
-                    {role.description ? `- ${role.description}` : ""}
-                  </option>
-                ))
+                allRoles.map(
+                  (role: {
+                    id: number;
+                    name: string;
+                    description?: string;
+                  }) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}{" "}
+                      {role.description ? `- ${role.description}` : ""}
+                    </option>
+                  )
+                )
               )}
             </Select>
             <p className="text-xs text-slate-400">

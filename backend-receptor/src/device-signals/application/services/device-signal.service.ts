@@ -31,7 +31,6 @@ export class DeviceSignalService {
       `Creating device signal with name: ${createDeviceSignalDto.name}`
     );
 
-    // Check if device exists
     const device = await this.deviceRepository.findById(
       createDeviceSignalDto.deviceId
     );
@@ -51,7 +50,6 @@ export class DeviceSignalService {
       );
     }
 
-    // Check if device signal with same externalValueId already exists for this device
     const existingDeviceSignal =
       await this.deviceSignalRepository.findByExternalValueIdAndDeviceId(
         createDeviceSignalDto.externalValueId,
@@ -139,7 +137,6 @@ export class DeviceSignalService {
 
   async findByDeviceId(deviceId: number): Promise<DeviceSignal[]> {
     try {
-      // Check if device exists
       const device = await this.deviceRepository.findById(deviceId);
       if (!device) {
         throw new NotFoundException(`Device with ID ${deviceId} not found`);

@@ -1,5 +1,3 @@
-// import React from "react";
-
 import { FaHome, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 

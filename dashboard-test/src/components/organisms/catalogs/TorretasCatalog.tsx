@@ -147,7 +147,7 @@ export function TorretasCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedTorreta(null);
       } catch {
-        errorHandling.setError("Error al eliminar la torreta");
+        errorHandling.setServerError("Error al eliminar la torreta");
       }
     }
   };

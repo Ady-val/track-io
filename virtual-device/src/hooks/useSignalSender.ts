@@ -11,7 +11,7 @@ export const useSignalSender = () => {
   const sendSignal = async (
     deviceId: number,
     device: Device,
-    deviceSignal: DeviceSignal
+    deviceSignal: DeviceSignal,
   ): Promise<{ success: boolean; value?: string; error?: string }> => {
     setSendingSignals((prev) => new Set(prev).add(deviceSignal.id));
     setErrors((prev) => {
@@ -24,11 +24,6 @@ export const useSignalSender = () => {
 
     try {
       await apiService.sendSignal(deviceId, device, deviceSignal);
-
-      console.log("Signal sent successfully:", {
-        deviceExternalId: device.externalId,
-        signalExternalValueId: deviceSignal.externalValueId,
-      });
 
       return { success: true, value: deviceSignal.externalValueId };
     } catch (error) {
@@ -59,7 +54,7 @@ export const useSignalSender = () => {
     device: Device,
     deviceSignal: DeviceSignal,
     reason: string,
-    comment?: string
+    comment?: string,
   ): Promise<{ success: boolean; error?: string }> => {
     setSendingSignals((prev) => new Set(prev).add(deviceSignal.id));
     setErrors((prev) => {
@@ -75,15 +70,8 @@ export const useSignalSender = () => {
         reason || "",
         device,
         deviceSignal,
-        comment
-      );
-
-      console.log("Virtual device signal sent successfully:", {
-        deviceExternalId: device.externalId,
-        signalExternalValueId: deviceSignal.externalValueId,
-        reason,
         comment,
-      });
+      );
 
       return { success: true };
     } catch (error) {

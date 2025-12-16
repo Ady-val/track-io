@@ -27,21 +27,18 @@ export const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   const config = getMeasurementConfig(type);
   const Icon = config.icon;
 
-  // Convertir a números y calcular los tres indicadores
   const min = parseFloat(minValue.toString());
   const max = parseFloat(maxValue.toString());
   const range = max - min;
-  const indicator1 = min + range * 0.25; // 25%
-  const indicator2 = min + range * 0.5; // 50%
-  const indicator3 = min + range * 0.75; // 75%
+  const indicator1 = min + range * 0.25;
+  const indicator2 = min + range * 0.5;
+  const indicator3 = min + range * 0.75;
 
-  // Calcular posición del valor actual
   const clampedValue =
     value !== undefined ? Math.max(min, Math.min(max, value)) : 0;
   const valuePosition =
     value !== undefined ? ((clampedValue - min) / range) * 100 : 0;
 
-  // Determinar color del valor
   const getValueColor = () => {
     if (value === undefined) return "text-slate-400";
     if (value < min || value > max) return "text-red-400";

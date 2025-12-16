@@ -27,13 +27,12 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   timestamp,
   history,
 }) => {
-  // Factory para renderizar el chart correcto según el tipo
   switch (type) {
     case "temperature":
     case "humidity":
       return (
         <GaugeChart
-          degrees={270} // 270 grados para temperature y humidity
+          degrees={270}
           maxValue={maxValue}
           minValue={minValue}
           subtitle={subtitle}
@@ -87,7 +86,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
       );
 
     default:
-      // Fallback al GaugeChart original para tipos no especificados
       return (
         <GaugeChart
           degrees={180}

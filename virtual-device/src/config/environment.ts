@@ -1,4 +1,3 @@
-// Environment Configuration
 export const ENV_CONFIG = {
   API_URL: import.meta.env.VITE_API_URL || "http://localhost:3000",
   APP_NAME: import.meta.env.VITE_APP_NAME || "Virtual Device Simulator",
@@ -6,6 +5,5 @@ export const ENV_CONFIG = {
   NODE_ENV: import.meta.env.NODE_ENV || "development",
 };
 
-// Development helpers
 export const isDevelopment = ENV_CONFIG.NODE_ENV === "development";
 export const isProduction = ENV_CONFIG.NODE_ENV === "production";

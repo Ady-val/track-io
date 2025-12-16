@@ -17,7 +17,6 @@ export const Input: React.FC<InputProps> = ({ classNames, ...props }) => {
     ...classNames,
   };
 
-  // Merge classNames properly to ensure label color and spacing are applied
   const mergedClassNames = {
     ...defaultClassNames,
     ...classNames,

@@ -1,8 +1,9 @@
 import type React from "react";
 
-import { Modal } from "./Modal";
-import { CreateDeviceForm } from "./CreateDeviceForm";
 import type { CreateDeviceData } from "@/types/device";
+
+import { CreateDeviceForm } from "./CreateDeviceForm";
+import { Modal } from "./Modal";
 
 export interface CreateDeviceModalProps {
   isOpen: boolean;
@@ -35,10 +36,3 @@ export const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
     </Modal>
   );
 };
-
-
-
-
-
-
-

@@ -104,7 +104,6 @@ export const routesConfig: RouteConfig[] = [
   },
 ];
 
-// Helper function to get all sidebar routes
 export const getSidebarRoutes = (): RouteConfig[] => {
   const sidebarRoutes: RouteConfig[] = [];
 
@@ -124,7 +123,6 @@ export const getSidebarRoutes = (): RouteConfig[] => {
   return sidebarRoutes;
 };
 
-// Helper function to find route by path
 export const findRouteByPath = (path: string): RouteConfig | null => {
   const findRoute = (routes: RouteConfig[]): RouteConfig | null => {
     for (const route of routes) {
@@ -144,7 +142,6 @@ export const findRouteByPath = (path: string): RouteConfig | null => {
   return findRoute(routesConfig);
 };
 
-// Helper function to get breadcrumbs
 export const getBreadcrumbs = (
   pathname: string
 ): Array<{ title: string; path: string }> => {

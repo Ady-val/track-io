@@ -48,7 +48,6 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Request() req: AuthenticatedRequest
   ): Promise<LoginResponseDto> {
-    // Use || instead of ?? to handle empty strings as falsy and fall back to connection.remoteAddress
     const ipAddress = req.ip || req.connection?.remoteAddress;
     const userAgent = req.headers['user-agent'];
 

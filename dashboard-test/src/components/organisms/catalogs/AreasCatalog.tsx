@@ -159,8 +159,8 @@ export function AreasCatalog() {
         await deleteAreaMutation.mutateAsync(selectedArea.id);
         setIsDeleteModalOpen(false);
         setSelectedArea(null);
-      } catch {
-        errorHandling.handleError();
+      } catch (error) {
+        errorHandling.handleApiError(error);
       }
     }
   };

@@ -625,10 +625,6 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                     title="Eliminar mensaje"
                                     variant="solid"
                                     onPress={() => {
-                                      console.log(
-                                        "Eliminando mensaje:",
-                                        message
-                                      );
                                       if (message.id) {
                                         handleDeleteMessage(message.id);
                                       } else {

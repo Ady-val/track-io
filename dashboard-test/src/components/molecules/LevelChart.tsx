@@ -41,7 +41,6 @@ export const LevelChart: React.FC<LevelChartProps> = ({
   const config = getMeasurementConfig(type);
   const Icon = config.icon;
 
-  // useEffect 1: Crear el chart solo una vez cuando se monta el componente
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -49,10 +48,8 @@ export const LevelChart: React.FC<LevelChartProps> = ({
 
     if (!ctx) return;
 
-    // Solo crear si no existe
     if (chartRef.current) return;
 
-    // Crear configuración del gauge circular completo (360 grados)
     const chartConfig: ChartConfiguration<"doughnut"> = {
       type: "doughnut",
       data: {

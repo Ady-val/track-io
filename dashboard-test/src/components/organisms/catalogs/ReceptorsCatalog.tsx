@@ -156,7 +156,7 @@ export function ReceptorsCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedReceptor(null);
       } catch {
-        errorHandling.setError("Error al eliminar el receptor");
+        errorHandling.setServerError("Error al eliminar el receptor");
       }
     }
   };

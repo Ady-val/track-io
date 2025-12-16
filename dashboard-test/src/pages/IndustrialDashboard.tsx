@@ -51,27 +51,21 @@ export const IndustrialDashboard: React.FC = () => {
   }, []);
 
   useWebSocketEvent("new-event", () => {
-    console.log("Nuevo evento recibido via WebSocket");
     refreshAll();
   });
 
   useWebSocketEvent("event-updated", () => {
-    console.log("Evento actualizado via WebSocket");
     refreshAll();
   });
 
   useWebSocketEvent("closed-event", () => {
-    console.log("Evento cerrado via WebSocket");
     refreshAll();
   });
 
-  const handleAreaClick = (area: string) => {
-    console.log("Área clickeada:", area);
-  };
+  const handleAreaClick = (_area: string) => {};
 
   const handleEventClick = (event: DashboardEventData) => {
     setSelectedEvent(event);
-    console.log("Evento clickeado:", event);
   };
 
   const handleClosedEventsToggle = async (isExpanded: boolean) => {

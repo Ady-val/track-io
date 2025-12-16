@@ -29,7 +29,6 @@ export class RawMeasurementService {
     );
 
     try {
-      // 1. Guardar raw measurement (operación crítica)
       const savedMeasurement = await this.rawMeasurementRepository.create({
         externalId: id,
         value: value,
@@ -37,7 +36,6 @@ export class RawMeasurementService {
 
       this.logger.log(`Raw measurement saved with ID: ${savedMeasurement.id}`);
 
-      // 2. Operaciones secundarias (no críticas - no deben romper el flujo)
       await this.saveMeasurementValue(id, value);
       this.emitWebSocketEvent(savedMeasurement);
       await this.evaluateAlertRules(savedMeasurement);
@@ -52,9 +50,6 @@ export class RawMeasurementService {
     }
   }
 
-  /**
-   * Guarda el valor en measurement_values si existe el measurement configurado
-   */
   private async saveMeasurementValue(
     externalId: string,
     value: string
@@ -73,16 +68,12 @@ export class RawMeasurementService {
         );
       }
     } catch (error) {
-      // No crítico - solo loguear y continuar
       this.logger.debug(
         `Could not save measurement value: ${(error as Error).message}`
       );
     }
   }
 
-  /**
-   * Emite evento WebSocket con la nueva medición
-   */
   private emitWebSocketEvent(rawMeasurement: RawMeasurement): void {
     try {
       this.webSocketEmitterService.emitNewRawMeasurement({
@@ -95,16 +86,12 @@ export class RawMeasurementService {
         `WebSocket event emitted: ${WEBSOCKET_EVENTS.NEW_RAW_MEASUREMENT}`
       );
     } catch (error) {
-      // No crítico - solo loguear y continuar
       this.logger.error(
         `WebSocket emission failed: ${(error as Error).message}`
       );
     }
   }
 
-  /**
-   * Evalúa las reglas de alerta para esta medición
-   */
   private async evaluateAlertRules(
     rawMeasurement: RawMeasurement
   ): Promise<void> {
@@ -114,7 +101,6 @@ export class RawMeasurementService {
         `Alert evaluation completed for: ${rawMeasurement.externalId}`
       );
     } catch (error) {
-      // No crítico - solo loguear y continuar
       this.logger.error(`Alert evaluation failed: ${(error as Error).message}`);
     }
   }

@@ -26,12 +26,10 @@ export const AreaCard: React.FC<AreaCardProps> = ({
       onClick?.();
     }
   };
-  // Determinar el estado del área usando la nueva lógica de múltiples eventos
   const areaEventStatus = getAreaEventStatus
     ? getAreaEventStatus(area.area)
     : { status: "ok" as const, hasOpenEvents: false };
 
-  // Filtrar solo departamentos con eventos activos (abiertos o en progreso)
   const activeDepartments =
     area.departments?.filter(
       (dept) =>
@@ -68,7 +66,6 @@ export const AreaCard: React.FC<AreaCardProps> = ({
     }
   };
 
-  // Determinar si hay eventos activos para mostrar contenido adicional
   const hasActiveEvents = activeDepartments.length > 0;
 
   return (

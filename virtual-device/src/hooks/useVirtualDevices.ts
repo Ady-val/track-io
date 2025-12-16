@@ -13,13 +13,11 @@ export const useVirtualDevices = () => {
         setIsLoading(true);
         setError(null);
 
-        // Usar API real siempre
         const response = await apiService.getVirtualDevices();
 
         setDevices(response.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
-        console.error("Error loading devices:", err);
       } finally {
         setIsLoading(false);
       }

@@ -32,7 +32,6 @@ export class AlertEscalationConfig {
   })
   endpointUrl!: string;
 
-  // Tiempos de escalamiento en minutos
   @Column({ name: 'warning_delay_minutes', type: 'integer', default: 20 })
   warningDelayMinutes!: number;
 
@@ -67,7 +66,6 @@ export class AlertEscalationConfig {
   })
   deletedAt?: Date;
 
-  // Relations
   @ManyToOne(() => Device, { eager: true })
   @JoinColumn({ name: 'device_id' })
   device?: Device;

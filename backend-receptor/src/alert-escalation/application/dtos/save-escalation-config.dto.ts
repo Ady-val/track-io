@@ -24,7 +24,7 @@ export class SaveEscalationMessageDto {
 
   @IsOptional()
   @IsString()
-  deviceColorId?: string; // deviceColorId para torretas (ej: "R1", "G1", "Y1")
+  deviceColorId?: string;
 }
 
 export class SaveEscalationConfigDto {
@@ -33,8 +33,6 @@ export class SaveEscalationConfigDto {
 
   @IsInt()
   deviceSignalId!: number;
-
-  // endpointUrl se maneja internamente en el backend, no se recibe del frontend
 
   @IsOptional()
   @IsInt()

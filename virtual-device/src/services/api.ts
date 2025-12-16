@@ -44,7 +44,7 @@ class ApiService {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -60,7 +60,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        API_CONFIG.TIMEOUT
+        API_CONFIG.TIMEOUT,
       );
 
       const response = await fetch(url, {
@@ -88,25 +88,22 @@ class ApiService {
     }
   }
 
-  // Get all virtual devices
   async getVirtualDevices(): Promise<ApiResponse<Device[]>> {
     return this.request<ApiResponse<Device[]>>("/devices?isVirtualDevice=true");
   }
 
-  // Get device by ID
   async getDevice(id: number): Promise<ApiResponse<Device>> {
     return this.request<ApiResponse<Device>>(`/devices/${id}`);
   }
 
-  // Send signal data
   async sendSignal(
     _deviceId: number,
     device: Device,
-    deviceSignal: DeviceSignal
+    deviceSignal: DeviceSignal,
   ): Promise<ApiResponse<any>> {
     const signalData: SignalData = {
-      id: device.externalId, // externalId del device
-      value: deviceSignal.externalValueId, // externalValueId del signalDevice
+      id: device.externalId,
+      value: deviceSignal.externalValueId,
     };
 
     return this.request<ApiResponse<any>>("/signals", {
@@ -115,12 +112,11 @@ class ApiService {
     });
   }
 
-  // Send virtual device signal data
   async sendVirtualDeviceSignal(
     reason: string,
     device: Device,
     deviceSignal: DeviceSignal,
-    comment?: string
+    comment?: string,
   ): Promise<ApiResponse<any>> {
     const signalData: VirtualDeviceSignalData = {
       id: device.externalId,
@@ -135,7 +131,6 @@ class ApiService {
     });
   }
 
-  // Get departments
   async getDepartments(): Promise<ApiResponse<any[]>> {
     return this.request<ApiResponse<any[]>>("/departments");
   }

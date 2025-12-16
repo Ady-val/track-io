@@ -101,7 +101,6 @@ export class Event {
   @Column({ type: 'text', nullable: true })
   comment?: string;
 
-  // Relations
   @ManyToOne(() => Area)
   @JoinColumn({ name: 'area_id' })
   area?: Area;

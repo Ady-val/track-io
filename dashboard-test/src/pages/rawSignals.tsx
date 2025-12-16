@@ -74,8 +74,6 @@ export default function RawSignalsPage() {
   const { isConnected } = useWebSocket();
 
   const handleNewSignal = useCallback((msg: WebSocketMessage) => {
-    console.log("New signal received:", msg);
-
     if (msg?.data?.data) {
       const signalData = { ...msg.data.data, type: "signal" as const };
 
@@ -84,8 +82,6 @@ export default function RawSignalsPage() {
   }, []);
 
   const handleNewMeasurement = useCallback((msg: WebSocketMessage) => {
-    console.log("New measurement received:", msg);
-
     if (msg?.data?.data) {
       const measurementData = {
         ...msg.data.data,
@@ -210,10 +206,8 @@ export default function RawSignalsPage() {
 
         setSelectedMeasurement(newMeasurement);
         setIsMeasurementModalOpen(false);
-
-        console.log("Measurement created successfully:", newMeasurement);
-      } catch (error) {
-        console.error("Error creating measurement:", error);
+      } catch {
+        // Error handled silently
       } finally {
         setIsCreatingMeasurement(false);
       }
@@ -232,10 +226,8 @@ export default function RawSignalsPage() {
 
         setSelectedDevice(newDevice);
         setIsDeviceModalOpen(false);
-
-        console.log("Device created successfully:", newDevice);
-      } catch (error) {
-        console.error("Error creating device:", error);
+      } catch {
+        // Error handled silently
       } finally {
         setIsCreatingDevice(false);
       }
@@ -261,10 +253,8 @@ export default function RawSignalsPage() {
         setIsDeviceSignalModalOpen(false);
 
         setUsedDepartments((prev) => [...prev, data.departmentId]);
-
-        console.log("Device signal created successfully:", newDeviceSignal);
-      } catch (error) {
-        console.error("Error creating device signal:", error);
+      } catch {
+        // Error handled silently
       } finally {
         setIsCreatingDeviceSignal(false);
       }
@@ -299,13 +289,8 @@ export default function RawSignalsPage() {
         setUsedDepartments([signalData.departmentId]);
 
         setIsDeviceAndSignalModalOpen(false);
-
-        console.log("Device and signal created successfully:", {
-          newDevice,
-          newDeviceSignal,
-        });
-      } catch (error) {
-        console.error("Error creating device and signal:", error);
+      } catch {
+        // Error handled silently
       } finally {
         setIsCreatingDevice(false);
       }
@@ -433,21 +418,20 @@ export default function RawSignalsPage() {
         />
       </div>
 
-      {/* Modals */}
       {selectedSignal && (
         <>
           <CreateMeasurementModal
             externalId={selectedSignal.externalId}
-            isOpen={isMeasurementModalOpen}
             isLoading={isCreatingMeasurement}
+            isOpen={isMeasurementModalOpen}
             onClose={() => setIsMeasurementModalOpen(false)}
             onSubmit={handleCreateMeasurement}
           />
 
           <CreateDeviceModal
             externalId={selectedSignal.externalId}
-            isOpen={isDeviceModalOpen}
             isLoading={isCreatingDevice}
+            isOpen={isDeviceModalOpen}
             onClose={() => setIsDeviceModalOpen(false)}
             onSubmit={handleCreateDevice}
           />
@@ -457,8 +441,8 @@ export default function RawSignalsPage() {
               deviceId={selectedDevice.id}
               deviceName={selectedDevice.name}
               externalValueId={selectedSignal.value}
-              isOpen={isDeviceSignalModalOpen}
               isLoading={isCreatingDeviceSignal}
+              isOpen={isDeviceSignalModalOpen}
               onClose={() => setIsDeviceSignalModalOpen(false)}
               onSubmit={handleCreateDeviceSignal}
             />
@@ -467,8 +451,8 @@ export default function RawSignalsPage() {
           <CreateDeviceAndSignalModal
             externalId={selectedSignal.externalId}
             externalValueId={selectedSignal.value}
-            isOpen={isDeviceAndSignalModalOpen}
             isLoading={isCreatingDevice}
+            isOpen={isDeviceAndSignalModalOpen}
             onClose={() => setIsDeviceAndSignalModalOpen(false)}
             onSubmit={handleCreateDeviceAndSignal}
           />
@@ -477,8 +461,8 @@ export default function RawSignalsPage() {
             <CreateDeviceSignalWithDeviceModal
               device={selectedDevice}
               externalValueId={selectedSignal.value}
-              isOpen={isDeviceSignalWithDeviceModalOpen}
               isLoading={isCreatingDeviceSignal}
+              isOpen={isDeviceSignalWithDeviceModalOpen}
               usedDepartments={usedDepartments}
               onClose={() => setIsDeviceSignalWithDeviceModalOpen(false)}
               onSubmit={handleCreateDeviceSignal}

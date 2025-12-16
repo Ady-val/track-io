@@ -16,23 +16,39 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
+      aria-labelledby="modal-title"
+      aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      role="dialog"
+      tabIndex={-1}
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           onClose();
         }
       }}
-      role="dialog"
-      tabIndex={-1}
     >
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div
         className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+        role="document"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            onClose();
+          }
+        }}
       >
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <h2
+            className="text-xl font-semibold text-gray-900"
+            id="modal-title"
+          >
+            {title}
+          </h2>
           <button
             className="text-gray-400 hover:text-gray-600"
             onClick={onClose}

@@ -4,8 +4,6 @@ import { AlertLevel } from '../../domain/entities/alert-escalation-message.entit
 
 @Injectable()
 export class EventAlertLogService {
-  // private readonly logger = new Logger(EventAlertLogService.name);
-
   constructor(
     private readonly eventAlertLogRepository: EventAlertLogRepository
   ) {}

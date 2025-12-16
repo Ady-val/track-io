@@ -149,7 +149,7 @@ export function EmailsCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedEmail(null);
       } catch {
-        errorHandling.setError("Error al eliminar el email");
+        errorHandling.setServerError("Error al eliminar el email");
       }
     }
   };

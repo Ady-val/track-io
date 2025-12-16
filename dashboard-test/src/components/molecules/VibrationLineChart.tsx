@@ -255,7 +255,6 @@ export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
     return "text-slate-100";
   };
 
-  // Verificar si hay valor
   const hasValue = value !== undefined;
 
   return (

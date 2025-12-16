@@ -6,24 +6,16 @@ import type {
 
 export class DeviceMapper {
   static toResponseDto(device: Device): DeviceResponseDto {
-    // Filter out null/undefined signals and signals without id (empty objects from leftJoin)
-    // When leftJoinAndSelect with condition doesn't match, TypeORM can create empty objects
     const deviceSignals: DeviceSignalResponseDto[] =
       device.deviceSignals
         ?.filter(signal => {
-          // Check if signal exists and has valid id (not null, not undefined, not empty object)
-          return (
-            signal?.id != null &&
-            signal.id !== undefined &&
-            typeof signal.id === 'number' &&
-            !isNaN(signal.id)
-          );
+          return typeof signal.id === 'number' && !isNaN(signal.id);
         })
-        ?.map(signal => ({
+        .map(signal => ({
           id: signal.id,
           name: signal.name || '',
           departmentId: signal.departmentId,
-          departmentName: signal.department?.name ?? '',
+          departmentName: signal.department ? signal.department.name : '',
           externalValueId: signal.externalValueId || '',
         })) ?? [];
 
@@ -31,7 +23,7 @@ export class DeviceMapper {
       id: device.id,
       name: device.name,
       areaId: device.areaId,
-      areaName: device.area?.name ?? '',
+      areaName: device.area ? device.area.name : '',
       externalId: device.externalId,
       isVirtualDevice: device.isVirtualDevice,
       deviceSignals,

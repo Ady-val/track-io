@@ -39,7 +39,11 @@ export const useRealtimeMeasurementValues = () => {
 
     const { measurementId, value, createdAt } = payload;
 
-    const newValue = parseFloat(value);
+    if (!value || !createdAt) {
+      return;
+    }
+
+    const newValue = parseFloat(String(value));
 
     setValues((prev) => ({
       ...prev,

@@ -45,7 +45,6 @@ export function useModalError(
       setParsedError(parsed);
       setServerError(parsed.message);
 
-      // Log for debugging
       console.error("API Error:", error);
     },
     [defaultServerMessage]
