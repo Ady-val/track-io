@@ -8,18 +8,17 @@ import {
 
 /**
  * Initial Schema Migration
- * 
+ *
  * This migration consolidates all previous migrations into a single initial schema.
  * It creates all tables, indexes, foreign keys, enums, and initial data required
  * for the Track.IO system to function.
- * 
+ *
  * IMPORTANT: This migration includes initial data for:
  * - permissions (56 records - CRITICAL for RBAC system)
  * - message_groups (5 records - CRITICAL for alert system)
  * - torreta_colors (8 records - IMPORTANT for torreta system)
  */
 export class InitialSchema1000000000000 implements MigrationInterface {
-
   public async up(queryRunner: QueryRunner): Promise<void> {
     // ============================================================================
     // STEP 1: Create ENUM types (must be created before tables that use them)
@@ -2300,14 +2299,29 @@ export class InitialSchema1000000000000 implements MigrationInterface {
     await queryRunner.dropTable('areas');
 
     // Drop enum types
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."event_alert_logs_level_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."alert_escalation_messages_message_type_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."alert_escalation_messages_level_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."area_torreta_configs_configuration_type_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."alert_messages_receptor_type_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."alert_rules_mode_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."events_status_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."measurements_type_enum"`);
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."event_alert_logs_level_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."alert_escalation_messages_message_type_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."alert_escalation_messages_level_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."area_torreta_configs_configuration_type_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."alert_messages_receptor_type_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."alert_rules_mode_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."events_status_enum"`
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."measurements_type_enum"`
+    );
   }
 }
-

@@ -1,4 +1,4 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 
 @Expose()
 export class DeviceSignalResponseDto {
@@ -39,6 +39,7 @@ export class DeviceResponseDto {
   isVirtualDevice!: boolean;
 
   @Expose()
+  @Type(() => DeviceSignalResponseDto)
   deviceSignals!: DeviceSignalResponseDto[];
 
   @Expose()

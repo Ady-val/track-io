@@ -98,6 +98,9 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
   signal,
   onSuccess,
 }) => {
+  const deviceId = device?.id ?? 0;
+  const deviceSignalId = signal?.id ?? 0;
+
   const {
     config,
     messages,
@@ -108,8 +111,8 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
     saveConfig,
     loadData,
   } = useEscalationConfig({
-    deviceId: device?.id ?? 0,
-    deviceSignalId: signal?.id ?? 0,
+    deviceId,
+    deviceSignalId,
   });
 
   const [escalationLevels, setEscalationLevels] = useState<EscalationLevel[]>(
@@ -310,7 +313,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
       case "torreta":
         return Array.isArray(torretas)
           ? torretas
-              .filter((t) => t.externalId)
+              .filter((t) => t.externalId != null && t.externalId.trim() !== "")
               .map((t) => ({
                 value: t.externalId,
                 label: `${t.name} (${t.externalId})`,
@@ -319,7 +322,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
       case "receptor":
         return Array.isArray(receptors)
           ? receptors
-              .filter((r) => r.externalId)
+              .filter((r) => r.externalId != null && r.externalId.trim() !== "")
               .map((r) => ({
                 value: r.externalId,
                 label: `${r.name} (${r.externalId})`,

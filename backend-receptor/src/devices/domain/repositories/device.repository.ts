@@ -77,7 +77,11 @@ export class DeviceRepository {
     }
 
     queryBuilder.leftJoinAndSelect('device.area', 'area');
-    queryBuilder.leftJoinAndSelect('device.deviceSignals', 'deviceSignals');
+    queryBuilder.leftJoinAndSelect(
+      'device.deviceSignals',
+      'deviceSignals',
+      'deviceSignals.deletedAt IS NULL'
+    );
     queryBuilder.leftJoinAndSelect('deviceSignals.department', 'department');
 
     const data = await queryBuilder.getMany();
@@ -86,28 +90,51 @@ export class DeviceRepository {
   }
 
   async findById(id: number): Promise<Device | null> {
-    return await this.deviceRepository.findOne({
-      where: { id },
-      withDeleted: false,
-      relations: ['area', 'deviceSignals', 'deviceSignals.department'],
-    });
+    const device = await this.deviceRepository
+      .createQueryBuilder('device')
+      .leftJoinAndSelect('device.area', 'area')
+      .leftJoinAndSelect(
+        'device.deviceSignals',
+        'deviceSignals',
+        'deviceSignals.deletedAt IS NULL'
+      )
+      .leftJoinAndSelect('deviceSignals.department', 'department')
+      .where('device.id = :id', { id })
+      .andWhere('device.deletedAt IS NULL')
+      .getOne();
+    return device;
   }
 
   async findByExternalId(externalId: string): Promise<Device | null> {
-    return await this.deviceRepository.findOne({
-      where: { externalId },
-      withDeleted: false,
-      relations: ['area', 'deviceSignals', 'deviceSignals.department'],
-    });
+    const device = await this.deviceRepository
+      .createQueryBuilder('device')
+      .leftJoinAndSelect('device.area', 'area')
+      .leftJoinAndSelect(
+        'device.deviceSignals',
+        'deviceSignals',
+        'deviceSignals.deletedAt IS NULL'
+      )
+      .leftJoinAndSelect('deviceSignals.department', 'department')
+      .where('device.externalId = :externalId', { externalId })
+      .andWhere('device.deletedAt IS NULL')
+      .getOne();
+    return device;
   }
 
   async findByAreaId(areaId: number): Promise<Device[]> {
-    return await this.deviceRepository.find({
-      where: { areaId },
-      withDeleted: false,
-      relations: ['area', 'deviceSignals', 'deviceSignals.department'],
-      order: { createdAt: 'DESC' },
-    });
+    return await this.deviceRepository
+      .createQueryBuilder('device')
+      .leftJoinAndSelect('device.area', 'area')
+      .leftJoinAndSelect(
+        'device.deviceSignals',
+        'deviceSignals',
+        'deviceSignals.deletedAt IS NULL'
+      )
+      .leftJoinAndSelect('deviceSignals.department', 'department')
+      .where('device.areaId = :areaId', { areaId })
+      .andWhere('device.deletedAt IS NULL')
+      .orderBy('device.createdAt', 'DESC')
+      .getMany();
   }
 
   async update(

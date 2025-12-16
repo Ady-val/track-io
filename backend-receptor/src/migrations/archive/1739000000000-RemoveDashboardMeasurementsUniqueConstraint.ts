@@ -40,4 +40,3 @@ export class RemoveDashboardMeasurementsUniqueConstraint1739000000000
     }
   }
 }
-

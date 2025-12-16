@@ -31,43 +31,44 @@ export const useEscalationConfig = ({
   const [dataLoaded, setDataLoaded] = useState(false);
 
   const loadData = useCallback(async () => {
-    if (!deviceId || !deviceSignalId) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      const [
-        configData,
-        messagesData,
-        torretasData,
-        receptorsData,
-        torretaColorsData,
-        emailsData,
-      ] = await Promise.all([
-        EscalationService.getEscalationConfig(deviceId, deviceSignalId),
-        EscalationService.getEscalationMessages(deviceId, deviceSignalId),
-        EscalationService.getTorretas(),
-        EscalationService.getReceptors(),
-        EscalationService.getTorretaColors(),
-        EscalationService.getEmails(),
-      ]);
+      // Cargar datos globales siempre (no dependen de deviceId/deviceSignalId)
+      const [torretasData, receptorsData, torretaColorsData, emailsData] =
+        await Promise.all([
+          EscalationService.getTorretas(),
+          EscalationService.getReceptors(),
+          EscalationService.getTorretaColors(),
+          EscalationService.getEmails(),
+        ]);
 
-      setConfig(configData);
-      setMessages(messagesData || []);
       setTorretas(torretasData || []);
       setReceptors(receptorsData || []);
       setTorretaColors(torretaColorsData || []);
       setEmails(emailsData || []);
+
+      // Cargar datos específicos solo si tenemos deviceId y deviceSignalId
+      if (deviceId && deviceSignalId) {
+        const [configData, messagesData] = await Promise.all([
+          EscalationService.getEscalationConfig(deviceId, deviceSignalId),
+          EscalationService.getEscalationMessages(deviceId, deviceSignalId),
+        ]);
+
+        setConfig(configData);
+        setMessages(messagesData || []);
+      } else {
+        setConfig(null);
+        setMessages([]);
+      }
+
       setDataLoaded(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading data");
       setConfig(null);
       setMessages([]);
-      setTorretas([]);
-      setReceptors([]);
-      setTorretaColors([]);
-      setEmails([]);
+      // No limpiar datos globales si ya se cargaron antes
     } finally {
       setLoading(false);
     }
@@ -159,15 +160,10 @@ export const useEscalationConfig = ({
     []
   );
 
+  // Cargar datos globales siempre al montar y cuando cambian deviceId/deviceSignalId
   useEffect(() => {
-    setDataLoaded(false);
-  }, [deviceId, deviceSignalId]);
-
-  useEffect(() => {
-    if (deviceId && deviceSignalId && !dataLoaded) {
-      loadData();
-    }
-  }, [deviceId, deviceSignalId, loadData, dataLoaded]);
+    loadData();
+  }, [deviceId, deviceSignalId, loadData]);
 
   return {
     config,
