@@ -51,7 +51,7 @@ export const useDeleteAreaTorretaConfig = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, areaId }: { id: number; areaId: number }) =>
+    mutationFn: ({ id, areaId: _areaId }: { id: number; areaId: number }) =>
       areaTorretaConfigService.delete(id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

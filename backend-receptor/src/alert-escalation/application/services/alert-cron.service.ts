@@ -31,7 +31,6 @@ export class AlertCronService {
 
   private async processEventEscalation(event: Event): Promise<void> {
     try {
-      // 1. Buscar configuración de escalamiento
       const config =
         await this.alertEscalationService.findConfigByDeviceAndSignal(
           event.deviceId,
@@ -46,7 +45,6 @@ export class AlertCronService {
         (new Date().getTime() - event.createdAt.getTime()) / (1000 * 60)
       );
 
-      // 3. Determinar qué nivel debe enviarse
       const levelToSend = this.alertEscalationService.determineLevelToSend(
         timeElapsedMinutes,
         config

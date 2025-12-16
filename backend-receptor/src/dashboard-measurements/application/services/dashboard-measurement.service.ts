@@ -81,7 +81,7 @@ export class DashboardMeasurementService {
       await this.measurementService.getMeasurementById(updateDto.measurementId);
     }
 
-    if (updateDto.groupId !== undefined && updateDto.groupId !== null) {
+    if (updateDto.groupId !== undefined) {
       await this.groupRepository.findOneOrFail({
         where: { id: updateDto.groupId },
       });

@@ -48,6 +48,7 @@ export class SignalService {
       const service = this.moduleRef.get(AreaTorretaSignalService, {
         strict: false,
       });
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!service) {
         throw new Error('AreaTorretaSignalService provider is not available');
       }

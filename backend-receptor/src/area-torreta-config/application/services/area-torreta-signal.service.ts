@@ -39,6 +39,7 @@ export class AreaTorretaSignalService {
           strict: false,
         }
       );
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!repository) {
         throw new Error(
           'TypeOrmAreaTorretaConfigRepository provider is not available'
@@ -55,6 +56,7 @@ export class AreaTorretaSignalService {
       const repository = this.moduleRef.get(TypeOrmEventRepository, {
         strict: false,
       });
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!repository) {
         throw new Error('TypeOrmEventRepository provider is not available');
       }
@@ -69,6 +71,7 @@ export class AreaTorretaSignalService {
       const repository = this.moduleRef.get(DepartmentRepository, {
         strict: false,
       });
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!repository) {
         throw new Error('DepartmentRepository provider is not available');
       }
@@ -83,6 +86,7 @@ export class AreaTorretaSignalService {
       const service = this.moduleRef.get(TorretaColorService, {
         strict: false,
       });
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!service) {
         throw new Error('TorretaColorService provider is not available');
       }

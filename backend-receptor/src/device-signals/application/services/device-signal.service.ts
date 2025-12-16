@@ -40,7 +40,6 @@ export class DeviceSignalService {
       );
     }
 
-    // Check if department exists
     const department = await this.departmentRepository.findById(
       createDeviceSignalDto.departmentId
     );
@@ -157,7 +156,6 @@ export class DeviceSignalService {
 
   async findByDepartmentId(departmentId: number): Promise<DeviceSignal[]> {
     try {
-      // Check if department exists
       const department = await this.departmentRepository.findById(departmentId);
       if (!department) {
         throw new NotFoundException(
@@ -185,10 +183,8 @@ export class DeviceSignalService {
     this.logger.log(`Updating device signal with ID: ${id}`);
 
     try {
-      // Check if device signal exists
       await this.findById(id);
 
-      // Check if device exists (if deviceId is being updated)
       if (updateDeviceSignalDto.deviceId) {
         const device = await this.deviceRepository.findById(
           updateDeviceSignalDto.deviceId
@@ -200,7 +196,6 @@ export class DeviceSignalService {
         }
       }
 
-      // Check if department exists (if departmentId is being updated)
       if (updateDeviceSignalDto.departmentId) {
         const department = await this.departmentRepository.findById(
           updateDeviceSignalDto.departmentId
@@ -212,7 +207,6 @@ export class DeviceSignalService {
         }
       }
 
-      // Check if new externalValueId conflicts with existing device signal for this device
       if (updateDeviceSignalDto.externalValueId) {
         const deviceId =
           updateDeviceSignalDto.deviceId || (await this.findById(id)).deviceId;
@@ -257,7 +251,6 @@ export class DeviceSignalService {
     this.logger.log(`Soft deleting device signal with ID: ${id}`);
 
     try {
-      // Check if device signal exists
       await this.findById(id);
 
       const deleted = await this.deviceSignalRepository.softDelete(id);
@@ -322,7 +315,6 @@ export class DeviceSignalService {
 
   async getCountByDeviceId(deviceId: number): Promise<number> {
     try {
-      // Check if device exists
       const device = await this.deviceRepository.findById(deviceId);
       if (!device) {
         throw new NotFoundException(`Device with ID ${deviceId} not found`);
@@ -343,7 +335,6 @@ export class DeviceSignalService {
 
   async getCountByDepartmentId(departmentId: number): Promise<number> {
     try {
-      // Check if department exists
       const department = await this.departmentRepository.findById(departmentId);
       if (!department) {
         throw new NotFoundException(

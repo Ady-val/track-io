@@ -196,7 +196,6 @@ export class TypeOrmEventRepository implements EventRepository {
       order: { createdAt: 'DESC' },
     });
 
-    // Agrupar por área
     const areaMap = new Map<string, DashboardData>();
 
     events.forEach(event => {
