@@ -25,7 +25,6 @@ export class DeviceService {
   async create(createDeviceDto: CreateDeviceDto): Promise<Device> {
     this.logger.log(`Creating device with name: ${createDeviceDto.name}`);
 
-    // Check if area exists
     const area = await this.areaRepository.findById(createDeviceDto.areaId);
     if (!area) {
       throw new NotFoundException(
@@ -33,7 +32,6 @@ export class DeviceService {
       );
     }
 
-    // Check if device with same externalId already exists
     const existingDevice = await this.deviceRepository.findByExternalId(
       createDeviceDto.externalId
     );
@@ -112,7 +110,6 @@ export class DeviceService {
 
   async findByAreaId(areaId: number): Promise<Device[]> {
     try {
-      // Check if area exists
       const area = await this.areaRepository.findById(areaId);
       if (!area) {
         throw new NotFoundException(`Area with ID ${areaId} not found`);
@@ -135,10 +132,8 @@ export class DeviceService {
     this.logger.log(`Updating device with ID: ${id}`);
 
     try {
-      // Check if device exists
       await this.findById(id);
 
-      // Check if area exists (if areaId is being updated)
       if (updateDeviceDto.areaId) {
         const area = await this.areaRepository.findById(updateDeviceDto.areaId);
         if (!area) {
@@ -148,7 +143,6 @@ export class DeviceService {
         }
       }
 
-      // Check if new externalId conflicts with existing device
       if (updateDeviceDto.externalId) {
         const existingDevice = await this.deviceRepository.findByExternalId(
           updateDeviceDto.externalId
@@ -189,7 +183,6 @@ export class DeviceService {
     this.logger.log(`Soft deleting device with ID: ${id}`);
 
     try {
-      // Check if device exists
       await this.findById(id);
 
       const deleted = await this.deviceRepository.softDelete(id);
@@ -254,7 +247,6 @@ export class DeviceService {
 
   async getCountByAreaId(areaId: number): Promise<number> {
     try {
-      // Check if area exists
       const area = await this.areaRepository.findById(areaId);
       if (!area) {
         throw new NotFoundException(`Area with ID ${areaId} not found`);

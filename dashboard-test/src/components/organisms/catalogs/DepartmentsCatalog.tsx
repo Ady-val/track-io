@@ -69,15 +69,18 @@ export function DepartmentsCatalog() {
       id: "htmlColor",
       label: "Color",
       key: "htmlColor",
-      component: (value) => (
-        <div className="flex items-center">
-          <div
-            className="w-6 h-6 rounded border border-gray-300 mr-2"
-            style={{ backgroundColor: value || "#ffffff" }}
-          />
-          <span className="font-mono text-sm">{value || "#ffffff"}</span>
-        </div>
-      ),
+      component: (value) => {
+        const colorValue = (value as string | undefined) || "#ffffff";
+        return (
+          <div className="flex items-center">
+            <div
+              className="w-6 h-6 rounded border border-gray-300 mr-2"
+              style={{ backgroundColor: colorValue }}
+            />
+            <span className="font-mono text-sm">{colorValue}</span>
+          </div>
+        );
+      },
     },
   ];
 
@@ -180,6 +183,7 @@ export function DepartmentsCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-department-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -192,6 +196,7 @@ export function DepartmentsCatalog() {
         <DataTable
           columns={columns}
           data={departments}
+          data-cy="departments-table"
           emptyMessage="No hay departamentos registrados"
           loading={isLoading}
           onDelete={hasDelete ? handleDelete : undefined}
@@ -212,6 +217,11 @@ export function DepartmentsCatalog() {
       )}
 
       <Modal
+        data-cy={
+          isCreateModalOpen
+            ? "create-department-modal"
+            : "edit-department-modal"
+        }
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Departamento" : "Editar Departamento"}
         onClose={handleCancel}
@@ -311,6 +321,7 @@ export function DepartmentsCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-department-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteDepartmentMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedDepartment?.name}"?`}

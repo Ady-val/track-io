@@ -28,12 +28,24 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     onToggle?.(newExpanded);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleToggle();
+    }
+  };
+
   return (
     <div className={`mb-8 ${className}`}>
       {/* Header clickeable */}
       <div
+        aria-expanded={isExpanded}
+        aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
         className="flex items-center justify-between cursor-pointer p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors duration-200"
+        role="button"
+        tabIndex={0}
         onClick={handleToggle}
+        onKeyDown={handleKeyDown}
       >
         <h2 className="text-2xl font-bold text-slate-100">{title}</h2>
         <div className="flex items-center gap-2">

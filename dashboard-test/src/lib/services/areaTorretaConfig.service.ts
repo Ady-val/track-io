@@ -1,3 +1,5 @@
+import type { AxiosError } from "axios";
+
 import apiClient from "../api";
 
 export interface AreaTorretaConfig {
@@ -51,13 +53,15 @@ class AreaTorretaConfigService {
       }>(this.baseUrl, data);
 
       return response.data.data;
-    } catch (error: any) {
-      console.error("Error creating area torreta config:", error);
-      if (error.response) {
-        console.error("Response status:", error.response.status);
-        console.error("Response data:", error.response.data);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+
+      console.error("Error creating area torreta config:", axiosError);
+      if (axiosError.response) {
+        console.error("Response status:", axiosError.response.status);
+        console.error("Response data:", axiosError.response.data);
       }
-      throw error;
+      throw axiosError;
     }
   }
 

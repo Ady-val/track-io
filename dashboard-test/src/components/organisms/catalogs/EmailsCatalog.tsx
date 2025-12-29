@@ -178,6 +178,7 @@ export function EmailsCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-email-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -190,6 +191,7 @@ export function EmailsCatalog() {
         <DataTable
           columns={columns}
           data={emails}
+          data-cy="emails-table"
           emptyMessage="No hay correos registrados"
           loading={isLoading}
           onDelete={hasDelete ? handleDelete : undefined}
@@ -210,6 +212,7 @@ export function EmailsCatalog() {
       )}
 
       <Modal
+        data-cy={isCreateModalOpen ? "create-email-modal" : "edit-email-modal"}
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Correo" : "Editar Correo"}
         onClose={handleCancel}
@@ -290,6 +293,7 @@ export function EmailsCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-email-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteEmailMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedEmail?.name}" (${selectedEmail?.email})?`}

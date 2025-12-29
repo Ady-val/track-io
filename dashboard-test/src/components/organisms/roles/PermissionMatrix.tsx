@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useModalError } from "@/hooks/useModalError";
 import {
@@ -47,7 +47,10 @@ export function PermissionMatrix({
   const previousRoleIdRef = useRef<number | null>(null);
   const isInitializedRef = useRef(false);
 
-  const rolePermissions = rolePermissionsData?.data ?? [];
+  const rolePermissions = useMemo(
+    () => rolePermissionsData?.data ?? [],
+    [rolePermissionsData?.data]
+  );
   const rolePermissionIdsArray = useMemo(
     () =>
       rolePermissions

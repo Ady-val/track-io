@@ -27,3 +27,8 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 bun.lockb
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/

@@ -25,6 +25,8 @@ import { CatalogsGlobalModule } from './common/modules/catalogs-global.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { TestSeedService } from './seed/test-seed.service';
+import { User } from './users/domain/entities/user.entity';
 
 @Module({
   imports: [
@@ -44,7 +46,10 @@ import { PermissionsModule } from './permissions/permissions.module';
         password: configService.get<string>('DATABASE_PASSWORD') ?? 'postgres',
         database: configService.get<string>('DATABASE_NAME') ?? 'track_io',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get<string>('NODE_ENV') === 'development',
+        synchronize:
+          configService.get<string>('NODE_ENV') === 'development' ||
+          configService.get<string>('NODE_ENV') === 'test' ||
+          configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true',
       }),
       inject: [ConfigService],
     }),
@@ -53,6 +58,7 @@ import { PermissionsModule } from './permissions/permissions.module';
     UsersModule,
     AuthModule,
     PermissionsModule,
+    TypeOrmModule.forFeature([User]),
     SignalsModule,
     RawMeasurementsModule,
     MeasurementsModule,
@@ -70,6 +76,6 @@ import { PermissionsModule } from './permissions/permissions.module';
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TestSeedService],
 })
 export class AppModule {}

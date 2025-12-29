@@ -22,9 +22,6 @@ export class TorretaColor {
   @Column({ name: 'device_color_id', type: 'varchar', length: 10 })
   deviceColorId!: string;
 
-  @Column({ type: 'integer', default: 0 })
-  order!: number;
-
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp with time zone',

@@ -5,7 +5,7 @@ import {
   IsBoolean,
   Length,
 } from 'class-validator';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 
 export class CreateTorretaDto {
   @IsString()
@@ -16,11 +16,13 @@ export class CreateTorretaDto {
   @IsOptional()
   @IsString()
   @Length(1, 500)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   description?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 255)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   externalId?: string;
 
   @IsOptional()
@@ -38,11 +40,13 @@ export class UpdateTorretaDto {
   @IsOptional()
   @IsString()
   @Length(1, 500)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   description?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 255)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   externalId?: string;
 
   @IsOptional()

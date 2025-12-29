@@ -189,6 +189,7 @@ export function AreasCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-area-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -201,6 +202,7 @@ export function AreasCatalog() {
         <DataTable
           columns={columns}
           data={areas}
+          data-cy="areas-table"
           emptyMessage="No hay áreas registradas"
           loading={isLoading}
           onDelete={hasDelete ? handleDelete : undefined}
@@ -221,6 +223,7 @@ export function AreasCatalog() {
       )}
 
       <Modal
+        data-cy={isCreateModalOpen ? "create-area-modal" : "edit-area-modal"}
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Área" : "Editar Área"}
         onClose={handleCancel}
@@ -288,6 +291,7 @@ export function AreasCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-area-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteAreaMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedArea?.name}"?`}

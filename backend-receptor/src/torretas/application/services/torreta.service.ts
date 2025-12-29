@@ -40,6 +40,20 @@ export class TorretaService {
       );
     }
 
+    if (createDto.externalId) {
+      const existingByExternalId =
+        await this.torretaRepository.findByExternalId(
+          createDto.externalId,
+          false
+        );
+
+      if (existingByExternalId) {
+        throw new ConflictException(
+          `Torreta with external ID "${createDto.externalId}" already exists`
+        );
+      }
+    }
+
     const torreta = this.torretaRepository.create(createDto);
     return this.torretaRepository.save(torreta);
   }
@@ -55,6 +69,22 @@ export class TorretaService {
       if (existing) {
         throw new ConflictException(
           `Torreta with name "${updateDto.name}" already exists`
+        );
+      }
+    }
+
+    if (
+      updateDto.externalId &&
+      updateDto.externalId !== torreta.externalId
+    ) {
+      const existingByExternalId =
+        await this.torretaRepository.findByExternalId(
+          updateDto.externalId,
+          false
+        );
+      if (existingByExternalId) {
+        throw new ConflictException(
+          `Torreta with external ID "${updateDto.externalId}" already exists`
         );
       }
     }

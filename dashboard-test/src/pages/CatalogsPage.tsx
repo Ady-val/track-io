@@ -71,6 +71,7 @@ export function CatalogsPage() {
             {allCatalogs.map((catalog) => (
               <button
                 key={catalog.id}
+                data-cy={`catalog-tab-${catalog.id}`}
                 className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                   activeCatalog === catalog.id
                     ? "border-blue-500 text-blue-400"

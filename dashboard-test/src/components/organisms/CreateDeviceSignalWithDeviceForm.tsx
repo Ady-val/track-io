@@ -11,7 +11,7 @@ import {
 
 import { Button, Input, Select, Text } from "@components/atoms";
 
-import { useDepartments } from "@/hooks/useCatalogs";
+import { useDepartments, type Department } from "@/hooks/useCatalogs";
 import type { Device } from "@/types/device";
 import type { CreateDeviceSignalData } from "@/types/device-signal";
 
@@ -164,7 +164,7 @@ export const CreateDeviceSignalWithDeviceForm: React.FC<
               value={departmentId}
               onChange={(e) => setDepartmentId(Number(e.target.value))}
             >
-              {availableDepartments.map((department: any) => (
+              {availableDepartments.map((department: Department) => (
                 <option key={department.id} value={department.id}>
                   {department.name}
                 </option>

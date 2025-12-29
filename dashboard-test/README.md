@@ -1,50 +1,20 @@
-# Vite & HeroUI Template
+# Testing E2E con Cypress
 
-This is a template for creating applications using Vite and HeroUI (v2).
+Para ejecutar los tests end-to-end, consulta la documentación completa:
 
-[Try it on CodeSandbox](https://githubbox.com/heroui-inc/vite-template)
+📖 **[Documentación de Testing E2E](../../documentation/TESTING_E2E.md)**
 
-## Technologies Used
-
-- [Vite](https://vitejs.dev/guide/)
-- [HeroUI](https://heroui.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org)
-- [Framer Motion](https://www.framer.com/motion)
-
-## How to Use
-
-To clone the project, run the following command:
+## Comandos Rápidos
 
 ```bash
-git clone https://github.com/heroui-inc/vite-template.git
+# 1. Iniciar entorno (PostgreSQL + Backend)
+pnpm run test:env:start
+
+# 2. En otra terminal: Iniciar frontend
+pnpm run dev:test
+
+# 3. En otra terminal: Ejecutar Cypress
+pnpm run cypress:open
 ```
 
-### Install dependencies
-
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
-
-```bash
-npm install
-```
-
-### Run the development server
-
-```bash
-npm run dev
-```
-
-### Setup pnpm (optional)
-
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
-
-```bash
-public-hoist-pattern[]=*@heroui/*
-```
-
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
-
-## License
-
-Licensed under the [MIT license](https://github.com/heroui-inc/vite-template/blob/main/LICENSE).
+Para más detalles, consulta la [documentación completa](../../documentation/TESTING_E2E.md).

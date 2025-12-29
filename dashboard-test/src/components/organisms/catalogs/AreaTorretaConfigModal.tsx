@@ -15,6 +15,7 @@ import type { AreaTorretaConfig } from "@/lib/services/areaTorretaConfig.service
 
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
+import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
@@ -43,6 +44,9 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   }>({});
   const [localError, setLocalError] = useState<string | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
+  const [configToDelete, setConfigToDelete] =
+    useState<AreaTorretaConfig | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const errorHandling = useModalError("Error al procesar la solicitud");
 
@@ -77,7 +81,7 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
       setLocalLoading(false);
       errorHandling.clearErrors();
     }
-  }, [isOpen]);
+  }, [isOpen, errorHandling]);
 
   const handleAdd = () => {
     setIsAddMode(true);
@@ -164,34 +168,37 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
     }
   };
 
-  const handleDelete = async (config: AreaTorretaConfig) => {
+  const handleDeleteClick = (config: AreaTorretaConfig) => {
     if (!area) return;
 
-    if (
-      window.confirm(
-        `¿Estás seguro de eliminar la configuración de la torreta "${config.torretaExternalId}"?`
-      )
-    ) {
-      try {
-        setLocalLoading(true);
-        setLocalError(null);
-        errorHandling.clearErrors();
+    setConfigToDelete(config);
+    setIsDeleteConfirmOpen(true);
+  };
 
-        await deleteMutation.mutateAsync({
-          id: config.id,
-          areaId: area.id,
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Error al eliminar la configuración";
+  const handleDeleteConfirm = async () => {
+    if (!area || !configToDelete) return;
 
-        setLocalError(errorMessage);
-        errorHandling.handleApiError(error, errorMessage);
-      } finally {
-        setLocalLoading(false);
-      }
+    try {
+      setLocalLoading(true);
+      setLocalError(null);
+      errorHandling.clearErrors();
+
+      await deleteMutation.mutateAsync({
+        id: configToDelete.id,
+        areaId: area.id,
+      });
+      setIsDeleteConfirmOpen(false);
+      setConfigToDelete(null);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Error al eliminar la configuración";
+
+      setLocalError(errorMessage);
+      errorHandling.handleApiError(error, errorMessage);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -204,213 +211,229 @@ export const AreaTorretaConfigModal: React.FC<AreaTorretaConfigModalProps> = ({
   if (!isOpen || !area) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      size="lg"
-      title={`Configurar Torretas - ${area.name}`}
-      onClose={onClose}
-    >
-      <div className="space-y-6">
-        {localError && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
-            <Text color="danger">Error: {localError}</Text>
-          </div>
-        )}
-
-        {localLoading && (
-          <div className="mb-4 p-4 bg-blue-900/50 border border-blue-700 rounded-lg">
-            <Text color="primary">Cargando configuración...</Text>
-          </div>
-        )}
-
-        {configsLoading && (
-          <div className="mb-4 p-4 bg-blue-900/50 border border-blue-700 rounded-lg">
-            <Text color="primary">Cargando configuraciones...</Text>
-          </div>
-        )}
-
-        {/* Lista de configuraciones existentes */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <Text color="primary" variant="h4">
-              Configuraciones
-            </Text>
-            <Button
-              color="primary"
-              disabled={isAddMode || !!editingConfig}
-              size="sm"
-              variant="solid"
-              onPress={handleAdd}
-            >
-              <FaPlus className="mr-2" />
-              Agregar
-            </Button>
-          </div>
-
-          {configs.length === 0 && !configsLoading ? (
-            <div className="text-center py-8">
-              <Text color="muted" variant="body">
-                No hay configuraciones. Haz clic en &quot;Agregar&quot; para
-                crear una.
-              </Text>
+    <>
+      <Modal
+        isOpen={isOpen}
+        size="lg"
+        title={`Configurar Torretas - ${area.name}`}
+        onClose={onClose}
+      >
+        <div className="space-y-6">
+          {localError && (
+            <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+              <Text color="danger">Error: {localError}</Text>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {configs.map((config) => (
-                <div
-                  key={config.id}
-                  className="flex items-center justify-between p-4 bg-slate-700 rounded-lg border border-slate-600"
-                >
-                  <div className="flex-1">
-                    <Text color="primary" variant="body">
-                      {getTorretaName(config.torretaExternalId)}
-                    </Text>
-                    <Text className="mt-1" color="muted" variant="caption">
-                      Tipo:{" "}
-                      <span className="font-semibold">
-                        {config.configurationType === "area"
-                          ? "Por Área"
-                          : "Por Departamento"}
-                      </span>
-                    </Text>
+          )}
+
+          {localLoading && (
+            <div className="mb-4 p-4 bg-blue-900/50 border border-blue-700 rounded-lg">
+              <Text color="primary">Cargando configuración...</Text>
+            </div>
+          )}
+
+          {configsLoading && (
+            <div className="mb-4 p-4 bg-blue-900/50 border border-blue-700 rounded-lg">
+              <Text color="primary">Cargando configuraciones...</Text>
+            </div>
+          )}
+
+          {/* Lista de configuraciones existentes */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <Text color="primary" variant="h4">
+                Configuraciones
+              </Text>
+              <Button
+                color="primary"
+                disabled={isAddMode || !!editingConfig}
+                size="sm"
+                variant="solid"
+                onPress={handleAdd}
+              >
+                <FaPlus className="mr-2" />
+                Agregar
+              </Button>
+            </div>
+
+            {configs.length === 0 && !configsLoading ? (
+              <div className="text-center py-8">
+                <Text color="muted" variant="body">
+                  No hay configuraciones. Haz clic en &quot;Agregar&quot; para
+                  crear una.
+                </Text>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {configs.map((config) => (
+                  <div
+                    key={config.id}
+                    className="flex items-center justify-between p-4 bg-slate-700 rounded-lg border border-slate-600"
+                  >
+                    <div className="flex-1">
+                      <Text color="primary" variant="body">
+                        {getTorretaName(config.torretaExternalId)}
+                      </Text>
+                      <Text className="mt-1" color="muted" variant="caption">
+                        Tipo:{" "}
+                        <span className="font-semibold">
+                          {config.configurationType === "area"
+                            ? "Por Área"
+                            : "Por Departamento"}
+                        </span>
+                      </Text>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        className="flex items-center justify-center w-8 h-8 font-semibold"
+                        color="warning"
+                        disabled={isAddMode || !!editingConfig}
+                        size="sm"
+                        title="Editar configuración"
+                        variant="solid"
+                        onPress={() => handleEdit(config)}
+                      >
+                        <FaEdit className="w-4 h-4 text-white" />
+                      </Button>
+                      <Button
+                        className="flex items-center justify-center w-8 h-8 font-semibold"
+                        color="danger"
+                        disabled={
+                          isAddMode ||
+                          !!editingConfig ||
+                          deleteMutation.isPending
+                        }
+                        size="sm"
+                        title="Eliminar configuración"
+                        variant="solid"
+                        onPress={() => handleDeleteClick(config)}
+                      >
+                        <FaTrash className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      className="flex items-center justify-center w-8 h-8 font-semibold"
-                      color="warning"
-                      disabled={isAddMode || !!editingConfig}
-                      size="sm"
-                      title="Editar configuración"
-                      variant="solid"
-                      onPress={() => handleEdit(config)}
-                    >
-                      <FaEdit className="w-4 h-4 text-white" />
-                    </Button>
-                    <Button
-                      className="flex items-center justify-center w-8 h-8 font-semibold"
-                      color="danger"
-                      disabled={
-                        isAddMode || !!editingConfig || deleteMutation.isPending
-                      }
-                      size="sm"
-                      title="Eliminar configuración"
-                      variant="solid"
-                      onPress={() => handleDelete(config)}
-                    >
-                      <FaTrash className="w-4 h-4" />
-                    </Button>
-                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Formulario para agregar/editar */}
+          {(isAddMode || editingConfig) && (
+            <div className="border-t border-slate-600 pt-6">
+              <Text className="mb-4" color="primary" variant="h4">
+                {isAddMode ? "Agregar Configuración" : "Editar Configuración"}
+              </Text>
+
+              {errorHandling.validationErrors.length > 0 && (
+                <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+                  <ul className="list-disc list-inside text-sm">
+                    {errorHandling.validationErrors.map((error, idx) => (
+                      <li key={idx}>
+                        <Text color="danger">{error}</Text>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
+
+              {errorHandling.serverError && (
+                <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+                  <Text color="danger">Error: {errorHandling.serverError}</Text>
+                </div>
+              )}
+
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <FormField
+                  required
+                  select
+                  disabled={!!editingConfig}
+                  error={formErrors.torretaExternalId}
+                  label="Torreta"
+                  name="torretaExternalId"
+                  options={availableTorretas
+                    .filter((t: Torreta) => t.externalId)
+                    .map((torreta: Torreta) => ({
+                      value: torreta.externalId!,
+                      label: `${torreta.name} (${torreta.externalId})`,
+                    }))}
+                  value={formData.torretaExternalId}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      torretaExternalId: value as string,
+                    })
+                  }
+                />
+
+                <FormField
+                  required
+                  select
+                  error={formErrors.configurationType}
+                  label="Tipo de Configuración"
+                  name="configurationType"
+                  options={[
+                    {
+                      value: "area",
+                      label: "Por Área (R1/Y1/G1 según estado del área)",
+                    },
+                    {
+                      value: "department",
+                      label:
+                        "Por Departamento (Color del departamento del evento)",
+                    },
+                  ]}
+                  value={formData.configurationType}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      configurationType: value as "area" | "department",
+                    })
+                  }
+                />
+
+                <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-600">
+                  <Button
+                    color="default"
+                    disabled={
+                      createMutation.isPending || updateMutation.isPending
+                    }
+                    type="button"
+                    variant="solid"
+                    onPress={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    color="primary"
+                    disabled={
+                      createMutation.isPending || updateMutation.isPending
+                    }
+                    type="submit"
+                    variant="solid"
+                  >
+                    {createMutation.isPending || updateMutation.isPending
+                      ? "Guardando..."
+                      : isAddMode
+                        ? "Crear"
+                        : "Actualizar"}
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </div>
-
-        {/* Formulario para agregar/editar */}
-        {(isAddMode || editingConfig) && (
-          <div className="border-t border-slate-600 pt-6">
-            <Text className="mb-4" color="primary" variant="h4">
-              {isAddMode ? "Agregar Configuración" : "Editar Configuración"}
-            </Text>
-
-            {errorHandling.validationErrors.length > 0 && (
-              <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
-                <ul className="list-disc list-inside text-sm">
-                  {errorHandling.validationErrors.map((error, idx) => (
-                    <li key={idx}>
-                      <Text color="danger">{error}</Text>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {errorHandling.serverError && (
-              <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
-                <Text color="danger">Error: {errorHandling.serverError}</Text>
-              </div>
-            )}
-
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <FormField
-                required
-                select
-                disabled={!!editingConfig}
-                error={formErrors.torretaExternalId}
-                label="Torreta"
-                name="torretaExternalId"
-                options={availableTorretas
-                  .filter((t: Torreta) => t.externalId)
-                  .map((torreta: Torreta) => ({
-                    value: torreta.externalId!,
-                    label: `${torreta.name} (${torreta.externalId})`,
-                  }))}
-                value={formData.torretaExternalId}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    torretaExternalId: value as string,
-                  })
-                }
-              />
-
-              <FormField
-                required
-                select
-                error={formErrors.configurationType}
-                label="Tipo de Configuración"
-                name="configurationType"
-                options={[
-                  {
-                    value: "area",
-                    label: "Por Área (R1/Y1/G1 según estado del área)",
-                  },
-                  {
-                    value: "department",
-                    label:
-                      "Por Departamento (Color del departamento del evento)",
-                  },
-                ]}
-                value={formData.configurationType}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    configurationType: value as "area" | "department",
-                  })
-                }
-              />
-
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-600">
-                <Button
-                  color="default"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
-                  type="button"
-                  variant="solid"
-                  onPress={handleCancel}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  color="primary"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
-                  type="submit"
-                  variant="solid"
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Guardando..."
-                    : isAddMode
-                      ? "Crear"
-                      : "Actualizar"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
-      </div>
-    </Modal>
+      </Modal>
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        loading={localLoading}
+        message={`¿Estás seguro de eliminar la configuración de la torreta "${configToDelete?.torretaExternalId}"?`}
+        title="Confirmar eliminación"
+        variant="danger"
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setConfigToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
   );
 };

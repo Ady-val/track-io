@@ -1,0 +1,66 @@
+# Track.IO - Docker Compose para Testing (E2E con Cypress)
+# Este compose crea un entorno aislado para testing que no interfiere con dev/prod
+
+services:
+  postgres_test:
+    image: postgres:15-alpine
+    container_name: track_io_postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_TEST:-track_io_test}
+      POSTGRES_USER: ${POSTGRES_USER_TEST:-postgres_test}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_TEST:-postgres_test}
+    ports:
+      - "5433:5432"  # Puerto diferente para no conflictuar con dev/prod
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - track_io_test_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_TEST:-postgres_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend_test:
+    build:
+      context: ../backend-receptor
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: track_io_backend_test
+    restart: unless-stopped
+    environment:
+      NODE_ENV: test
+      PORT: 3001  # Puerto diferente para testing
+      DATABASE_HOST: postgres_test
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${POSTGRES_USER_TEST:-postgres_test}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD_TEST:-postgres_test}
+      DATABASE_NAME: ${POSTGRES_DB_TEST:-track_io_test}
+      DATABASE_URL: postgresql://${POSTGRES_USER_TEST:-postgres_test}:${POSTGRES_PASSWORD_TEST:-postgres_test}@postgres_test:5432/${POSTGRES_DB_TEST:-track_io_test}
+      CORS_ORIGIN: '*'
+      # Permitir sincronización de schema en testing
+      TYPEORM_SYNCHRONIZE: "true"
+    ports:
+      - "3001:3001"  # Puerto diferente para testing
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+    networks:
+      - track_io_test_network
+    healthcheck:
+      # Verificar que el backend responda en el puerto configurado
+      # Usar wget para hacer una petición HTTP básica
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  postgres_test_data:
+    name: track_io_postgres_test_data
+
+networks:
+  track_io_test_network:
+    name: track_io_test_network
+    driver: bridge

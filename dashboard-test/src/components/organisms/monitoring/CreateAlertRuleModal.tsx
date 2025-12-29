@@ -43,6 +43,7 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
   const [setpoint, setSetpoint] = useState("");
   const [minValue, setMinValue] = useState("");
   const [maxValue, setMaxValue] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleClose = () => {
     setRuleName("");
@@ -52,24 +53,27 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
     setSetpoint("");
     setMinValue("");
     setMaxValue("");
+    setValidationError(null);
     onClose();
   };
 
   const handleCreate = () => {
+    setValidationError(null);
+
     if (!ruleName.trim()) {
-      alert("Por favor ingresa un nombre para la condición");
+      setValidationError("Por favor ingresa un nombre para la condición");
 
       return;
     }
 
     if (mode === "setpoint" && !setpoint) {
-      alert("Por favor ingresa un valor para el setpoint");
+      setValidationError("Por favor ingresa un valor para el setpoint");
 
       return;
     }
 
     if (mode === "window" && (!minValue || !maxValue)) {
-      alert("Por favor ingresa los valores mínimo y máximo");
+      setValidationError("Por favor ingresa los valores mínimo y máximo");
 
       return;
     }
@@ -94,6 +98,13 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
       onClose={handleClose}
     >
       <div className="space-y-5">
+        {validationError && (
+          <div className="bg-red-900/30 border border-red-700 rounded-lg p-3">
+            <Text className="text-red-400" variant="small">
+              {validationError}
+            </Text>
+          </div>
+        )}
         {/* Información básica */}
         <div className="bg-slate-900/30 rounded-lg p-4 space-y-4">
           {/* Nombre de la condición */}

@@ -185,6 +185,7 @@ export function ReceptorsCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-receptor-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -197,6 +198,7 @@ export function ReceptorsCatalog() {
         <DataTable
           columns={columns}
           data={filteredReceptors}
+          data-cy="receptors-table"
           emptyMessage="No hay receptores registrados"
           loading={isLoading}
           onDelete={hasDelete ? handleDelete : undefined}
@@ -205,6 +207,9 @@ export function ReceptorsCatalog() {
       </div>
 
       <Modal
+        data-cy={
+          isCreateModalOpen ? "create-receptor-modal" : "edit-receptor-modal"
+        }
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Receptor" : "Editar Receptor"}
         onClose={handleCancel}
@@ -287,6 +292,7 @@ export function ReceptorsCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-receptor-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteReceptorMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedReceptor?.name}"?`}

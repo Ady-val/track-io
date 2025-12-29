@@ -21,7 +21,6 @@ export class AreaService {
   async create(createAreaDto: CreateAreaDto): Promise<Area> {
     this.logger.log(`Creating area with name: ${createAreaDto.name}`);
 
-    // Check if area with same name already exists
     const existingArea = await this.areaRepository.findByName(
       createAreaDto.name
     );
@@ -81,10 +80,8 @@ export class AreaService {
     this.logger.log(`Updating area with ID: ${id}`);
 
     try {
-      // Check if area exists
       await this.findById(id);
 
-      // Check if new name conflicts with existing area
       if (updateAreaDto.name) {
         const existingArea = await this.areaRepository.findByName(
           updateAreaDto.name
@@ -122,7 +119,6 @@ export class AreaService {
     this.logger.log(`Soft deleting area with ID: ${id}`);
 
     try {
-      // Check if area exists
       await this.findById(id);
 
       const deleted = await this.areaRepository.softDelete(id);

@@ -62,7 +62,6 @@ export interface TorretaColor {
   name: string;
   htmlColor: string;
   deviceColorId: string;
-  order: number;
   createdAt: Date;
   updatedAt: Date;
 }

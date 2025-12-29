@@ -67,6 +67,7 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
       size="md"
       title="Editar Dispositivo"
       onClose={onClose}
+      data-cy="edit-device-modal"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-2 mb-4">

@@ -94,6 +94,7 @@ export default function LoginPage() {
                   label: "text-slate-300",
                   inputWrapper: "border-slate-600",
                 }}
+                data-cy="username-input"
                 errorMessage={errors.username?.message}
                 isInvalid={!!errors.username}
                 label="Nombre de Usuario"
@@ -111,6 +112,7 @@ export default function LoginPage() {
                   label: "text-slate-300",
                   inputWrapper: "border-slate-600",
                 }}
+                data-cy="password-input"
                 errorMessage={errors.password?.message}
                 isInvalid={!!errors.password}
                 label="Contraseña"
@@ -123,6 +125,7 @@ export default function LoginPage() {
             <Button
               className="w-full"
               color="primary"
+              data-cy="login-submit-button"
               disabled={loginMutation.isPending}
               isLoading={loginMutation.isPending}
               type="submit"

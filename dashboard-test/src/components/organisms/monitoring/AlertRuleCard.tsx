@@ -311,11 +311,13 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({
                             value={operator}
                             onChange={(e) => setOperator(e.target.value)}
                           >
-                            {operators.map((op: any) => (
-                              <option key={op.value} value={op.value}>
-                                {op.label}
-                              </option>
-                            ))}
+                            {operators.map(
+                              (op: { value: string; label: string }) => (
+                                <option key={op.value} value={op.value}>
+                                  {op.label}
+                                </option>
+                              )
+                            )}
                           </Select>
                         </div>
                         <div className="col-span-2">

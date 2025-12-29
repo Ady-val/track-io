@@ -4,8 +4,6 @@ import {
   IsOptional,
   Length,
   Matches,
-  IsInt,
-  Min,
 } from 'class-validator';
 
 export class CreateTorretaColorDto {
@@ -25,10 +23,6 @@ export class CreateTorretaColorDto {
   @IsNotEmpty()
   @Length(1, 10)
   deviceColorId!: string;
-
-  @IsInt()
-  @Min(0)
-  order!: number;
 }
 
 export class UpdateTorretaColorDto {
@@ -51,9 +45,4 @@ export class UpdateTorretaColorDto {
   @IsNotEmpty()
   @Length(1, 10)
   deviceColorId?: string;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  order?: number;
 }

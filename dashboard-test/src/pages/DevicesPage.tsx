@@ -1,4 +1,5 @@
 import type { Device } from "../types/device";
+import type { DeviceSignal } from "../types/device-signal";
 
 import React, { useState } from "react";
 
@@ -32,10 +33,9 @@ export const DevicesPage: React.FC = () => {
   const [isEscalationConfigModalOpen, setIsEscalationConfigModalOpen] =
     useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [selectedSignal, setSelectedSignal] = useState<{
-    id: number;
-    name: string;
-  } | null>(null);
+  const [selectedSignal, setSelectedSignal] = useState<DeviceSignal | null>(
+    null
+  );
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -59,6 +59,7 @@ export const DevicesPage: React.FC = () => {
             <Button
               className="flex items-center space-x-2"
               color="primary"
+              data-cy="add-device-button"
               variant="solid"
               onClick={() => setIsCreateModalOpen(true)}
             >
@@ -98,7 +99,21 @@ export const DevicesPage: React.FC = () => {
               setIsDeleteDeviceModalOpen(true);
             }}
             onDeleteSignal={(signal, device) => {
-              setSelectedSignal(signal);
+              setSelectedSignal({
+                id: signal.id,
+                name: signal.name,
+                deviceId: device.id,
+                departmentId: signal.departmentId,
+                externalValueId: signal.externalValueId,
+                createdAt: "",
+                updatedAt: "",
+                department: signal.departmentName
+                  ? {
+                      id: signal.departmentId,
+                      name: signal.departmentName,
+                    }
+                  : undefined,
+              });
               setSelectedDevice(device);
               setIsDeleteSignalModalOpen(true);
             }}
@@ -107,7 +122,21 @@ export const DevicesPage: React.FC = () => {
               setIsEditDeviceModalOpen(true);
             }}
             onEditSignal={(signal, device) => {
-              setSelectedSignal(signal);
+              setSelectedSignal({
+                id: signal.id,
+                name: signal.name,
+                deviceId: device.id,
+                departmentId: signal.departmentId,
+                externalValueId: signal.externalValueId,
+                createdAt: "",
+                updatedAt: "",
+                department: signal.departmentName
+                  ? {
+                      id: signal.departmentId,
+                      name: signal.departmentName,
+                    }
+                  : undefined,
+              });
               setSelectedDevice(device);
               setIsEditSignalModalOpen(true);
             }}

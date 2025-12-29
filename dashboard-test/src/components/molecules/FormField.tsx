@@ -70,15 +70,18 @@ export function FormField({
             input: "!text-white placeholder:text-slate-400",
             label: "!text-white text-sm",
           }}
-          disabled={disabled}
           id={fieldId}
+          isDisabled={disabled}
           name={name}
           placeholder={placeholder}
           required={required}
           type={type}
           value={String(value)}
           variant="bordered"
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange(e.target.value)
+          }
+          onValueChange={(val: string) => onChange(val)}
         />
       )}
 

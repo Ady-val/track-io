@@ -186,7 +186,6 @@ export class DashboardService {
     departmentId: number,
     events: EventForDashboard[]
   ): string {
-    // Buscar eventos activos (open o in-progress) para esta área y departamento
     const activeEvents = events.filter(
       event =>
         event.areaId === areaId &&
@@ -199,7 +198,6 @@ export class DashboardService {
       return 'ok';
     }
 
-    // Si hay eventos activos, determinar el estado más crítico
     const hasOpenEvents = activeEvents.some(
       event => event.status === EventStatus.OPEN
     );
@@ -220,7 +218,6 @@ export class DashboardService {
     areaId: number,
     events: EventForDashboard[]
   ): string {
-    // Calcular tiempo total de eventos activos en el área
     const activeEvents = events.filter(
       event =>
         event.areaId === areaId &&

@@ -52,7 +52,8 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
             onClick={handleToggleClick}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
-                handleToggleClick(e as any);
+                e.preventDefault();
+                handleToggleClick(e as unknown as React.MouseEvent);
               }
             }}
           >

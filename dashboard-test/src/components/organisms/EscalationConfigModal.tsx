@@ -401,7 +401,11 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       />
 
-      <div className="relative w-full max-w-5xl animate-in fade-in zoom-in-95 duration-200">
+      <div
+        className="relative w-full max-w-5xl animate-in fade-in zoom-in-95 duration-200"
+        data-cy="escalation-modal"
+        role="dialog"
+      >
         <div className="bg-slate-800 border border-slate-600 shadow-2xl rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 flex-shrink-0">
             <div>
@@ -414,6 +418,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
             </div>
             <button
               className="text-slate-400 hover:text-slate-200 transition-colors p-1 hover:bg-slate-700/50 rounded"
+              data-cy="close-modal"
               onClick={onClose}
             >
               <FaTimes className="w-4 h-4" />
@@ -717,7 +722,9 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                   <option value="">Color</option>
                                   {Array.isArray(torretaColors) &&
                                     torretaColors
-                                      .sort((a, b) => a.order - b.order)
+                                      .sort((a, b) =>
+                                        a.name.localeCompare(b.name)
+                                      )
                                       .map((color) => (
                                         <option
                                           key={color.id}

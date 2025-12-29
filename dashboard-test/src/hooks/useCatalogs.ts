@@ -35,7 +35,6 @@ export interface TorretaColor {
   name: string;
   htmlColor: string;
   deviceColorId: string;
-  order: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -150,7 +149,6 @@ const catalogApi = {
     name: string;
     htmlColor: string;
     deviceColorId: string;
-    order: number;
   }) => {
     const response = await apiClient.post("/torreta-colors", data);
 
@@ -162,7 +160,6 @@ const catalogApi = {
       name: string;
       htmlColor: string;
       deviceColorId: string;
-      order: number;
     }
   ) => {
     const response = await apiClient.put(`/torreta-colors/${id}`, data);
@@ -398,7 +395,6 @@ export function useUpdateTorretaColor() {
         name: string;
         htmlColor: string;
         deviceColorId: string;
-        order: number;
       };
     }) => catalogApi.updateTorretaColor(id, data),
     onSuccess: () => {

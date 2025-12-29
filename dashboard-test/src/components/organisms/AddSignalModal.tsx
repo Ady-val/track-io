@@ -1,6 +1,6 @@
 import type { Device } from "../../types/device";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { FaMicrochip } from "react-icons/fa";
 
@@ -31,7 +31,10 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: departmentsData } = useDepartments();
-  const departments = departmentsData?.data ?? [];
+  const departments = useMemo(
+    () => departmentsData?.data ?? [],
+    [departmentsData?.data]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -70,6 +73,7 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
       size="md"
       title="Agregar Señal al Dispositivo"
       onClose={onClose}
+      data-cy="add-signal-modal"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-2 mb-4">

@@ -225,6 +225,7 @@ export const CreateDeviceWithSignalsModal: React.FC<
       size="lg"
       title="Agregar Dispositivo y Señales"
       onClose={onClose}
+      data-cy="create-device-modal"
     >
       <div className="max-h-[80vh] overflow-y-auto pr-2">
         <form className="space-y-6" onSubmit={handleSubmit}>

@@ -1,0 +1,38 @@
+{
+  "devices": [
+    {
+      "id": 1,
+      "name": "Dispositivo Test 1",
+      "areaId": 1,
+      "areaName": "Área Test 1",
+      "externalId": "DEV-001",
+      "deviceSignals": [
+        {
+          "id": 1,
+          "name": "Señal Test 1",
+          "departmentId": 1,
+          "departmentName": "Departamento 1",
+          "externalValueId": "SIG-001"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Dispositivo Test 2",
+      "areaId": 2,
+      "areaName": "Área Test 2",
+      "externalId": "DEV-002",
+      "deviceSignals": []
+    }
+  ],
+  "emptyResponse": {
+    "message": "Devices retrieved",
+    "data": [],
+    "total": 0,
+    "pagination": {
+      "limit": 50,
+      "offset": 0,
+      "total": 0
+    }
+  }
+}

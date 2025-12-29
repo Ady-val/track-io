@@ -96,7 +96,7 @@ export const LevelChart: React.FC<LevelChartProps> = ({
         chartRef.current = null;
       }
     };
-  }, []);
+  }, [config.color]);
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -122,7 +122,7 @@ export const LevelChart: React.FC<LevelChartProps> = ({
       chartRef.current.data.datasets[0].borderColor = dynamicColor;
       chartRef.current.update();
     }
-  }, [value, minValue, maxValue]);
+  }, [value, minValue, maxValue, config.color]);
 
   const getValueColor = () => {
     if (value === undefined) return "text-slate-400";

@@ -23,7 +23,6 @@ export class DepartmentService {
       `Creating department with name: ${createDepartmentDto.name}`
     );
 
-    // Check if department with same name already exists
     const existingDepartment = await this.departmentRepository.findByName(
       createDepartmentDto.name
     );
@@ -89,10 +88,8 @@ export class DepartmentService {
     this.logger.log(`Updating department with ID: ${id}`);
 
     try {
-      // Check if department exists
       await this.findById(id);
 
-      // Check if new name conflicts with existing department
       if (updateDepartmentDto.name) {
         const existingDepartment = await this.departmentRepository.findByName(
           updateDepartmentDto.name
@@ -133,7 +130,6 @@ export class DepartmentService {
     this.logger.log(`Soft deleting department with ID: ${id}`);
 
     try {
-      // Check if department exists
       await this.findById(id);
 
       const deleted = await this.departmentRepository.softDelete(id);

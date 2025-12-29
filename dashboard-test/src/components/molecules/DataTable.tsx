@@ -3,16 +3,16 @@ import React from "react";
 import { Button } from "../atoms/Button";
 import { Icon } from "../atoms/Icon";
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   id: string;
   label: string;
   key: keyof T;
-  component?: (value: any, row: T) => React.ReactNode;
+  component?: (value: unknown, row: T) => React.ReactNode;
   sortable?: boolean;
   width?: string;
 }
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T = Record<string, unknown>> {
   data: T[];
   columns: Array<TableColumn<T>>;
   onEdit?: (item: T) => void;
@@ -21,6 +21,7 @@ export interface DataTableProps<T = any> {
   emptyMessage?: string;
   className?: string;
   maxHeight?: string;
+  "data-cy"?: string;
 }
 
 export function DataTable<T extends { id: number | string }>({
@@ -32,6 +33,7 @@ export function DataTable<T extends { id: number | string }>({
   emptyMessage = "No hay datos disponibles",
   className = "",
   maxHeight,
+  "data-cy": dataCy,
 }: DataTableProps<T>) {
   if (loading) {
     return (
@@ -53,6 +55,7 @@ export function DataTable<T extends { id: number | string }>({
         <div className="flex-1 overflow-x-auto overflow-y-auto table-scrollbar">
           <table
             className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
+            data-cy={dataCy || "data-table"}
             style={{ tableLayout: "fixed" }}
           >
             <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
@@ -75,7 +78,11 @@ export function DataTable<T extends { id: number | string }>({
             </thead>
             <tbody className="bg-slate-700 divide-y divide-slate-600">
               {data.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-600">
+                <tr
+                  key={row.id}
+                  className="hover:bg-slate-600"
+                  data-cy="table-row"
+                >
                   {columns.map((column) => (
                     <td
                       key={column.id}
@@ -92,6 +99,8 @@ export function DataTable<T extends { id: number | string }>({
                       <div className="flex space-x-2">
                         {onEdit && (
                           <Button
+                            data-cy="edit-row-button"
+                            disableRipple
                             className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
                             size="sm"
                             variant="bordered"
@@ -102,6 +111,8 @@ export function DataTable<T extends { id: number | string }>({
                         )}
                         {onDelete && (
                           <Button
+                            data-cy="delete-row-button"
+                            disableRipple
                             className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
                             size="sm"
                             variant="bordered"
@@ -127,6 +138,7 @@ export function DataTable<T extends { id: number | string }>({
       <div className="flex-1 overflow-y-auto overflow-x-auto table-scrollbar">
         <table
           className="min-w-full bg-slate-700 border border-slate-600 rounded-lg"
+          data-cy={dataCy || "data-table"}
           style={{ tableLayout: "fixed" }}
         >
           <thead className="bg-slate-800 sticky top-0 z-10 shadow-md">
@@ -149,7 +161,11 @@ export function DataTable<T extends { id: number | string }>({
           </thead>
           <tbody className="bg-slate-700 divide-y divide-slate-600">
             {data.map((row) => (
-              <tr key={row.id} className="hover:bg-slate-600">
+              <tr
+                key={row.id}
+                className="hover:bg-slate-600"
+                data-cy="table-row"
+              >
                 {columns.map((column) => (
                   <td
                     key={column.id}
@@ -166,6 +182,8 @@ export function DataTable<T extends { id: number | string }>({
                     <div className="flex space-x-2">
                       {onEdit && (
                         <Button
+                          data-cy="edit-row-button"
+                          disableRipple
                           className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
                           size="sm"
                           variant="bordered"
@@ -176,6 +194,8 @@ export function DataTable<T extends { id: number | string }>({
                       )}
                       {onDelete && (
                         <Button
+                          data-cy="delete-row-button"
+                          disableRipple
                           className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
                           size="sm"
                           variant="bordered"

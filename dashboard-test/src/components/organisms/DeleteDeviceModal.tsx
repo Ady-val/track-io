@@ -47,6 +47,7 @@ export const DeleteDeviceModal: React.FC<DeleteDeviceModalProps> = ({
       size="md"
       title="Eliminar Dispositivo"
       onClose={onClose}
+      data-cy="delete-device-modal"
     >
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
@@ -105,6 +106,7 @@ export const DeleteDeviceModal: React.FC<DeleteDeviceModalProps> = ({
           <Button
             className="px-6 py-2 font-semibold"
             color="default"
+            data-cy="delete-device-cancel-button"
             disabled={isLoading}
             size="md"
             type="button"
@@ -116,6 +118,7 @@ export const DeleteDeviceModal: React.FC<DeleteDeviceModalProps> = ({
           <Button
             className="flex items-center space-x-2 px-6 py-2 font-semibold"
             color="danger"
+            data-cy="delete-device-confirm-button"
             disabled={isLoading}
             size="md"
             type="button"

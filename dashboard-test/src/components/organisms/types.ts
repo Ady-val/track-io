@@ -34,13 +34,26 @@ export interface Sensor {
   isActive: boolean;
 }
 
+export interface AlertRuleCondition {
+  field?: string;
+  operator?: string;
+  value?: unknown;
+  [key: string]: unknown;
+}
+
+export interface AlertRuleAction {
+  type?: string;
+  target?: string;
+  [key: string]: unknown;
+}
+
 export interface AlertRule {
   id: number;
   name: string;
   description?: string;
   isActive: boolean;
-  conditions: any[];
-  actions: any[];
+  conditions: AlertRuleCondition[];
+  actions: AlertRuleAction[];
   createdAt: string;
   updatedAt: string;
 }

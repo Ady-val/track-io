@@ -39,10 +39,8 @@ export class AlertRuleService {
   }
 
   async createAlertRule(createDto: CreateAlertRuleDto): Promise<AlertRule> {
-    // Verify measurement exists
     await this.measurementService.getMeasurementById(createDto.measurementId);
 
-    // Validate rule configuration
     this.validateRuleConfiguration(createDto);
 
     const alertRule = this.alertRuleRepository.create(createDto);

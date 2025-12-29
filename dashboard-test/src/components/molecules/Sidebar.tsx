@@ -157,6 +157,8 @@ export default function Sidebar() {
               onMouseLeave={() => setHoveredItem(null)}
             >
               <Link
+                data-cy={`sidebar-link-${item.path.replace(/\//g, "-").replace(/^-/, "")}`}
+                aria-label={item.label}
                 className={`
                   flex items-center justify-center w-full h-12 rounded-lg
                   transition-all duration-200 ease-in-out

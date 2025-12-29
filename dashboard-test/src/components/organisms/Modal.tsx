@@ -12,6 +12,7 @@ export interface ModalProps {
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   hideHeader?: boolean;
+  "data-cy"?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -21,6 +22,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = "md",
   hideHeader = false,
+  "data-cy": dataCy,
 }) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -59,17 +61,29 @@ export const Modal: React.FC<ModalProps> = ({
     "3xl": "max-w-5xl", // 1024px
   };
 
+  const handleBackdropKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      onClose();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
+        aria-label="Close modal"
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        role="button"
+        tabIndex={0}
         onClick={onClose}
+        onKeyDown={handleBackdropKeyDown}
       />
 
       {/* Modal */}
       <div
         className={`relative w-full ${sizeClasses[size]} max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200`}
+        data-cy={dataCy || "modal"}
+        role="dialog"
       >
         <Card className="bg-slate-800 border-slate-600 shadow-2xl flex flex-col h-full max-h-[85vh]">
           <CardBody className="p-0 flex flex-col h-full overflow-hidden">
@@ -85,6 +99,7 @@ export const Modal: React.FC<ModalProps> = ({
                 )}
                 <button
                   className="text-slate-400 hover:text-slate-200 transition-colors p-1 hover:bg-slate-700/50 rounded"
+                  data-cy="close-modal"
                   onClick={onClose}
                 >
                   <FaXmark className="w-4 h-4" />

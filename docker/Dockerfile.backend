@@ -4,8 +4,8 @@
 # Use Node.js 18 Alpine as base image
 FROM node:18-alpine
 
-# Install system dependencies for PostgreSQL client
-RUN apk add --no-cache postgresql-client
+# Install system dependencies for PostgreSQL client and wget for healthchecks
+RUN apk add --no-cache postgresql-client wget
 
 # Set working directory
 WORKDIR /app
@@ -35,12 +35,9 @@ COPY scripts/ ./scripts/
 # Build the NestJS application
 RUN pnpm run build
 
-# Make start script executable
-RUN chmod +x scripts/start-with-migrations.sh
-
 # Expose the application port
 EXPOSE 3000
 
 # Start the application with migrations
-# The script runs migrations before starting the app
-CMD ["./scripts/start-with-migrations.sh"]
+# Run migrations before starting (skip if TYPEORM_SYNCHRONIZE is true for test environments)
+CMD sh -c "if [ \"$TYPEORM_SYNCHRONIZE\" != \"true\" ]; then echo '🔄 Running database migrations...' && pnpm run migration:run || exit 1; fi && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"

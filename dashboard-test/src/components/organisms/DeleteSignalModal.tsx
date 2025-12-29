@@ -1,4 +1,5 @@
 import type { Device } from "../../types/device";
+import type { DeviceSignal } from "../../types/device-signal";
 
 import React, { useState } from "react";
 
@@ -13,7 +14,7 @@ interface DeleteSignalModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  signal: any;
+  signal: DeviceSignal | null;
   device: Device | null;
 }
 
@@ -44,7 +45,13 @@ export const DeleteSignalModal: React.FC<DeleteSignalModalProps> = ({
   if (!signal || !device) return null;
 
   return (
-    <Modal isOpen={isOpen} size="md" title="Eliminar Señal" onClose={onClose}>
+    <Modal
+      isOpen={isOpen}
+      size="md"
+      title="Eliminar Señal"
+      onClose={onClose}
+      data-cy="delete-signal-modal"
+    >
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
           <div className="flex items-center justify-center w-12 h-12 bg-red-600/20 rounded-full">
@@ -74,7 +81,7 @@ export const DeleteSignalModal: React.FC<DeleteSignalModalProps> = ({
             </p>
             <p className="text-slate-300">
               <span className="font-medium">Departamento:</span>{" "}
-              {signal.departmentName}
+              {signal.department?.name ?? "N/A"}
             </p>
             <p className="text-slate-300">
               <span className="font-medium">Dispositivo:</span> {device.name}
@@ -101,6 +108,7 @@ export const DeleteSignalModal: React.FC<DeleteSignalModalProps> = ({
           <Button
             className="px-6 py-2 font-semibold"
             color="default"
+            data-cy="delete-signal-cancel-button"
             disabled={isLoading}
             size="md"
             type="button"
@@ -112,6 +120,7 @@ export const DeleteSignalModal: React.FC<DeleteSignalModalProps> = ({
           <Button
             className="flex items-center space-x-2 px-6 py-2 font-semibold"
             color="danger"
+            data-cy="delete-signal-confirm-button"
             disabled={isLoading}
             size="md"
             type="button"

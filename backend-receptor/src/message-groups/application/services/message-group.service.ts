@@ -35,7 +35,6 @@ export class MessageGroupService {
   async createMessageGroup(
     createDto: CreateMessageGroupDto
   ): Promise<MessageGroup> {
-    // Check if name already exists
     const existing = await this.messageGroupRepository.findByName(
       createDto.name
     );
@@ -56,7 +55,6 @@ export class MessageGroupService {
   ): Promise<MessageGroup> {
     const messageGroup = await this.getMessageGroupById(id);
 
-    // Check if new name conflicts with existing
     if (updateDto.name && updateDto.name !== messageGroup.name) {
       const existing = await this.messageGroupRepository.findByName(
         updateDto.name

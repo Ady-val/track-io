@@ -178,12 +178,21 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
         {/* Componentes de control sueltos */}
         <div className="flex items-center justify-between">
           <div
+            aria-label={`${rule.isEnabled ? "Desactivar" : "Activar"} regla de alerta`}
             className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium transition-colors ${
               rule.isEnabled
                 ? "bg-green-600 text-white border border-green-500"
                 : "bg-gray-600 text-white border border-gray-500"
             }`}
+            role="button"
+            tabIndex={0}
             onClick={() => onToggleEnabled(rule.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggleEnabled(rule.id);
+              }
+            }}
           >
             {rule.isEnabled ? "Activa" : "Inactiva"}
           </div>

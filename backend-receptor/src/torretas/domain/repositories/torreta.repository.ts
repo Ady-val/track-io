@@ -18,4 +18,14 @@ export class TorretaRepository extends Repository<Torreta> {
   async findByName(name: string): Promise<Torreta | null> {
     return this.findOne({ where: { name } });
   }
+
+  async findByExternalId(
+    externalId: string,
+    includeDeleted = false
+  ): Promise<Torreta | null> {
+    return this.findOne({
+      where: { externalId },
+      withDeleted: includeDeleted,
+    });
+  }
 }

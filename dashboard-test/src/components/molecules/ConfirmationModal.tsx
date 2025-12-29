@@ -12,6 +12,7 @@ export interface ConfirmationModalProps {
   cancelText?: string;
   variant?: "danger" | "warning" | "info";
   loading?: boolean;
+  "data-cy"?: string;
 }
 
 export function ConfirmationModal({
@@ -24,6 +25,7 @@ export function ConfirmationModal({
   cancelText = "Cancelar",
   variant = "danger",
   loading = false,
+  "data-cy": dataCy,
 }: ConfirmationModalProps) {
   const getVariantStyles = () => {
     switch (variant) {
@@ -57,7 +59,13 @@ export function ConfirmationModal({
   const styles = getVariantStyles();
 
   return (
-    <Modal isOpen={isOpen} size="sm" title={title} onClose={onClose}>
+    <Modal
+      data-cy={dataCy || "confirmation-modal"}
+      isOpen={isOpen}
+      size="sm"
+      title={title}
+      onClose={onClose}
+    >
       <div className="p-6">
         <div className="flex items-center mb-4">
           <div className={`flex-shrink-0 ${styles.iconColor}`}>
@@ -73,13 +81,19 @@ export function ConfirmationModal({
         </div>
 
         <div className="flex justify-end space-x-3">
-          <Button disabled={loading} variant="bordered" onClick={onClose}>
+          <Button
+            data-cy="confirmation-cancel-button"
+            disabled={loading}
+            variant="bordered"
+            onPress={onClose}
+          >
             {cancelText}
           </Button>
           <Button
             className={styles.confirmButton}
+            data-cy="confirmation-confirm-button"
             disabled={loading}
-            onClick={onConfirm}
+            onPress={onConfirm}
           >
             {loading ? (
               <div className="flex items-center">

@@ -11,7 +11,6 @@ export class TorretaColorRepository extends Repository<TorretaColor> {
   async findAllOrderedByOrder(): Promise<TorretaColor[]> {
     return this.find({
       order: {
-        order: 'ASC',
         name: 'ASC',
       },
     });

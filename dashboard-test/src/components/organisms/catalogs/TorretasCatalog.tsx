@@ -67,13 +67,13 @@ export function TorretasCatalog() {
       label: "External ID",
       key: "externalId",
       width: "200px",
-      component: (value) => value ?? "-",
+      component: (value) => (value as string | undefined) ?? "-",
     },
     {
       id: "description",
       label: "Descripción",
       key: "description",
-      component: (value) => value ?? "-",
+      component: (value) => (value as string | undefined) ?? "-",
     },
   ];
 
@@ -122,13 +122,20 @@ export function TorretasCatalog() {
     try {
       errorHandling.clearErrors();
 
+      // Clean optional fields: convert empty strings to undefined
+      const cleanedData = {
+        name: formData.name,
+        description: formData.description.trim() || undefined,
+        externalId: formData.externalId.trim() || undefined,
+      };
+
       if (isCreateModalOpen) {
-        await createTorretaMutation.mutateAsync(formData);
+        await createTorretaMutation.mutateAsync(cleanedData);
         setIsCreateModalOpen(false);
       } else if (isEditModalOpen && selectedTorreta) {
         await updateTorretaMutation.mutateAsync({
           id: selectedTorreta.id,
-          data: formData,
+          data: cleanedData,
         });
         setIsEditModalOpen(false);
       }
@@ -176,6 +183,7 @@ export function TorretasCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-torreta-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -188,6 +196,7 @@ export function TorretasCatalog() {
         <DataTable
           columns={columns}
           data={filteredTorretas}
+          data-cy="torretas-table"
           emptyMessage="No hay torretas registradas"
           loading={isLoading}
           onDelete={hasDelete ? handleDelete : undefined}
@@ -196,6 +205,9 @@ export function TorretasCatalog() {
       </div>
 
       <Modal
+        data-cy={
+          isCreateModalOpen ? "create-torreta-modal" : "edit-torreta-modal"
+        }
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={isCreateModalOpen ? "Crear Torreta" : "Editar Torreta"}
         onClose={handleCancel}
@@ -286,6 +298,7 @@ export function TorretasCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-torreta-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteTorretaMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedTorreta?.name}"?`}

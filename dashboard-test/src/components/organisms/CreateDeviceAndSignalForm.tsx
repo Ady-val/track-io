@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   FaFloppyDisk,
@@ -13,7 +13,7 @@ import {
 import { Button, Input, Select, Text } from "@components/atoms";
 
 import { useAreas } from "@/hooks/useAreas";
-import { useDepartments } from "@/hooks/useCatalogs";
+import { useDepartments, type Department } from "@/hooks/useCatalogs";
 import type { CreateDeviceData } from "@/types/device";
 import type { CreateDeviceSignalData } from "@/types/device-signal";
 
@@ -46,7 +46,10 @@ export const CreateDeviceAndSignalForm: React.FC<
   const { areas, loading: areasLoading } = useAreas();
   const { data: departmentsData, isLoading: departmentsLoading } =
     useDepartments();
-  const departments = departmentsData?.data ?? [];
+  const departments = useMemo(
+    () => departmentsData?.data ?? [],
+    [departmentsData?.data]
+  );
 
   useEffect(() => {
     if (areas.length > 0 && !areaId) {
@@ -211,7 +214,7 @@ export const CreateDeviceAndSignalForm: React.FC<
               value={departmentId}
               onChange={(e) => setDepartmentId(Number(e.target.value))}
             >
-              {departments.map((department: any) => (
+              {departments.map((department: Department) => (
                 <option key={department.id} value={department.id}>
                   {department.name}
                 </option>

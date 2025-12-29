@@ -1,10 +1,11 @@
 import type { Device } from "../../types/device";
+import type { DeviceSignal } from "../../types/device-signal";
 
 import React, { useState, useEffect } from "react";
 
 import { FaMicrochip } from "react-icons/fa";
 
-import { useDepartments } from "../../hooks/useCatalogs";
+import { useDepartments, type Department } from "../../hooks/useCatalogs";
 import deviceSignalService from "../../lib/services/device-signal.service";
 import { Button } from "../atoms/Button";
 import { Input } from "../atoms/Input";
@@ -16,7 +17,7 @@ interface EditSignalModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  signal: any;
+  signal: DeviceSignal | null;
   device: Device | null;
 }
 
@@ -66,7 +67,13 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
   if (!signal || !device) return null;
 
   return (
-    <Modal isOpen={isOpen} size="md" title="Editar Señal" onClose={onClose}>
+    <Modal
+      isOpen={isOpen}
+      size="md"
+      title="Editar Señal"
+      onClose={onClose}
+      data-cy="edit-signal-modal"
+    >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-2 mb-4">
           <FaMicrochip className="w-5 h-5 text-green-500" />
@@ -123,7 +130,7 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
               onChange={(e) => setDepartmentId(e.target.value)}
             >
               <option value="">Seleccionar departamento</option>
-              {departments.map((dept: any) => (
+              {departments.map((dept: Department) => (
                 <option key={dept.id} value={dept.id}>
                   {dept.name}
                 </option>

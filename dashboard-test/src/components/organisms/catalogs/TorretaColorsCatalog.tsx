@@ -32,12 +32,10 @@ export function TorretaColorsCatalog() {
     name: "",
     htmlColor: "#000000",
     deviceColorId: "",
-    order: 0,
   });
   const [formErrors, setFormErrors] = useState<{
     name?: string;
     deviceColorId?: string;
-    order?: string;
   }>({});
 
   const errorHandling = useModalError("Error al procesar la solicitud");
@@ -74,9 +72,9 @@ export function TorretaColorsCatalog() {
         <div className="flex items-center">
           <div
             className="w-6 h-6 rounded border border-gray-300 mr-2"
-            style={{ backgroundColor: value }}
+            style={{ backgroundColor: value as string }}
           />
-          <span className="font-mono text-sm">{value}</span>
+          <span className="font-mono text-sm">{value as string}</span>
         </div>
       ),
     },
@@ -85,11 +83,6 @@ export function TorretaColorsCatalog() {
       label: "ID del Dispositivo",
       key: "deviceColorId",
     },
-    {
-      id: "order",
-      label: "Orden",
-      key: "order",
-    },
   ];
 
   const handleCreate = () => {
@@ -97,7 +90,6 @@ export function TorretaColorsCatalog() {
       name: "",
       htmlColor: "#000000",
       deviceColorId: "",
-      order: 0,
     });
     setFormErrors({});
     errorHandling.clearErrors();
@@ -110,7 +102,6 @@ export function TorretaColorsCatalog() {
       name: color.name,
       htmlColor: color.htmlColor,
       deviceColorId: color.deviceColorId,
-      order: color.order,
     });
     setFormErrors({});
     errorHandling.clearErrors();
@@ -125,17 +116,13 @@ export function TorretaColorsCatalog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const errors: { name?: string; deviceColorId?: string; order?: string } =
-      {};
+    const errors: { name?: string; deviceColorId?: string } = {};
 
     if (!formData.name.trim()) {
       errors.name = "El nombre es requerido";
     }
     if (!formData.deviceColorId.trim()) {
       errors.deviceColorId = "El ID del dispositivo es requerido";
-    }
-    if (formData.order < 0) {
-      errors.order = "El orden debe ser mayor o igual a 0";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -165,7 +152,6 @@ export function TorretaColorsCatalog() {
         name: "",
         htmlColor: "#000000",
         deviceColorId: "",
-        order: 0,
       });
       setFormErrors({});
     } catch (error) {
@@ -190,7 +176,6 @@ export function TorretaColorsCatalog() {
       name: "",
       htmlColor: "#000000",
       deviceColorId: "",
-      order: 0,
     });
     setFormErrors({});
     errorHandling.clearErrors();
@@ -214,6 +199,7 @@ export function TorretaColorsCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-torreta-color-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -226,6 +212,7 @@ export function TorretaColorsCatalog() {
         <DataTable
           columns={columns}
           data={filteredColors}
+          data-cy="torreta-colors-table"
           emptyMessage="No hay colores registrados"
           loading={isLoading}
           onDelete={hasDelete ? handleDelete : undefined}
@@ -234,6 +221,11 @@ export function TorretaColorsCatalog() {
       </div>
 
       <Modal
+        data-cy={
+          isCreateModalOpen
+            ? "create-torreta-color-modal"
+            : "edit-torreta-color-modal"
+        }
         isOpen={isCreateModalOpen || isEditModalOpen}
         title={
           isCreateModalOpen
@@ -309,19 +301,6 @@ export function TorretaColorsCatalog() {
             }
           />
 
-          <FormField
-            required
-            error={formErrors.order}
-            label="Orden"
-            name="order"
-            placeholder="0"
-            type="number"
-            value={formData.order}
-            onChange={(value) =>
-              setFormData({ ...formData, order: Number(value) })
-            }
-          />
-
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
@@ -359,6 +338,7 @@ export function TorretaColorsCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-torreta-color-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteColorMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedColor?.name}"?`}

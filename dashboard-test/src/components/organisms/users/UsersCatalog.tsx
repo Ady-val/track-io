@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { Module, Action } from "@/constants/permissions";
 import { useHasPermission } from "@/hooks/useHasPermission";
@@ -83,7 +83,10 @@ export function UsersCatalog() {
   const { data: userRolesData } = useUserRoles(selectedUser?.id ?? 0);
 
   const allRoles = allRolesData?.data ?? [];
-  const userRoles = userRolesData?.data ?? [];
+  const userRoles = useMemo(
+    () => userRolesData?.data ?? [],
+    [userRolesData?.data]
+  );
 
   const users = usersData?.data ?? [];
   const totalItems = usersData?.total ?? 0;
