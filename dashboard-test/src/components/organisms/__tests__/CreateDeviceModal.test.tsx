@@ -71,3 +71,4 @@ describe("CreateDeviceModal", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 });
+
