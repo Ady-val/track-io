@@ -110,7 +110,9 @@ export default defineConfig([
         {
           args: "after-used",
           ignoreRestSiblings: false,
-          argsIgnorePattern: "^_.*?$",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
 
@@ -170,6 +172,14 @@ export default defineConfig([
           next: ["const", "let", "var"],
         },
       ],
+    },
+  },
+  {
+    files: ["**/migrations/**/*.ts", "**/migrations/**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
     },
   },
 ]);

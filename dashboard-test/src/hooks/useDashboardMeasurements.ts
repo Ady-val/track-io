@@ -44,3 +44,45 @@ export const useDashboardMeasurements = (groupId?: number | null) => {
     refetch: fetchDashboards,
   };
 };
+
+export const useAvailableDashboardMeasurements = () => {
+  const [dashboards, setDashboards] = useState<DashboardMeasurement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAvailable = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await apiClient.get<{
+        message: string;
+        data: DashboardMeasurement[];
+        total: number;
+      }>("/dashboard-measurements/available");
+
+      setDashboards(response.data.data ?? []);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch available dashboard measurements";
+
+      setError(errorMessage);
+      console.error("Error fetching available dashboard measurements:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAvailable();
+  }, [fetchAvailable]);
+
+  return {
+    data: dashboards,
+    loading,
+    error,
+    refetch: fetchAvailable,
+  };
+};

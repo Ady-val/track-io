@@ -245,7 +245,7 @@ describe('AlertMessageService', () => {
       const mockMessage = createMockAlertMessage({ id });
 
       repository.findWithRelations.mockResolvedValue(mockMessage);
-      repository.remove.mockResolvedValue(mockMessage as any);
+      repository.remove.mockResolvedValue(mockMessage);
 
       await service.deleteAlertMessage(id);
 

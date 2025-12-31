@@ -9,6 +9,7 @@ describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let sessionRepository: jest.Mocked<SessionRepository>;
   let mockContext: jest.Mocked<ExecutionContext>;
+  let mockGetRequest: jest.Mock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,13 +27,17 @@ describe('JwtAuthGuard', () => {
     guard = module.get<JwtAuthGuard>(JwtAuthGuard);
     sessionRepository = module.get(SessionRepository);
 
+    mockGetRequest = jest.fn().mockReturnValue({
+      headers: {},
+      user: undefined,
+    });
+    const mockGetResponse = jest.fn().mockReturnValue({});
+    const mockSwitchToHttp = {
+      getRequest: mockGetRequest,
+      getResponse: mockGetResponse,
+    };
     mockContext = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue({
-          headers: {},
-          user: undefined,
-        }),
-      }),
+      switchToHttp: jest.fn().mockReturnValue(mockSwitchToHttp),
       getHandler: jest.fn(),
       getClass: jest.fn(),
     } as unknown as jest.Mocked<ExecutionContext>;
@@ -49,7 +54,7 @@ describe('JwtAuthGuard', () => {
         user: undefined,
       };
 
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
         UnauthorizedException
@@ -67,7 +72,7 @@ describe('JwtAuthGuard', () => {
         user: undefined,
       };
 
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
         UnauthorizedException
@@ -86,21 +91,19 @@ describe('JwtAuthGuard', () => {
         user: { id: 1, username: 'testuser' },
       };
 
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
-      jest.spyOn(guard as any, 'canActivate').mockImplementation(async () => {
-        const parentResult = true;
-        if (!parentResult) {
-          throw new UnauthorizedException('Invalid token');
-        }
-        const session = await sessionRepository.findByToken(token);
-        if (!session) {
-          throw new UnauthorizedException('Session not found or expired');
-        }
-        if (!request.user) {
-          throw new UnauthorizedException('User not found in request');
-        }
-        return true;
-      });
+      mockGetRequest.mockReturnValue(request);
+      jest
+        .spyOn(
+          guard as unknown as { canActivate: () => Promise<boolean> },
+          'canActivate'
+        )
+        .mockImplementation(async () => {
+          const session = await sessionRepository.findByToken(token);
+          if (!session) {
+            throw new UnauthorizedException('Session not found or expired');
+          }
+          return true;
+        });
 
       sessionRepository.findByToken.mockResolvedValue(null);
 
@@ -122,21 +125,19 @@ describe('JwtAuthGuard', () => {
         user: { id: 1, username: 'testuser' },
       };
 
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
-      jest.spyOn(guard as any, 'canActivate').mockImplementation(async () => {
-        const parentResult = true;
-        if (!parentResult) {
-          throw new UnauthorizedException('Invalid token');
-        }
-        const session = await sessionRepository.findByToken(token);
-        if (!session) {
-          throw new UnauthorizedException('Session not found or expired');
-        }
-        if (!request.user) {
-          throw new UnauthorizedException('User not found in request');
-        }
-        return true;
-      });
+      mockGetRequest.mockReturnValue(request);
+      jest
+        .spyOn(
+          guard as unknown as { canActivate: () => Promise<boolean> },
+          'canActivate'
+        )
+        .mockImplementation(async () => {
+          const session = await sessionRepository.findByToken(token);
+          if (!session) {
+            throw new UnauthorizedException('Session not found or expired');
+          }
+          return true;
+        });
 
       sessionRepository.findByToken.mockResolvedValue(mockSession);
 
@@ -149,29 +150,21 @@ describe('JwtAuthGuard', () => {
     it('should throw UnauthorizedException when user not found in request after validation', async () => {
       const token = 'test-token-123';
       const mockSession = createMockSession({ token });
-      const request = {
+      const request: {
+        headers: { authorization: string };
+        user?: { id: number; username: string };
+      } = {
         headers: {
           authorization: `Bearer ${token}`,
         },
         user: undefined,
       };
 
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
-      jest.spyOn(guard as any, 'canActivate').mockImplementation(async () => {
-        const parentResult = true;
-        if (!parentResult) {
-          throw new UnauthorizedException('Invalid token');
-        }
-        const session = await sessionRepository.findByToken(token);
-        if (!session) {
-          throw new UnauthorizedException('Session not found or expired');
-        }
-        if (!request.user) {
-          throw new UnauthorizedException('User not found in request');
-        }
-        return true;
-      });
-
+      mockGetRequest.mockReturnValue(request);
+      // Mock super.canActivate() to return true (token validation passes)
+      jest
+        .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+        .mockResolvedValue(true);
       sessionRepository.findByToken.mockResolvedValue(mockSession);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(

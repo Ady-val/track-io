@@ -21,4 +21,3 @@ export class RemoveOrderFromTorretaColors1766441675300
     `);
   }
 }
-

@@ -6,6 +6,10 @@ import {
   AlertLevel,
   MessageType,
 } from '../../domain/entities/alert-escalation-message.entity';
+import type {
+  CreateAlertEscalationMessageDto as RepositoryCreateDto,
+  UpdateAlertEscalationMessageDto as RepositoryUpdateDto,
+} from '../../domain/repositories/alert-escalation-message.repository';
 
 @Injectable()
 export class AlertEscalationMessageService {
@@ -20,7 +24,7 @@ export class AlertEscalationMessageService {
       `Creating alert escalation message for config ${createDto.escalationConfigId} and level ${createDto.level}`
     );
 
-    const messageData: any = {
+    const messageData: RepositoryCreateDto = {
       escalationConfigId: createDto.escalationConfigId,
       level: createDto.level,
       messageType: createDto.messageType,
@@ -70,7 +74,7 @@ export class AlertEscalationMessageService {
   async update(id: number, updateDto: UpdateAlertEscalationMessageDto) {
     this.logger.log(`Updating alert escalation message ${id}`);
 
-    const updateData: any = {};
+    const updateData: RepositoryUpdateDto = {};
     if (updateDto.messageType !== undefined)
       updateData.messageType = updateDto.messageType;
     if (updateDto.targetId !== undefined)

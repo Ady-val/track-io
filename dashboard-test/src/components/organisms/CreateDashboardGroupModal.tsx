@@ -1,17 +1,13 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
-import {
-  FaFloppyDisk,
-  FaXmark,
-  FaPlus,
-  FaTrash,
-  FaGaugeHigh,
-} from "react-icons/fa6";
+import { FaFloppyDisk, FaXmark, FaTrash, FaGaugeHigh } from "react-icons/fa6";
 
 import { Button, Input, Select, Text } from "@components/atoms";
+import { CollapsibleSection } from "@components/molecules";
 
-import { useMeasurements } from "@/hooks/useMeasurements";
+import { useAvailableDashboardMeasurements } from "@/hooks/useDashboardMeasurements";
+import type { DashboardMeasurement } from "@/types/dashboard";
 import type { CreateDashboardMeasurementGroupData } from "@/types/dashboard-measurement-group";
 
 import { Modal } from "./Modal";
@@ -23,55 +19,65 @@ export interface CreateDashboardGroupModalProps {
   isLoading?: boolean;
 }
 
-interface MeasurementItem {
-  measurementId: string;
-  minValue: string;
-  maxValue: string;
-}
-
 export const CreateDashboardGroupModal: React.FC<
   CreateDashboardGroupModalProps
 > = ({ isOpen, onClose, onSubmit, isLoading = false }) => {
   const [groupName, setGroupName] = useState<string>("");
-  const [measurements, setMeasurements] = useState<MeasurementItem[]>([
-    { measurementId: "", minValue: "", maxValue: "" } as MeasurementItem,
-  ]);
+  const [selectedDashboardMeasurementIds, setSelectedDashboardMeasurementIds] =
+    useState<number[]>([]);
+  const [selectedMeasurementId, setSelectedMeasurementId] =
+    useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [chartTimeRange, setChartTimeRange] = useState<string>("");
+  const [chartMinValue, setChartMinValue] = useState<string>("");
+  const [chartMaxValue, setChartMaxValue] = useState<string>("");
+  const [chartMeasurementIds, setChartMeasurementIds] = useState<number[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const { data: availableMeasurements = [], isLoading: measurementsLoading } =
-    useMeasurements();
+  const {
+    data: availableDashboardMeasurements = [],
+    loading: measurementsLoading,
+    error: measurementsError,
+  } = useAvailableDashboardMeasurements();
 
-  const handleAddMeasurement = () => {
-    setMeasurements([
-      ...measurements,
-      { measurementId: "", minValue: "", maxValue: "" },
-    ]);
+  useEffect(() => {
+    if (!isOpen) {
+      setGroupName("");
+      setSelectedDashboardMeasurementIds([]);
+      setSelectedMeasurementId("");
+      setErrors({});
+      setChartTimeRange("");
+      setChartMinValue("");
+      setChartMaxValue("");
+      setChartMeasurementIds([]);
+    }
+  }, [isOpen]);
+
+  const selectedDashboardMeasurements = useMemo(() => {
+    return availableDashboardMeasurements.filter((dm) =>
+      selectedDashboardMeasurementIds.includes(dm.id)
+    );
+  }, [availableDashboardMeasurements, selectedDashboardMeasurementIds]);
+
+  const availableForSelect = useMemo(() => {
+    return availableDashboardMeasurements.filter(
+      (dm) => !selectedDashboardMeasurementIds.includes(dm.id)
+    );
+  }, [availableDashboardMeasurements, selectedDashboardMeasurementIds]);
+
+  const handleRemoveMeasurement = (id: number) => {
+    setSelectedDashboardMeasurementIds(
+      selectedDashboardMeasurementIds.filter(
+        (measurementId) => measurementId !== id
+      )
+    );
+    setChartMeasurementIds(
+      chartMeasurementIds.filter((measurementId) => measurementId !== id)
+    );
   };
 
-  const handleRemoveMeasurement = (index: number) => {
-    if (measurements.length > 1) {
-      setMeasurements(measurements.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleMeasurementChange = (
-    index: number,
-    field: keyof MeasurementItem,
-    value: string
-  ) => {
-    const updated = [...measurements];
-
-    updated[index] = { ...updated[index], [field]: value } as MeasurementItem;
-    setMeasurements(updated);
-
-    const errorKey = `${index}-${field}`;
-
-    if (errors[errorKey]) {
-      const newErrors = { ...errors };
-
-      delete newErrors[errorKey];
-      setErrors(newErrors);
-    }
+  const formatMeasurementDisplay = (dm: DashboardMeasurement): string => {
+    return `${dm.measurement.name} - ${dm.measurement.externalId} | ${dm.measurement.type} | ${dm.minValue ?? 0} - ${dm.maxValue ?? 100}`;
   };
 
   const validateForm = (): boolean => {
@@ -81,40 +87,56 @@ export const CreateDashboardGroupModal: React.FC<
       newErrors.name = "El nombre del grupo es requerido";
     }
 
-    measurements.forEach((measurement, index) => {
-      if (!measurement.measurementId) {
-        newErrors[`${index}-measurementId`] = "Selecciona un measurement";
+    if (selectedDashboardMeasurementIds.length === 0) {
+      newErrors.measurements =
+        "Debes seleccionar al menos un dashboard measurement";
+    }
+
+    if (
+      chartTimeRange ||
+      chartMinValue ||
+      chartMaxValue ||
+      chartMeasurementIds.length > 0
+    ) {
+      if (!chartTimeRange) {
+        newErrors.chartTimeRange = "El tiempo del eje X es requerido";
       }
 
-      if (!measurement.minValue) {
-        newErrors[`${index}-minValue`] = "El valor mínimo es requerido";
-      } else if (isNaN(Number(measurement.minValue))) {
-        newErrors[`${index}-minValue`] = "El valor mínimo debe ser un número";
+      if (!chartMinValue) {
+        newErrors.chartMinValue = "El valor mínimo del eje Y es requerido";
+      } else if (isNaN(Number(chartMinValue))) {
+        newErrors.chartMinValue = "El valor mínimo debe ser un número";
       }
 
-      if (!measurement.maxValue) {
-        newErrors[`${index}-maxValue`] = "El valor máximo es requerido";
-      } else if (isNaN(Number(measurement.maxValue))) {
-        newErrors[`${index}-maxValue`] = "El valor máximo debe ser un número";
+      if (!chartMaxValue) {
+        newErrors.chartMaxValue = "El valor máximo del eje Y es requerido";
+      } else if (isNaN(Number(chartMaxValue))) {
+        newErrors.chartMaxValue = "El valor máximo debe ser un número";
       }
 
       if (
-        measurement.minValue &&
-        measurement.maxValue &&
-        Number(measurement.minValue) >= Number(measurement.maxValue)
+        chartMinValue &&
+        chartMaxValue &&
+        Number(chartMinValue) >= Number(chartMaxValue)
       ) {
-        newErrors[`${index}-range`] =
-          "El valor mínimo debe ser menor que el máximo";
+        newErrors.chartRange = "El valor mínimo debe ser menor que el máximo";
       }
-    });
+
+      if (chartMeasurementIds.length === 0) {
+        newErrors.chartMeasurements =
+          "Debes seleccionar al menos un measurement para el chart";
+      }
+    }
 
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
 
     if (!validateForm()) {
       return;
@@ -122,11 +144,21 @@ export const CreateDashboardGroupModal: React.FC<
 
     const data: CreateDashboardMeasurementGroupData = {
       name: groupName.trim(),
-      dashboardMeasurements: measurements.map((m) => ({
-        measurementId: Number(m.measurementId),
-        minValue: Number(m.minValue),
-        maxValue: Number(m.maxValue),
+      dashboardMeasurements: selectedDashboardMeasurementIds.map((id) => ({
+        dashboardMeasurementId: id,
       })),
+      ...(chartTimeRange ||
+      chartMinValue ||
+      chartMaxValue ||
+      chartMeasurementIds.length > 0
+        ? {
+            chartTimeRange: chartTimeRange ? Number(chartTimeRange) : undefined,
+            chartMinValue: chartMinValue ? Number(chartMinValue) : undefined,
+            chartMaxValue: chartMaxValue ? Number(chartMaxValue) : undefined,
+            chartMeasurementIds:
+              chartMeasurementIds.length > 0 ? chartMeasurementIds : undefined,
+          }
+        : {}),
     };
 
     await onSubmit(data);
@@ -135,9 +167,22 @@ export const CreateDashboardGroupModal: React.FC<
 
   const handleClose = () => {
     setGroupName("");
-    setMeasurements([{ measurementId: "", minValue: "", maxValue: "" }]);
+    setSelectedDashboardMeasurementIds([]);
+    setSelectedMeasurementId("");
     setErrors({});
+    setChartTimeRange("");
+    setChartMinValue("");
+    setChartMaxValue("");
+    setChartMeasurementIds([]);
     onClose();
+  };
+
+  const handleChartMeasurementToggle = (measurementId: number) => {
+    setChartMeasurementIds((prev) =>
+      prev.includes(measurementId)
+        ? prev.filter((id) => id !== measurementId)
+        : [...prev, measurementId]
+    );
   };
 
   return (
@@ -147,195 +192,260 @@ export const CreateDashboardGroupModal: React.FC<
       title="Crear Grupo de Dashboard Measurements"
       onClose={handleClose}
     >
-      <form onSubmit={handleSubmit}>
-        {/* Group Name */}
-        <div className="mb-6">
-          <Input
-            autoFocus
-            fullWidth
-            required
-            isDisabled={isLoading}
-            label="Nombre del Grupo"
-            labelPlacement="outside"
-            placeholder="Ej: Grupo de Temperaturas"
-            size="md"
-            startContent={<FaGaugeHigh className="text-slate-400" />}
-            type="text"
-            value={groupName}
-            variant="bordered"
-            onChange={(e) => setGroupName(e.target.value)}
-          />
-          {errors.name && (
-            <Text className="mt-1" color="danger" variant="caption">
-              {errors.name}
-            </Text>
-          )}
-        </div>
-
-        {/* Measurements List */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <Text color="secondary" variant="small">
-              Measurements del Grupo
-            </Text>
-            <Button
-              color="primary"
-              size="sm"
-              type="button"
-              variant="flat"
-              onPress={handleAddMeasurement}
-            >
-              <FaPlus className="mr-2" />
-              Agregar Measurement
-            </Button>
+      <div className="max-h-[calc(85vh-220px)] overflow-y-auto overflow-x-hidden pr-2 -mr-2">
+        <form ref={formRef} onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <Input
+              autoFocus
+              fullWidth
+              required
+              isDisabled={isLoading}
+              label="Nombre del Grupo"
+              labelPlacement="outside"
+              placeholder="Ej: Grupo de Temperaturas"
+              size="md"
+              startContent={<FaGaugeHigh className="text-slate-400" />}
+              type="text"
+              value={groupName}
+              variant="bordered"
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+            {errors.name && (
+              <Text className="mt-1" color="danger" variant="caption">
+                {errors.name}
+              </Text>
+            )}
           </div>
 
-          <div className="space-y-4">
-            {measurements.map((measurement, index) => (
-              <div
-                key={index}
-                className="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <Text color="secondary" variant="small">
-                    Measurement {index + 1}
-                  </Text>
-                  {measurements.length > 1 && (
+          <div className="mb-6">
+            <Text className="mb-4" color="secondary" variant="small">
+              Dashboard Measurements del Grupo
+            </Text>
+
+            {selectedDashboardMeasurements.length > 0 && (
+              <div className="mb-4 space-y-2">
+                {selectedDashboardMeasurements.map((dm) => (
+                  <div
+                    key={dm.id}
+                    className="bg-slate-700/50 rounded-lg p-3 border border-slate-600 flex items-center justify-between"
+                  >
+                    <Text className="text-slate-200" variant="small">
+                      {formatMeasurementDisplay(dm)}
+                    </Text>
                     <Button
+                      isIconOnly
                       color="danger"
                       size="sm"
                       type="button"
                       variant="flat"
-                      onPress={() => handleRemoveMeasurement(index)}
+                      onPress={() => handleRemoveMeasurement(dm.id)}
                     >
-                      <FaTrash className="w-3 h-3" />
+                      <FaTrash className="w-4 h-4" />
                     </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Select
+              fullWidth
+              disabled={isLoading || measurementsLoading}
+              value={selectedMeasurementId}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                setSelectedMeasurementId(value);
+                if (value) {
+                  const id = Number(value);
+
+                  if (!selectedDashboardMeasurementIds.includes(id)) {
+                    setSelectedDashboardMeasurementIds([
+                      ...selectedDashboardMeasurementIds,
+                      id,
+                    ]);
+                    setSelectedMeasurementId("");
+                  }
+                }
+              }}
+            >
+              <option value="">
+                {measurementsLoading
+                  ? "Cargando measurements..."
+                  : measurementsError
+                    ? "Error al cargar measurements"
+                    : availableForSelect.length === 0
+                      ? "No hay measurements disponibles"
+                      : "Seleccionar dashboard measurement..."}
+              </option>
+              {availableForSelect.map((dm) => (
+                <option key={dm.id} value={String(dm.id)}>
+                  {formatMeasurementDisplay(dm)}
+                </option>
+              ))}
+            </Select>
+            {measurementsError && (
+              <Text className="mt-1" color="danger" variant="caption">
+                Error: {measurementsError}
+              </Text>
+            )}
+            {errors.measurements && (
+              <Text className="mt-1" color="danger" variant="caption">
+                {errors.measurements}
+              </Text>
+            )}
+          </div>
+
+          <div className="mb-6">
+            <CollapsibleSection title="Configuración de Gráfica en Tiempo Real">
+              <div className="space-y-4">
+                <div>
+                  <Text className="mb-2 text-sm text-slate-300" variant="small">
+                    Tiempo del Eje X (Rango de datos)
+                  </Text>
+                  <Select
+                    fullWidth
+                    value={chartTimeRange}
+                    onChange={(e) => setChartTimeRange(e.target.value)}
+                  >
+                    <option value="">Seleccionar tiempo...</option>
+                    <option value="1">1 minuto</option>
+                    <option value="10">10 minutos</option>
+                    <option value="30">30 minutos</option>
+                    <option value="60">1 hora</option>
+                    <option value="120">2 horas</option>
+                    <option value="240">4 horas</option>
+                    <option value="480">8 horas</option>
+                  </Select>
+                  {errors.chartTimeRange && (
+                    <Text className="mt-1" color="danger" variant="caption">
+                      {errors.chartTimeRange}
+                    </Text>
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  {/* Measurement Select */}
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Select
+                    <Input
                       fullWidth
-                      required
-                      disabled={isLoading || measurementsLoading}
-                      value={measurement.measurementId}
-                      onChange={(e) =>
-                        handleMeasurementChange(
-                          index,
-                          "measurementId",
-                          e.target.value
-                        )
-                      }
-                    >
-                      <option value="">Seleccionar...</option>
-                      {availableMeasurements.map((m) => (
-                        <option key={m.id} value={String(m.id)}>
-                          {m.name} ({m.externalId}) - {m.type}
-                        </option>
-                      ))}
-                    </Select>
-                    {errors[`${index}-measurementId`] && (
+                      isDisabled={isLoading}
+                      label="Valor Mínimo (Eje Y)"
+                      labelPlacement="outside"
+                      placeholder="0"
+                      size="md"
+                      type="number"
+                      value={chartMinValue}
+                      variant="bordered"
+                      onChange={(e) => setChartMinValue(e.target.value)}
+                    />
+                    {errors.chartMinValue && (
                       <Text className="mt-1" color="danger" variant="caption">
-                        {errors[`${index}-measurementId`]}
+                        {errors.chartMinValue}
                       </Text>
                     )}
                   </div>
-
-                  {/* Min and Max Values */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Input
-                        fullWidth
-                        required
-                        isDisabled={isLoading}
-                        label="Valor Mínimo"
-                        labelPlacement="outside"
-                        placeholder="0"
-                        size="md"
-                        type="number"
-                        value={measurement.minValue}
-                        variant="bordered"
-                        onChange={(e) =>
-                          handleMeasurementChange(
-                            index,
-                            "minValue",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {errors[`${index}-minValue`] && (
-                        <Text className="mt-1" color="danger" variant="caption">
-                          {errors[`${index}-minValue`]}
-                        </Text>
-                      )}
-                    </div>
-
-                    <div>
-                      <Input
-                        fullWidth
-                        required
-                        isDisabled={isLoading}
-                        label="Valor Máximo"
-                        labelPlacement="outside"
-                        placeholder="100"
-                        size="md"
-                        type="number"
-                        value={measurement.maxValue}
-                        variant="bordered"
-                        onChange={(e) =>
-                          handleMeasurementChange(
-                            index,
-                            "maxValue",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {errors[`${index}-maxValue`] && (
-                        <Text className="mt-1" color="danger" variant="caption">
-                          {errors[`${index}-maxValue`]}
-                        </Text>
-                      )}
-                    </div>
+                  <div>
+                    <Input
+                      fullWidth
+                      isDisabled={isLoading}
+                      label="Valor Máximo (Eje Y)"
+                      labelPlacement="outside"
+                      placeholder="100"
+                      size="md"
+                      type="number"
+                      value={chartMaxValue}
+                      variant="bordered"
+                      onChange={(e) => setChartMaxValue(e.target.value)}
+                    />
+                    {errors.chartMaxValue && (
+                      <Text className="mt-1" color="danger" variant="caption">
+                        {errors.chartMaxValue}
+                      </Text>
+                    )}
                   </div>
+                </div>
 
-                  {errors[`${index}-range`] && (
-                    <Text color="danger" variant="caption">
-                      {errors[`${index}-range`]}
+                {errors.chartRange && (
+                  <Text color="danger" variant="caption">
+                    {errors.chartRange}
+                  </Text>
+                )}
+
+                <div>
+                  <Text className="mb-2 text-sm text-slate-300" variant="small">
+                    Measurements para el Chart
+                  </Text>
+                  <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 max-h-48 overflow-y-auto">
+                    {selectedDashboardMeasurements.map((dm) => {
+                      const measurementId = dm.measurementId;
+
+                      return (
+                        <label
+                          key={dm.id}
+                          className="flex items-center gap-2 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
+                        >
+                          <input
+                            checked={chartMeasurementIds.includes(
+                              measurementId
+                            )}
+                            className="w-4 h-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary focus:ring-2"
+                            type="checkbox"
+                            onChange={() =>
+                              handleChartMeasurementToggle(measurementId)
+                            }
+                          />
+                          <Text variant="small">
+                            {dm.measurement.name} ({dm.measurement.externalId})
+                          </Text>
+                        </label>
+                      );
+                    })}
+                    {selectedDashboardMeasurements.length === 0 && (
+                      <Text color="muted" variant="small">
+                        Agrega dashboard measurements al grupo primero
+                      </Text>
+                    )}
+                  </div>
+                  {errors.chartMeasurements && (
+                    <Text className="mt-1" color="danger" variant="caption">
+                      {errors.chartMeasurements}
                     </Text>
                   )}
                 </div>
               </div>
-            ))}
+            </CollapsibleSection>
           </div>
-        </div>
+        </form>
+      </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-600">
-          <Button
-            color="default"
-            disabled={isLoading}
-            size="md"
-            variant="flat"
-            onPress={handleClose}
-          >
-            <FaXmark className="mr-2" />
-            Cancelar
-          </Button>
-          <Button
-            color="primary"
-            disabled={isLoading}
-            isLoading={isLoading}
-            size="md"
-            type="submit"
-            variant="solid"
-          >
-            <FaFloppyDisk className="mr-2" />
-            Crear Grupo
-          </Button>
-        </div>
-      </form>
+      <div className="flex items-center justify-end gap-2 pt-4 pb-2 border-t border-slate-600 flex-shrink-0">
+        <Button
+          className="px-6 py-2 font-semibold"
+          color="default"
+          disabled={isLoading}
+          size="md"
+          variant="solid"
+          onPress={handleClose}
+        >
+          <FaXmark className="mr-2" />
+          Cancelar
+        </Button>
+        <Button
+          className="px-6 py-2 font-semibold"
+          color="primary"
+          disabled={isLoading}
+          isLoading={isLoading}
+          size="md"
+          variant="solid"
+          onPress={() => {
+            if (formRef.current) {
+              formRef.current.requestSubmit();
+            }
+          }}
+        >
+          <FaFloppyDisk className="mr-2" />
+          Crear Grupo
+        </Button>
+      </div>
     </Modal>
   );
 };

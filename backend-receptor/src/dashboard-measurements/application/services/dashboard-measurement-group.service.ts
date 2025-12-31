@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
 import { DashboardMeasurementRepository } from '../../domain/repositories/dashboard-measurement.repository';
 import { DashboardMeasurementGroup } from '../../domain/entities/dashboard-measurement-group.entity';
@@ -11,15 +10,12 @@ import {
   CreateDashboardMeasurementGroupDto,
   UpdateDashboardMeasurementGroupDto,
 } from '../dtos/dashboard-measurement-group.dto';
-import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 
 @Injectable()
 export class DashboardMeasurementGroupService {
   constructor(
     private readonly groupRepository: DashboardMeasurementGroupRepository,
-    private readonly dashboardMeasurementRepository: DashboardMeasurementRepository,
-    private readonly measurementService: MeasurementService,
-    private readonly dataSource: DataSource
+    private readonly dashboardMeasurementRepository: DashboardMeasurementRepository
   ) {}
 
   async getAllGroups(): Promise<DashboardMeasurementGroup[]> {
@@ -47,46 +43,101 @@ export class DashboardMeasurementGroupService {
       );
     }
 
-    for (const dm of createDto.dashboardMeasurements) {
-      await this.measurementService.getMeasurementById(dm.measurementId);
+    const dashboardMeasurementIds = createDto.dashboardMeasurements.map(
+      dm => dm.dashboardMeasurementId
+    );
 
-      if (dm.minValue >= dm.maxValue) {
+    const dashboardMeasurements = await Promise.all(
+      dashboardMeasurementIds.map(id =>
+        this.dashboardMeasurementRepository.findOne({
+          where: { id },
+          relations: ['measurement'],
+        })
+      )
+    );
+
+    const notFoundIds = dashboardMeasurements
+      .map((dm, index) => (!dm ? dashboardMeasurementIds[index] : null))
+      .filter((id): id is number => id !== null);
+
+    if (notFoundIds.length > 0) {
+      throw new BadRequestException(
+        `Dashboard measurements not found: ${notFoundIds.join(', ')}`
+      );
+    }
+
+    const validMeasurements = dashboardMeasurements.filter(
+      (dm): dm is NonNullable<typeof dm> => dm !== null
+    );
+
+    if (
+      createDto.chartTimeRange ||
+      createDto.chartMinValue !== undefined ||
+      createDto.chartMaxValue !== undefined ||
+      createDto.chartMeasurementIds
+    ) {
+      const validTimeRanges = [1, 10, 30, 60, 120, 240, 480];
+      if (
+        createDto.chartTimeRange &&
+        !validTimeRanges.includes(createDto.chartTimeRange)
+      ) {
         throw new BadRequestException(
-          `minValue must be less than maxValue for measurement ${dm.measurementId}`
+          `chartTimeRange must be one of: ${validTimeRanges.join(', ')}`
         );
+      }
+
+      if (
+        createDto.chartMinValue !== undefined &&
+        createDto.chartMaxValue !== undefined
+      ) {
+        if (createDto.chartMinValue >= createDto.chartMaxValue) {
+          throw new BadRequestException(
+            'chartMinValue must be less than chartMaxValue'
+          );
+        }
+      }
+
+      if (createDto.chartMeasurementIds) {
+        const groupMeasurementIds = validMeasurements.map(dm => dm.measurementId);
+        const invalidIds = createDto.chartMeasurementIds.filter(
+          id => !groupMeasurementIds.includes(id)
+        );
+        if (invalidIds.length > 0) {
+          throw new BadRequestException(
+            `chartMeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
+          );
+        }
       }
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const groupData: Partial<DashboardMeasurementGroup> = {
+      name: createDto.name,
+      dashboardMeasurements: validMeasurements,
+    };
 
-    try {
-      const group = this.groupRepository.create({
-        name: createDto.name,
-      });
-      const savedGroup = await queryRunner.manager.save(group);
-
-      const dashboardMeasurements = createDto.dashboardMeasurements.map(dm =>
-        this.dashboardMeasurementRepository.create({
-          measurementId: dm.measurementId,
-          minValue: dm.minValue,
-          maxValue: dm.maxValue,
-          groupId: savedGroup.id,
-        })
-      );
-
-      await queryRunner.manager.save(dashboardMeasurements);
-
-      await queryRunner.commitTransaction();
-
-      return this.getGroupById(savedGroup.id);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (createDto.chartTimeRange !== undefined) {
+      groupData.chartTimeRange = createDto.chartTimeRange;
     }
+    if (createDto.chartMinValue !== undefined) {
+      groupData.chartMinValue = createDto.chartMinValue;
+    }
+    if (createDto.chartMaxValue !== undefined) {
+      groupData.chartMaxValue = createDto.chartMaxValue;
+    }
+    if (createDto.chartMeasurementIds !== undefined) {
+      groupData.chartMeasurementIds = createDto.chartMeasurementIds;
+    }
+
+    const group = this.groupRepository.create(groupData);
+    const savedGroup = await this.groupRepository.save(group);
+
+    // Actualizar el groupId de los measurements después de guardar el grupo
+    for (const measurement of validMeasurements) {
+      measurement.groupId = savedGroup.id;
+      await this.dashboardMeasurementRepository.save(measurement);
+    }
+
+    return this.getGroupById(savedGroup.id);
   }
 
   async updateGroup(
@@ -95,63 +146,121 @@ export class DashboardMeasurementGroupService {
   ): Promise<DashboardMeasurementGroup> {
     const group = await this.getGroupById(id);
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    if (updateDto.name) {
+      group.name = updateDto.name;
+    }
 
-    try {
-      if (updateDto.name) {
-        group.name = updateDto.name;
-        await queryRunner.manager.save(group);
+    if (
+      updateDto.chartTimeRange !== undefined ||
+      updateDto.chartMinValue !== undefined ||
+      updateDto.chartMaxValue !== undefined ||
+      updateDto.chartMeasurementIds !== undefined
+    ) {
+      const validTimeRanges = [1, 10, 30, 60, 120, 240, 480];
+      if (
+        updateDto.chartTimeRange !== undefined &&
+        !validTimeRanges.includes(updateDto.chartTimeRange)
+      ) {
+        throw new BadRequestException(
+          `chartTimeRange must be one of: ${validTimeRanges.join(', ')}`
+        );
       }
 
-      if (updateDto.dashboardMeasurements) {
-        if (updateDto.dashboardMeasurements.length === 0) {
+      const chartMinValue = updateDto.chartMinValue ?? group.chartMinValue;
+      const chartMaxValue = updateDto.chartMaxValue ?? group.chartMaxValue;
+
+      if (
+        chartMinValue !== undefined &&
+        chartMaxValue !== undefined &&
+        chartMinValue >= chartMaxValue
+      ) {
+        throw new BadRequestException(
+          'chartMinValue must be less than chartMaxValue'
+        );
+      }
+
+      if (updateDto.chartMeasurementIds) {
+        const currentMeasurementIds = group.dashboardMeasurements.map(
+          dm => dm.measurementId
+        );
+        const invalidIds = updateDto.chartMeasurementIds.filter(
+          measurementId => !currentMeasurementIds.includes(measurementId)
+        );
+        if (invalidIds.length > 0) {
           throw new BadRequestException(
-            'At least one dashboard measurement is required'
+            `chartMeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
           );
         }
-
-        for (const dm of updateDto.dashboardMeasurements) {
-          await this.measurementService.getMeasurementById(dm.measurementId);
-
-          if (dm.minValue >= dm.maxValue) {
-            throw new BadRequestException(
-              `minValue must be less than maxValue for measurement ${dm.measurementId}`
-            );
-          }
-        }
-
-        const existingMeasurements =
-          await this.dashboardMeasurementRepository.find({
-            where: { groupId: id },
-          });
-        if (existingMeasurements.length > 0) {
-          await queryRunner.manager.remove(existingMeasurements);
-        }
-
-        const newDashboardMeasurements = updateDto.dashboardMeasurements.map(
-          dm =>
-            this.dashboardMeasurementRepository.create({
-              measurementId: dm.measurementId,
-              minValue: dm.minValue,
-              maxValue: dm.maxValue,
-              groupId: id,
-            })
-        );
-
-        await queryRunner.manager.save(newDashboardMeasurements);
       }
 
-      await queryRunner.commitTransaction();
-
-      return this.getGroupById(id);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+      if (updateDto.chartTimeRange !== undefined) {
+        group.chartTimeRange = updateDto.chartTimeRange;
+      }
+      if (updateDto.chartMinValue !== undefined) {
+        group.chartMinValue = updateDto.chartMinValue;
+      }
+      if (updateDto.chartMaxValue !== undefined) {
+        group.chartMaxValue = updateDto.chartMaxValue;
+      }
+      if (updateDto.chartMeasurementIds !== undefined) {
+        group.chartMeasurementIds = updateDto.chartMeasurementIds;
+      }
     }
+
+    if (updateDto.dashboardMeasurements) {
+      if (updateDto.dashboardMeasurements.length === 0) {
+        throw new BadRequestException(
+          'At least one dashboard measurement is required'
+        );
+      }
+
+      const dashboardMeasurementIds = updateDto.dashboardMeasurements.map(
+        dm => dm.dashboardMeasurementId
+      );
+
+      const dashboardMeasurements = await Promise.all(
+        dashboardMeasurementIds.map(dashboardMeasurementId =>
+          this.dashboardMeasurementRepository.findOne({
+            where: { id: dashboardMeasurementId },
+            relations: ['measurement'],
+          })
+        )
+      );
+
+      const notFoundIds = dashboardMeasurements
+        .map((dm, index) => (!dm ? dashboardMeasurementIds[index] : null))
+        .filter((id): id is number => id !== null);
+
+      if (notFoundIds.length > 0) {
+        throw new BadRequestException(
+          `Dashboard measurements not found: ${notFoundIds.join(', ')}`
+        );
+      }
+
+      const validMeasurements = dashboardMeasurements.filter(
+        (dm): dm is NonNullable<typeof dm> => dm !== null
+      );
+
+      // Desasignar measurements actuales del grupo usando query builder
+      await this.dashboardMeasurementRepository
+        .createQueryBuilder()
+        .update()
+        .set({ groupId: () => 'NULL' })
+        .where('group_id = :groupId', { groupId: id })
+        .execute();
+
+      // Asignar nuevos measurements al grupo
+      for (const measurement of validMeasurements) {
+        measurement.groupId = id;
+        await this.dashboardMeasurementRepository.save(measurement);
+      }
+
+      group.dashboardMeasurements = validMeasurements;
+    }
+
+    await this.groupRepository.save(group);
+
+    return this.getGroupById(id);
   }
 
   async deleteGroup(id: number): Promise<void> {
@@ -159,3 +268,5 @@ export class DashboardMeasurementGroupService {
     await this.groupRepository.softDelete(id);
   }
 }
+
+

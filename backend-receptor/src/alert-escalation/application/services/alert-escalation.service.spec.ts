@@ -6,6 +6,7 @@ import { AlertEscalationConfigRepository } from '../../domain/repositories/alert
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
 import { EventAlertLogRepository } from '../../domain/repositories/event-alert-log.repository';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+import type { EventAlertLog } from '../../domain/entities/event-alert-log.entity';
 import {
   createMockAlertEscalationConfig,
   createMockAlertEscalationMessage,
@@ -62,11 +63,18 @@ describe('AlertEscalationService', () => {
     }).compile();
 
     service = module.get<AlertEscalationService>(AlertEscalationService);
-    configRepository = module.get(AlertEscalationConfigRepository);
-    messageRepository = module.get(AlertEscalationMessageRepository);
-    logRepository = module.get(EventAlertLogRepository);
-    httpService = module.get(HttpService);
-    torretaColorService = module.get(TorretaColorService);
+    configRepository = module.get<AlertEscalationConfigRepository>(
+      AlertEscalationConfigRepository
+    ) as jest.Mocked<AlertEscalationConfigRepository>;
+    messageRepository = module.get<AlertEscalationMessageRepository>(
+      AlertEscalationMessageRepository
+    ) as jest.Mocked<AlertEscalationMessageRepository>;
+    logRepository = module.get<EventAlertLogRepository>(
+      EventAlertLogRepository
+    ) as jest.Mocked<EventAlertLogRepository>;
+    httpService = module.get<HttpService>(
+      HttpService
+    ) as jest.Mocked<HttpService>;
   });
 
   afterEach(() => {
@@ -131,7 +139,7 @@ describe('AlertEscalationService', () => {
         level,
       };
 
-      logRepository.findByEventAndLevel.mockResolvedValue(mockLog as any);
+      logRepository.findByEventAndLevel.mockResolvedValue(mockLog);
 
       const result = await service.hasLevelBeenSent(eventId, level);
 
@@ -230,7 +238,9 @@ describe('AlertEscalationService', () => {
         data: {},
       };
 
-      httpService.post.mockReturnValue(of(mockResponse) as any);
+      httpService.post.mockReturnValue(
+        of(mockResponse) as unknown as ReturnType<typeof httpService.post>
+      );
 
       const result = await service.sendMessagesToEndpoint(
         messages,
@@ -251,7 +261,9 @@ describe('AlertEscalationService', () => {
       const endpointUrl = 'http://test.com/endpoint';
 
       httpService.post.mockReturnValue(
-        throwError(() => new Error('Network error')) as any
+        throwError(() => new Error('Network error')) as unknown as ReturnType<
+          typeof httpService.post
+        >
       );
 
       const result = await service.sendMessagesToEndpoint(
@@ -273,7 +285,7 @@ describe('AlertEscalationService', () => {
         id: 1,
         eventId: event.id,
         level,
-      } as any);
+      } as EventAlertLog);
 
       await service.sendAlertForLevel(event, config, level);
 
@@ -302,12 +314,14 @@ describe('AlertEscalationService', () => {
 
       logRepository.findByEventAndLevel.mockResolvedValue(null);
       messageRepository.findByConfigAndLevel.mockResolvedValue(messages);
-      httpService.post.mockReturnValue(of(mockResponse) as any);
+      httpService.post.mockReturnValue(
+        of(mockResponse) as unknown as ReturnType<typeof httpService.post>
+      );
       logRepository.create.mockResolvedValue({
         id: 1,
         eventId: event.id,
         level,
-      } as any);
+      } as EventAlertLog);
 
       await service.sendAlertForLevel(event, config, level);
 

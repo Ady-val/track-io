@@ -59,7 +59,7 @@ describe('MessageGroupService', () => {
       const id = 1;
       const mockGroup = createMockMessageGroup({ id });
 
-      repository.findOne.mockResolvedValue(mockGroup as any);
+      repository.findOne.mockResolvedValue(mockGroup);
 
       const result = await service.getMessageGroupById(id);
 
@@ -93,7 +93,7 @@ describe('MessageGroupService', () => {
       const mockGroup = createMockMessageGroup({ id: 1, ...createDto });
 
       repository.findByName.mockResolvedValue(null);
-      repository.create.mockReturnValue(mockGroup as any);
+      repository.create.mockReturnValue(mockGroup);
       repository.save.mockResolvedValue(mockGroup);
 
       const result = await service.createMessageGroup(createDto);
@@ -137,7 +137,7 @@ describe('MessageGroupService', () => {
         name: 'Updated Name',
       });
 
-      repository.findOne.mockResolvedValue(existingGroup as any);
+      repository.findOne.mockResolvedValue(existingGroup);
       repository.findByName.mockResolvedValue(null);
       repository.save.mockResolvedValue(updatedGroup);
 
@@ -157,7 +157,7 @@ describe('MessageGroupService', () => {
         name: 'Existing Name',
       });
 
-      repository.findOne.mockResolvedValue(existingGroup as any);
+      repository.findOne.mockResolvedValue(existingGroup);
       repository.findByName.mockResolvedValue(conflictingGroup);
 
       await expect(service.updateMessageGroup(id, updateDto)).rejects.toThrow(
@@ -173,7 +173,7 @@ describe('MessageGroupService', () => {
       const updateDto: UpdateMessageGroupDto = { name: 'Same Name' };
       const existingGroup = createMockMessageGroup({ id, name: 'Same Name' });
 
-      repository.findOne.mockResolvedValue(existingGroup as any);
+      repository.findOne.mockResolvedValue(existingGroup);
       repository.findByName.mockResolvedValue(existingGroup);
       repository.save.mockResolvedValue(existingGroup);
 
@@ -188,8 +188,8 @@ describe('MessageGroupService', () => {
       const id = 1;
       const mockGroup = createMockMessageGroup({ id });
 
-      repository.findOne.mockResolvedValue(mockGroup as any);
-      repository.remove.mockResolvedValue(mockGroup as any);
+      repository.findOne.mockResolvedValue(mockGroup);
+      repository.remove.mockResolvedValue(mockGroup);
 
       await service.deleteMessageGroup(id);
 

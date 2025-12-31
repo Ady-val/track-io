@@ -109,7 +109,7 @@ export const Modal: React.FC<ModalProps> = ({
 
             {/* Content */}
             <div
-              className={`${hideHeader ? "p-6" : "p-6"} flex flex-col flex-1 min-h-0 overflow-hidden max-h-full`}
+              className={`${hideHeader ? "p-6" : "p-6"} flex flex-col flex-1 min-h-0 overflow-hidden`}
             >
               {children}
             </div>

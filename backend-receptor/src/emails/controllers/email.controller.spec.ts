@@ -34,9 +34,13 @@ describe('EmailController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 

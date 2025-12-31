@@ -5,6 +5,7 @@ import { WebSocketEmitterService } from '../../../websocket/services/websocket-e
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import { MeasurementValueRepository } from '../../../measurements/domain/repositories/measurement-value.repository';
 import { AlertEvaluationService } from '../../../alert-rules/application/services/alert-evaluation.service';
+import type { MeasurementValue } from '../../../measurements/domain/entities/measurement-value.entity';
 import {
   createMockRawMeasurement,
   createMockMeasurement,
@@ -90,7 +91,9 @@ describe('RawMeasurementService', () => {
       measurementService.getMeasurementByExternalId.mockResolvedValue(
         mockMeasurementEntity
       );
-      measurementValueRepository.create.mockResolvedValue(undefined as any);
+      measurementValueRepository.create.mockResolvedValue(
+        undefined as unknown as MeasurementValue
+      );
       alertEvaluationService.evaluateMeasurement.mockResolvedValue(undefined);
 
       const result = await service.processMeasurement(id, value);

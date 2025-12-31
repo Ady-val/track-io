@@ -791,12 +791,20 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
           </div>
 
           <div className="flex items-center justify-end space-x-3 p-6 border-t border-slate-600 flex-shrink-0">
-            <Button color="default" variant="solid" onPress={onClose}>
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="default"
+              size="md"
+              variant="solid"
+              onPress={onClose}
+            >
               Cancelar
             </Button>
             <Button
+              className="px-6 py-2 font-semibold"
               color="primary"
               disabled={localLoading}
+              size="md"
               variant="solid"
               onPress={handleSaveAll}
             >

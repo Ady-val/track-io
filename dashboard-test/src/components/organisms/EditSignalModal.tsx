@@ -68,11 +68,11 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
 
   return (
     <Modal
+      data-cy="edit-signal-modal"
       isOpen={isOpen}
       size="md"
       title="Editar Señal"
       onClose={onClose}
-      data-cy="edit-signal-modal"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-2 mb-4">

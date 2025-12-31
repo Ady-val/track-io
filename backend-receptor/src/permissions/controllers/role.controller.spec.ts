@@ -8,6 +8,7 @@ import type {
   UpdateRoleDto,
   AssignPermissionsDto,
 } from '../application/dtos/role.dto';
+import type { Permission } from '../../domain/entities/permission.entity';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -41,9 +42,13 @@ describe('RoleController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 
@@ -243,15 +248,15 @@ describe('RoleController', () => {
   describe('getPermissions', () => {
     it('should return permissions for role', async () => {
       const id = 1;
-      const mockPermissions = [
+      const mockPermissions: Permission[] = [
         {
           id: 1,
           module: 'areas',
           action: 'read',
-        },
+        } as Permission,
       ];
 
-      service.getPermissionsByRoleId.mockResolvedValue(mockPermissions as any);
+      service.getPermissionsByRoleId.mockResolvedValue(mockPermissions);
 
       const result = await controller.getPermissions(id);
 

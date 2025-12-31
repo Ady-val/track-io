@@ -221,19 +221,21 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
         {/* Botones de acción */}
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-700/50">
           <Button
+            className="px-6 py-2 font-semibold"
             color="default"
             size="md"
             startContent={<FaCircleXmark className="w-4 h-4" />}
-            variant="flat"
-            onClick={handleClose}
+            variant="solid"
+            onPress={handleClose}
           >
             Cancelar
           </Button>
           <Button
+            className="px-6 py-2 font-semibold"
             color="success"
             size="md"
             startContent={<FaCircleCheck className="w-4 h-4" />}
-            onClick={handleCreate}
+            onPress={handleCreate}
           >
             Crear
           </Button>

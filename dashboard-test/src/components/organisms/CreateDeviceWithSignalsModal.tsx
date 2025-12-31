@@ -221,11 +221,11 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
   return (
     <Modal
+      data-cy="create-device-modal"
       isOpen={isOpen}
       size="lg"
       title="Agregar Dispositivo y Señales"
       onClose={onClose}
-      data-cy="create-device-modal"
     >
       <div className="max-h-[80vh] overflow-y-auto pr-2">
         <form className="space-y-6" onSubmit={handleSubmit}>
@@ -261,34 +261,32 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label
-                  className="block text-sm font-medium text-slate-300 mb-2"
-                  htmlFor="device-name"
-                >
-                  Nombre del Dispositivo
-                </label>
                 <Input
                   autoFocus
+                  fullWidth
                   required
                   id="device-name"
+                  label="Nombre del Dispositivo"
+                  labelPlacement="outside"
                   placeholder="Ej: Controlador Principal"
+                  size="md"
                   value={deviceName}
+                  variant="bordered"
                   onChange={(e) => handleDeviceNameChange(e.target.value)}
                 />
               </div>
 
               <div>
-                <label
-                  className="block text-sm font-medium text-slate-300 mb-2"
-                  htmlFor="device-external-id"
-                >
-                  External ID
-                </label>
                 <Input
+                  fullWidth
                   required
                   id="device-external-id"
+                  label="External ID"
+                  labelPlacement="outside"
                   placeholder="Ej: CTR-1433"
+                  size="md"
                   value={externalId}
+                  variant="bordered"
                   onChange={(e) => handleExternalIdChange(e.target.value)}
                 />
               </div>

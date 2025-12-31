@@ -73,10 +73,7 @@ export class TorretaService {
       }
     }
 
-    if (
-      updateDto.externalId &&
-      updateDto.externalId !== torreta.externalId
-    ) {
+    if (updateDto.externalId && updateDto.externalId !== torreta.externalId) {
       const existingByExternalId =
         await this.torretaRepository.findByExternalId(
           updateDto.externalId,

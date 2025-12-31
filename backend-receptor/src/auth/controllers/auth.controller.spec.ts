@@ -2,8 +2,8 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from '../application/services/auth.service';
-import { createMockUser } from '../../test-helpers';
 import type { LoginDto } from '../application/dtos/auth.dto';
+import type { CurrentUser } from '../decorators/current-user.decorator';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -30,7 +30,9 @@ describe('AuthController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
       .compile();
 
@@ -66,7 +68,14 @@ describe('AuthController', () => {
 
       service.login.mockResolvedValue(mockResponse);
 
-      const result = await controller.login(loginDto, mockRequest as any);
+      const result = await controller.login(
+        loginDto,
+        mockRequest as {
+          ip?: string;
+          connection?: { remoteAddress?: string };
+          headers?: Record<string, string>;
+        }
+      );
 
       expect(result).toEqual(mockResponse);
       expect(service.login).toHaveBeenCalledWith(
@@ -91,7 +100,10 @@ describe('AuthController', () => {
       );
 
       await expect(
-        controller.login(loginDto, mockRequest as any)
+        controller.login(
+          loginDto,
+          mockRequest as { headers?: Record<string, string> }
+        )
       ).rejects.toThrow(UnauthorizedException);
     });
   });
@@ -107,7 +119,9 @@ describe('AuthController', () => {
 
       service.logout.mockResolvedValue(undefined);
 
-      const result = await controller.logout(mockRequest as any);
+      const result = await controller.logout(
+        mockRequest as { headers?: Record<string, string> }
+      );
 
       expect(result.message).toBe('Logged out successfully');
       expect(service.logout).toHaveBeenCalledWith(token);
@@ -118,12 +132,12 @@ describe('AuthController', () => {
         headers: {},
       };
 
-      await expect(controller.logout(mockRequest as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(controller.logout(mockRequest as any)).rejects.toThrow(
-        'Authorization header not found'
-      );
+      await expect(
+        controller.logout(mockRequest as { headers?: Record<string, string> })
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.logout(mockRequest as { headers?: Record<string, string> })
+      ).rejects.toThrow('Authorization header not found');
     });
   });
 
@@ -133,7 +147,9 @@ describe('AuthController', () => {
 
       service.logoutAll.mockResolvedValue(undefined);
 
-      const result = await controller.logoutAll(mockUser as any);
+      const result = await controller.logoutAll(
+        mockUser as { id: number; username: string }
+      );
 
       expect(result.message).toBe('All sessions closed successfully');
       expect(service.logoutAll).toHaveBeenCalledWith(mockUser.id);
@@ -153,8 +169,8 @@ describe('AuthController', () => {
       service.logoutAllExceptCurrent.mockResolvedValue(undefined);
 
       const result = await controller.logoutAllExceptCurrent(
-        mockUser as any,
-        mockRequest as any
+        mockUser as { id: number; username: string },
+        mockRequest as { headers?: Record<string, string> }
       );
 
       expect(result.message).toBe('All other sessions closed successfully');
@@ -181,10 +197,17 @@ describe('AuthController', () => {
         },
       ];
 
-      service.getUserPermissions.mockResolvedValue(mockPermissions as any);
+      service.getUserPermissions.mockResolvedValue(
+        mockPermissions as Array<{
+          id: number;
+          module: string;
+          action: string;
+          description?: string;
+        }>
+      );
       service.getUserData.mockResolvedValue(mockUserData);
 
-      const result = await controller.getCurrentUser(mockUser as any);
+      const result = await controller.getCurrentUser(mockUser as CurrentUser);
 
       expect(result.message).toBe('Current user retrieved successfully');
       expect(result.data.user).toEqual(mockUserData);

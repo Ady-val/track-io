@@ -12,6 +12,7 @@ import {
   RoleFilters,
 } from '../../domain/repositories/role.repository';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
+import { Permission } from '../../domain/entities/permission.entity';
 
 @Injectable()
 export class RoleService {
@@ -237,7 +238,7 @@ export class RoleService {
     }
   }
 
-  async getPermissionsByRoleId(roleId: number): Promise<any[]> {
+  async getPermissionsByRoleId(roleId: number): Promise<Permission[]> {
     try {
       await this.findById(roleId);
       return await this.roleRepository.getPermissionsByRoleId(roleId);

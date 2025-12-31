@@ -99,9 +99,9 @@ export function DataTable<T extends { id: number | string }>({
                       <div className="flex space-x-2">
                         {onEdit && (
                           <Button
-                            data-cy="edit-row-button"
                             disableRipple
                             className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
+                            data-cy="edit-row-button"
                             size="sm"
                             variant="bordered"
                             onClick={() => onEdit(row)}
@@ -111,9 +111,9 @@ export function DataTable<T extends { id: number | string }>({
                         )}
                         {onDelete && (
                           <Button
-                            data-cy="delete-row-button"
                             disableRipple
                             className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
+                            data-cy="delete-row-button"
                             size="sm"
                             variant="bordered"
                             onClick={() => onDelete(row)}
@@ -182,9 +182,9 @@ export function DataTable<T extends { id: number | string }>({
                     <div className="flex space-x-2">
                       {onEdit && (
                         <Button
-                          data-cy="edit-row-button"
                           disableRipple
                           className="text-blue-400 hover:text-blue-300 border-slate-600 hover:border-blue-400"
+                          data-cy="edit-row-button"
                           size="sm"
                           variant="bordered"
                           onClick={() => onEdit(row)}
@@ -194,9 +194,9 @@ export function DataTable<T extends { id: number | string }>({
                       )}
                       {onDelete && (
                         <Button
-                          data-cy="delete-row-button"
                           disableRipple
                           className="text-red-400 hover:text-red-300 border-slate-600 hover:border-red-400"
+                          data-cy="delete-row-button"
                           size="sm"
                           variant="bordered"
                           onClick={() => onDelete(row)}

@@ -3,6 +3,7 @@ import { WebSocketEmitterService } from './websocket-emitter.service';
 import { WebSocketGateway } from '../gateways/websocket.gateway';
 import { WEBSOCKET_EVENTS } from '../constants/websocket-events.constant';
 import type { WebSocketMessage } from './websocket-emitter.service';
+import type { Server } from 'socket.io';
 
 describe('WebSocketEmitterService', () => {
   let service: WebSocketEmitterService;
@@ -407,8 +408,8 @@ describe('WebSocketEmitterService', () => {
 
   describe('getServer', () => {
     it('should return server from gateway', () => {
-      const mockServer = { test: 'server' };
-      gateway.getServer.mockReturnValue(mockServer as any);
+      const mockServer = { test: 'server' } as unknown as Server;
+      gateway.getServer.mockReturnValue(mockServer);
 
       const server = service.getServer();
 
@@ -417,8 +418,8 @@ describe('WebSocketEmitterService', () => {
     });
 
     it('should return the same server instance on multiple calls', () => {
-      const mockServer = { test: 'server' };
-      gateway.getServer.mockReturnValue(mockServer as any);
+      const mockServer = { test: 'server' } as unknown as Server;
+      gateway.getServer.mockReturnValue(mockServer);
 
       const server1 = service.getServer();
       const server2 = service.getServer();

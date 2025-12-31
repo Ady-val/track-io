@@ -27,6 +27,7 @@ describe('DashboardMeasurementController', () => {
           provide: DashboardMeasurementService,
           useValue: {
             getAllDashboardMeasurements: jest.fn(),
+            getAvailableDashboardMeasurements: jest.fn(),
             getDashboardMeasurementById: jest.fn(),
             getDashboardMeasurementByMeasurementId: jest.fn(),
             createDashboardMeasurement: jest.fn(),
@@ -36,9 +37,13 @@ describe('DashboardMeasurementController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 
@@ -110,6 +115,44 @@ describe('DashboardMeasurementController', () => {
       await expect(controller.getDashboardMeasurementById(id)).rejects.toThrow(
         NotFoundException
       );
+    });
+  });
+
+  describe('getAvailableDashboardMeasurements', () => {
+    it('should return list of available dashboard measurements', async () => {
+      const mockMeasurements = [
+        createMockDashboardMeasurement({
+          id: 1,
+          groupId: null,
+          measurement: createMockMeasurement({ id: 1 }),
+        }),
+        createMockDashboardMeasurement({
+          id: 2,
+          groupId: null,
+          measurement: createMockMeasurement({ id: 2 }),
+        }),
+      ];
+      service.getAvailableDashboardMeasurements.mockResolvedValue(
+        mockMeasurements
+      );
+
+      const result = await controller.getAvailableDashboardMeasurements();
+
+      expect(result.message).toBe(
+        'Available dashboard measurements retrieved successfully'
+      );
+      expect(result.data).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(service.getAvailableDashboardMeasurements).toHaveBeenCalled();
+    });
+
+    it('should return empty array when no available measurements', async () => {
+      service.getAvailableDashboardMeasurements.mockResolvedValue([]);
+
+      const result = await controller.getAvailableDashboardMeasurements();
+
+      expect(result.data).toHaveLength(0);
+      expect(result.total).toBe(0);
     });
   });
 

@@ -4,6 +4,10 @@ import { AlertRuleController } from './alert-rule.controller';
 import { AlertRuleService } from '../application/services/alert-rule.service';
 import { createMockAlertRule } from '../../test-helpers';
 import { AlertRuleMode } from '../domain/entities/alert-rule.entity';
+import type {
+  CreateAlertRuleDto,
+  UpdateAlertRuleDto,
+} from '../application/dtos/alert-rule.dto';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -34,9 +38,13 @@ describe('AlertRuleController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 
@@ -227,7 +235,7 @@ describe('AlertRuleController', () => {
 
       // Act & Assert
       await expect(
-        controller.createAlertRule(createDto as any)
+        controller.createAlertRule(createDto as CreateAlertRuleDto)
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -278,7 +286,7 @@ describe('AlertRuleController', () => {
 
       // Act & Assert
       await expect(
-        controller.updateAlertRule(id, updateDto as any)
+        controller.updateAlertRule(id, updateDto as UpdateAlertRuleDto)
       ).rejects.toThrow(BadRequestException);
     });
   });

@@ -7,6 +7,7 @@ import {
 import { UserController } from './user.controller';
 import { UserService } from '../application/services/user.service';
 import { createMockUser } from '../../test-helpers';
+import type { Role } from '../../../permissions/domain/entities/role.entity';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -42,9 +43,13 @@ describe('UserController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 
@@ -265,12 +270,12 @@ describe('UserController', () => {
   describe('getUserRoles', () => {
     it('should return user roles', async () => {
       const id = 1;
-      const mockRoles = [
-        { id: 1, name: 'Role 1' },
-        { id: 2, name: 'Role 2' },
+      const mockRoles: Role[] = [
+        { id: 1, name: 'Role 1' } as Role,
+        { id: 2, name: 'Role 2' } as Role,
       ];
 
-      service.getUserRoles.mockResolvedValue(mockRoles as any);
+      service.getUserRoles.mockResolvedValue(mockRoles);
 
       const result = await controller.getUserRoles(id);
 
@@ -283,7 +288,12 @@ describe('UserController', () => {
   describe('getUserPermissions', () => {
     it('should return user permissions', async () => {
       const id = 1;
-      const mockPermissions = [
+      const mockPermissions: Array<{
+        id: number;
+        module: string;
+        action: string;
+        description?: string;
+      }> = [
         {
           id: 1,
           module: 'areas',
@@ -292,7 +302,7 @@ describe('UserController', () => {
         },
       ];
 
-      service.getUserPermissions.mockResolvedValue(mockPermissions as any);
+      service.getUserPermissions.mockResolvedValue(mockPermissions);
 
       const result = await controller.getUserPermissions(id);
 

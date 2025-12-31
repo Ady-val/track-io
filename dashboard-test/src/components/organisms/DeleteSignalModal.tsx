@@ -46,11 +46,11 @@ export const DeleteSignalModal: React.FC<DeleteSignalModalProps> = ({
 
   return (
     <Modal
+      data-cy="delete-signal-modal"
       isOpen={isOpen}
       size="md"
       title="Eliminar Señal"
       onClose={onClose}
-      data-cy="delete-signal-modal"
     >
       <div className="space-y-6">
         <div className="flex items-center space-x-3">

@@ -90,7 +90,15 @@ export const DevicesPage: React.FC = () => {
               setIsAddSignalModalOpen(true);
             }}
             onConfigureEscalation={(signal, device) => {
-              setSelectedSignal(signal);
+              setSelectedSignal({
+                id: signal.id,
+                name: signal.name,
+                deviceId: device.id,
+                departmentId: signal.departmentId,
+                externalValueId: signal.externalValueId,
+                createdAt: "",
+                updatedAt: "",
+              });
               setSelectedDevice(device);
               setIsEscalationConfigModalOpen(true);
             }}

@@ -914,17 +914,24 @@ describe('AlertEvaluationService', () => {
       await service['handleTriggeredAlert'](rule, rawMeasurement);
 
       // Assert
+      const expectedDataContaining = expect.objectContaining({
+        alertRule: rule,
+        value: 30,
+        conditionResult: '30 > 25 = true',
+        messagesCount: 0,
+      }) as unknown as {
+        alertRule: typeof rule;
+        value: number;
+        conditionResult: string;
+        messagesCount: number;
+      };
+      const expectedPayloadContaining = expect.objectContaining({
+        type: 'alert',
+        data: expectedDataContaining,
+      }) as unknown as { type: string; data: typeof expectedDataContaining };
       expect(webSocketEmitterService.emitToAll).toHaveBeenCalledWith(
         'alert_triggered',
-        expect.objectContaining({
-          type: 'alert',
-          data: expect.objectContaining({
-            alertRule: rule,
-            value: 30,
-            conditionResult: '30 > 25 = true',
-            messagesCount: 0,
-          }),
-        })
+        expectedPayloadContaining
       );
     });
 

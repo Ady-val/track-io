@@ -16,13 +16,17 @@ export class CreateTorretaDto {
   @IsOptional()
   @IsString()
   @Length(1, 500)
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }: { value: string }) =>
+    value === '' ? undefined : value
+  )
   description?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 255)
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }: { value: string }) =>
+    value === '' ? undefined : value
+  )
   externalId?: string;
 
   @IsOptional()
@@ -40,13 +44,17 @@ export class UpdateTorretaDto {
   @IsOptional()
   @IsString()
   @Length(1, 500)
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }: { value: string }) =>
+    value === '' ? undefined : value
+  )
   description?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 255)
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }: { value: string }) =>
+    value === '' ? undefined : value
+  )
   externalId?: string;
 
   @IsOptional()

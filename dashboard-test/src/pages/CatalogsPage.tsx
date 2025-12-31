@@ -71,12 +71,12 @@ export function CatalogsPage() {
             {allCatalogs.map((catalog) => (
               <button
                 key={catalog.id}
-                data-cy={`catalog-tab-${catalog.id}`}
                 className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                   activeCatalog === catalog.id
                     ? "border-blue-500 text-blue-400"
                     : "border-transparent text-slate-400 hover:text-white hover:border-slate-500"
                 }`}
+                data-cy={`catalog-tab-${catalog.id}`}
                 onClick={() => setActiveCatalog(catalog.id)}
               >
                 <div className="flex items-center">

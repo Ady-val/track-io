@@ -71,6 +71,7 @@ export function DepartmentsCatalog() {
       key: "htmlColor",
       component: (value) => {
         const colorValue = (value as string | undefined) || "#ffffff";
+
         return (
           <div className="flex items-center">
             <div

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, type FindOneOptions } from 'typeorm';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
 
@@ -67,7 +67,7 @@ export class RoleRepository {
   }
 
   async findById(id: number, includeRelations = false): Promise<Role | null> {
-    const options: any = {
+    const options: FindOneOptions<Role> = {
       where: { id },
       withDeleted: false,
     };

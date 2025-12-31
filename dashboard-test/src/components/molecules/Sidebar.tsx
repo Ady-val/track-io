@@ -157,7 +157,6 @@ export default function Sidebar() {
               onMouseLeave={() => setHoveredItem(null)}
             >
               <Link
-                data-cy={`sidebar-link-${item.path.replace(/\//g, "-").replace(/^-/, "")}`}
                 aria-label={item.label}
                 className={`
                   flex items-center justify-center w-full h-12 rounded-lg
@@ -168,6 +167,7 @@ export default function Sidebar() {
                       : "text-slate-400 hover:text-white hover:bg-slate-700"
                   }
                 `}
+                data-cy={`sidebar-link-${item.path.replace(/\//g, "-").replace(/^-/, "")}`}
                 to={item.path}
               >
                 <Icon className="w-6 h-6" />

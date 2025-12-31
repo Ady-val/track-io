@@ -5,7 +5,6 @@ import { AlertTriggerRepository } from '../../domain/repositories/alert-trigger.
 import {
   createMockAlertTrigger,
   createMockAlertRule,
-  createMockRawMeasurement,
 } from '../../../test-helpers';
 import type { AlertTriggerFilters } from '../../domain/repositories/alert-trigger.repository';
 
@@ -79,7 +78,7 @@ describe('AlertTriggerService', () => {
       const mockAlertRule = createMockAlertRule({ id: 1 });
       mockTrigger.alertRule = mockAlertRule;
 
-      repository.findOne.mockResolvedValue(mockTrigger as any);
+      repository.findOne.mockResolvedValue(mockTrigger);
 
       const result = await service.getAlertTriggerById(id);
 
@@ -114,8 +113,8 @@ describe('AlertTriggerService', () => {
       };
       const mockTrigger = createMockAlertTrigger({ id: 1, ...createDto });
 
-      repository.create.mockReturnValue(mockTrigger as any);
-      repository.save.mockResolvedValue(mockTrigger as any);
+      repository.create.mockReturnValue(mockTrigger);
+      repository.save.mockResolvedValue(mockTrigger);
 
       const result = await service.createAlertTrigger(createDto);
 
@@ -133,7 +132,7 @@ describe('AlertTriggerService', () => {
         createMockAlertTrigger({ id: 2, alertRuleId }),
       ];
 
-      repository.findByAlertRuleId.mockResolvedValue(mockTriggers as any);
+      repository.findByAlertRuleId.mockResolvedValue(mockTriggers);
 
       const result = await service.getTriggersByAlertRuleId(alertRuleId);
 

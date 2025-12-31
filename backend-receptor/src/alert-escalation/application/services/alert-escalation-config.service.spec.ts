@@ -9,6 +9,8 @@ import {
 } from '../../../test-helpers';
 import type { CreateAlertEscalationConfigDto } from '../dtos/create-alert-escalation-config.dto';
 import { MessageType } from '../../domain/entities/alert-escalation-message.entity';
+import type { CreateEscalationConfigWithMessagesDto } from '../dtos/create-escalation-config-with-messages.dto';
+import type { AlertEscalationMessage } from '../../domain/entities/alert-escalation-message.entity';
 
 describe('AlertEscalationConfigService', () => {
   let service: AlertEscalationConfigService;
@@ -104,9 +106,11 @@ describe('AlertEscalationConfigService', () => {
         id: 1,
         escalationConfigId: mockConfig.id,
         ...createDto.messages[0],
-      } as any);
+      } as AlertEscalationMessage);
 
-      const result = await service.createWithMessages(createDto as any);
+      const result = await service.createWithMessages(
+        createDto as CreateEscalationConfigWithMessagesDto
+      );
 
       expect(result).toEqual(mockConfig);
       expect(configRepository.create).toHaveBeenCalled();
@@ -141,9 +145,11 @@ describe('AlertEscalationConfigService', () => {
         id: 1,
         escalationConfigId: mockConfig.id,
         color: 'RED',
-      } as any);
+      } as AlertEscalationMessage);
 
-      await service.createWithMessages(createDto as any);
+      await service.createWithMessages(
+        createDto as CreateEscalationConfigWithMessagesDto
+      );
 
       expect(
         torretaColorService.getTorretaColorByHtmlColor

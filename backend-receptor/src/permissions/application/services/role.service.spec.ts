@@ -319,9 +319,7 @@ describe('RoleService', () => {
       const mockRole = createMockRole({ id: roleId });
 
       roleRepository.findById.mockResolvedValue(mockRole);
-      roleRepository.getPermissionsByRoleId.mockResolvedValue(
-        mockPermissions as any
-      );
+      roleRepository.getPermissionsByRoleId.mockResolvedValue(mockPermissions);
 
       const result = await service.getPermissionsByRoleId(roleId);
 

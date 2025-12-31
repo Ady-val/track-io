@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
+import type { UpdateResult } from 'typeorm';
 import { TorretaService } from './torreta.service';
 import { TorretaRepository } from '../../domain/repositories/torreta.repository';
 import { createMockTorreta } from '../../../test-helpers';
@@ -218,7 +219,7 @@ describe('TorretaService', () => {
       const mockTorreta = createMockTorreta({ id });
 
       repository.findOne.mockResolvedValue(mockTorreta);
-      repository.softDelete.mockResolvedValue({ affected: 1 } as any);
+      repository.softDelete.mockResolvedValue({ affected: 1 } as UpdateResult);
 
       await service.deleteTorreta(id);
 

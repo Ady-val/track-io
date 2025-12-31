@@ -1,6 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ModuleRef } from '@nestjs/core';
 import { HttpService } from '@nestjs/axios';
+import { ModuleRef } from '@nestjs/core';
 import { AreaTorretaSignalService } from './area-torreta-signal.service';
 import { TypeOrmAreaTorretaConfigRepository } from '../../domain/repositories/typeorm-area-torreta-config.repository';
 import { TypeOrmEventRepository } from '../../../events/domain/repositories/typeorm-event.repository';
@@ -15,10 +15,11 @@ import {
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { TorretaConfigurationType } from '../../domain/entities/area-torreta-config.entity';
 import { of, throwError } from 'rxjs';
+import type { Event } from '../../../events/domain/entities/event.entity';
+import type { AxiosResponse } from 'axios';
 
 describe('AreaTorretaSignalService', () => {
   let service: AreaTorretaSignalService;
-  let moduleRef: jest.Mocked<ModuleRef>;
   let httpService: jest.Mocked<HttpService>;
   let areaTorretaConfigRepository: jest.Mocked<TypeOrmAreaTorretaConfigRepository>;
   let eventRepository: jest.Mocked<TypeOrmEventRepository>;
@@ -47,7 +48,7 @@ describe('AreaTorretaSignalService', () => {
     };
 
     const mockModuleRef = {
-      get: jest.fn((token: any) => {
+      get: jest.fn((token: unknown) => {
         if (token === TypeOrmAreaTorretaConfigRepository) {
           return mockAreaTorretaConfigRepository;
         }
@@ -62,7 +63,7 @@ describe('AreaTorretaSignalService', () => {
         }
         return null;
       }),
-    };
+    } as jest.Mocked<ModuleRef>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -79,12 +80,15 @@ describe('AreaTorretaSignalService', () => {
     }).compile();
 
     service = module.get<AreaTorretaSignalService>(AreaTorretaSignalService);
-    moduleRef = module.get(ModuleRef);
     httpService = module.get(HttpService);
-    areaTorretaConfigRepository = mockAreaTorretaConfigRepository as any;
-    eventRepository = mockEventRepository as any;
-    departmentRepository = mockDepartmentRepository as any;
-    torretaColorService = mockTorretaColorService as any;
+    areaTorretaConfigRepository =
+      mockAreaTorretaConfigRepository as jest.Mocked<TypeOrmAreaTorretaConfigRepository>;
+    eventRepository =
+      mockEventRepository as jest.Mocked<TypeOrmEventRepository>;
+    departmentRepository =
+      mockDepartmentRepository as jest.Mocked<DepartmentRepository>;
+    torretaColorService =
+      mockTorretaColorService as jest.Mocked<TorretaColorService>;
   });
 
   afterEach(() => {
@@ -107,7 +111,11 @@ describe('AreaTorretaSignalService', () => {
         mockConfigs
       );
       eventRepository.findActiveByArea.mockResolvedValue([]);
-      httpService.post.mockReturnValue(of({ data: {} }) as any);
+      httpService.post.mockReturnValue(
+        of({ data: {} } as AxiosResponse) as unknown as ReturnType<
+          typeof httpService.post
+        >
+      );
 
       await service.processEventForAreaTorretas(event);
 
@@ -146,7 +154,11 @@ describe('AreaTorretaSignalService', () => {
       const areaId = 1;
       eventRepository.findActiveByArea.mockResolvedValue([]);
 
-      const color = await (service as any).determineColorByArea(areaId);
+      const color = await (
+        service as unknown as {
+          determineColorByArea: (areaId: number) => Promise<string>;
+        }
+      ).determineColorByArea(areaId);
 
       expect(color).toBe('G1');
     });
@@ -161,9 +173,13 @@ describe('AreaTorretaSignalService', () => {
         }),
       ];
 
-      eventRepository.findActiveByArea.mockResolvedValue(mockEvents as any);
+      eventRepository.findActiveByArea.mockResolvedValue(mockEvents);
 
-      const color = await (service as any).determineColorByArea(areaId);
+      const color = await (
+        service as unknown as {
+          determineColorByArea: (areaId: number) => Promise<string>;
+        }
+      ).determineColorByArea(areaId);
 
       expect(color).toBe('R1');
     });
@@ -178,9 +194,13 @@ describe('AreaTorretaSignalService', () => {
         }),
       ];
 
-      eventRepository.findActiveByArea.mockResolvedValue(mockEvents as any);
+      eventRepository.findActiveByArea.mockResolvedValue(mockEvents);
 
-      const color = await (service as any).determineColorByArea(areaId);
+      const color = await (
+        service as unknown as {
+          determineColorByArea: (areaId: number) => Promise<string>;
+        }
+      ).determineColorByArea(areaId);
 
       expect(color).toBe('Y1');
     });
@@ -193,10 +213,11 @@ describe('AreaTorretaSignalService', () => {
 
       eventRepository.findActiveByArea.mockResolvedValue([]);
 
-      const color = await (service as any).determineColorByDepartment(
-        areaId,
-        event
-      );
+      const color = await (
+        service as unknown as {
+          determineColorByDepartment: (departmentId: number) => Promise<string>;
+        }
+      ).determineColorByDepartment(areaId, event);
 
       expect(color).toBe('G1');
     });
@@ -224,16 +245,17 @@ describe('AreaTorretaSignalService', () => {
         deviceColorId: 'R1',
       });
 
-      eventRepository.findActiveByArea.mockResolvedValue(mockEvents as any);
+      eventRepository.findActiveByArea.mockResolvedValue(mockEvents);
       departmentRepository.findById.mockResolvedValue(mockDepartment);
       torretaColorService.getTorretaColorByHtmlColor.mockResolvedValue(
         mockTorretaColor
       );
 
-      const color = await (service as any).determineColorByDepartment(
-        areaId,
-        event
-      );
+      const color = await (
+        service as unknown as {
+          determineColorByDepartment: (departmentId: number) => Promise<string>;
+        }
+      ).determineColorByDepartment(areaId, event);
 
       expect(color).toBe('R1');
     });
@@ -255,14 +277,15 @@ describe('AreaTorretaSignalService', () => {
         htmlColor: '#FF0000',
       });
 
-      eventRepository.findActiveByArea.mockResolvedValue(mockEvents as any);
+      eventRepository.findActiveByArea.mockResolvedValue(mockEvents);
       departmentRepository.findById.mockResolvedValue(mockDepartment);
       torretaColorService.getTorretaColorByHtmlColor.mockResolvedValue(null);
 
-      const color = await (service as any).determineColorByDepartment(
-        areaId,
-        event
-      );
+      const color = await (
+        service as unknown as {
+          determineColorByDepartment: (departmentId: number) => Promise<string>;
+        }
+      ).determineColorByDepartment(areaId, event);
 
       expect(color).toBe('G1');
     });
@@ -275,12 +298,20 @@ describe('AreaTorretaSignalService', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
-      httpService.post.mockReturnValue(of({ data: {} }) as any);
-
-      await (service as any).sendTorretaSignal(
-        torretaExternalId,
-        deviceColorId
+      httpService.post.mockReturnValue(
+        of({ data: {} } as AxiosResponse) as unknown as ReturnType<
+          typeof httpService.post
+        >
       );
+
+      await (
+        service as unknown as {
+          sendTorretaSignal: (
+            torretaExternalId: string,
+            deviceColorId: string
+          ) => Promise<void>;
+        }
+      ).sendTorretaSignal(torretaExternalId, deviceColorId);
 
       expect(httpService.post).toHaveBeenCalled();
       const callArgs = httpService.post.mock.calls[0];
@@ -307,10 +338,21 @@ describe('AreaTorretaSignalService', () => {
       const deviceColorId = 'R1';
       const error = new Error('Network error');
 
-      httpService.post.mockReturnValue(throwError(() => error) as any);
+      httpService.post.mockReturnValue(
+        throwError(() => error) as unknown as ReturnType<
+          typeof httpService.post
+        >
+      );
 
       await expect(
-        (service as any).sendTorretaSignal(torretaExternalId, deviceColorId)
+        (
+          service as unknown as {
+            sendTorretaSignal: (
+              torretaExternalId: string,
+              deviceColorId: string
+            ) => Promise<void>;
+          }
+        ).sendTorretaSignal(torretaExternalId, deviceColorId)
       ).resolves.not.toThrow();
     });
   });
@@ -320,9 +362,9 @@ describe('AreaTorretaSignalService', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
-      const url = (service as any).resolveEndpointUrl(
-        'http://localhost:1880/events'
-      );
+      const url = (
+        service as unknown as { resolveEndpointUrl: (url: string) => string }
+      ).resolveEndpointUrl('http://localhost:1880/events');
 
       expect(url).toBe('http://localhost:1880/events');
       process.env.NODE_ENV = originalEnv;
@@ -332,16 +374,18 @@ describe('AreaTorretaSignalService', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
-      const url = (service as any).resolveEndpointUrl(
-        'http://localhost:1880/events'
-      );
+      const url = (
+        service as unknown as { resolveEndpointUrl: (url: string) => string }
+      ).resolveEndpointUrl('http://localhost:1880/events');
 
       expect(url).toContain('host.docker.internal');
       process.env.NODE_ENV = originalEnv;
     });
 
     it('should handle invalid URLs gracefully', () => {
-      const url = (service as any).resolveEndpointUrl('invalid-url');
+      const url = (
+        service as unknown as { resolveEndpointUrl: (url: string) => string }
+      ).resolveEndpointUrl('invalid-url');
 
       expect(url).toBe('invalid-url');
     });

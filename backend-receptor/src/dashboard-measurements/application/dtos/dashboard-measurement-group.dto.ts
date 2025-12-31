@@ -6,24 +6,14 @@ import {
   ValidateNested,
   IsInt,
   IsNumber,
-  Min,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class DashboardMeasurementItemDto {
   @IsInt()
   @IsNotEmpty()
-  measurementId!: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  @Min(0)
-  minValue!: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  @Min(0)
-  maxValue!: number;
+  dashboardMeasurementId!: number;
 }
 
 export class CreateDashboardMeasurementGroupDto {
@@ -35,6 +25,25 @@ export class CreateDashboardMeasurementGroupDto {
   @ValidateNested({ each: true })
   @Type(() => DashboardMeasurementItemDto)
   dashboardMeasurements!: DashboardMeasurementItemDto[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsIn([1, 10, 30, 60, 120, 240, 480])
+  chartTimeRange?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chartMinValue?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chartMaxValue?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  chartMeasurementIds?: number[];
 }
 
 export class UpdateDashboardMeasurementGroupDto {
@@ -48,4 +57,23 @@ export class UpdateDashboardMeasurementGroupDto {
   @ValidateNested({ each: true })
   @Type(() => DashboardMeasurementItemDto)
   dashboardMeasurements?: DashboardMeasurementItemDto[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsIn([1, 10, 30, 60, 120, 240, 480])
+  chartTimeRange?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chartMinValue?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chartMaxValue?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  chartMeasurementIds?: number[];
 }

@@ -9,6 +9,7 @@ import {
   createMockEvent,
 } from '../../../test-helpers';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
+import type { Event } from '../../../events/domain/entities/event.entity';
 
 describe('DashboardService', () => {
   let service: DashboardService;
@@ -62,7 +63,7 @@ describe('DashboardService', () => {
         createMockDepartment({ id: 1 }),
         createMockDepartment({ id: 2 }),
       ];
-      const mockEvents: any[] = [];
+      const mockEvents: Event[] = [];
 
       areaRepository.findAll.mockResolvedValue({ data: mockAreas, total: 2 });
       departmentRepository.findAll.mockResolvedValue({
@@ -97,7 +98,7 @@ describe('DashboardService', () => {
         data: mockDepartments,
         total: 1,
       });
-      eventRepository.findAll.mockResolvedValue(mockEvents as any);
+      eventRepository.findAll.mockResolvedValue(mockEvents);
 
       const result = await service.getAreasWithEvents();
 
@@ -151,7 +152,7 @@ describe('DashboardService', () => {
         }),
       ];
 
-      eventRepository.findByStatus.mockResolvedValue(mockEvents as any);
+      eventRepository.findByStatus.mockResolvedValue(mockEvents);
 
       const result = await service.getOpenEvents();
 
@@ -174,7 +175,7 @@ describe('DashboardService', () => {
         }),
       ];
 
-      eventRepository.findByStatus.mockResolvedValue(mockEvents as any);
+      eventRepository.findByStatus.mockResolvedValue(mockEvents);
 
       const result = await service.getInProgressEvents();
 
@@ -197,7 +198,7 @@ describe('DashboardService', () => {
         }),
       ];
 
-      eventRepository.findByStatus.mockResolvedValue(mockEvents as any);
+      eventRepository.findByStatus.mockResolvedValue(mockEvents);
 
       const result = await service.getClosedEvents();
 
@@ -217,9 +218,7 @@ describe('DashboardService', () => {
         }),
       ];
 
-      eventRepository.findRecentClosedEvents.mockResolvedValue(
-        mockEvents as any
-      );
+      eventRepository.findRecentClosedEvents.mockResolvedValue(mockEvents);
 
       const result = await service.getRecentClosedEvents();
 
@@ -229,7 +228,7 @@ describe('DashboardService', () => {
 
     it('should return recent closed events with custom limit', async () => {
       const limit = 20;
-      const mockEvents: any[] = [];
+      const mockEvents: Event[] = [];
 
       eventRepository.findRecentClosedEvents.mockResolvedValue(mockEvents);
 
@@ -248,7 +247,7 @@ describe('DashboardService', () => {
         createMockEvent({ id: 2 }),
       ];
 
-      eventRepository.findAll.mockResolvedValue(mockEvents as any);
+      eventRepository.findAll.mockResolvedValue(mockEvents);
 
       const result = await service.getAllEvents();
 
@@ -265,7 +264,7 @@ describe('DashboardService', () => {
         createMockEvent({ id: 2, areaId }),
       ];
 
-      eventRepository.findByArea.mockResolvedValue(mockEvents as any);
+      eventRepository.findByArea.mockResolvedValue(mockEvents);
 
       const result = await service.getEventsByArea(areaId);
 

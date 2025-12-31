@@ -1,6 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ModuleRef } from '@nestjs/core';
 import { NotFoundException, ConflictException } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { AreaTorretaConfigService } from './area-torreta-config.service';
 import { TypeOrmAreaTorretaConfigRepository } from '../../domain/repositories/typeorm-area-torreta-config.repository';
 import { AreaRepository } from '../../../areas/domain/repositories/area.repository';
@@ -18,7 +18,6 @@ import type {
 
 describe('AreaTorretaConfigService', () => {
   let service: AreaTorretaConfigService;
-  let moduleRef: jest.Mocked<ModuleRef>;
   let areaTorretaConfigRepository: jest.Mocked<TypeOrmAreaTorretaConfigRepository>;
   let areaRepository: jest.Mocked<AreaRepository>;
   let torretaRepository: jest.Mocked<TorretaRepository>;
@@ -43,7 +42,7 @@ describe('AreaTorretaConfigService', () => {
     };
 
     const mockModuleRef = {
-      get: jest.fn((token: any) => {
+      get: jest.fn((token: unknown) => {
         if (token === TypeOrmAreaTorretaConfigRepository) {
           return mockAreaTorretaConfigRepository;
         }
@@ -55,7 +54,7 @@ describe('AreaTorretaConfigService', () => {
         }
         return null;
       }),
-    };
+    } as jest.Mocked<ModuleRef>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -68,10 +67,10 @@ describe('AreaTorretaConfigService', () => {
     }).compile();
 
     service = module.get<AreaTorretaConfigService>(AreaTorretaConfigService);
-    moduleRef = module.get(ModuleRef);
-    areaTorretaConfigRepository = mockAreaTorretaConfigRepository as any;
-    areaRepository = mockAreaRepository as any;
-    torretaRepository = mockTorretaRepository as any;
+    areaTorretaConfigRepository =
+      mockAreaTorretaConfigRepository as jest.Mocked<TypeOrmAreaTorretaConfigRepository>;
+    areaRepository = mockAreaRepository as jest.Mocked<AreaRepository>;
+    torretaRepository = mockTorretaRepository as jest.Mocked<TorretaRepository>;
   });
 
   afterEach(() => {

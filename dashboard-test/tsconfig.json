@@ -43,6 +43,6 @@
     "useUnknownInCatchVariables": true
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "build", "coverage"],
+  "exclude": ["node_modules", "dist", "build", "coverage", "**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

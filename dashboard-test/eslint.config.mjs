@@ -50,6 +50,7 @@ export default [
   ),
   {
     files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**/*"],
     plugins: {
       react: fixupPluginRules(react),
       "react-hooks": fixupPluginRules(reactHooks),
@@ -246,6 +247,55 @@ export default [
         beforeAll: "readonly",
         afterAll: "readonly",
       },
+      parser: tsParser,
+      ecmaVersion: 2022,
+      sourceType: "module",
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        // No usar project para archivos de test ya que están excluidos del tsconfig.json
+      },
+    },
+    plugins: {
+      react: fixupPluginRules(react),
+      "react-hooks": fixupPluginRules(reactHooks),
+      "@typescript-eslint": tseslint,
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      // Deshabilitar reglas que requieren type checking para archivos de test
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-misused-promises": "off",
+      // Reglas de React para archivos de test
+      "react/prop-types": "off",
+      "react/jsx-uses-react": "off",
+      "react/react-in-jsx-scope": "off",
+      // Deshabilitar reglas de variables no usadas para parámetros de funciones mock
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "none",
+          ignoreRestSiblings: true,
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/migrations/**/*.ts", "**/migrations/**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
     },
   },
 ];

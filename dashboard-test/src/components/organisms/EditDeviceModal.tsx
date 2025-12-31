@@ -63,11 +63,11 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 
   return (
     <Modal
+      data-cy="edit-device-modal"
       isOpen={isOpen}
       size="md"
       title="Editar Dispositivo"
       onClose={onClose}
-      data-cy="edit-device-modal"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-2 mb-4">
@@ -79,50 +79,49 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 
         <div className="space-y-4">
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="edit-device-name"
-            >
-              Nombre del Dispositivo
-            </label>
             <Input
               autoFocus
+              fullWidth
               required
               id="edit-device-name"
+              isDisabled={isLoading}
+              label="Nombre del Dispositivo"
+              labelPlacement="outside"
               placeholder="Ej: Controlador Principal"
+              size="md"
               value={name}
+              variant="bordered"
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="edit-device-external-id"
-            >
-              External ID
-            </label>
             <Input
+              fullWidth
               required
               id="edit-device-external-id"
+              isDisabled={isLoading}
+              label="External ID"
+              labelPlacement="outside"
               placeholder="Ej: CTR-1433"
+              size="md"
               value={externalId}
+              variant="bordered"
               onChange={(e) => setExternalId(e.target.value)}
             />
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="edit-device-area"
-            >
-              Área (No editable)
-            </label>
             <Input
               disabled
-              className="bg-slate-700 text-slate-400"
+              fullWidth
               id="edit-device-area"
+              isDisabled
+              label="Área (No editable)"
+              labelPlacement="outside"
+              size="md"
               value={device.areaName}
+              variant="bordered"
             />
           </div>
 

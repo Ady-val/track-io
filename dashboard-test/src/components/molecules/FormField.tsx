@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { Input } from "../atoms/Input";
 import { Label } from "../atoms/Label";
 import { Select } from "../atoms/Select";

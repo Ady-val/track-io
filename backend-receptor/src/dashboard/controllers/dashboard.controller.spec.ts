@@ -1,6 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from '../application/services/dashboard.service';
+import type { DashboardEventData } from '../application/services/dashboard.service';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
@@ -83,7 +84,9 @@ describe('DashboardController', () => {
         },
       ];
 
-      service.getOpenEvents.mockResolvedValue(mockEvents as any);
+      service.getOpenEvents.mockResolvedValue(
+        mockEvents as DashboardEventData[]
+      );
 
       const result = await controller.getOpenEvents();
 
@@ -107,7 +110,7 @@ describe('DashboardController', () => {
 
   describe('getInProgressEvents', () => {
     it('should return in-progress events', async () => {
-      const mockEvents: any[] = [];
+      const mockEvents: DashboardEventData[] = [];
       service.getInProgressEvents.mockResolvedValue(mockEvents);
 
       const result = await controller.getInProgressEvents();
@@ -119,7 +122,7 @@ describe('DashboardController', () => {
 
   describe('getClosedEvents', () => {
     it('should return closed events', async () => {
-      const mockEvents: any[] = [];
+      const mockEvents: DashboardEventData[] = [];
       service.getClosedEvents.mockResolvedValue(mockEvents);
 
       const result = await controller.getClosedEvents();
@@ -131,7 +134,7 @@ describe('DashboardController', () => {
 
   describe('getRecentClosedEvents', () => {
     it('should return recent closed events', async () => {
-      const mockEvents: any[] = [];
+      const mockEvents: DashboardEventData[] = [];
       service.getRecentClosedEvents.mockResolvedValue(mockEvents);
 
       const result = await controller.getRecentClosedEvents();
@@ -143,7 +146,7 @@ describe('DashboardController', () => {
 
   describe('getAllEvents', () => {
     it('should return all events', async () => {
-      const mockEvents: any[] = [];
+      const mockEvents: DashboardEventData[] = [];
       service.getAllEvents.mockResolvedValue(mockEvents);
 
       const result = await controller.getAllEvents();
@@ -156,7 +159,7 @@ describe('DashboardController', () => {
   describe('getEventsByArea', () => {
     it('should return events for area', async () => {
       const areaId = '1';
-      const mockEvents: any[] = [];
+      const mockEvents: DashboardEventData[] = [];
       service.getEventsByArea.mockResolvedValue(mockEvents);
 
       const result = await controller.getEventsByArea(areaId);
@@ -183,8 +186,12 @@ describe('DashboardController', () => {
 
   describe('getDashboardStatus', () => {
     it('should return dashboard status', async () => {
-      const openEvents: any[] = [{ id: 1 }];
-      const inProgressEvents: any[] = [{ id: 2 }];
+      const openEvents: DashboardEventData[] = [
+        { id: 1 } as DashboardEventData,
+      ];
+      const inProgressEvents: DashboardEventData[] = [
+        { id: 2 } as DashboardEventData,
+      ];
 
       service.getOpenEvents.mockResolvedValue(openEvents);
       service.getInProgressEvents.mockResolvedValue(inProgressEvents);

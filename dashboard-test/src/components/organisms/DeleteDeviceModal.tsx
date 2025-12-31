@@ -43,11 +43,11 @@ export const DeleteDeviceModal: React.FC<DeleteDeviceModalProps> = ({
 
   return (
     <Modal
+      data-cy="delete-device-modal"
       isOpen={isOpen}
       size="md"
       title="Eliminar Dispositivo"
       onClose={onClose}
-      data-cy="delete-device-modal"
     >
       <div className="space-y-6">
         <div className="flex items-center space-x-3">

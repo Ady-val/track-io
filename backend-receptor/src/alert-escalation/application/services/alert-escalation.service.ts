@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { AlertEscalationConfigRepository } from '../../domain/repositories/alert-escalation-config.repository';
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
 import { EventAlertLogRepository } from '../../domain/repositories/event-alert-log.repository';
+import type { CreateEventAlertLogDto } from '../../domain/repositories/event-alert-log.repository';
 import {
   AlertEscalationMessage,
   AlertLevel,
@@ -255,7 +256,7 @@ export class AlertEscalationService {
     endpointUrl: string,
     errorMessage?: string
   ): Promise<void> {
-    await this.eventAlertLogRepository.create({
+    const logData: CreateEventAlertLogDto = {
       eventId,
       level,
       sentAt: new Date(),
@@ -266,9 +267,14 @@ export class AlertEscalationService {
         messageType: msg.messageType,
       })),
       success,
-      errorMessage: errorMessage,
       endpointUrl,
-    });
+    };
+
+    if (errorMessage !== undefined) {
+      logData.errorMessage = errorMessage;
+    }
+
+    await this.eventAlertLogRepository.create(logData);
   }
 
   determineLevelToSend(

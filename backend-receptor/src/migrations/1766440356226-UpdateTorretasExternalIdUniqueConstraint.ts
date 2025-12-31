@@ -58,4 +58,3 @@ export class UpdateTorretasExternalIdUniqueConstraint1766440356226
     `);
   }
 }
-

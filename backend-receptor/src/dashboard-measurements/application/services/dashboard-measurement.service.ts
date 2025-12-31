@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { IsNull } from 'typeorm';
 import { DashboardMeasurementRepository } from '../../domain/repositories/dashboard-measurement.repository';
 import { DashboardMeasurement } from '../../domain/entities/dashboard-measurement.entity';
 import {
@@ -101,5 +102,15 @@ export class DashboardMeasurementService {
   async deleteDashboardMeasurement(id: number): Promise<void> {
     await this.getDashboardMeasurementById(id);
     await this.dashboardMeasurementRepository.softDelete(id);
+  }
+
+  async getAvailableDashboardMeasurements(): Promise<DashboardMeasurement[]> {
+    // Retornar todos los dashboard measurements no eliminados
+    // Ya que ahora se pueden reasignar entre grupos
+    return this.dashboardMeasurementRepository.find({
+      where: { deletedAt: IsNull() },
+      relations: ['measurement'],
+      order: { createdAt: 'DESC' },
+    });
   }
 }

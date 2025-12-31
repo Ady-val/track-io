@@ -6,6 +6,7 @@ import { PermissionGuard } from './permission.guard';
 import { UserService } from 'src/users/application/services/user.service';
 import { ADMIN_USERNAME } from '../constants/permissions.constants';
 import { Module, Action } from '../constants/permissions.constants';
+import type { Role } from '../../domain/entities/role.entity';
 
 describe('PermissionGuard', () => {
   let guard: PermissionGuard;
@@ -13,6 +14,7 @@ describe('PermissionGuard', () => {
   let moduleRef: jest.Mocked<ModuleRef>;
   let userService: jest.Mocked<UserService>;
   let mockContext: jest.Mocked<ExecutionContext>;
+  let mockGetRequest: jest.Mock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -45,12 +47,14 @@ describe('PermissionGuard', () => {
     moduleRef = module.get(ModuleRef);
     userService = module.get(UserService);
 
+    mockGetRequest = jest.fn().mockReturnValue({
+      user: undefined,
+    });
+    const mockSwitchToHttp = {
+      getRequest: mockGetRequest,
+    };
     mockContext = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue({
-          user: undefined,
-        }),
-      }),
+      switchToHttp: jest.fn().mockReturnValue(mockSwitchToHttp),
       getHandler: jest.fn(),
       getClass: jest.fn(),
     } as unknown as jest.Mocked<ExecutionContext>;
@@ -79,7 +83,7 @@ describe('PermissionGuard', () => {
       };
 
       reflector.getAllAndOverride.mockReturnValue(requiredPermission);
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
 
       const result = await guard.canActivate(mockContext);
 
@@ -96,7 +100,7 @@ describe('PermissionGuard', () => {
       };
 
       reflector.getAllAndOverride.mockReturnValue(requiredPermission);
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
         ForbiddenException
@@ -116,7 +120,7 @@ describe('PermissionGuard', () => {
       };
 
       reflector.getAllAndOverride.mockReturnValue(requiredPermission);
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
       moduleRef.get.mockReturnValue(userService);
       userService.getUserRoles.mockResolvedValue([]);
 
@@ -136,8 +140,13 @@ describe('PermissionGuard', () => {
       const request = {
         user: { id: 1, username: 'testuser' },
       };
-      const mockRoles = [{ id: 1, name: 'Test Role' }];
-      const mockPermissions = [
+      const mockRoles: Role[] = [{ id: 1, name: 'Test Role' } as Role];
+      const mockPermissions: Array<{
+        id: number;
+        module: string;
+        action: string;
+        description?: string;
+      }> = [
         {
           id: 1,
           module: Module.DEPARTMENTS,
@@ -146,10 +155,10 @@ describe('PermissionGuard', () => {
       ];
 
       reflector.getAllAndOverride.mockReturnValue(requiredPermission);
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
       moduleRef.get.mockReturnValue(userService);
-      userService.getUserRoles.mockResolvedValue(mockRoles as any);
-      userService.getUserPermissions.mockResolvedValue(mockPermissions as any);
+      userService.getUserRoles.mockResolvedValue(mockRoles);
+      userService.getUserPermissions.mockResolvedValue(mockPermissions);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
         ForbiddenException
@@ -167,8 +176,13 @@ describe('PermissionGuard', () => {
       const request = {
         user: { id: 1, username: 'testuser' },
       };
-      const mockRoles = [{ id: 1, name: 'Test Role' }];
-      const mockPermissions = [
+      const mockRoles: Role[] = [{ id: 1, name: 'Test Role' } as Role];
+      const mockPermissions: Array<{
+        id: number;
+        module: string;
+        action: string;
+        description?: string;
+      }> = [
         {
           id: 1,
           module: Module.AREAS,
@@ -177,10 +191,10 @@ describe('PermissionGuard', () => {
       ];
 
       reflector.getAllAndOverride.mockReturnValue(requiredPermission);
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
       moduleRef.get.mockReturnValue(userService);
-      userService.getUserRoles.mockResolvedValue(mockRoles as any);
-      userService.getUserPermissions.mockResolvedValue(mockPermissions as any);
+      userService.getUserRoles.mockResolvedValue(mockRoles);
+      userService.getUserPermissions.mockResolvedValue(mockPermissions);
 
       const result = await guard.canActivate(mockContext);
 
@@ -200,7 +214,7 @@ describe('PermissionGuard', () => {
       };
 
       reflector.getAllAndOverride.mockReturnValue(requiredPermission);
-      mockContext.switchToHttp().getRequest.mockReturnValue(request);
+      mockGetRequest.mockReturnValue(request);
       moduleRef.get.mockReturnValue(undefined);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(

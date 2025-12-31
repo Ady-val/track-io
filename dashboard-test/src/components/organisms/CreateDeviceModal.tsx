@@ -36,4 +36,3 @@ export const CreateDeviceModal: React.FC<CreateDeviceModalProps> = ({
     </Modal>
   );
 };
-

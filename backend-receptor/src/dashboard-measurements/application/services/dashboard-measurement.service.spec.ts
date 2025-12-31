@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { IsNull } from 'typeorm';
 import { DashboardMeasurementService } from './dashboard-measurement.service';
 import { DashboardMeasurementRepository } from '../../domain/repositories/dashboard-measurement.repository';
 import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
@@ -31,6 +32,7 @@ describe('DashboardMeasurementService', () => {
             findAllWithMeasurements: jest.fn(),
             findOne: jest.fn(),
             findByMeasurementId: jest.fn(),
+            find: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
             softDelete: jest.fn(),
@@ -447,6 +449,43 @@ describe('DashboardMeasurementService', () => {
       await expect(service.deleteDashboardMeasurement(id)).rejects.toThrow(
         NotFoundException
       );
+    });
+  });
+
+  describe('getAvailableDashboardMeasurements', () => {
+    it('should return all dashboard measurements not deleted', async () => {
+      const mockMeasurements = [
+        createMockDashboardMeasurement({
+          id: 1,
+          groupId: null,
+          measurement: createMockMeasurement({ id: 1 }),
+        }),
+        createMockDashboardMeasurement({
+          id: 2,
+          groupId: 5, // Ya tiene grupo asignado, pero se devuelve igual
+          measurement: createMockMeasurement({ id: 2 }),
+        }),
+      ];
+
+      dashboardMeasurementRepository.find.mockResolvedValue(mockMeasurements);
+
+      const result = await service.getAvailableDashboardMeasurements();
+
+      expect(result).toEqual(mockMeasurements);
+      expect(dashboardMeasurementRepository.find).toHaveBeenCalledWith({
+        where: { deletedAt: IsNull() },
+        relations: ['measurement'],
+        order: { createdAt: 'DESC' },
+      });
+    });
+
+    it('should return empty array when no measurements exist', async () => {
+      dashboardMeasurementRepository.find.mockResolvedValue([]);
+
+      const result = await service.getAvailableDashboardMeasurements();
+
+      expect(result).toEqual([]);
+      expect(dashboardMeasurementRepository.find).toHaveBeenCalled();
     });
   });
 });

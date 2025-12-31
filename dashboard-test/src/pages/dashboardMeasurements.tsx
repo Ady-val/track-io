@@ -9,6 +9,7 @@ import {
   EmptyState,
   LoadingState,
   ConnectionIndicator,
+  RealtimeGroupChart,
 } from "@components/molecules";
 import {
   CreateDashboardGroupModal,
@@ -60,6 +61,28 @@ export default function DashboardMeasurementsPage() {
   const { isConnected } = useWebSocket();
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
+
+  const hasChartConfig =
+    selectedGroup?.chartTimeRange &&
+    selectedGroup.chartMinValue !== undefined &&
+    selectedGroup.chartMaxValue !== undefined &&
+    selectedGroup.chartMeasurementIds &&
+    selectedGroup.chartMeasurementIds.length > 0;
+
+  const chartMeasurements =
+    hasChartConfig && selectedGroup
+      ? dashboards
+          .filter((dashboard) =>
+            selectedGroup.chartMeasurementIds?.includes(dashboard.measurementId)
+          )
+          .map((dashboard) => ({
+            id: dashboard.id,
+            measurementId: dashboard.measurementId,
+            minValue: dashboard.minValue ?? 0,
+            maxValue: dashboard.maxValue ?? 100,
+            measurement: dashboard.measurement,
+          }))
+      : [];
 
   const handleCreateGroup = async (
     data: CreateDashboardMeasurementGroupData
@@ -115,7 +138,7 @@ export default function DashboardMeasurementsPage() {
 
   return (
     <div className="flex flex-col h-full p-6">
-      <div className="flex-shrink-0 pb-4">
+      <header className="flex-shrink-0 mb-4">
         <Card>
           <CardBody className="py-3 px-4">
             <div className="flex items-center justify-between gap-4">
@@ -192,10 +215,10 @@ export default function DashboardMeasurementsPage() {
             </div>
           </CardBody>
         </Card>
-      </div>
+      </header>
 
       {dashboards.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center px-4">
+        <div className="flex-1 flex items-center justify-center">
           <EmptyState
             description="Configura mediciones para comenzar a monitorear en tiempo real"
             icon={FaChartLine}
@@ -203,46 +226,64 @@ export default function DashboardMeasurementsPage() {
           />
         </div>
       ) : (
-        <>
-          <div className="flex-1 overflow-y-auto px-4 min-h-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-2">
-              {dashboards.map((dashboard) => (
-                <MeasurementChart
-                  key={dashboard.id}
-                  history={getHistory(dashboard.measurementId)}
-                  maxValue={dashboard.maxValue ?? 100}
-                  minValue={dashboard.minValue ?? 0}
-                  subtitle={dashboard.measurement.externalId}
-                  timestamp={getTimestamp(dashboard.measurementId)}
-                  title={dashboard.measurement.name}
-                  type={dashboard.measurement.type}
-                  value={values[dashboard.measurementId]?.value ?? undefined}
-                />
-              ))}
+        <div className="flex-1 flex flex-col min-h-0 gap-4">
+          <div
+            className={`flex flex-col min-h-0 ${
+              hasChartConfig ? "h-1/2" : "flex-1"
+            }`}
+          >
+            <div className="flex-1 overflow-y-auto px-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-4">
+                {dashboards.map((dashboard) => (
+                  <MeasurementChart
+                    key={dashboard.id}
+                    history={getHistory(dashboard.measurementId)}
+                    maxValue={dashboard.maxValue ?? 100}
+                    minValue={dashboard.minValue ?? 0}
+                    subtitle={dashboard.measurement.externalId}
+                    timestamp={getTimestamp(dashboard.measurementId)}
+                    title={dashboard.measurement.name}
+                    type={dashboard.measurement.type}
+                    value={values[dashboard.measurementId]?.value ?? undefined}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="flex-shrink-0 px-4 pb-1">
-            <Card>
-              <CardBody className="p-2">
-                <div className="flex items-center justify-center">
-                  <div className="flex items-center gap-3">
-                    <ConnectionIndicator
-                      connectedText="Conexión WebSocket Activa"
-                      disconnectedText="Desconectado"
-                      isConnected={isConnected}
-                    />
-                    <div className="h-3 w-px bg-slate-600" />
-                    <Text color="muted" variant="small">
-                      new_measurement_value
-                    </Text>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        </>
+          {hasChartConfig && selectedGroup && chartMeasurements.length > 0 && (
+            <div className="h-1/2 flex-shrink-0 px-4 flex flex-col">
+              <RealtimeGroupChart
+                maxValue={selectedGroup.chartMaxValue ?? 100}
+                measurementIds={selectedGroup.chartMeasurementIds ?? []}
+                measurements={chartMeasurements}
+                minValue={selectedGroup.chartMinValue ?? 0}
+                timeRange={selectedGroup.chartTimeRange ?? 10}
+              />
+            </div>
+          )}
+        </div>
       )}
+
+      <footer className="flex-shrink-0 mt-4">
+        <Card>
+          <CardBody className="p-2">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <ConnectionIndicator
+                  connectedText="Conexión WebSocket Activa"
+                  disconnectedText="Desconectado"
+                  isConnected={isConnected}
+                />
+                <div className="h-3 w-px bg-slate-600" />
+                <Text color="muted" variant="small">
+                  new_measurement_value
+                </Text>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      </footer>
 
       <CreateDashboardGroupModal
         isLoading={isCreatingGroup}

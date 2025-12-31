@@ -8,6 +8,11 @@ import {
   createMockMeasurement,
 } from '../../../test-helpers';
 import { AlertRuleMode } from '../../domain/entities/alert-rule.entity';
+import type {
+  CreateAlertRuleDto,
+  UpdateAlertRuleDto,
+} from '../dtos/alert-rule.dto';
+import type { UpdateResult } from 'typeorm';
 
 describe('AlertRuleService', () => {
   let service: AlertRuleService;
@@ -301,12 +306,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'Setpoint mode requires operator and setpoint value'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('Setpoint mode requires operator and setpoint value');
     });
 
     it('should throw BadRequestException when SETPOINT mode missing setpoint', async () => {
@@ -322,12 +327,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'Setpoint mode requires operator and setpoint value'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('Setpoint mode requires operator and setpoint value');
     });
 
     it('should throw BadRequestException when operator is invalid', async () => {
@@ -344,12 +349,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'Invalid operator'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('Invalid operator');
     });
 
     it('should accept valid operators', async () => {
@@ -396,12 +401,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'Window mode requires minValue and maxValue'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('Window mode requires minValue and maxValue');
     });
 
     it('should throw BadRequestException when WINDOW mode missing maxValue', async () => {
@@ -417,12 +422,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'Window mode requires minValue and maxValue'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('Window mode requires minValue and maxValue');
     });
 
     it('should throw BadRequestException when minValue >= maxValue', async () => {
@@ -439,12 +444,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'minValue must be less than maxValue'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('minValue must be less than maxValue');
     });
 
     it('should throw BadRequestException when minValue equals maxValue', async () => {
@@ -461,12 +466,12 @@ describe('AlertRuleService', () => {
       measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
 
       // Act & Assert
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.createAlertRule(createDto as any)).rejects.toThrow(
-        'minValue must be less than maxValue'
-      );
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createAlertRule(createDto as CreateAlertRuleDto)
+      ).rejects.toThrow('minValue must be less than maxValue');
     });
 
     it('should throw NotFoundException when Measurement does not exist', async () => {
@@ -608,7 +613,7 @@ describe('AlertRuleService', () => {
 
       // Act & Assert
       await expect(
-        service.updateAlertRule(id, updateDto as any)
+        service.updateAlertRule(id, updateDto as UpdateAlertRuleDto)
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -650,7 +655,9 @@ describe('AlertRuleService', () => {
       const existingRule = createMockAlertRule({ id });
 
       alertRuleRepository.findOne.mockResolvedValue(existingRule);
-      alertRuleRepository.softDelete.mockResolvedValue(undefined as any);
+      alertRuleRepository.softDelete.mockResolvedValue({
+        affected: 1,
+      } as UpdateResult);
 
       // Act
       await service.deleteAlertRule(id);

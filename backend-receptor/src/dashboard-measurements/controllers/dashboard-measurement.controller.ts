@@ -47,6 +47,18 @@ export class DashboardMeasurementController {
     };
   }
 
+  @Get('available')
+  @RequirePermission(Module.MEASUREMENTS, Action.READ)
+  async getAvailableDashboardMeasurements() {
+    const dashboards =
+      await this.dashboardMeasurementService.getAvailableDashboardMeasurements();
+    return {
+      message: 'Available dashboard measurements retrieved successfully',
+      data: dashboards,
+      total: dashboards.length,
+    };
+  }
+
   @Get(':id')
   @RequirePermission(Module.MEASUREMENTS, Action.READ)
   async getDashboardMeasurementById(@Param('id', ParseIntPipe) id: number) {

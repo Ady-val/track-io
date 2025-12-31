@@ -3,7 +3,7 @@ import { AreaDowntimeController } from './area-downtime.controller';
 import { AreaDowntimeService } from '../application/services/area-downtime.service';
 import { AreaDowntimeMappingService } from '../application/services/area-downtime-mapping.service';
 import { TypeOrmAreaDowntimeRepository } from '../domain/repositories/typeorm-area-downtime.repository';
-import { createMockAreaDowntime, createMockEvent } from '../../test-helpers';
+import { createMockAreaDowntime } from '../../test-helpers';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -50,9 +50,13 @@ describe('AreaDowntimeController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 

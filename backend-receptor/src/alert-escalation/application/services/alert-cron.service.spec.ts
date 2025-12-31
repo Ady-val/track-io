@@ -8,6 +8,7 @@ import {
 } from '../../../test-helpers';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { AlertLevel } from '../../domain/entities/alert-escalation-message.entity';
+import type { Event } from '../../../events/domain/entities/event.entity';
 
 describe('AlertCronService', () => {
   let service: AlertCronService;
@@ -115,7 +116,11 @@ describe('AlertCronService', () => {
       );
       alertEscalationService.sendAlertForLevel.mockResolvedValue(undefined);
 
-      await (service as any).processEventEscalation(event);
+      await (
+        service as unknown as {
+          processEventEscalation: (event: Event) => Promise<void>;
+        }
+      ).processEventEscalation(event);
 
       expect(
         alertEscalationService.findConfigByDeviceAndSignal
@@ -135,7 +140,11 @@ describe('AlertCronService', () => {
         null
       );
 
-      await (service as any).processEventEscalation(event);
+      await (
+        service as unknown as {
+          processEventEscalation: (event: Event) => Promise<void>;
+        }
+      ).processEventEscalation(event);
 
       expect(
         alertEscalationService.determineLevelToSend
@@ -154,7 +163,11 @@ describe('AlertCronService', () => {
       );
       alertEscalationService.determineLevelToSend.mockReturnValue(null);
 
-      await (service as any).processEventEscalation(event);
+      await (
+        service as unknown as {
+          processEventEscalation: (event: Event) => Promise<void>;
+        }
+      ).processEventEscalation(event);
 
       expect(alertEscalationService.sendAlertForLevel).not.toHaveBeenCalled();
     });

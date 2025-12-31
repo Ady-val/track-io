@@ -92,7 +92,7 @@ describe('AreaDowntimeService', () => {
 
       expect(areaDowntimeRepository.create).toHaveBeenCalledWith({
         areaId: 1,
-        startAt: expect.any(Date),
+        startAt: expect.any(Date) as unknown as Date,
         isActive: true,
       });
       expect(areaDowntimeEventRepository.create).toHaveBeenCalledWith({
@@ -122,7 +122,7 @@ describe('AreaDowntimeService', () => {
 
       expect(areaDowntimeRepository.update).toHaveBeenCalledWith(1, {
         isActive: false,
-        endsAt: expect.any(Date),
+        endsAt: expect.any(Date) as unknown as Date,
       });
     });
 
@@ -344,7 +344,7 @@ describe('AreaDowntimeService', () => {
       expect(result).toEqual(mockDowntime);
       expect(areaDowntimeRepository.create).toHaveBeenCalledWith({
         areaId,
-        startAt: expect.any(Date),
+        startAt: expect.any(Date) as unknown as Date,
         isActive: true,
       });
       expect(areaDowntimeEventRepository.create).toHaveBeenCalledTimes(2);
@@ -368,7 +368,7 @@ describe('AreaDowntimeService', () => {
       expect(result).toBe(true);
       expect(areaDowntimeRepository.update).toHaveBeenCalledWith(1, {
         isActive: false,
-        endsAt: expect.any(Date),
+        endsAt: expect.any(Date) as unknown as Date,
       });
     });
 

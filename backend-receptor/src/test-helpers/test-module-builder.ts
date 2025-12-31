@@ -4,19 +4,26 @@ import {
   type TestingModuleBuilder,
 } from '@nestjs/testing';
 
+type ModuleMetadata = Parameters<typeof Test.createTestingModule>[0];
+
 export class TestModuleBuilder {
   private builder: TestingModuleBuilder;
 
-  constructor(moduleMetadata: any) {
+  constructor(moduleMetadata: ModuleMetadata) {
     this.builder = Test.createTestingModule(moduleMetadata);
   }
 
-  overrideProvider(provider: any, value: any): this {
+  overrideProvider(
+    provider: string | symbol | (new (...args: unknown[]) => unknown),
+    value: unknown
+  ): this {
     this.builder = this.builder.overrideProvider(provider).useValue(value);
     return this;
   }
 
-  overrideGuard(guard: any): this {
+  overrideGuard(
+    guard: string | symbol | (new (...args: unknown[]) => unknown)
+  ): this {
     this.builder = this.builder.overrideGuard(guard).useValue({
       canActivate: jest.fn(() => true),
     });

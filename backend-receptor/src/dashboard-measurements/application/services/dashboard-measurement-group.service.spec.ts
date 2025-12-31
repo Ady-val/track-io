@@ -1,10 +1,8 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { DataSource, type QueryRunner } from 'typeorm';
 import { DashboardMeasurementGroupService } from './dashboard-measurement-group.service';
 import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
 import { DashboardMeasurementRepository } from '../../domain/repositories/dashboard-measurement.repository';
-import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import {
   createMockDashboardMeasurementGroup,
   createMockDashboardMeasurement,
@@ -19,23 +17,8 @@ describe('DashboardMeasurementGroupService', () => {
   let service: DashboardMeasurementGroupService;
   let groupRepository: jest.Mocked<DashboardMeasurementGroupRepository>;
   let dashboardMeasurementRepository: jest.Mocked<DashboardMeasurementRepository>;
-  let measurementService: jest.Mocked<MeasurementService>;
-  let dataSource: jest.Mocked<DataSource>;
-  let queryRunner: jest.Mocked<QueryRunner>;
 
   beforeEach(async () => {
-    queryRunner = {
-      connect: jest.fn().mockResolvedValue(undefined),
-      startTransaction: jest.fn().mockResolvedValue(undefined),
-      commitTransaction: jest.fn().mockResolvedValue(undefined),
-      rollbackTransaction: jest.fn().mockResolvedValue(undefined),
-      release: jest.fn().mockResolvedValue(undefined),
-      manager: {
-        save: jest.fn(),
-        remove: jest.fn(),
-      },
-    } as unknown as jest.Mocked<QueryRunner>;
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DashboardMeasurementGroupService,
@@ -45,26 +28,22 @@ describe('DashboardMeasurementGroupService', () => {
             findAllWithMeasurements: jest.fn(),
             findByIdWithMeasurements: jest.fn(),
             create: jest.fn(),
+            save: jest.fn(),
             softDelete: jest.fn(),
           },
         },
         {
           provide: DashboardMeasurementRepository,
           useValue: {
-            create: jest.fn(),
             find: jest.fn(),
-          },
-        },
-        {
-          provide: MeasurementService,
-          useValue: {
-            getMeasurementById: jest.fn(),
-          },
-        },
-        {
-          provide: DataSource,
-          useValue: {
-            createQueryRunner: jest.fn().mockReturnValue(queryRunner),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            createQueryBuilder: jest.fn(() => ({
+              update: jest.fn().mockReturnThis(),
+              set: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              execute: jest.fn(),
+            })),
           },
         },
       ],
@@ -75,8 +54,6 @@ describe('DashboardMeasurementGroupService', () => {
     );
     groupRepository = module.get(DashboardMeasurementGroupRepository);
     dashboardMeasurementRepository = module.get(DashboardMeasurementRepository);
-    measurementService = module.get(MeasurementService);
-    dataSource = module.get(DataSource);
   });
 
   afterEach(() => {
@@ -129,14 +106,10 @@ describe('DashboardMeasurementGroupService', () => {
       name: 'Test Group',
       dashboardMeasurements: [
         {
-          measurementId: 1,
-          minValue: 0,
-          maxValue: 100,
+          dashboardMeasurementId: 1,
         },
         {
-          measurementId: 2,
-          minValue: 10,
-          maxValue: 90,
+          dashboardMeasurementId: 2,
         },
       ],
     };
@@ -150,40 +123,43 @@ describe('DashboardMeasurementGroupService', () => {
         id: 1,
         name: createDto.name,
       });
-      const mockMeasurements = [
-        createMockMeasurement({ id: 1 }),
-        createMockMeasurement({ id: 2 }),
-      ];
       const mockDashboardMeasurements = [
         createMockDashboardMeasurement({
           id: 1,
           measurementId: 1,
-          groupId: 1,
+          groupId: null,
+          measurement: createMockMeasurement({ id: 1 }),
         }),
         createMockDashboardMeasurement({
           id: 2,
           measurementId: 2,
-          groupId: 1,
+          groupId: null,
+          measurement: createMockMeasurement({ id: 2 }),
         }),
       ];
 
-      measurementService.getMeasurementById
-        .mockResolvedValueOnce(mockMeasurements[0])
-        .mockResolvedValueOnce(mockMeasurements[1]);
+      dashboardMeasurementRepository.findOne
+        .mockResolvedValueOnce(mockDashboardMeasurements[0])
+        .mockResolvedValueOnce(mockDashboardMeasurements[1]);
       groupRepository.create.mockReturnValue(mockGroup);
-      queryRunner.manager.save
-        .mockResolvedValueOnce(savedGroup)
-        .mockResolvedValueOnce(mockDashboardMeasurements);
+      groupRepository.save.mockResolvedValue(savedGroup);
+      dashboardMeasurementRepository.save
+        .mockResolvedValueOnce({
+          ...mockDashboardMeasurements[0],
+          groupId: savedGroup.id,
+        })
+        .mockResolvedValueOnce({
+          ...mockDashboardMeasurements[1],
+          groupId: savedGroup.id,
+        });
       groupRepository.findByIdWithMeasurements.mockResolvedValue(savedGroup);
 
       const result = await service.createGroup(createDto);
 
       expect(result).toEqual(savedGroup);
-      expect(measurementService.getMeasurementById).toHaveBeenCalledTimes(2);
-      expect(queryRunner.connect).toHaveBeenCalled();
-      expect(queryRunner.startTransaction).toHaveBeenCalled();
-      expect(queryRunner.commitTransaction).toHaveBeenCalled();
-      expect(queryRunner.release).toHaveBeenCalled();
+      expect(dashboardMeasurementRepository.findOne).toHaveBeenCalledTimes(2);
+      expect(groupRepository.save).toHaveBeenCalled();
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalledTimes(2);
     });
 
     it('should throw BadRequestException when dashboardMeasurements array is empty', async () => {
@@ -200,42 +176,86 @@ describe('DashboardMeasurementGroupService', () => {
       );
     });
 
-    it('should throw BadRequestException when minValue >= maxValue', async () => {
+    it('should throw BadRequestException when dashboard measurement not found', async () => {
       const invalidDto: CreateDashboardMeasurementGroupDto = {
         name: 'Test Group',
         dashboardMeasurements: [
           {
-            measurementId: 1,
-            minValue: 100,
-            maxValue: 50,
+            dashboardMeasurementId: 999,
           },
         ],
       };
-      const mockMeasurement = createMockMeasurement({ id: 1 });
 
-      measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
+      dashboardMeasurementRepository.findOne.mockResolvedValue(null);
 
       await expect(service.createGroup(invalidDto)).rejects.toThrow(
         BadRequestException
       );
       await expect(service.createGroup(invalidDto)).rejects.toThrow(
-        'minValue must be less than maxValue for measurement 1'
+        'Dashboard measurements not found: 999'
       );
     });
 
-    it('should rollback transaction on error', async () => {
-      const mockMeasurement = createMockMeasurement({ id: 1 });
+    it('should create group with measurements that are already assigned to another group', async () => {
+      const createDtoWithAssigned: CreateDashboardMeasurementGroupDto = {
+        name: 'Test Group',
+        dashboardMeasurements: [
+          {
+            dashboardMeasurementId: 1,
+          },
+        ],
+      };
+      const mockGroup = createMockDashboardMeasurementGroup({
+        id: 1,
+        name: createDtoWithAssigned.name,
+      });
+      const savedGroup = createMockDashboardMeasurementGroup({
+        id: 1,
+        name: createDtoWithAssigned.name,
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        groupId: 5, // Ya está asignado a otro grupo
+        measurement: createMockMeasurement({ id: 1 }),
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        mockDashboardMeasurement
+      );
+      groupRepository.create.mockReturnValue(mockGroup);
+      groupRepository.save.mockResolvedValue(savedGroup);
+      dashboardMeasurementRepository.save.mockResolvedValue({
+        ...mockDashboardMeasurement,
+        groupId: savedGroup.id, // Se actualiza al nuevo grupo
+      });
+      groupRepository.findByIdWithMeasurements.mockResolvedValue(savedGroup);
+
+      const result = await service.createGroup(createDtoWithAssigned);
+
+      expect(result).toEqual(savedGroup);
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ groupId: savedGroup.id })
+      );
+    });
+
+    it('should throw error when save fails', async () => {
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        groupId: null,
+        measurement: createMockMeasurement({ id: 1 }),
+      });
       const mockGroup = createMockDashboardMeasurementGroup({ id: 1 });
 
-      measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        mockDashboardMeasurement
+      );
       groupRepository.create.mockReturnValue(mockGroup);
-      queryRunner.manager.save.mockRejectedValue(new Error('Database error'));
+      groupRepository.save.mockRejectedValue(new Error('Database error'));
 
       await expect(service.createGroup(createDto)).rejects.toThrow(
         'Database error'
       );
-      expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
-      expect(queryRunner.release).toHaveBeenCalled();
     });
   });
 
@@ -255,19 +275,15 @@ describe('DashboardMeasurementGroupService', () => {
         name: updateDto.name,
       });
 
-      groupRepository.findByIdWithMeasurements.mockResolvedValue(existingGroup);
-      queryRunner.manager.save.mockResolvedValue(updatedGroup);
-      groupRepository.findByIdWithMeasurements.mockResolvedValueOnce(
-        existingGroup
-      );
-      groupRepository.findByIdWithMeasurements.mockResolvedValueOnce(
-        updatedGroup
-      );
+      groupRepository.findByIdWithMeasurements
+        .mockResolvedValueOnce(existingGroup)
+        .mockResolvedValueOnce(updatedGroup);
+      groupRepository.save.mockResolvedValue(updatedGroup);
 
       const result = await service.updateGroup(id, updateDto);
 
       expect(result).toEqual(updatedGroup);
-      expect(queryRunner.commitTransaction).toHaveBeenCalled();
+      expect(groupRepository.save).toHaveBeenCalled();
     });
 
     it('should update dashboard measurements successfully', async () => {
@@ -275,52 +291,50 @@ describe('DashboardMeasurementGroupService', () => {
       const updateDtoWithMeasurements: UpdateDashboardMeasurementGroupDto = {
         dashboardMeasurements: [
           {
-            measurementId: 3,
-            minValue: 20,
-            maxValue: 80,
+            dashboardMeasurementId: 3,
           },
         ],
       };
-      const existingGroup = createMockDashboardMeasurementGroup({ id });
-      const existingMeasurements = [
-        createMockDashboardMeasurement({ id: 1, groupId: id }),
-        createMockDashboardMeasurement({ id: 2, groupId: id }),
-      ];
-      const mockMeasurement = createMockMeasurement({ id: 3 });
-      const newDashboardMeasurements = [
-        createMockDashboardMeasurement({
-          id: 3,
-          measurementId: 3,
-          groupId: id,
-        }),
-      ];
+      const existingGroup = createMockDashboardMeasurementGroup({
+        id,
+        dashboardMeasurements: [
+          createMockDashboardMeasurement({ id: 1, groupId: id }),
+          createMockDashboardMeasurement({ id: 2, groupId: id }),
+        ],
+      });
+      const newDashboardMeasurement = createMockDashboardMeasurement({
+        id: 3,
+        measurementId: 3,
+        groupId: 10, // Ya está asignado a otro grupo
+        measurement: createMockMeasurement({ id: 3 }),
+      });
       const updatedGroup = createMockDashboardMeasurementGroup({ id });
 
-      groupRepository.findByIdWithMeasurements.mockResolvedValueOnce(
-        existingGroup
+      groupRepository.findByIdWithMeasurements
+        .mockResolvedValueOnce(existingGroup)
+        .mockResolvedValueOnce(updatedGroup);
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        newDashboardMeasurement
       );
-      dashboardMeasurementRepository.find.mockResolvedValue(
-        existingMeasurements
-      );
-      measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
-      dashboardMeasurementRepository.create.mockReturnValue(
-        newDashboardMeasurements[0]
-      );
-      queryRunner.manager.save
-        .mockResolvedValueOnce(updatedGroup)
-        .mockResolvedValueOnce(newDashboardMeasurements);
-      queryRunner.manager.remove.mockResolvedValue(undefined);
-      groupRepository.findByIdWithMeasurements.mockResolvedValueOnce(
-        updatedGroup
-      );
+      const mockQueryBuilder = {
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 2 }),
+      };
+      dashboardMeasurementRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(mockQueryBuilder);
+      dashboardMeasurementRepository.save.mockResolvedValue({
+        ...newDashboardMeasurement,
+        groupId: id,
+      });
+      groupRepository.save.mockResolvedValue(updatedGroup);
 
       const result = await service.updateGroup(id, updateDtoWithMeasurements);
 
       expect(result).toEqual(updatedGroup);
-      expect(queryRunner.manager.remove).toHaveBeenCalledWith(
-        existingMeasurements
-      );
-      expect(queryRunner.commitTransaction).toHaveBeenCalled();
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException when dashboardMeasurements array is empty', async () => {
@@ -340,47 +354,87 @@ describe('DashboardMeasurementGroupService', () => {
       );
     });
 
-    it('should throw BadRequestException when minValue >= maxValue in update', async () => {
+    it('should throw BadRequestException when dashboard measurement not found in update', async () => {
       const id = 1;
       const invalidUpdateDto: UpdateDashboardMeasurementGroupDto = {
         dashboardMeasurements: [
           {
-            measurementId: 1,
-            minValue: 100,
-            maxValue: 50,
+            dashboardMeasurementId: 999,
           },
         ],
       };
       const existingGroup = createMockDashboardMeasurementGroup({ id });
-      const existingMeasurements: never[] = [];
-      const mockMeasurement = createMockMeasurement({ id: 1 });
 
       groupRepository.findByIdWithMeasurements.mockResolvedValue(existingGroup);
-      dashboardMeasurementRepository.find.mockResolvedValue(
-        existingMeasurements
-      );
-      measurementService.getMeasurementById.mockResolvedValue(mockMeasurement);
+      dashboardMeasurementRepository.findOne.mockResolvedValue(null);
 
       await expect(service.updateGroup(id, invalidUpdateDto)).rejects.toThrow(
         BadRequestException
       );
       await expect(service.updateGroup(id, invalidUpdateDto)).rejects.toThrow(
-        'minValue must be less than maxValue for measurement 1'
+        'Dashboard measurements not found: 999'
       );
     });
 
-    it('should rollback transaction on error', async () => {
+    it('should update group with measurements that are already assigned to another group', async () => {
+      const id = 1;
+      const updateDtoWithMeasurements: UpdateDashboardMeasurementGroupDto = {
+        dashboardMeasurements: [
+          {
+            dashboardMeasurementId: 5,
+          },
+        ],
+      };
+      const existingGroup = createMockDashboardMeasurementGroup({
+        id,
+        dashboardMeasurements: [],
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 5,
+        groupId: 10, // Ya está asignado a otro grupo
+        measurement: createMockMeasurement({ id: 1 }),
+      });
+      const updatedGroup = createMockDashboardMeasurementGroup({ id });
+
+      groupRepository.findByIdWithMeasurements
+        .mockResolvedValueOnce(existingGroup)
+        .mockResolvedValueOnce(updatedGroup);
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        mockDashboardMeasurement
+      );
+      const mockQueryBuilder = {
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+      };
+      dashboardMeasurementRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(mockQueryBuilder);
+      dashboardMeasurementRepository.save.mockResolvedValue({
+        ...mockDashboardMeasurement,
+        groupId: id,
+      });
+      groupRepository.save.mockResolvedValue(updatedGroup);
+
+      const result = await service.updateGroup(id, updateDtoWithMeasurements);
+
+      expect(result).toEqual(updatedGroup);
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ groupId: id })
+      );
+    });
+
+    it('should throw error when save fails', async () => {
       const id = 1;
       const existingGroup = createMockDashboardMeasurementGroup({ id });
 
       groupRepository.findByIdWithMeasurements.mockResolvedValue(existingGroup);
-      queryRunner.manager.save.mockRejectedValue(new Error('Database error'));
+      groupRepository.save.mockRejectedValue(new Error('Database error'));
 
       await expect(service.updateGroup(id, updateDto)).rejects.toThrow(
         'Database error'
       );
-      expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
-      expect(queryRunner.release).toHaveBeenCalled();
     });
   });
 

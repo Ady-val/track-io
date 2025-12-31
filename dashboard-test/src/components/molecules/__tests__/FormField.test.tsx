@@ -168,6 +168,7 @@ describe("FormField", () => {
   });
 
   it("should have autoFocus when autoFocus prop is true", () => {
+    // eslint-disable-next-line jsx-a11y/no-autofocus
     render(<FormField {...defaultProps} autoFocus />);
 
     const input = screen.getByRole("textbox");

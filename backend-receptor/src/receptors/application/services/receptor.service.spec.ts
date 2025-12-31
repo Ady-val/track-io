@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
+import type { UpdateResult } from 'typeorm';
 import { ReceptorService } from './receptor.service';
 import { ReceptorRepository } from '../../domain/repositories/receptor.repository';
 import { createMockReceptor } from '../../../test-helpers';
@@ -265,7 +266,7 @@ describe('ReceptorService', () => {
       const mockReceptor = createMockReceptor({ id });
 
       repository.findOne.mockResolvedValue(mockReceptor);
-      repository.softDelete.mockResolvedValue({ affected: 1 } as any);
+      repository.softDelete.mockResolvedValue({ affected: 1 } as UpdateResult);
 
       await service.deleteReceptor(id);
 

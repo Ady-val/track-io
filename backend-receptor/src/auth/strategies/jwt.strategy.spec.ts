@@ -72,7 +72,7 @@ describe('JwtStrategy', () => {
     it('should use default secret when JWT_SECRET is not configured', () => {
       configService.get.mockReturnValue(undefined);
 
-      const module: TestingModule = Test.createTestingModule({
+      const _module: TestingModule = Test.createTestingModule({
         providers: [
           JwtStrategy,
           {

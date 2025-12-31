@@ -6,7 +6,11 @@ import { CreateEscalationConfigWithMessagesDto } from '../dtos/create-escalation
 import { SaveEscalationConfigDto } from '../dtos/save-escalation-config.dto';
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
-import { MessageType } from '../../domain/entities/alert-escalation-message.entity';
+import {
+  MessageType,
+  AlertLevel,
+} from '../../domain/entities/alert-escalation-message.entity';
+import type { CreateAlertEscalationMessageDto } from '../../domain/repositories/alert-escalation-message.repository';
 
 @Injectable()
 export class AlertEscalationConfigService {
@@ -34,10 +38,12 @@ export class AlertEscalationConfigService {
 
     if (createDto.messages && createDto.messages.length > 0) {
       for (const messageDto of createDto.messages) {
-        const messageData: any = {
+        const messageData: CreateAlertEscalationMessageDto & {
+          color?: string;
+        } = {
           escalationConfigId: config.id,
-          level: messageDto.level as any,
-          messageType: messageDto.messageType as any,
+          level: messageDto.level as AlertLevel,
+          messageType: messageDto.messageType as MessageType,
           targetId: messageDto.targetId,
           message: messageDto.message,
         };
@@ -49,9 +55,10 @@ export class AlertEscalationConfigService {
           messageData.color = messageDto.deviceColorId;
         } else if (
           (messageDto.messageType as MessageType) === MessageType.TORRETA &&
-          (messageDto as any).color
+          'color' in messageDto &&
+          typeof messageDto.color === 'string'
         ) {
-          const hexColor = (messageDto as any).color as string;
+          const hexColor = messageDto.color;
           const torretaColor =
             await this.torretaColorService.getTorretaColorByHtmlColor(
               hexColor.toUpperCase().trim()
@@ -89,7 +96,9 @@ export class AlertEscalationConfigService {
 
     let config;
     if (existingConfig) {
-      const updateData: any = {
+      const updateData: Partial<UpdateAlertEscalationConfigDto> & {
+        endpointUrl: string;
+      } = {
         endpointUrl: 'http://host.docker.internal:1880/events',
       };
       if (dto.warningDelayMinutes !== undefined)
@@ -107,7 +116,11 @@ export class AlertEscalationConfigService {
         updateData
       );
     } else {
-      const createData: any = {
+      const createData: Partial<CreateAlertEscalationConfigDto> & {
+        deviceId: number;
+        deviceSignalId: number;
+        endpointUrl: string;
+      } = {
         deviceId: dto.deviceId,
         deviceSignalId: dto.deviceSignalId,
         endpointUrl: 'http://host.docker.internal:1880/events',
@@ -131,10 +144,12 @@ export class AlertEscalationConfigService {
 
     if (dto.messages && dto.messages.length > 0 && config) {
       for (const messageDto of dto.messages) {
-        const messageData: any = {
+        const messageData: CreateAlertEscalationMessageDto & {
+          color?: string;
+        } = {
           escalationConfigId: config.id,
-          level: messageDto.level as any,
-          messageType: messageDto.messageType as any,
+          level: messageDto.level as AlertLevel,
+          messageType: messageDto.messageType as MessageType,
           targetId: messageDto.targetId,
           message: messageDto.message,
         };
@@ -146,9 +161,10 @@ export class AlertEscalationConfigService {
           messageData.color = messageDto.deviceColorId;
         } else if (
           (messageDto.messageType as MessageType) === MessageType.TORRETA &&
-          (messageDto as any).color
+          'color' in messageDto &&
+          typeof messageDto.color === 'string'
         ) {
-          const hexColor = (messageDto as any).color as string;
+          const hexColor = messageDto.color;
           const torretaColor =
             await this.torretaColorService.getTorretaColorByHtmlColor(
               hexColor.toUpperCase().trim()

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, type DeepPartial } from 'typeorm';
 import { EventAlertLog } from '../entities/event-alert-log.entity';
 import { AlertLevel } from '../entities/alert-escalation-message.entity';
 
@@ -8,9 +8,9 @@ export interface CreateEventAlertLogDto {
   eventId: number;
   level: AlertLevel;
   sentAt: Date;
-  messagesSent: any[];
+  messagesSent: unknown[];
   success: boolean;
-  errorMessage?: string | undefined;
+  errorMessage?: string;
   endpointUrl: string;
 }
 
@@ -22,7 +22,7 @@ export class EventAlertLogRepository {
   ) {}
 
   async create(dto: CreateEventAlertLogDto): Promise<EventAlertLog> {
-    const log = this.repository.create(dto as any);
+    const log = this.repository.create(dto as DeepPartial<EventAlertLog>);
     const result = await this.repository.save(log);
     return Array.isArray(result) ? result[0]! : result;
   }

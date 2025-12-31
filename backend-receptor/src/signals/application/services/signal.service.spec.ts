@@ -18,6 +18,7 @@ import {
   createMockEvent,
 } from '../../../test-helpers';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
+import type { Event } from '../../../events/domain/entities/event.entity';
 
 describe('SignalService', () => {
   let service: SignalService;
@@ -875,12 +876,13 @@ describe('SignalService', () => {
       expect(
         eventRepository.findInProgressByDeviceAndSignal
       ).toHaveBeenCalledWith(mockDevice.id, mockDeviceSignal.id);
+      const expectedData: Partial<Event> = {
+        durationSeconds: expect.any(Number) as unknown as number,
+      };
       expect(eventRepository.updateStatus).toHaveBeenCalledWith(
         mockInProgressEvent.id,
         EventStatus.CLOSED,
-        expect.objectContaining({
-          durationSeconds: expect.any(Number),
-        })
+        expect.objectContaining(expectedData)
       );
     });
 
@@ -1227,12 +1229,13 @@ describe('SignalService', () => {
       await service['closeEvent'](mockEvent);
 
       // Assert
+      const expectedData: Partial<Event> = {
+        durationSeconds: expect.any(Number) as unknown as number,
+      };
       expect(eventRepository.updateStatus).toHaveBeenCalledWith(
         mockEvent.id,
         EventStatus.CLOSED,
-        expect.objectContaining({
-          durationSeconds: expect.any(Number),
-        })
+        expect.objectContaining(expectedData)
       );
       // Verify durationSeconds is a positive number
       const callArgs = eventRepository.updateStatus.mock.calls[0];
@@ -1255,12 +1258,13 @@ describe('SignalService', () => {
       await service['closeEvent'](mockEvent);
 
       // Assert
+      const expectedData: Partial<Event> = {
+        durationSeconds: expect.any(Number) as unknown as number,
+      };
       expect(eventRepository.updateStatus).toHaveBeenCalledWith(
         mockEvent.id,
         EventStatus.CLOSED,
-        expect.objectContaining({
-          durationSeconds: expect.any(Number),
-        })
+        expect.objectContaining(expectedData)
       );
     });
 
@@ -1305,8 +1309,8 @@ describe('SignalService', () => {
           area: mockClosedEvent.areaName,
           department: mockClosedEvent.departmentName,
           status: mockClosedEvent.status,
-          duration: expect.any(Number),
-        })
+          duration: expect.any(Number) as unknown as number,
+        } as Partial<Event>)
       );
     });
 

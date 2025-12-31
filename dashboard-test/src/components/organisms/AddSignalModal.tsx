@@ -69,11 +69,11 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
 
   return (
     <Modal
+      data-cy="add-signal-modal"
       isOpen={isOpen}
       size="md"
       title="Agregar Señal al Dispositivo"
       onClose={onClose}
-      data-cy="add-signal-modal"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-2 mb-4">
@@ -85,34 +85,32 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
 
         <div className="space-y-4">
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="signal-name"
-            >
-              Nombre del Botón
-            </label>
             <Input
               autoFocus
+              fullWidth
               required
               id="signal-name"
+              label="Nombre del Botón"
+              labelPlacement="outside"
               placeholder="Ej: Botón 1"
+              size="md"
               value={name}
+              variant="bordered"
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="signal-external-value"
-            >
-              External Value ID
-            </label>
             <Input
+              fullWidth
               required
               id="signal-external-value"
+              label="External Value ID"
+              labelPlacement="outside"
               placeholder="Ej: 432"
+              size="md"
               value={externalValueId}
+              variant="bordered"
               onChange={(e) => setExternalValueId(e.target.value)}
             />
           </div>

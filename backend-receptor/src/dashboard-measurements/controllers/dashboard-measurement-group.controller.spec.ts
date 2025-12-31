@@ -32,9 +32,13 @@ describe('DashboardMeasurementGroupController', () => {
         },
       ],
     })
-      .overrideGuard(mockJwtAuthGuard.constructor as any)
+      .overrideGuard(
+        mockJwtAuthGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockJwtAuthGuard)
-      .overrideGuard(mockPermissionGuard.constructor as any)
+      .overrideGuard(
+        mockPermissionGuard.constructor as unknown as new () => unknown
+      )
       .useValue(mockPermissionGuard)
       .compile();
 
@@ -102,9 +106,7 @@ describe('DashboardMeasurementGroupController', () => {
         name: 'Test Group',
         dashboardMeasurements: [
           {
-            measurementId: 1,
-            minValue: 0,
-            maxValue: 100,
+            dashboardMeasurementId: 1,
           },
         ],
       };

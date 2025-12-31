@@ -219,7 +219,7 @@ describe('AuthService', () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockUser.id);
       expect(result?.username).toBe(mockUser.username);
-      expect((result as any).password).toBeUndefined();
+      expect((result as { password?: string }).password).toBeUndefined();
     });
 
     it('should return null when password is invalid', async () => {
@@ -261,7 +261,14 @@ describe('AuthService', () => {
         },
       ];
 
-      userService.getUserPermissions.mockResolvedValue(mockPermissions as any);
+      userService.getUserPermissions.mockResolvedValue(
+        mockPermissions as Array<{
+          id: number;
+          module: string;
+          action: string;
+          description?: string;
+        }>
+      );
 
       const result = await service.getUserPermissions(userId);
 
