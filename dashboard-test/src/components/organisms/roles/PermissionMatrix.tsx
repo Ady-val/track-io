@@ -14,8 +14,8 @@ import { Modal } from "../Modal";
 
 interface PermissionMatrixProps {
   role: Role;
-  permissions: Permission[];
-  modules: string[];
+  permissions?: Permission[];
+  modules?: string[];
   isLoading?: boolean;
   isOpen: boolean;
   onClose: () => void;
@@ -32,12 +32,16 @@ const ACTION_LABELS: Record<string, string> = {
 
 export function PermissionMatrix({
   role,
-  permissions,
-  modules,
+  permissions = [],
+  modules = [],
   isLoading = false,
   isOpen,
   onClose,
 }: PermissionMatrixProps) {
+  // Asegurar que permissions y modules siempre sean arrays válidos
+  const safePermissions = Array.isArray(permissions) ? permissions : [];
+  const safeModules = Array.isArray(modules) ? modules : [];
+
   const { data: rolePermissionsData, isLoading: isLoadingPermissions } =
     useRolePermissions(role.id);
   const assignPermissionsMutation = useAssignPermissions();
@@ -84,14 +88,13 @@ export function PermissionMatrix({
   const permissionMap = useMemo(() => {
     const map = new Map<string, Permission>();
 
-    permissions.forEach((perm) => {
+    safePermissions.forEach((perm) => {
       const key = `${perm.module}:${perm.action}`;
-
       map.set(key, perm);
     });
 
     return map;
-  }, [permissions]);
+  }, [safePermissions]);
 
   const handleTogglePermission = (module: string, action: string) => {
     const key = `${module}:${action}`;
@@ -110,7 +113,7 @@ export function PermissionMatrix({
   };
 
   const handleSelectAllModule = (module: string) => {
-    const modulePermissions = permissions.filter((p) => p.module === module);
+    const modulePermissions = safePermissions.filter((p) => p.module === module);
     const allSelected = modulePermissions.every((p) =>
       selectedPermissions.has(p.id)
     );
@@ -128,12 +131,12 @@ export function PermissionMatrix({
   };
 
   const handleSelectAll = () => {
-    const allSelected = permissions.every((p) => selectedPermissions.has(p.id));
+    const allSelected = safePermissions.every((p) => selectedPermissions.has(p.id));
 
     if (allSelected) {
       setSelectedPermissions(new Set());
     } else {
-      setSelectedPermissions(new Set(permissions.map((p) => p.id)));
+      setSelectedPermissions(new Set(safePermissions.map((p) => p.id)));
     }
   };
 
@@ -180,7 +183,7 @@ export function PermissionMatrix({
   };
 
   const isModuleFullySelected = (module: string) => {
-    const modulePermissions = permissions.filter((p) => p.module === module);
+    const modulePermissions = safePermissions.filter((p) => p.module === module);
 
     return (
       modulePermissions.length > 0 &&
@@ -189,7 +192,7 @@ export function PermissionMatrix({
   };
 
   const isModulePartiallySelected = (module: string) => {
-    const modulePermissions = permissions.filter((p) => p.module === module);
+    const modulePermissions = safePermissions.filter((p) => p.module === module);
     const selectedCount = modulePermissions.filter((p) =>
       selectedPermissions.has(p.id)
     ).length;
@@ -197,8 +200,8 @@ export function PermissionMatrix({
     return selectedCount > 0 && selectedCount < modulePermissions.length;
   };
 
-  const allSelected = permissions.every((p) => selectedPermissions.has(p.id));
-  const someSelected = permissions.some((p) => selectedPermissions.has(p.id));
+  const allSelected = safePermissions.every((p) => selectedPermissions.has(p.id));
+  const someSelected = safePermissions.some((p) => selectedPermissions.has(p.id));
 
   return (
     <Modal
@@ -225,17 +228,17 @@ export function PermissionMatrix({
           </div>
         </div>
 
-        <div className="max-h-96 overflow-y-auto">
+        <div>
           {isLoading || isLoadingPermissions ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
-          ) : modules.length === 0 || permissions.length === 0 ? (
+          ) : safeModules.length === 0 || safePermissions.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
               <p>
-                {modules.length === 0 && permissions.length === 0
+                {safeModules.length === 0 && safePermissions.length === 0
                   ? "No hay módulos ni permisos disponibles."
-                  : modules.length === 0
+                  : safeModules.length === 0
                     ? "No hay módulos disponibles."
                     : "No hay permisos disponibles."}
               </p>
@@ -258,10 +261,8 @@ export function PermissionMatrix({
                 </tr>
               </thead>
               <tbody>
-                {modules.map((module) => {
-                  const modulePermissions = permissions.filter(
-                    (p) => p.module === module
-                  );
+                {safeModules.map((module) => {
+                  const modulePermissions = safePermissions.filter((p) => p.module === module);
 
                   if (modulePermissions.length === 0) return null;
 

@@ -12,6 +12,7 @@ export interface ModalProps {
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   hideHeader?: boolean;
+  footer?: React.ReactNode;
   "data-cy"?: string;
 }
 
@@ -22,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = "md",
   hideHeader = false,
+  footer,
   "data-cy": dataCy,
 }) => {
   useEffect(() => {
@@ -87,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
       >
         <Card className="bg-slate-800 border-slate-600 shadow-2xl flex flex-col h-full max-h-[85vh]">
           <CardBody className="p-0 flex flex-col h-full overflow-hidden">
-            {/* Header - Minimalista */}
+            {/* Header - Fijo */}
             {!hideHeader && (
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 flex-shrink-0">
                 {typeof title === "string" ? (
@@ -107,12 +109,19 @@ export const Modal: React.FC<ModalProps> = ({
               </div>
             )}
 
-            {/* Content */}
+            {/* Content - Scrollable */}
             <div
-              className={`${hideHeader ? "p-6" : "p-6"} flex flex-col flex-1 min-h-0 overflow-hidden`}
+              className={`${hideHeader ? "p-6" : "p-6"} ${footer ? "pb-0" : ""} flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden`}
             >
               {children}
             </div>
+
+            {/* Footer - Fijo */}
+            {footer && (
+              <div className="px-6 py-4 border-t border-slate-700/50 flex-shrink-0">
+                {footer}
+              </div>
+            )}
           </CardBody>
         </Card>
       </div>

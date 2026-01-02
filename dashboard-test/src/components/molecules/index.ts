@@ -56,3 +56,6 @@ export type { PaginationProps } from "./Pagination";
 
 export { ConfirmationModal } from "./ConfirmationModal";
 export type { ConfirmationModalProps } from "./ConfirmationModal";
+
+export { FieldError } from "./FieldError";
+export type { FieldErrorProps } from "./FieldError";

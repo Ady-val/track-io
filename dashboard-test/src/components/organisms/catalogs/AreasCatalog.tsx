@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
 import {
@@ -8,15 +9,15 @@ import {
   useDeleteArea,
   type Area,
 } from "@/hooks/useCatalogs";
+import { useFormValidation } from "@/hooks/useFormValidation";
 import { useHasPermission } from "@/hooks/useHasPermission";
-import { useModalError } from "@/hooks/useModalError";
+import { createAreaSchema, updateAreaSchema } from "@/lib/validations/schemas";
 
-import { ErrorMessage, ValidationErrorList } from "../../atoms";
-import { Button } from "../../atoms/Button";
+import { Button, ErrorMessage, Input, ValidationErrorList } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
+import { FieldError } from "../../molecules/FieldError";
 import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
 
@@ -36,10 +37,6 @@ export function AreasCatalog() {
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [selectedAreaForTorreta, setSelectedAreaForTorreta] =
     useState<Area | null>(null);
-  const [formData, setFormData] = useState({ name: "" });
-  const [formErrors, setFormErrors] = useState<{ name?: string }>({});
-
-  const errorHandling = useModalError("Error al procesar la solicitud");
 
   const itemsPerPage = 10;
   const offset = (currentPage - 1) * itemsPerPage;
@@ -57,6 +54,28 @@ export function AreasCatalog() {
   const areas = areasData?.data ?? [];
   const totalItems = areasData?.total ?? 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Form para crear
+  const createForm = useFormValidation({
+    schema: createAreaSchema,
+    defaultValues: {
+      name: "",
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Área creada exitosamente",
+  });
+
+  // Form para editar
+  const editForm = useFormValidation({
+    schema: updateAreaSchema,
+    defaultValues: {
+      name: selectedArea?.name ?? "",
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Área actualizada exitosamente",
+  });
 
   const handleTorretaConfig = (area: Area) => {
     setSelectedAreaForTorreta(area);
@@ -95,17 +114,13 @@ export function AreasCatalog() {
   ];
 
   const handleCreate = () => {
-    setFormData({ name: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({ name: "" });
     setIsCreateModalOpen(true);
   };
 
   const handleEdit = (area: Area) => {
     setSelectedArea(area);
-    setFormData({ name: area.name });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    editForm.resetForm({ name: area.name });
     setIsEditModalOpen(true);
   };
 
@@ -114,44 +129,39 @@ export function AreasCatalog() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errors: { name?: string } = {};
-
-    if (!formData.name.trim()) {
-      errors.name = "El nombre es requerido";
+  const handleCreateSubmit = createForm.form.handleSubmit(async (data) => {
+    try {
+      createForm.clearAllErrors();
+      await createAreaMutation.mutateAsync(data);
+      createForm.toast.success("Área creada exitosamente");
+      createForm.resetForm({ name: "" });
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      createForm.handleBackendError(error);
     }
+  });
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      errorHandling.setValidationErrors(
-        Object.values(errors).filter((err): err is string => !!err)
-      );
-
-      return;
-    }
+  const handleEditSubmit = editForm.form.handleSubmit(async (data) => {
+    if (!selectedArea) return;
 
     try {
-      errorHandling.clearErrors();
-
-      if (isCreateModalOpen) {
-        await createAreaMutation.mutateAsync(formData);
-        setIsCreateModalOpen(false);
-      } else if (isEditModalOpen && selectedArea) {
-        await updateAreaMutation.mutateAsync({
-          id: selectedArea.id,
-          data: formData,
-        });
-        setIsEditModalOpen(false);
-      }
-
-      setFormData({ name: "" });
-      setFormErrors({});
+      editForm.clearAllErrors();
+      // Asegurar que data tenga name como string, no undefined
+      const updateData = {
+        name: data.name ?? selectedArea.name,
+      };
+      await updateAreaMutation.mutateAsync({
+        id: selectedArea.id,
+        data: updateData,
+      });
+      editForm.toast.success("Área actualizada exitosamente");
+      editForm.resetForm({ name: updateData.name });
+      setIsEditModalOpen(false);
+      setSelectedArea(null);
     } catch (error) {
-      errorHandling.handleApiError(error, "Error al guardar el área");
+      editForm.handleBackendError(error);
     }
-  };
+  });
 
   const handleDeleteConfirm = async () => {
     if (selectedArea) {
@@ -159,20 +169,24 @@ export function AreasCatalog() {
         await deleteAreaMutation.mutateAsync(selectedArea.id);
         setIsDeleteModalOpen(false);
         setSelectedArea(null);
-      } catch (error) {
-        errorHandling.handleApiError(error);
+      } catch {
+        // El error se maneja automáticamente por la mutación
       }
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({ name: "" });
+    if (selectedArea?.name) {
+      editForm.resetForm({ name: selectedArea.name });
+    }
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedArea(null);
   };
+
+  const isCreateLoading = createAreaMutation.isPending;
+  const isEditLoading = updateAreaMutation.isPending;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -222,45 +236,62 @@ export function AreasCatalog() {
         </div>
       )}
 
+      {/* Modal de Crear */}
       <Modal
-        data-cy={isCreateModalOpen ? "create-area-modal" : "edit-area-modal"}
-        isOpen={isCreateModalOpen || isEditModalOpen}
-        title={isCreateModalOpen ? "Crear Área" : "Editar Área"}
+        data-cy="create-area-modal"
+        isOpen={isCreateModalOpen}
+        title="Crear Área"
         onClose={handleCancel}
       >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {errorHandling.validationErrors.length > 0 && (
-            <ValidationErrorList errors={errorHandling.validationErrors} />
+        <form className="space-y-4" onSubmit={handleCreateSubmit}>
+          {createForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={createForm.modalError.validationErrors}
+            />
           )}
 
-          {errorHandling.serverError && (
+          {createForm.modalError.serverError && (
             <ErrorMessage
-              isServerError={errorHandling.parsedError?.isServerError ?? false}
-              message={errorHandling.serverError}
+              isServerError={
+                createForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={createForm.modalError.serverError}
               type="server"
             />
           )}
 
-          <FormField
-            autoFocus
-            required
-            error={formErrors.name}
-            label="Nombre"
-            name="name"
-            placeholder="Ingresa el nombre del área"
-            value={formData.name}
-            onChange={(value) =>
-              setFormData({ ...formData, name: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="name"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del área"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
               color="default"
-              disabled={
-                createAreaMutation.isPending || updateAreaMutation.isPending
-              }
+              disabled={isCreateLoading}
               size="md"
               type="button"
               variant="solid"
@@ -272,17 +303,92 @@ export function AreasCatalog() {
               className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
-                createAreaMutation.isPending || updateAreaMutation.isPending
+                isCreateLoading || createForm.form.formState.isSubmitting
               }
+              isLoading={isCreateLoading}
               size="md"
               type="submit"
               variant="solid"
             >
-              {createAreaMutation.isPending || updateAreaMutation.isPending
-                ? "Guardando..."
-                : isCreateModalOpen
-                  ? "Crear"
-                  : "Actualizar"}
+              Crear
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Editar */}
+      <Modal
+        data-cy="edit-area-modal"
+        isOpen={isEditModalOpen}
+        title="Editar Área"
+        onClose={handleCancel}
+      >
+        <form className="space-y-4" onSubmit={handleEditSubmit}>
+          {editForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={editForm.modalError.validationErrors}
+            />
+          )}
+
+          {editForm.modalError.serverError && (
+            <ErrorMessage
+              isServerError={
+                editForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={editForm.modalError.serverError}
+              type="server"
+            />
+          )}
+
+          <div>
+            <Controller
+              name="name"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del área"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="default"
+              disabled={isEditLoading}
+              size="md"
+              type="button"
+              variant="solid"
+              onPress={handleCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="primary"
+              disabled={isEditLoading || editForm.form.formState.isSubmitting}
+              isLoading={isEditLoading}
+              size="md"
+              type="submit"
+              variant="solid"
+            >
+              Actualizar
             </Button>
           </div>
         </form>

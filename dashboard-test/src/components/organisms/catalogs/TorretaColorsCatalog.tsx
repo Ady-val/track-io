@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
 import {
@@ -9,14 +10,17 @@ import {
   type TorretaColor,
 } from "@/hooks/useCatalogs";
 import { useHasPermission } from "@/hooks/useHasPermission";
-import { useModalError } from "@/hooks/useModalError";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import {
+  createTorretaColorSchema,
+  updateTorretaColorSchema,
+} from "@/lib/validations/schemas";
 
-import { ErrorMessage, ValidationErrorList } from "../../atoms";
-import { Button } from "../../atoms/Button";
+import { ErrorMessage, ValidationErrorList, Button, Input } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
+import { FieldError } from "../../molecules/FieldError";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function TorretaColorsCatalog() {
@@ -28,17 +32,6 @@ export function TorretaColorsCatalog() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState<TorretaColor | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    htmlColor: "#000000",
-    deviceColorId: "",
-  });
-  const [formErrors, setFormErrors] = useState<{
-    name?: string;
-    deviceColorId?: string;
-  }>({});
-
-  const errorHandling = useModalError("Error al procesar la solicitud");
 
   const { data: colorsData, isLoading } = useTorretaColors();
 
@@ -50,6 +43,32 @@ export function TorretaColorsCatalog() {
   const filteredColors = colors.filter((color: { name: string }) =>
     color.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Form para crear
+  const createForm = useFormValidation({
+    schema: createTorretaColorSchema,
+    defaultValues: {
+      name: "",
+      htmlColor: "#000000",
+      deviceColorId: "",
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Color creado exitosamente",
+  });
+
+  // Form para editar
+  const editForm = useFormValidation({
+    schema: updateTorretaColorSchema,
+    defaultValues: {
+      name: selectedColor?.name ?? "",
+      htmlColor: selectedColor?.htmlColor ?? "#000000",
+      deviceColorId: selectedColor?.deviceColorId ?? "",
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Color actualizado exitosamente",
+  });
 
   const columns: Array<TableColumn<TorretaColor>> = [
     {
@@ -86,25 +105,21 @@ export function TorretaColorsCatalog() {
   ];
 
   const handleCreate = () => {
-    setFormData({
+    createForm.resetForm({
       name: "",
       htmlColor: "#000000",
       deviceColorId: "",
     });
-    setFormErrors({});
-    errorHandling.clearErrors();
     setIsCreateModalOpen(true);
   };
 
   const handleEdit = (color: TorretaColor) => {
     setSelectedColor(color);
-    setFormData({
+    editForm.resetForm({
       name: color.name,
       htmlColor: color.htmlColor,
       deviceColorId: color.deviceColorId,
     });
-    setFormErrors({});
-    errorHandling.clearErrors();
     setIsEditModalOpen(true);
   };
 
@@ -113,51 +128,44 @@ export function TorretaColorsCatalog() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errors: { name?: string; deviceColorId?: string } = {};
-
-    if (!formData.name.trim()) {
-      errors.name = "El nombre es requerido";
-    }
-    if (!formData.deviceColorId.trim()) {
-      errors.deviceColorId = "El ID del dispositivo es requerido";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      errorHandling.setValidationErrors(
-        Object.values(errors).filter((err): err is string => !!err)
-      );
-
-      return;
-    }
-
+  const handleCreateSubmit = createForm.form.handleSubmit(async (data) => {
     try {
-      errorHandling.clearErrors();
-
-      if (isCreateModalOpen) {
-        await createColorMutation.mutateAsync(formData);
-        setIsCreateModalOpen(false);
-      } else if (isEditModalOpen && selectedColor) {
-        await updateColorMutation.mutateAsync({
-          id: selectedColor.id,
-          data: formData,
-        });
-        setIsEditModalOpen(false);
-      }
-
-      setFormData({
+      createForm.clearAllErrors();
+      await createColorMutation.mutateAsync(data);
+      createForm.toast.success("Color creado exitosamente");
+      createForm.resetForm({
         name: "",
         htmlColor: "#000000",
         deviceColorId: "",
       });
-      setFormErrors({});
+      setIsCreateModalOpen(false);
     } catch (error) {
-      errorHandling.handleApiError(error, "Error al guardar el color");
+      createForm.handleBackendError(error);
     }
-  };
+  });
+
+  const handleEditSubmit = editForm.form.handleSubmit(async (data) => {
+    if (!selectedColor) return;
+
+    try {
+      editForm.clearAllErrors();
+      const updateData = {
+        name: data.name ?? selectedColor.name,
+        htmlColor: data.htmlColor ?? selectedColor.htmlColor,
+        deviceColorId: data.deviceColorId ?? selectedColor.deviceColorId,
+      };
+      await updateColorMutation.mutateAsync({
+        id: selectedColor.id,
+        data: updateData,
+      });
+      editForm.toast.success("Color actualizado exitosamente");
+      editForm.resetForm(updateData);
+      setIsEditModalOpen(false);
+      setSelectedColor(null);
+    } catch (error) {
+      editForm.handleBackendError(error);
+    }
+  });
 
   const handleDeleteConfirm = async () => {
     if (selectedColor) {
@@ -166,23 +174,31 @@ export function TorretaColorsCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedColor(null);
       } catch {
-        errorHandling.setServerError("Error al eliminar el color");
+        // El error se maneja automáticamente por la mutación
       }
     }
   };
 
   const handleCancel = () => {
-    setFormData({
+    createForm.resetForm({
       name: "",
       htmlColor: "#000000",
       deviceColorId: "",
     });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    if (selectedColor) {
+      editForm.resetForm({
+        name: selectedColor.name,
+        htmlColor: selectedColor.htmlColor,
+        deviceColorId: selectedColor.deviceColorId,
+      });
+    }
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedColor(null);
   };
+
+  const isCreateLoading = createColorMutation.isPending;
+  const isEditLoading = updateColorMutation.isPending;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -220,94 +236,140 @@ export function TorretaColorsCatalog() {
         />
       </div>
 
+      {/* Modal de Crear */}
       <Modal
-        data-cy={
-          isCreateModalOpen
-            ? "create-torreta-color-modal"
-            : "edit-torreta-color-modal"
-        }
-        isOpen={isCreateModalOpen || isEditModalOpen}
-        title={
-          isCreateModalOpen
-            ? "Crear Color de Torreta"
-            : "Editar Color de Torreta"
-        }
+        data-cy="create-torreta-color-modal"
+        isOpen={isCreateModalOpen}
+        title="Crear Color de Torreta"
         onClose={handleCancel}
       >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {errorHandling.validationErrors.length > 0 && (
-            <ValidationErrorList errors={errorHandling.validationErrors} />
+        <form className="space-y-4" onSubmit={handleCreateSubmit}>
+          {createForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={createForm.modalError.validationErrors}
+            />
           )}
 
-          {errorHandling.serverError && (
+          {createForm.modalError.serverError && (
             <ErrorMessage
-              isServerError={errorHandling.parsedError?.isServerError ?? false}
-              message={errorHandling.serverError}
+              isServerError={
+                createForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={createForm.modalError.serverError}
               type="server"
             />
           )}
 
-          <FormField
-            autoFocus
-            required
-            error={formErrors.name}
-            label="Nombre"
-            name="name"
-            placeholder="Ingresa el nombre del color"
-            value={formData.name}
-            onChange={(value) =>
-              setFormData({ ...formData, name: value as string })
-            }
-          />
-
-          <div className="space-y-2">
-            <label
-              className="block text-sm font-medium text-gray-700"
-              htmlFor="color-input"
-            >
-              Color
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                id="color-input"
-                type="color"
-                value={formData.htmlColor}
-                onChange={(e) =>
-                  setFormData({ ...formData, htmlColor: e.target.value })
-                }
-              />
-              <input
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="#000000"
-                type="text"
-                value={formData.htmlColor}
-                onChange={(e) =>
-                  setFormData({ ...formData, htmlColor: e.target.value })
-                }
-              />
-            </div>
+          <div>
+            <Controller
+              name="name"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del color"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
           </div>
 
-          <FormField
-            required
-            error={formErrors.deviceColorId}
-            label="ID del Dispositivo"
-            name="deviceColorId"
-            placeholder="Ingresa el ID del dispositivo"
-            value={formData.deviceColorId}
-            onChange={(value) =>
-              setFormData({ ...formData, deviceColorId: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="htmlColor"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <label
+                    className="block text-sm font-medium text-slate-300 mb-2"
+                    htmlFor="color-input-create"
+                  >
+                    Color
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      className="w-12 h-10 border border-slate-600 rounded cursor-pointer bg-slate-800"
+                      id="color-input-create"
+                      type="color"
+                      value={field.value || "#000000"}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                    <Input
+                      {...field}
+                      errorMessage={fieldState.error?.message}
+                      fullWidth
+                      isInvalid={!!fieldState.error}
+                      placeholder="#000000"
+                      size="md"
+                      type="text"
+                      value={field.value || ""}
+                      variant="bordered"
+                    />
+                  </div>
+                  {field.value && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded border border-slate-600"
+                        style={{ backgroundColor: field.value }}
+                      />
+                      <span className="text-sm text-slate-400">
+                        Vista previa del color
+                      </span>
+                    </div>
+                  )}
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="htmlColor"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="deviceColorId"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="ID del Dispositivo"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el ID del dispositivo"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="deviceColorId"
+                  />
+                </>
+              )}
+            />
+          </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
               color="default"
-              disabled={
-                createColorMutation.isPending || updateColorMutation.isPending
-              }
+              disabled={isCreateLoading}
               size="md"
               type="button"
               variant="solid"
@@ -319,17 +381,170 @@ export function TorretaColorsCatalog() {
               className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
-                createColorMutation.isPending || updateColorMutation.isPending
+                isCreateLoading || createForm.form.formState.isSubmitting
               }
+              isLoading={isCreateLoading}
               size="md"
               type="submit"
               variant="solid"
             >
-              {createColorMutation.isPending || updateColorMutation.isPending
-                ? "Guardando..."
-                : isCreateModalOpen
-                  ? "Crear"
-                  : "Actualizar"}
+              Crear
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Editar */}
+      <Modal
+        data-cy="edit-torreta-color-modal"
+        isOpen={isEditModalOpen}
+        title="Editar Color de Torreta"
+        onClose={handleCancel}
+      >
+        <form className="space-y-4" onSubmit={handleEditSubmit}>
+          {editForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={editForm.modalError.validationErrors}
+            />
+          )}
+
+          {editForm.modalError.serverError && (
+            <ErrorMessage
+              isServerError={
+                editForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={editForm.modalError.serverError}
+              type="server"
+            />
+          )}
+
+          <div>
+            <Controller
+              name="name"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del color"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="htmlColor"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <label
+                    className="block text-sm font-medium text-slate-300 mb-2"
+                    htmlFor="color-input-edit"
+                  >
+                    Color
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      className="w-12 h-10 border border-slate-600 rounded cursor-pointer bg-slate-800"
+                      id="color-input-edit"
+                      type="color"
+                      value={field.value || "#000000"}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                    <Input
+                      {...field}
+                      errorMessage={fieldState.error?.message}
+                      fullWidth
+                      isInvalid={!!fieldState.error}
+                      placeholder="#000000"
+                      size="md"
+                      type="text"
+                      value={field.value || ""}
+                      variant="bordered"
+                    />
+                  </div>
+                  {field.value && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded border border-slate-600"
+                        style={{ backgroundColor: field.value }}
+                      />
+                      <span className="text-sm text-slate-400">
+                        Vista previa del color
+                      </span>
+                    </div>
+                  )}
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="htmlColor"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="deviceColorId"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="ID del Dispositivo"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el ID del dispositivo"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="deviceColorId"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="default"
+              disabled={isEditLoading}
+              size="md"
+              type="button"
+              variant="solid"
+              onPress={handleCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="primary"
+              disabled={isEditLoading || editForm.form.formState.isSubmitting}
+              isLoading={isEditLoading}
+              size="md"
+              type="submit"
+              variant="solid"
+            >
+              Actualizar
             </Button>
           </div>
         </form>

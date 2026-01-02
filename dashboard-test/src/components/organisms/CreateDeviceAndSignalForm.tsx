@@ -26,6 +26,7 @@ export interface CreateDeviceAndSignalFormProps {
   ) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 export const CreateDeviceAndSignalForm: React.FC<
@@ -36,12 +37,21 @@ export const CreateDeviceAndSignalForm: React.FC<
   onSubmit,
   onCancel,
   isLoading = false,
+  onValidationChange,
 }) => {
   const [deviceName, setDeviceName] = useState<string>("");
   const [areaId, setAreaId] = useState<number | string>("");
 
   const [signalName, setSignalName] = useState<string>("");
   const [departmentId, setDepartmentId] = useState<number | string>("");
+
+  const isValid = Boolean(
+    deviceName.trim() && areaId && signalName.trim() && departmentId
+  );
+
+  useEffect(() => {
+    onValidationChange?.(isValid);
+  }, [isValid, onValidationChange]);
 
   const { areas, loading: areasLoading } = useAreas();
   const { data: departmentsData, isLoading: departmentsLoading } =
@@ -86,7 +96,7 @@ export const CreateDeviceAndSignalForm: React.FC<
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form id="create-device-and-signal-form" onSubmit={handleSubmit}>
       {/* External IDs Display */}
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,37 +237,6 @@ export const CreateDeviceAndSignalForm: React.FC<
             )}
           </div>
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-600">
-        <Button
-          color="default"
-          disabled={isLoading}
-          size="md"
-          variant="solid"
-          onClick={onCancel}
-        >
-          <FaXmark className="mr-2" />
-          Cancelar
-        </Button>
-        <Button
-          color="primary"
-          disabled={
-            isLoading ||
-            !deviceName.trim() ||
-            !areaId ||
-            !signalName.trim() ||
-            !departmentId
-          }
-          isLoading={isLoading}
-          size="md"
-          type="submit"
-          variant="solid"
-        >
-          <FaFloppyDisk className="mr-2" />
-          Crear Dispositivo y Señal
-        </Button>
       </div>
     </form>
   );

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
 import {
@@ -8,15 +9,18 @@ import {
   useDeleteTorreta,
   type Torreta,
 } from "@/hooks/useCatalogs";
+import { useFormValidation } from "@/hooks/useFormValidation";
 import { useHasPermission } from "@/hooks/useHasPermission";
-import { useModalError } from "@/hooks/useModalError";
+import {
+  createTorretaSchema,
+  updateTorretaSchema,
+} from "@/lib/validations/schemas";
 
-import { ErrorMessage, ValidationErrorList } from "../../atoms";
-import { Button } from "../../atoms/Button";
+import { Button, ErrorMessage, Input, ValidationErrorList } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
+import { FieldError } from "../../molecules/FieldError";
 import { Modal } from "../Modal";
 
 export function TorretasCatalog() {
@@ -28,14 +32,6 @@ export function TorretasCatalog() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTorreta, setSelectedTorreta] = useState<Torreta | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    externalId: "",
-  });
-  const [formErrors, setFormErrors] = useState<{ name?: string }>({});
-
-  const errorHandling = useModalError("Error al procesar la solicitud");
 
   const { data: torretasData, isLoading } = useTorretas({
     active: undefined,
@@ -49,6 +45,34 @@ export function TorretasCatalog() {
   const filteredTorretas = torretas.filter((torreta: { name: string }) =>
     torreta.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Form para crear
+  const createForm = useFormValidation({
+    schema: createTorretaSchema,
+    defaultValues: {
+      name: "",
+      description: undefined,
+      externalId: undefined,
+      isActive: undefined,
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Torreta creada exitosamente",
+  });
+
+  // Form para editar
+  const editForm = useFormValidation({
+    schema: updateTorretaSchema,
+    defaultValues: {
+      name: selectedTorreta?.name ?? "",
+      description: selectedTorreta?.description,
+      externalId: selectedTorreta?.externalId,
+      isActive: selectedTorreta?.isActive,
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Torreta actualizada exitosamente",
+  });
 
   const columns: Array<TableColumn<Torreta>> = [
     {
@@ -78,21 +102,23 @@ export function TorretasCatalog() {
   ];
 
   const handleCreate = () => {
-    setFormData({ name: "", description: "", externalId: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({
+      name: "",
+      description: undefined,
+      externalId: undefined,
+      isActive: undefined,
+    });
     setIsCreateModalOpen(true);
   };
 
   const handleEdit = (torreta: Torreta) => {
     setSelectedTorreta(torreta);
-    setFormData({
+    editForm.resetForm({
       name: torreta.name,
-      description: torreta.description ?? "",
-      externalId: torreta.externalId ?? "",
+      description: torreta.description || undefined,
+      externalId: torreta.externalId || undefined,
+      isActive: torreta.isActive,
     });
-    setFormErrors({});
-    errorHandling.clearErrors();
     setIsEditModalOpen(true);
   };
 
@@ -101,51 +127,54 @@ export function TorretasCatalog() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errors: { name?: string } = {};
-
-    if (!formData.name.trim()) {
-      errors.name = "El nombre es requerido";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      errorHandling.setValidationErrors(
-        Object.values(errors).filter((err): err is string => !!err)
-      );
-
-      return;
-    }
-
+  const handleCreateSubmit = createForm.form.handleSubmit(async (data) => {
     try {
-      errorHandling.clearErrors();
-
+      createForm.clearAllErrors();
       // Clean optional fields: convert empty strings to undefined
       const cleanedData = {
-        name: formData.name,
-        description: formData.description.trim() || undefined,
-        externalId: formData.externalId.trim() || undefined,
+        name: data.name,
+        description: data.description?.trim() || undefined,
+        externalId: data.externalId?.trim() || undefined,
+        isActive: data.isActive,
       };
-
-      if (isCreateModalOpen) {
-        await createTorretaMutation.mutateAsync(cleanedData);
-        setIsCreateModalOpen(false);
-      } else if (isEditModalOpen && selectedTorreta) {
-        await updateTorretaMutation.mutateAsync({
-          id: selectedTorreta.id,
-          data: cleanedData,
-        });
-        setIsEditModalOpen(false);
-      }
-
-      setFormData({ name: "", description: "", externalId: "" });
-      setFormErrors({});
+      await createTorretaMutation.mutateAsync(cleanedData);
+      createForm.toast.success("Torreta creada exitosamente");
+      createForm.resetForm({
+        name: "",
+        description: undefined,
+        externalId: undefined,
+        isActive: undefined,
+      });
+      setIsCreateModalOpen(false);
     } catch (error) {
-      errorHandling.handleApiError(error, "Error al guardar la torreta");
+      createForm.handleBackendError(error);
     }
-  };
+  });
+
+  const handleEditSubmit = editForm.form.handleSubmit(async (data) => {
+    if (!selectedTorreta) return;
+
+    try {
+      editForm.clearAllErrors();
+      // Clean optional fields: convert empty strings to undefined
+      const cleanedData = {
+        name: data.name ?? selectedTorreta.name,
+        description: data.description?.trim() || undefined,
+        externalId: data.externalId?.trim() || undefined,
+        isActive: data.isActive ?? selectedTorreta.isActive,
+      };
+      await updateTorretaMutation.mutateAsync({
+        id: selectedTorreta.id,
+        data: cleanedData,
+      });
+      editForm.toast.success("Torreta actualizada exitosamente");
+      editForm.resetForm(cleanedData);
+      setIsEditModalOpen(false);
+      setSelectedTorreta(null);
+    } catch (error) {
+      editForm.handleBackendError(error);
+    }
+  });
 
   const handleDeleteConfirm = async () => {
     if (selectedTorreta) {
@@ -154,19 +183,33 @@ export function TorretasCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedTorreta(null);
       } catch {
-        errorHandling.setServerError("Error al eliminar la torreta");
+        // El error se maneja automáticamente por la mutación
       }
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: "", description: "", externalId: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({
+      name: "",
+      description: undefined,
+      externalId: undefined,
+      isActive: undefined,
+    });
+    if (selectedTorreta) {
+      editForm.resetForm({
+        name: selectedTorreta.name,
+        description: selectedTorreta.description || undefined,
+        externalId: selectedTorreta.externalId || undefined,
+        isActive: selectedTorreta.isActive,
+      });
+    }
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedTorreta(null);
   };
+
+  const isCreateLoading = createTorretaMutation.isPending;
+  const isEditLoading = updateTorretaMutation.isPending;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -204,68 +247,116 @@ export function TorretasCatalog() {
         />
       </div>
 
+      {/* Modal de Crear */}
       <Modal
-        data-cy={
-          isCreateModalOpen ? "create-torreta-modal" : "edit-torreta-modal"
-        }
-        isOpen={isCreateModalOpen || isEditModalOpen}
-        title={isCreateModalOpen ? "Crear Torreta" : "Editar Torreta"}
+        data-cy="create-torreta-modal"
+        isOpen={isCreateModalOpen}
+        title="Crear Torreta"
         onClose={handleCancel}
       >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {errorHandling.validationErrors.length > 0 && (
-            <ValidationErrorList errors={errorHandling.validationErrors} />
+        <form className="space-y-4" onSubmit={handleCreateSubmit}>
+          {createForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={createForm.modalError.validationErrors}
+            />
           )}
 
-          {errorHandling.serverError && (
+          {createForm.modalError.serverError && (
             <ErrorMessage
-              isServerError={errorHandling.parsedError?.isServerError ?? false}
-              message={errorHandling.serverError}
+              isServerError={
+                createForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={createForm.modalError.serverError}
               type="server"
             />
           )}
 
-          <FormField
-            autoFocus
-            required
-            error={formErrors.name}
-            label="Nombre"
-            name="name"
-            placeholder="Ingresa el nombre de la torreta"
-            value={formData.name}
-            onChange={(value) =>
-              setFormData({ ...formData, name: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="name"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre de la torreta"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
 
-          <FormField
-            label="External ID"
-            name="externalId"
-            placeholder="Ingresa el External ID de la torreta (opcional)"
-            value={formData.externalId}
-            onChange={(value) =>
-              setFormData({ ...formData, externalId: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="description"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Descripción (Opcional)"
+                    labelPlacement="outside"
+                    placeholder="Ingresa una descripción"
+                    size="md"
+                    value={field.value || ""}
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="description"
+                  />
+                </>
+              )}
+            />
+          </div>
 
-          <FormField
-            label="Descripción"
-            name="description"
-            placeholder="Ingresa la descripción de la torreta (opcional)"
-            value={formData.description}
-            onChange={(value) =>
-              setFormData({ ...formData, description: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="externalId"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="External ID (Opcional)"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el External ID"
+                    size="md"
+                    value={field.value || ""}
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="externalId"
+                  />
+                </>
+              )}
+            />
+          </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
               color="default"
-              disabled={
-                createTorretaMutation.isPending ||
-                updateTorretaMutation.isPending
-              }
+              disabled={isCreateLoading}
               size="md"
               type="button"
               variant="solid"
@@ -277,19 +368,146 @@ export function TorretasCatalog() {
               className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
-                createTorretaMutation.isPending ||
-                updateTorretaMutation.isPending
+                isCreateLoading || createForm.form.formState.isSubmitting
               }
+              isLoading={isCreateLoading}
               size="md"
               type="submit"
               variant="solid"
             >
-              {createTorretaMutation.isPending ||
-              updateTorretaMutation.isPending
-                ? "Guardando..."
-                : isCreateModalOpen
-                  ? "Crear"
-                  : "Actualizar"}
+              Crear
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Editar */}
+      <Modal
+        data-cy="edit-torreta-modal"
+        isOpen={isEditModalOpen}
+        title="Editar Torreta"
+        onClose={handleCancel}
+      >
+        <form className="space-y-4" onSubmit={handleEditSubmit}>
+          {editForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={editForm.modalError.validationErrors}
+            />
+          )}
+
+          {editForm.modalError.serverError && (
+            <ErrorMessage
+              isServerError={
+                editForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={editForm.modalError.serverError}
+              type="server"
+            />
+          )}
+
+          <div>
+            <Controller
+              name="name"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre de la torreta"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="description"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Descripción (Opcional)"
+                    labelPlacement="outside"
+                    placeholder="Ingresa una descripción"
+                    size="md"
+                    value={field.value || ""}
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="description"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="externalId"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="External ID (Opcional)"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el External ID"
+                    size="md"
+                    value={field.value || ""}
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="externalId"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="default"
+              disabled={isEditLoading}
+              size="md"
+              type="button"
+              variant="solid"
+              onPress={handleCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="primary"
+              disabled={isEditLoading || editForm.form.formState.isSubmitting}
+              isLoading={isEditLoading}
+              size="md"
+              type="submit"
+              variant="solid"
+            >
+              Actualizar
             </Button>
           </div>
         </form>

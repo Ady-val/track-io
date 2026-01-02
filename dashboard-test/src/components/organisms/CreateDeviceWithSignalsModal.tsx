@@ -3,18 +3,26 @@ import type {
   CreateDeviceSignalData,
 } from "../../types/device";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
+import { Controller, useFieldArray } from "react-hook-form";
 
 import { FaMicrochip, FaPlus, FaTrash, FaDesktop } from "react-icons/fa";
 
 import { useAreas } from "../../hooks/useAreas";
 import { useDepartments } from "../../hooks/useCatalogs";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { createDeviceWithSignalsSchema } from "../../lib/validations/schemas";
 import deviceSignalService from "../../lib/services/device-signal.service";
 import deviceService from "../../lib/services/device.service";
-import { Button } from "../atoms/Button";
-import { Checkbox } from "../atoms/Checkbox";
-import { Input } from "../atoms/Input";
-import { Select } from "../atoms/Select";
+import {
+  Button,
+  Checkbox,
+  Input,
+  Select,
+  ErrorMessage,
+  ValidationErrorList,
+} from "../atoms";
+import { FieldError } from "../molecules";
 
 import { Modal } from "./Modal";
 
@@ -24,200 +32,98 @@ interface CreateDeviceWithSignalsModalProps {
   onSuccess: () => void;
 }
 
-interface SignalFormData {
-  name: string;
-  externalValueId: string;
-  departmentId: string;
-}
-
 export const CreateDeviceWithSignalsModal: React.FC<
   CreateDeviceWithSignalsModalProps
 > = ({ isOpen, onClose, onSuccess }) => {
-  const [deviceName, setDeviceName] = useState("");
-  const [externalId, setExternalId] = useState("");
-  const [areaId, setAreaId] = useState("");
-  const [isVirtualDevice, setIsVirtualDevice] = useState(false);
-  const [signals, setSignals] = useState<SignalFormData[]>([
-    { name: "", externalValueId: "", departmentId: "" },
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [serverError, setServerError] = useState<string>("");
-
   const { areas } = useAreas();
   const { data: departmentsData } = useDepartments();
-
   const departments = departmentsData?.data ?? [];
 
+  const { form, modalError, handleBackendError, resetForm, toast } =
+    useFormValidation({
+      schema: createDeviceWithSignalsSchema,
+      defaultValues: {
+        name: "",
+        externalId: "",
+        areaId: areas[0]?.id?.toString() ?? "",
+        isVirtualDevice: false,
+        signals: [{ name: "", externalValueId: "", departmentId: "" }],
+      },
+      showToastOnError: true,
+      showToastOnSuccess: true,
+      successMessage: "Dispositivo y señales creados exitosamente",
+    });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "signals",
+  });
+
+  const prevIsOpenRef = useRef(isOpen);
+
+  // Resetear formulario cuando se abre el modal
   useEffect(() => {
-    if (isOpen) {
-      setDeviceName("");
-      setExternalId("");
-      setAreaId(areas[0]?.id?.toString() ?? "");
-      setIsVirtualDevice(false);
-      setSignals([{ name: "", externalValueId: "", departmentId: "" }]);
-      setValidationErrors([]);
-      setServerError("");
+    if (isOpen && !prevIsOpenRef.current) {
+      resetForm({
+        name: "",
+        externalId: "",
+        areaId: areas[0]?.id?.toString() ?? "",
+        isVirtualDevice: false,
+        signals: [{ name: "", externalValueId: "", departmentId: "" }],
+      });
     }
-  }, [isOpen, areas]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, areas, resetForm]);
 
   const addSignal = () => {
-    setSignals([
-      ...signals,
-      { name: "", externalValueId: "", departmentId: "" },
-    ]);
-    if (validationErrors.length > 0) {
-      setValidationErrors([]);
-    }
+    append({ name: "", externalValueId: "", departmentId: "" });
   };
 
   const removeSignal = (index: number) => {
-    if (signals.length > 1) {
-      setSignals(signals.filter((_, i) => i !== index));
-      if (validationErrors.length > 0) {
-        setValidationErrors([]);
-      }
+    if (fields.length > 1) {
+      remove(index);
     }
   };
 
-  const updateSignal = (
-    index: number,
-    field: keyof SignalFormData,
-    value: string
-  ) => {
-    const newSignals = [...signals];
-    const signal = newSignals[index];
-
-    if (signal) {
-      signal[field] = value;
-      setSignals(newSignals);
-      if (validationErrors.length > 0) {
-        setValidationErrors([]);
-      }
-    }
-  };
-
-  const handleDeviceNameChange = (value: string) => {
-    setDeviceName(value);
-    if (serverError) {
-      setServerError("");
-    }
-  };
-
-  const handleExternalIdChange = (value: string) => {
-    setExternalId(value);
-    if (serverError) {
-      setServerError("");
-    }
-  };
-
-  const validateSignals = (): boolean => {
-    const errors: string[] = [];
-    const validSignals = signals.filter(
-      (signal) => signal.name && signal.externalValueId && signal.departmentId
-    );
-
-    const names = validSignals.map((s) => s.name.trim().toLowerCase());
-    const uniqueNames = new Set(names);
-
-    if (names.length !== uniqueNames.size) {
-      errors.push("No se pueden repetir nombres entre señales");
-    }
-
-    const externalValueIds = validSignals.map((s) => s.externalValueId.trim());
-    const uniqueExternalValueIds = new Set(externalValueIds);
-
-    if (externalValueIds.length !== uniqueExternalValueIds.size) {
-      errors.push("No se pueden repetir External Value ID entre señales");
-    }
-
-    const departmentIds = validSignals.map((s) => s.departmentId);
-    const uniqueDepartmentIds = new Set(departmentIds);
-
-    if (departmentIds.length !== uniqueDepartmentIds.size) {
-      errors.push("No se pueden repetir departamentos entre señales");
-    }
-
-    setValidationErrors(errors);
-
-    return errors.length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!deviceName || !externalId || !areaId) return;
-
-    if (!validateSignals()) {
-      return;
-    }
-
-    setIsLoading(true);
-    setServerError("");
-
+  const handleSubmit = form.handleSubmit(async (data) => {
     try {
+      // Crear dispositivo
       const deviceData: CreateDeviceData = {
-        name: deviceName,
-        externalId,
-        areaId: Number(areaId),
-        isVirtualDevice,
+        name: data.name.trim(),
+        externalId: data.externalId.trim(),
+        areaId: data.areaId,
+        isVirtualDevice: data.isVirtualDevice ?? false,
       };
+
       const newDevice = await deviceService.create(deviceData);
 
-      const validSignals = signals.filter(
+      if (!newDevice) {
+        throw new Error("No se pudo crear el dispositivo");
+      }
+
+      // Crear señales
+      const validSignals = data.signals.filter(
         (signal) => signal.name && signal.externalValueId && signal.departmentId
       );
 
-      if (newDevice) {
-        for (const signal of validSignals) {
-          const signalData: CreateDeviceSignalData = {
-            name: signal.name,
-            deviceId: newDevice.id,
-            departmentId: Number(signal.departmentId),
-            externalValueId: signal.externalValueId,
-          };
-
-          await deviceSignalService.create(signalData);
-        }
-      }
-
-      onSuccess();
-      onClose();
-    } catch (error: unknown) {
-      console.error("Error creating device with signals:", error);
-
-      if (error && typeof error === "object" && "response" in error) {
-        const apiError = error as {
-          response?: {
-            status?: number;
-            data?: { message?: string; error?: string };
-          };
+      for (const signal of validSignals) {
+        const signalData: CreateDeviceSignalData = {
+          name: signal.name.trim(),
+          deviceId: newDevice.id,
+          departmentId: signal.departmentId,
+          externalValueId: signal.externalValueId.trim(),
         };
 
-        const serverMessage =
-          apiError.response?.data?.message ??
-          apiError.response?.data?.error ??
-          "Error del servidor";
-
-        if (apiError.response?.status === 409) {
-          setServerError(serverMessage);
-        } else if (apiError.response?.status === 400) {
-          setServerError(serverMessage);
-        } else {
-          setServerError(serverMessage);
-        }
-      } else if (error && typeof error === "object" && "message" in error) {
-        const errorWithMessage = error as { message: string };
-
-        setServerError(`Error: ${errorWithMessage.message}`);
-      } else {
-        setServerError(
-          "Error al crear el dispositivo. Por favor, intenta nuevamente."
-        );
+        await deviceSignalService.create(signalData);
       }
-    } finally {
-      setIsLoading(false);
+
+      toast.success("Dispositivo y señales creados exitosamente");
+      onSuccess();
+      onClose();
+    } catch (error) {
+      handleBackendError(error);
     }
-  };
+  });
 
   return (
     <Modal
@@ -227,28 +133,19 @@ export const CreateDeviceWithSignalsModal: React.FC<
       title="Agregar Dispositivo y Señales"
       onClose={onClose}
     >
-      <div className="max-h-[80vh] overflow-y-auto pr-2">
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {validationErrors.length > 0 && (
-            <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-4">
-              <h4 className="text-red-400 font-semibold mb-2">
-                Errores de validación:
-              </h4>
-              <ul className="text-red-300 text-sm space-y-1">
-                {validationErrors.map((error, index) => (
-                  <li key={index}>• {error}</li>
-                ))}
-              </ul>
-            </div>
+      <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Errores de validación generales */}
+          {modalError.validationErrors.length > 0 && (
+            <ValidationErrorList errors={modalError.validationErrors} />
           )}
 
-          {serverError && (
-            <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-4">
-              <h4 className="text-red-400 font-semibold mb-2">
-                Error del servidor:
-              </h4>
-              <p className="text-red-300 text-sm">{serverError}</p>
-            </div>
+          {/* Error del servidor */}
+          {modalError.serverError && (
+            <ErrorMessage
+              message={modalError.serverError}
+              type="server"
+              isServerError={modalError.parsedError?.isServerError ?? false}
+            />
           )}
 
           <div className="space-y-4">
@@ -261,57 +158,93 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Input
-                  autoFocus
-                  fullWidth
-                  required
-                  id="device-name"
-                  label="Nombre del Dispositivo"
-                  labelPlacement="outside"
-                  placeholder="Ej: Controlador Principal"
-                  size="md"
-                  value={deviceName}
-                  variant="bordered"
-                  onChange={(e) => handleDeviceNameChange(e.target.value)}
+                <Controller
+                  name="name"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <>
+                      <Input
+                        {...field}
+                        autoFocus
+                        fullWidth
+                        isInvalid={!!fieldState.error}
+                        errorMessage={fieldState.error?.message}
+                        id="device-name"
+                        label="Nombre del Dispositivo"
+                        labelPlacement="outside"
+                        placeholder="Ej: Controlador Principal"
+                        size="md"
+                        variant="bordered"
+                      />
+                      <FieldError
+                        error={fieldState.error?.message}
+                        fieldId="device-name"
+                      />
+                    </>
+                  )}
                 />
               </div>
 
               <div>
-                <Input
-                  fullWidth
-                  required
-                  id="device-external-id"
-                  label="External ID"
-                  labelPlacement="outside"
-                  placeholder="Ej: CTR-1433"
-                  size="md"
-                  value={externalId}
-                  variant="bordered"
-                  onChange={(e) => handleExternalIdChange(e.target.value)}
+                <Controller
+                  name="externalId"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <>
+                      <Input
+                        {...field}
+                        fullWidth
+                        isInvalid={!!fieldState.error}
+                        errorMessage={fieldState.error?.message}
+                        id="device-external-id"
+                        label="External ID"
+                        labelPlacement="outside"
+                        placeholder="Ej: CTR-1433"
+                        size="md"
+                        variant="bordered"
+                      />
+                      <FieldError
+                        error={fieldState.error?.message}
+                        fieldId="device-external-id"
+                      />
+                    </>
+                  )}
                 />
               </div>
             </div>
 
             <div>
-              <label
-                className="block text-sm font-medium text-slate-300 mb-2"
-                htmlFor="device-area"
-              >
-                Área
-              </label>
-              <Select
-                required
-                id="device-area"
-                value={areaId}
-                onChange={(e) => setAreaId(e.target.value)}
-              >
-                <option value="">Seleccionar área</option>
-                {areas.map((area: { id: number; name: string }) => (
-                  <option key={area.id} value={area.id}>
-                    {area.name}
-                  </option>
-                ))}
-              </Select>
+              <Controller
+                name="areaId"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <>
+                    <label
+                      className="block text-sm font-medium text-slate-300 mb-2"
+                      htmlFor="device-area"
+                    >
+                      Área
+                    </label>
+                    <Select
+                      id="device-area"
+                      isInvalid={!!fieldState.error}
+                      value={String(field.value ?? "")}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    >
+                      <option value="">Seleccionar área</option>
+                      {areas.map((area: { id: number; name: string }) => (
+                        <option key={area.id} value={area.id}>
+                          {area.name}
+                        </option>
+                      ))}
+                    </Select>
+                    <FieldError
+                      error={fieldState.error?.message}
+                      fieldId="device-area"
+                    />
+                  </>
+                )}
+              />
             </div>
 
             <div className="flex items-center space-x-3">
@@ -321,16 +254,22 @@ export const CreateDeviceWithSignalsModal: React.FC<
                   Tipo de Dispositivo
                 </span>
               </div>
-              <Checkbox
-                color="primary"
-                isSelected={isVirtualDevice}
-                size="md"
-                onValueChange={setIsVirtualDevice}
-              >
-                <span className="text-sm text-slate-400">
-                  Dispositivo Virtual (para computadora)
-                </span>
-              </Checkbox>
+              <Controller
+                name="isVirtualDevice"
+                control={form.control}
+                render={({ field }) => (
+                  <Checkbox
+                    color="primary"
+                    isSelected={field.value ?? false}
+                    size="md"
+                    onValueChange={field.onChange}
+                  >
+                    <span className="text-sm text-slate-400">
+                      Dispositivo Virtual (para computadora)
+                    </span>
+                  </Checkbox>
+                )}
+              />
             </div>
           </div>
 
@@ -355,16 +294,16 @@ export const CreateDeviceWithSignalsModal: React.FC<
               </Button>
             </div>
 
-            {signals.map((signal, index) => (
+            {fields.map((field, index) => (
               <div
-                key={index}
+                key={field.id}
                 className="bg-slate-800/50 p-4 rounded-lg border border-slate-600"
               >
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-md font-medium text-slate-200">
                     Señal {index + 1}
                   </h4>
-                  {signals.length > 1 && (
+                  {fields.length > 1 && (
                     <Button
                       className="flex items-center space-x-1 font-semibold"
                       color="danger"
@@ -380,74 +319,123 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="min-w-0">
-                    <label
-                      className="block text-sm font-medium text-slate-300 mb-2"
-                      htmlFor={`signal-name-${index}`}
-                    >
-                      Nombre del Botón
-                    </label>
-                    <Input
-                      className="w-full"
-                      id={`signal-name-${index}`}
-                      placeholder="Ej: Botón 1"
-                      value={signal.name}
-                      onChange={(e) =>
-                        updateSignal(index, "name", e.target.value)
-                      }
+                    <Controller
+                      name={`signals.${index}.name`}
+                      control={form.control}
+                      render={({ field: signalField, fieldState }) => (
+                        <>
+                          <label
+                            className="block text-sm font-medium text-slate-300 mb-2"
+                            htmlFor={`signal-name-${index}`}
+                          >
+                            Nombre del Botón
+                          </label>
+                          <Input
+                            {...signalField}
+                            className="w-full"
+                            id={`signal-name-${index}`}
+                            isInvalid={!!fieldState.error}
+                            placeholder="Ej: Botón 1"
+                            size="md"
+                            variant="bordered"
+                          />
+                          <FieldError
+                            error={fieldState.error?.message}
+                            fieldId={`signal-name-${index}`}
+                          />
+                        </>
+                      )}
                     />
                   </div>
 
                   <div className="min-w-0">
-                    <label
-                      className="block text-sm font-medium text-slate-300 mb-2"
-                      htmlFor={`signal-external-value-${index}`}
-                    >
-                      External Value ID
-                    </label>
-                    <Input
-                      className="w-full"
-                      id={`signal-external-value-${index}`}
-                      placeholder="Ej: 432"
-                      value={signal.externalValueId}
-                      onChange={(e) =>
-                        updateSignal(index, "externalValueId", e.target.value)
-                      }
+                    <Controller
+                      name={`signals.${index}.externalValueId`}
+                      control={form.control}
+                      render={({ field: signalField, fieldState }) => (
+                        <>
+                          <label
+                            className="block text-sm font-medium text-slate-300 mb-2"
+                            htmlFor={`signal-external-value-${index}`}
+                          >
+                            External Value ID
+                          </label>
+                          <Input
+                            {...signalField}
+                            className="w-full"
+                            id={`signal-external-value-${index}`}
+                            isInvalid={!!fieldState.error}
+                            placeholder="Ej: 432"
+                            size="md"
+                            variant="bordered"
+                          />
+                          <FieldError
+                            error={fieldState.error?.message}
+                            fieldId={`signal-external-value-${index}`}
+                          />
+                        </>
+                      )}
                     />
                   </div>
 
                   <div className="min-w-0">
-                    <label
-                      className="block text-sm font-medium text-slate-300 mb-2"
-                      htmlFor={`signal-department-${index}`}
-                    >
-                      Departamento
-                    </label>
-                    <Select
-                      className="w-full"
-                      id={`signal-department-${index}`}
-                      value={signal.departmentId}
-                      onChange={(e) =>
-                        updateSignal(index, "departmentId", e.target.value)
-                      }
-                    >
-                      <option value="">Seleccionar departamento</option>
-                      {departments.map((dept: { id: number; name: string }) => (
-                        <option key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </Select>
+                    <Controller
+                      name={`signals.${index}.departmentId`}
+                      control={form.control}
+                      render={({ field: signalField, fieldState }) => (
+                        <>
+                          <label
+                            className="block text-sm font-medium text-slate-300 mb-2"
+                            htmlFor={`signal-department-${index}`}
+                          >
+                            Departamento
+                          </label>
+                          <Select
+                            className="w-full"
+                            id={`signal-department-${index}`}
+                            isInvalid={!!fieldState.error}
+                            value={String(signalField.value ?? "")}
+                            onChange={(e) =>
+                              signalField.onChange(e.target.value)
+                            }
+                          >
+                            <option value="">Seleccionar departamento</option>
+                            {departments.map(
+                              (dept: { id: number; name: string }) => (
+                                <option key={dept.id} value={dept.id}>
+                                  {dept.name}
+                                </option>
+                              )
+                            )}
+                          </Select>
+                          <FieldError
+                            error={fieldState.error?.message}
+                            fieldId={`signal-department-${index}`}
+                          />
+                        </>
+                      )}
+                    />
                   </div>
                 </div>
               </div>
             ))}
+
+            {/* Mostrar errores de validación de señales si existen */}
+            {form.formState.errors.signals && (
+              <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+                <p className="text-red-300 text-sm">
+                  {form.formState.errors.signals.message ||
+                    "Hay errores en las señales"}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
               color="default"
-              disabled={isLoading}
+              disabled={form.formState.isSubmitting}
               size="md"
               type="button"
               variant="solid"
@@ -458,16 +446,16 @@ export const CreateDeviceWithSignalsModal: React.FC<
             <Button
               className="px-6 py-2 font-semibold"
               color="primary"
-              disabled={isLoading || !deviceName || !externalId || !areaId}
+              disabled={form.formState.isSubmitting}
+              isLoading={form.formState.isSubmitting}
               size="md"
               type="submit"
               variant="solid"
             >
-              {isLoading ? "Creando..." : "Crear Dispositivo"}
+              Crear Dispositivo
             </Button>
           </div>
         </form>
-      </div>
     </Modal>
   );
 };

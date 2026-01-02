@@ -1,15 +1,23 @@
 import type { Device } from "../../types/device";
 import type { DeviceSignal } from "../../types/device-signal";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
+import { Controller } from "react-hook-form";
 
 import { FaMicrochip } from "react-icons/fa";
 
 import { useDepartments, type Department } from "../../hooks/useCatalogs";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { updateDeviceSignalSchema } from "../../lib/validations/schemas";
 import deviceSignalService from "../../lib/services/device-signal.service";
-import { Button } from "../atoms/Button";
-import { Input } from "../atoms/Input";
-import { Select } from "../atoms/Select";
+import {
+  Button,
+  Input,
+  Select,
+  ErrorMessage,
+  ValidationErrorList,
+} from "../atoms";
+import { FieldError } from "../molecules";
 
 import { Modal } from "./Modal";
 
@@ -28,41 +36,52 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
   signal,
   device,
 }) => {
-  const [name, setName] = useState("");
-  const [externalValueId, setExternalValueId] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
   const { data: departmentsData } = useDepartments();
   const departments = departmentsData?.data ?? [];
 
+  const { form, modalError, handleBackendError, resetForm, toast } =
+    useFormValidation({
+      schema: updateDeviceSignalSchema,
+      defaultValues: {
+        name: signal?.name ?? "",
+        externalValueId: signal?.externalValueId ?? "",
+        departmentId: signal?.departmentId ?? undefined,
+      },
+      showToastOnError: true,
+      showToastOnSuccess: true,
+      successMessage: "Señal actualizada exitosamente",
+    });
+
+  const prevIsOpenRef = useRef(isOpen);
+
+  // Actualizar valores cuando se abre el modal
   useEffect(() => {
-    if (signal && isOpen) {
-      setName(signal.name);
-      setExternalValueId(signal.externalValueId);
-      setDepartmentId(signal.departmentId?.toString() ?? "");
+    if (signal && isOpen && !prevIsOpenRef.current) {
+      resetForm({
+        name: signal.name,
+        externalValueId: signal.externalValueId,
+        departmentId: signal.departmentId,
+      });
     }
-  }, [signal, isOpen]);
+    prevIsOpenRef.current = isOpen;
+  }, [signal, isOpen, resetForm]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!signal || !name || !externalValueId || !departmentId) return;
+  const handleSubmit = form.handleSubmit(async (data) => {
+    if (!signal) return;
 
-    setIsLoading(true);
     try {
       await deviceSignalService.update(signal.id, {
-        name,
-        externalValueId,
-        departmentId: Number(departmentId),
+        name: data.name?.trim() ?? signal.name,
+        externalValueId: data.externalValueId?.trim() ?? signal.externalValueId,
+        departmentId: data.departmentId ?? signal.departmentId,
       });
+      toast.success("Señal actualizada exitosamente");
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Error updating signal:", error);
-    } finally {
-      setIsLoading(false);
+      handleBackendError(error);
     }
-  };
+  });
 
   if (!signal || !device) return null;
 
@@ -75,6 +94,20 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
       onClose={onClose}
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
+        {/* Errores de validación generales */}
+        {modalError.validationErrors.length > 0 && (
+          <ValidationErrorList errors={modalError.validationErrors} />
+        )}
+
+        {/* Error del servidor */}
+        {modalError.serverError && (
+          <ErrorMessage
+            message={modalError.serverError}
+            type="server"
+            isServerError={modalError.parsedError?.isServerError ?? false}
+          />
+        )}
+
         <div className="flex items-center space-x-2 mb-4">
           <FaMicrochip className="w-5 h-5 text-green-500" />
           <h3 className="text-lg font-semibold text-slate-200">
@@ -84,58 +117,94 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
 
         <div className="space-y-4">
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="edit-signal-name"
-            >
-              Nombre del Botón
-            </label>
-            <Input
-              autoFocus
-              required
-              id="edit-signal-name"
-              placeholder="Ej: Botón 1"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    fullWidth
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
+                    errorMessage={fieldState.error?.message}
+                    id="edit-signal-name"
+                    label="Nombre del Botón"
+                    labelPlacement="outside"
+                    placeholder="Ej: Botón 1"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="edit-signal-name"
+                  />
+                </>
+              )}
             />
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="edit-signal-external-value"
-            >
-              External Value ID
-            </label>
-            <Input
-              required
-              id="edit-signal-external-value"
-              placeholder="Ej: 432"
-              value={externalValueId}
-              onChange={(e) => setExternalValueId(e.target.value)}
+            <Controller
+              name="externalValueId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    fullWidth
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
+                    errorMessage={fieldState.error?.message}
+                    id="edit-signal-external-value"
+                    label="External Value ID"
+                    labelPlacement="outside"
+                    placeholder="Ej: 432"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="edit-signal-external-value"
+                  />
+                </>
+              )}
             />
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium text-slate-300 mb-2"
-              htmlFor="edit-signal-department"
-            >
-              Departamento
-            </label>
-            <Select
-              required
-              id="edit-signal-department"
-              value={departmentId}
-              onChange={(e) => setDepartmentId(e.target.value)}
-            >
-              <option value="">Seleccionar departamento</option>
-              {departments.map((dept: Department) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </option>
-              ))}
-            </Select>
+            <Controller
+              name="departmentId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <label
+                    className="block text-sm font-medium text-slate-300 mb-2"
+                    htmlFor="edit-signal-department"
+                  >
+                    Departamento
+                  </label>
+                  <Select
+                    id="edit-signal-department"
+                    isInvalid={!!fieldState.error}
+                    value={String(field.value ?? "")}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  >
+                    <option value="">Seleccionar departamento</option>
+                    {departments.map((dept: Department) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="edit-signal-department"
+                  />
+                </>
+              )}
+            />
           </div>
         </div>
 
@@ -143,7 +212,7 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
           <Button
             className="px-6 py-2 font-semibold"
             color="default"
-            disabled={isLoading}
+            disabled={form.formState.isSubmitting}
             size="md"
             type="button"
             variant="solid"
@@ -154,12 +223,13 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
           <Button
             className="px-6 py-2 font-semibold"
             color="primary"
-            disabled={isLoading || !name || !externalValueId || !departmentId}
+            disabled={form.formState.isSubmitting}
+            isLoading={form.formState.isSubmitting}
             size="md"
             type="submit"
             variant="solid"
           >
-            {isLoading ? "Guardando..." : "Guardar Cambios"}
+            Guardar Cambios
           </Button>
         </div>
       </form>

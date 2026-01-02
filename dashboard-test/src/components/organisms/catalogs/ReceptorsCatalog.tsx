@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
 import {
@@ -9,14 +10,17 @@ import {
   type Receptor,
 } from "@/hooks/useCatalogs";
 import { useHasPermission } from "@/hooks/useHasPermission";
-import { useModalError } from "@/hooks/useModalError";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import {
+  createReceptorSchema,
+  updateReceptorSchema,
+} from "@/lib/validations/schemas";
 
-import { ErrorMessage, ValidationErrorList } from "../../atoms";
-import { Button } from "../../atoms/Button";
+import { ErrorMessage, ValidationErrorList, Button, Input } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
+import { FieldError } from "../../molecules/FieldError";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
 import { Modal } from "../Modal";
 
 export function ReceptorsCatalog() {
@@ -30,13 +34,6 @@ export function ReceptorsCatalog() {
   const [selectedReceptor, setSelectedReceptor] = useState<Receptor | null>(
     null
   );
-  const [formData, setFormData] = useState({ externalId: "", name: "" });
-  const [formErrors, setFormErrors] = useState<{
-    externalId?: string;
-    name?: string;
-  }>({});
-
-  const errorHandling = useModalError("Error al procesar la solicitud");
 
   const { data: receptorsData, isLoading } = useReceptors({
     active: undefined,
@@ -52,6 +49,32 @@ export function ReceptorsCatalog() {
       receptor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       receptor.externalId.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Form para crear
+  const createForm = useFormValidation({
+    schema: createReceptorSchema,
+    defaultValues: {
+      externalId: "",
+      name: "",
+      isActive: undefined,
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Receptor creado exitosamente",
+  });
+
+  // Form para editar
+  const editForm = useFormValidation({
+    schema: updateReceptorSchema,
+    defaultValues: {
+      externalId: selectedReceptor?.externalId ?? "",
+      name: selectedReceptor?.name ?? "",
+      isActive: selectedReceptor?.isActive,
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Receptor actualizado exitosamente",
+  });
 
   const columns: Array<TableColumn<Receptor>> = [
     {
@@ -78,7 +101,9 @@ export function ReceptorsCatalog() {
       component: (value) => (
         <span
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            value
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
           }`}
         >
           {value ? "Activo" : "Inactivo"}
@@ -88,17 +113,21 @@ export function ReceptorsCatalog() {
   ];
 
   const handleCreate = () => {
-    setFormData({ externalId: "", name: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({
+      externalId: "",
+      name: "",
+      isActive: undefined,
+    });
     setIsCreateModalOpen(true);
   };
 
   const handleEdit = (receptor: Receptor) => {
     setSelectedReceptor(receptor);
-    setFormData({ externalId: receptor.externalId, name: receptor.name });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    editForm.resetForm({
+      externalId: receptor.externalId,
+      name: receptor.name,
+      isActive: receptor.isActive,
+    });
     setIsEditModalOpen(true);
   };
 
@@ -107,47 +136,44 @@ export function ReceptorsCatalog() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errors: { externalId?: string; name?: string } = {};
-
-    if (!formData.externalId.trim()) {
-      errors.externalId = "El ID externo es requerido";
+  const handleCreateSubmit = createForm.form.handleSubmit(async (data) => {
+    try {
+      createForm.clearAllErrors();
+      await createReceptorMutation.mutateAsync(data);
+      createForm.toast.success("Receptor creado exitosamente");
+      createForm.resetForm({
+        externalId: "",
+        name: "",
+        isActive: undefined,
+      });
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      createForm.handleBackendError(error);
     }
-    if (!formData.name.trim()) {
-      errors.name = "El nombre es requerido";
-    }
+  });
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      errorHandling.setValidationErrors(
-        Object.values(errors).filter((err): err is string => !!err)
-      );
-
-      return;
-    }
+  const handleEditSubmit = editForm.form.handleSubmit(async (data) => {
+    if (!selectedReceptor) return;
 
     try {
-      errorHandling.clearErrors();
-
-      if (isCreateModalOpen) {
-        await createReceptorMutation.mutateAsync(formData);
-        setIsCreateModalOpen(false);
-      } else if (isEditModalOpen && selectedReceptor) {
-        await updateReceptorMutation.mutateAsync({
-          id: selectedReceptor.id,
-          data: formData,
-        });
-        setIsEditModalOpen(false);
-      }
-
-      setFormData({ externalId: "", name: "" });
-      setFormErrors({});
+      editForm.clearAllErrors();
+      const updateData = {
+        externalId: data.externalId ?? selectedReceptor.externalId,
+        name: data.name ?? selectedReceptor.name,
+        isActive: data.isActive ?? selectedReceptor.isActive,
+      };
+      await updateReceptorMutation.mutateAsync({
+        id: selectedReceptor.id,
+        data: updateData,
+      });
+      editForm.toast.success("Receptor actualizado exitosamente");
+      editForm.resetForm(updateData);
+      setIsEditModalOpen(false);
+      setSelectedReceptor(null);
     } catch (error) {
-      errorHandling.handleApiError(error, "Error al guardar el receptor");
+      editForm.handleBackendError(error);
     }
-  };
+  });
 
   const handleDeleteConfirm = async () => {
     if (selectedReceptor) {
@@ -156,19 +182,31 @@ export function ReceptorsCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedReceptor(null);
       } catch {
-        errorHandling.setServerError("Error al eliminar el receptor");
+        // El error se maneja automáticamente por la mutación
       }
     }
   };
 
   const handleCancel = () => {
-    setFormData({ externalId: "", name: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({
+      externalId: "",
+      name: "",
+      isActive: undefined,
+    });
+    if (selectedReceptor) {
+      editForm.resetForm({
+        externalId: selectedReceptor.externalId,
+        name: selectedReceptor.name,
+        isActive: selectedReceptor.isActive,
+      });
+    }
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedReceptor(null);
   };
+
+  const isCreateLoading = createReceptorMutation.isPending;
+  const isEditLoading = updateReceptorMutation.isPending;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -206,60 +244,88 @@ export function ReceptorsCatalog() {
         />
       </div>
 
+      {/* Modal de Crear */}
       <Modal
-        data-cy={
-          isCreateModalOpen ? "create-receptor-modal" : "edit-receptor-modal"
-        }
-        isOpen={isCreateModalOpen || isEditModalOpen}
-        title={isCreateModalOpen ? "Crear Receptor" : "Editar Receptor"}
+        data-cy="create-receptor-modal"
+        isOpen={isCreateModalOpen}
+        title="Crear Receptor"
         onClose={handleCancel}
       >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {errorHandling.validationErrors.length > 0 && (
-            <ValidationErrorList errors={errorHandling.validationErrors} />
+        <form className="space-y-4" onSubmit={handleCreateSubmit}>
+          {createForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={createForm.modalError.validationErrors}
+            />
           )}
 
-          {errorHandling.serverError && (
+          {createForm.modalError.serverError && (
             <ErrorMessage
-              isServerError={errorHandling.parsedError?.isServerError ?? false}
-              message={errorHandling.serverError}
+              isServerError={
+                createForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={createForm.modalError.serverError}
               type="server"
             />
           )}
 
-          <FormField
-            autoFocus
-            required
-            error={formErrors.externalId}
-            label="ID Externo"
-            name="externalId"
-            placeholder="Ingresa el ID externo del receptor"
-            value={formData.externalId}
-            onChange={(value) =>
-              setFormData({ ...formData, externalId: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="externalId"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="ID Externo"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el ID externo"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="externalId"
+                  />
+                </>
+              )}
+            />
+          </div>
 
-          <FormField
-            required
-            error={formErrors.name}
-            label="Nombre"
-            name="name"
-            placeholder="Ingresa el nombre del receptor"
-            value={formData.name}
-            onChange={(value) =>
-              setFormData({ ...formData, name: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="name"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del receptor"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
               color="default"
-              disabled={
-                createReceptorMutation.isPending ||
-                updateReceptorMutation.isPending
-              }
+              disabled={isCreateLoading}
               size="md"
               type="button"
               variant="solid"
@@ -271,19 +337,118 @@ export function ReceptorsCatalog() {
               className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
-                createReceptorMutation.isPending ||
-                updateReceptorMutation.isPending
+                isCreateLoading || createForm.form.formState.isSubmitting
               }
+              isLoading={isCreateLoading}
               size="md"
               type="submit"
               variant="solid"
             >
-              {createReceptorMutation.isPending ||
-              updateReceptorMutation.isPending
-                ? "Guardando..."
-                : isCreateModalOpen
-                  ? "Crear"
-                  : "Actualizar"}
+              Crear
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Editar */}
+      <Modal
+        data-cy="edit-receptor-modal"
+        isOpen={isEditModalOpen}
+        title="Editar Receptor"
+        onClose={handleCancel}
+      >
+        <form className="space-y-4" onSubmit={handleEditSubmit}>
+          {editForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={editForm.modalError.validationErrors}
+            />
+          )}
+
+          {editForm.modalError.serverError && (
+            <ErrorMessage
+              isServerError={
+                editForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={editForm.modalError.serverError}
+              type="server"
+            />
+          )}
+
+          <div>
+            <Controller
+              name="externalId"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="ID Externo"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el ID externo"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="externalId"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="name"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del receptor"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="default"
+              disabled={isEditLoading}
+              size="md"
+              type="button"
+              variant="solid"
+              onPress={handleCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="primary"
+              disabled={isEditLoading || editForm.form.formState.isSubmitting}
+              isLoading={isEditLoading}
+              size="md"
+              type="submit"
+              variant="solid"
+            >
+              Actualizar
             </Button>
           </div>
         </form>

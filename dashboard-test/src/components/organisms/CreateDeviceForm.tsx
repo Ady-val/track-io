@@ -1,5 +1,6 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { Controller } from "react-hook-form";
 
 import {
   FaFloppyDisk,
@@ -9,14 +10,25 @@ import {
   FaDesktop,
 } from "react-icons/fa6";
 
-import { Button, Input, Select, Text, Checkbox } from "@components/atoms";
+import {
+  Button,
+  Input,
+  Select,
+  Text,
+  Checkbox,
+  ErrorMessage,
+  ValidationErrorList,
+} from "@components/atoms";
+import { FieldError } from "@components/molecules";
 
 import { useAreas } from "@/hooks/useAreas";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { createDeviceSchema } from "@/lib/validations/schemas";
 import type { CreateDeviceData } from "@/types/device";
 
 export interface CreateDeviceFormProps {
   externalId: string;
-  onSubmit: (data: CreateDeviceData) => void;
+  onSubmit: (data: CreateDeviceData) => Promise<void> | void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -27,34 +39,65 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const [name, setName] = useState<string>("");
-  const [areaId, setAreaId] = useState<number | string>("");
-  const [isVirtualDevice, setIsVirtualDevice] = useState<boolean>(false);
   const { areas, loading: areasLoading } = useAreas();
-
-  useEffect(() => {
-    if (areas.length > 0 && !areaId) {
-      setAreaId(areas[0]?.id ?? "");
-    }
-  }, [areas, areaId]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!name.trim() || !areaId) {
-      return;
-    }
-
-    onSubmit({
-      externalId,
-      name: name.trim(),
-      areaId: Number(areaId),
-      isVirtualDevice,
+  const { form, modalError, handleBackendError, clearAllErrors } =
+    useFormValidation({
+      schema: createDeviceSchema,
+      defaultValues: {
+        name: "",
+        areaId: undefined,
+        externalId,
+        isVirtualDevice: false,
+      },
+      showToastOnError: true,
+      showToastOnSuccess: true,
+      successMessage: "Dispositivo creado exitosamente",
     });
-  };
+
+  // Establecer el primer área como valor por defecto si hay áreas disponibles
+  useEffect(() => {
+    if (areas.length > 0 && !form.getValues("areaId")) {
+      form.setValue("areaId", areas[0]?.id ?? 0);
+    }
+  }, [areas, form]);
+
+  // Limpiar errores cuando se cancela
+  useEffect(() => {
+    return () => {
+      clearAllErrors();
+    };
+  }, [clearAllErrors]);
+
+  const handleSubmit = form.handleSubmit(async (data) => {
+    try {
+      clearAllErrors();
+      await onSubmit({
+        externalId: data.externalId,
+        name: data.name.trim(),
+        areaId: data.areaId,
+        isVirtualDevice: data.isVirtualDevice ?? false,
+      });
+    } catch (error) {
+      handleBackendError(error);
+    }
+  });
 
   return (
     <form onSubmit={handleSubmit}>
+      {/* Errores de validación generales */}
+      {modalError.validationErrors.length > 0 && (
+        <ValidationErrorList errors={modalError.validationErrors} />
+      )}
+
+      {/* Error del servidor */}
+      {modalError.serverError && (
+        <ErrorMessage
+          message={modalError.serverError}
+          type="server"
+          isServerError={modalError.parsedError?.isServerError ?? false}
+        />
+      )}
+
       {/* External ID Display */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
@@ -70,20 +113,29 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
 
       {/* Name Input */}
       <div className="mb-4">
-        <Input
-          autoFocus
-          fullWidth
-          required
-          isDisabled={isLoading}
-          label="Nombre del Dispositivo"
-          labelPlacement="outside"
-          placeholder="Ej: Sensor Principal de Temperatura"
-          size="md"
-          startContent={<FaTag className="text-slate-400" />}
-          type="text"
-          value={name}
-          variant="bordered"
-          onChange={(e) => setName(e.target.value)}
+        <Controller
+          name="name"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <>
+              <Input
+                {...field}
+                autoFocus
+                fullWidth
+                isDisabled={isLoading}
+                isInvalid={!!fieldState.error}
+                errorMessage={fieldState.error?.message}
+                label="Nombre del Dispositivo"
+                labelPlacement="outside"
+                placeholder="Ej: Sensor Principal de Temperatura"
+                size="md"
+                startContent={<FaTag className="text-slate-400" />}
+                type="text"
+                variant="bordered"
+              />
+              <FieldError error={fieldState.error?.message} fieldId="name" />
+            </>
+          )}
         />
       </div>
 
@@ -95,24 +147,34 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
             Área
           </Text>
         </div>
-        <Select
-          fullWidth
-          required
-          disabled={isLoading || areasLoading}
-          value={areaId}
-          onChange={(e) => setAreaId(Number(e.target.value))}
-        >
-          {areas.map((area) => (
-            <option key={area.id} value={area.id}>
-              {area.name}
-            </option>
-          ))}
-        </Select>
-        {areasLoading && (
-          <Text className="mt-1" color="muted" variant="caption">
-            Cargando áreas...
-          </Text>
-        )}
+        <Controller
+          name="areaId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <>
+              <Select
+                {...field}
+                fullWidth
+                disabled={isLoading || areasLoading}
+                isInvalid={!!fieldState.error}
+                value={String(field.value ?? "")}
+                onChange={(e) => field.onChange(Number(e.target.value))}
+              >
+                {areas.map((area) => (
+                  <option key={area.id} value={area.id}>
+                    {area.name}
+                  </option>
+                ))}
+              </Select>
+              {areasLoading && (
+                <Text className="mt-1" color="muted" variant="caption">
+                  Cargando áreas...
+                </Text>
+              )}
+              <FieldError error={fieldState.error?.message} fieldId="areaId" />
+            </>
+          )}
+        />
       </div>
 
       {/* Virtual Device Checkbox */}
@@ -123,16 +185,22 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
             Tipo de Dispositivo
           </Text>
         </div>
-        <Checkbox
-          color="primary"
-          isSelected={isVirtualDevice}
-          size="md"
-          onValueChange={setIsVirtualDevice}
-        >
-          <Text color="secondary" variant="small">
-            Dispositivo Virtual (para computadora)
-          </Text>
-        </Checkbox>
+        <Controller
+          name="isVirtualDevice"
+          control={form.control}
+          render={({ field }) => (
+            <Checkbox
+              color="primary"
+              isSelected={field.value ?? false}
+              size="md"
+              onValueChange={field.onChange}
+            >
+              <Text color="secondary" variant="small">
+                Dispositivo Virtual (para computadora)
+              </Text>
+            </Checkbox>
+          )}
+        />
       </div>
 
       {/* Actions */}
@@ -142,18 +210,20 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
           disabled={isLoading}
           size="md"
           variant="solid"
-          onClick={onCancel}
+          onPress={onCancel}
+          className="px-6 py-2 font-semibold"
         >
           <FaXmark className="mr-2" />
           Cancelar
         </Button>
         <Button
           color="primary"
-          disabled={isLoading || !name.trim() || !areaId}
+          disabled={isLoading}
           isLoading={isLoading}
           size="md"
           type="submit"
           variant="solid"
+          className="px-6 py-2 font-semibold"
         >
           <FaFloppyDisk className="mr-2" />
           Crear Dispositivo

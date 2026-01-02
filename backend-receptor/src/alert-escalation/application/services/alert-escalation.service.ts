@@ -36,6 +36,7 @@ type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertEscalationService {
+  private readonly endpointUrl = 'http://localhost:1880/events';
   private readonly logger = new Logger(AlertEscalationService.name);
 
   constructor(
@@ -313,7 +314,7 @@ export class AlertEscalationService {
 
       const success = await this.sendMessagesToEndpoint(
         messages,
-        config.endpointUrl
+        this.endpointUrl
       );
 
       await this.logAlertSent(
@@ -321,7 +322,7 @@ export class AlertEscalationService {
         level,
         messages,
         success,
-        config.endpointUrl,
+        this.endpointUrl,
         success ? undefined : 'HTTP request failed'
       );
 
@@ -372,7 +373,7 @@ export class AlertEscalationService {
 
       const success = await this.sendMessagesToEndpoint(
         messages,
-        config.endpointUrl
+        this.endpointUrl
       );
 
       await this.logAlertSent(
@@ -380,7 +381,7 @@ export class AlertEscalationService {
         AlertLevel.CLOSE,
         messages,
         success,
-        config.endpointUrl,
+        this.endpointUrl,
         success ? undefined : 'HTTP request failed'
       );
 

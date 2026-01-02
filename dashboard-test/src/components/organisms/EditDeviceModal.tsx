@@ -1,13 +1,21 @@
 import type { Device, UpdateDeviceData } from "../../types/device";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
+import { Controller } from "react-hook-form";
 
 import { FaMicrochip, FaDesktop } from "react-icons/fa";
 
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { updateDeviceSchema } from "../../lib/validations/schemas";
 import deviceService from "../../lib/services/device.service";
-import { Button } from "../atoms/Button";
-import { Checkbox } from "../atoms/Checkbox";
-import { Input } from "../atoms/Input";
+import {
+  Button,
+  Checkbox,
+  Input,
+  ErrorMessage,
+  ValidationErrorList,
+} from "../atoms";
+import { FieldError } from "../molecules";
 
 import { Modal } from "./Modal";
 
@@ -24,40 +32,51 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
   onSuccess,
   device,
 }) => {
-  const [name, setName] = useState("");
-  const [externalId, setExternalId] = useState("");
-  const [isVirtualDevice, setIsVirtualDevice] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { form, modalError, handleBackendError, resetForm, toast } =
+    useFormValidation({
+      schema: updateDeviceSchema,
+      defaultValues: {
+        name: device?.name ?? "",
+        externalId: device?.externalId ?? "",
+        isVirtualDevice: device?.isVirtualDevice ?? false,
+      },
+      showToastOnError: true,
+      showToastOnSuccess: true,
+      successMessage: "Dispositivo actualizado exitosamente",
+    });
 
+  const prevIsOpenRef = useRef(isOpen);
+
+  // Actualizar valores cuando se abre el modal
   useEffect(() => {
-    if (device && isOpen) {
-      setName(device.name);
-      setExternalId(device.externalId);
-      setIsVirtualDevice(device.isVirtualDevice);
+    if (device && isOpen && !prevIsOpenRef.current) {
+      resetForm({
+        name: device.name,
+        externalId: device.externalId,
+        isVirtualDevice: device.isVirtualDevice,
+      });
     }
-  }, [device, isOpen]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, device, resetForm]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!device || !name || !externalId) return;
+  const handleSubmit = form.handleSubmit(async (data) => {
+    if (!device) return;
 
-    setIsLoading(true);
     try {
       const deviceData: UpdateDeviceData = {
-        name,
-        externalId,
-        isVirtualDevice,
+        name: data.name?.trim() ?? device.name,
+        externalId: data.externalId?.trim() ?? device.externalId,
+        isVirtualDevice: data.isVirtualDevice ?? device.isVirtualDevice,
       };
 
       await deviceService.update(device.id, deviceData);
+      toast.success("Dispositivo actualizado exitosamente");
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Error updating device:", error);
-    } finally {
-      setIsLoading(false);
+      handleBackendError(error);
     }
-  };
+  });
 
   if (!device) return null;
 
@@ -70,6 +89,20 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
       onClose={onClose}
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
+        {/* Errores de validación generales */}
+        {modalError.validationErrors.length > 0 && (
+          <ValidationErrorList errors={modalError.validationErrors} />
+        )}
+
+        {/* Error del servidor */}
+        {modalError.serverError && (
+          <ErrorMessage
+            message={modalError.serverError}
+            type="server"
+            isServerError={modalError.parsedError?.isServerError ?? false}
+          />
+        )}
+
         <div className="flex items-center space-x-2 mb-4">
           <FaMicrochip className="w-5 h-5 text-blue-500" />
           <h3 className="text-lg font-semibold text-slate-200">
@@ -79,35 +112,59 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 
         <div className="space-y-4">
           <div>
-            <Input
-              autoFocus
-              fullWidth
-              required
-              id="edit-device-name"
-              isDisabled={isLoading}
-              label="Nombre del Dispositivo"
-              labelPlacement="outside"
-              placeholder="Ej: Controlador Principal"
-              size="md"
-              value={name}
-              variant="bordered"
-              onChange={(e) => setName(e.target.value)}
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    fullWidth
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
+                    errorMessage={fieldState.error?.message}
+                    id="edit-device-name"
+                    label="Nombre del Dispositivo"
+                    labelPlacement="outside"
+                    placeholder="Ej: Controlador Principal"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="edit-device-name"
+                  />
+                </>
+              )}
             />
           </div>
 
           <div>
-            <Input
-              fullWidth
-              required
-              id="edit-device-external-id"
-              isDisabled={isLoading}
-              label="External ID"
-              labelPlacement="outside"
-              placeholder="Ej: CTR-1433"
-              size="md"
-              value={externalId}
-              variant="bordered"
-              onChange={(e) => setExternalId(e.target.value)}
+            <Controller
+              name="externalId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    fullWidth
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
+                    errorMessage={fieldState.error?.message}
+                    id="edit-device-external-id"
+                    label="External ID"
+                    labelPlacement="outside"
+                    placeholder="Ej: CTR-1433"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="edit-device-external-id"
+                  />
+                </>
+              )}
             />
           </div>
 
@@ -132,16 +189,22 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
                 Tipo de Dispositivo
               </span>
             </div>
-            <Checkbox
-              color="primary"
-              isSelected={isVirtualDevice}
-              size="md"
-              onValueChange={setIsVirtualDevice}
-            >
-              <span className="text-sm text-slate-400">
-                Dispositivo Virtual (para computadora)
-              </span>
-            </Checkbox>
+            <Controller
+              name="isVirtualDevice"
+              control={form.control}
+              render={({ field }) => (
+                <Checkbox
+                  color="primary"
+                  isSelected={field.value ?? false}
+                  size="md"
+                  onValueChange={field.onChange}
+                >
+                  <span className="text-sm text-slate-400">
+                    Dispositivo Virtual (para computadora)
+                  </span>
+                </Checkbox>
+              )}
+            />
           </div>
         </div>
 
@@ -149,7 +212,7 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
           <Button
             className="px-6 py-2 font-semibold"
             color="default"
-            disabled={isLoading}
+            disabled={form.formState.isSubmitting}
             size="md"
             type="button"
             variant="solid"
@@ -160,12 +223,13 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
           <Button
             className="px-6 py-2 font-semibold"
             color="primary"
-            disabled={isLoading || !name || !externalId}
+            disabled={form.formState.isSubmitting}
+            isLoading={form.formState.isSubmitting}
             size="md"
             type="submit"
             variant="solid"
           >
-            {isLoading ? "Guardando..." : "Guardar Cambios"}
+            Guardar Cambios
           </Button>
         </div>
       </form>

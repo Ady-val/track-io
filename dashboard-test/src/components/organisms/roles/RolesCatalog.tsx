@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
 import { useHasPermission } from "@/hooks/useHasPermission";
-import { useModalError } from "@/hooks/useModalError";
+import { useFormValidation } from "@/hooks/useFormValidation";
 import {
   useRoles,
   useCreateRole,
@@ -13,13 +14,13 @@ import {
   useInitializePermissions,
   type Role,
 } from "@/hooks/useRoles";
+import { createRoleSchema, updateRoleSchema } from "@/lib/validations/schemas";
 
-import { ErrorMessage, ValidationErrorList } from "../../atoms";
-import { Button } from "../../atoms/Button";
+import { ErrorMessage, ValidationErrorList, Button, Input } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
+import { FieldError } from "../../molecules/FieldError";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
-import { FormField } from "../../molecules/FormField";
 import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
 
@@ -33,10 +34,6 @@ export function RolesCatalog() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
-  const [formErrors, setFormErrors] = useState<{ name?: string }>({});
-
-  const errorHandling = useModalError("Error al procesar la solicitud");
 
   const itemsPerPage = 10;
   const offset = (currentPage - 1) * itemsPerPage;
@@ -75,6 +72,31 @@ export function RolesCatalog() {
 
   const permissions = permissionsData?.data ?? [];
   const modules = modulesData?.data ?? [];
+
+  // Form para crear
+  const createForm = useFormValidation({
+    schema: createRoleSchema,
+    defaultValues: {
+      name: "",
+      description: undefined,
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Rol creado exitosamente",
+  });
+
+  // Form para editar
+  const editForm = useFormValidation({
+    schema: updateRoleSchema,
+    defaultValues: {
+      name: selectedRole?.name ?? "",
+      description: selectedRole?.description,
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Rol actualizado exitosamente",
+  });
+
 
   const columns: Array<TableColumn<Role>> = [
     {
@@ -118,17 +140,19 @@ export function RolesCatalog() {
   ];
 
   const handleCreate = () => {
-    setFormData({ name: "", description: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm({
+      name: "",
+      description: undefined,
+    });
     setIsCreateModalOpen(true);
   };
 
   const handleEdit = (role: Role) => {
     setSelectedRole(role);
-    setFormData({ name: role.name, description: role.description || "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    editForm.resetForm({
+      name: role.name,
+      description: role.description || undefined,
+    });
     setIsEditModalOpen(true);
   };
 
@@ -142,47 +166,36 @@ export function RolesCatalog() {
     setIsPermissionsModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errors: { name?: string } = {};
-
-    if (!formData.name.trim()) {
-      errors.name = "El nombre es requerido";
+  const handleCreateSubmit = createForm.form.handleSubmit(async (data) => {
+    try {
+      createForm.clearAllErrors();
+      if (modules.length > 0 && permissions.length === 0) {
+        await initializePermissionsMutation.mutateAsync();
+      }
+      await createRoleMutation.mutateAsync(data);
+      createForm.toast.success("Rol creado exitosamente");
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      createForm.handleBackendError(error);
     }
+  });
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      errorHandling.setValidationErrors(
-        Object.values(errors).filter((err): err is string => !!err)
-      );
-
-      return;
-    }
+  const handleEditSubmit = editForm.form.handleSubmit(async (data) => {
+    if (!selectedRole) return;
 
     try {
-      errorHandling.clearErrors();
-
-      if (isCreateModalOpen) {
-        if (modules.length > 0 && permissions.length === 0) {
-          await initializePermissionsMutation.mutateAsync();
-        }
-        await createRoleMutation.mutateAsync(formData);
-        setIsCreateModalOpen(false);
-      } else if (isEditModalOpen && selectedRole) {
-        await updateRoleMutation.mutateAsync({
-          id: selectedRole.id,
-          data: formData,
-        });
-        setIsEditModalOpen(false);
-      }
-
-      setFormData({ name: "", description: "" });
-      setFormErrors({});
+      editForm.clearAllErrors();
+      await updateRoleMutation.mutateAsync({
+        id: selectedRole.id,
+        data,
+      });
+      editForm.toast.success("Rol actualizado exitosamente");
+      setIsEditModalOpen(false);
+      setSelectedRole(null);
     } catch (error) {
-      errorHandling.handleApiError(error, "Error al guardar el rol");
+      editForm.handleBackendError(error);
     }
-  };
+  });
 
   const handleDeleteConfirm = async () => {
     if (selectedRole) {
@@ -191,19 +204,21 @@ export function RolesCatalog() {
         setIsDeleteModalOpen(false);
         setSelectedRole(null);
       } catch (error) {
-        console.error("Error deleting role:", error);
+        // El error se maneja automáticamente por la mutación
       }
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: "", description: "" });
-    setFormErrors({});
-    errorHandling.clearErrors();
+    createForm.resetForm();
+    editForm.resetForm();
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedRole(null);
   };
+
+  const isCreateLoading = createRoleMutation.isPending;
+  const isEditLoading = updateRoleMutation.isPending;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -220,6 +235,7 @@ export function RolesCatalog() {
           <Button
             className="ml-4"
             color="primary"
+            data-cy="create-role-button"
             size="lg"
             onClick={handleCreate}
           >
@@ -232,6 +248,7 @@ export function RolesCatalog() {
         <DataTable
           columns={columns}
           data={roles}
+          data-cy="roles-table"
           emptyMessage="No hay roles registrados"
           loading={isLoading}
           onDelete={hasDeletePermission ? handleDelete : undefined}
@@ -251,55 +268,89 @@ export function RolesCatalog() {
         </div>
       )}
 
+      {/* Modal de Crear */}
       <Modal
-        isOpen={isCreateModalOpen || isEditModalOpen}
-        title={isCreateModalOpen ? "Crear Rol" : "Editar Rol"}
+        data-cy="create-role-modal"
+        isOpen={isCreateModalOpen}
+        title="Crear Rol"
         onClose={handleCancel}
       >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {errorHandling.validationErrors.length > 0 && (
-            <ValidationErrorList errors={errorHandling.validationErrors} />
+        <form className="space-y-4" onSubmit={handleCreateSubmit}>
+          {createForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={createForm.modalError.validationErrors}
+            />
           )}
 
-          {errorHandling.serverError && (
+          {createForm.modalError.serverError && (
             <ErrorMessage
-              isServerError={errorHandling.parsedError?.isServerError ?? false}
-              message={errorHandling.serverError}
+              isServerError={
+                createForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={createForm.modalError.serverError}
               type="server"
             />
           )}
 
-          <FormField
-            autoFocus
-            required
-            error={formErrors.name}
-            label="Nombre"
-            name="name"
-            placeholder="Ingresa el nombre del rol"
-            value={formData.name}
-            onChange={(value) =>
-              setFormData({ ...formData, name: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="name"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del rol"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
 
-          <FormField
-            error={undefined}
-            label="Descripción"
-            name="description"
-            placeholder="Ingresa una descripción (opcional)"
-            value={formData.description}
-            onChange={(value) =>
-              setFormData({ ...formData, description: value as string })
-            }
-          />
+          <div>
+            <Controller
+              name="description"
+              control={createForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Descripción (Opcional)"
+                    labelPlacement="outside"
+                    placeholder="Ingresa una descripción"
+                    size="md"
+                    value={field.value || ""}
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="description"
+                  />
+                </>
+              )}
+            />
+          </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
             <Button
               className="px-6 py-2 font-semibold"
               color="default"
-              disabled={
-                createRoleMutation.isPending || updateRoleMutation.isPending
-              }
+              disabled={isCreateLoading}
               size="md"
               type="button"
               variant="solid"
@@ -311,17 +362,119 @@ export function RolesCatalog() {
               className="px-6 py-2 font-semibold"
               color="primary"
               disabled={
-                createRoleMutation.isPending || updateRoleMutation.isPending
+                isCreateLoading || createForm.form.formState.isSubmitting
               }
+              isLoading={isCreateLoading}
               size="md"
               type="submit"
               variant="solid"
             >
-              {createRoleMutation.isPending || updateRoleMutation.isPending
-                ? "Guardando..."
-                : isCreateModalOpen
-                  ? "Crear"
-                  : "Actualizar"}
+              Crear
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Editar */}
+      <Modal
+        data-cy="edit-role-modal"
+        isOpen={isEditModalOpen}
+        title="Editar Rol"
+        onClose={handleCancel}
+      >
+        <form className="space-y-4" onSubmit={handleEditSubmit}>
+          {editForm.modalError.validationErrors.length > 0 && (
+            <ValidationErrorList
+              errors={editForm.modalError.validationErrors}
+            />
+          )}
+
+          {editForm.modalError.serverError && (
+            <ErrorMessage
+              isServerError={
+                editForm.modalError.parsedError?.isServerError ?? false
+              }
+              message={editForm.modalError.serverError}
+              type="server"
+            />
+          )}
+
+          <div>
+            <Controller
+              name="name"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    autoFocus
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Ingresa el nombre del rol"
+                    size="md"
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="name"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <Controller
+              name="description"
+              control={editForm.form.control}
+              render={({ field, fieldState }) => (
+                <>
+                  <Input
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    fullWidth
+                    isInvalid={!!fieldState.error}
+                    label="Descripción (Opcional)"
+                    labelPlacement="outside"
+                    placeholder="Ingresa una descripción"
+                    size="md"
+                    value={field.value || ""}
+                    variant="bordered"
+                  />
+                  <FieldError
+                    error={fieldState.error?.message}
+                    fieldId="description"
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="default"
+              disabled={isEditLoading}
+              size="md"
+              type="button"
+              variant="solid"
+              onPress={handleCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="px-6 py-2 font-semibold"
+              color="primary"
+              disabled={isEditLoading || editForm.form.formState.isSubmitting}
+              isLoading={isEditLoading}
+              size="md"
+              type="submit"
+              variant="solid"
+            >
+              Actualizar
             </Button>
           </div>
         </form>
@@ -330,6 +483,7 @@ export function RolesCatalog() {
       <ConfirmationModal
         cancelText="Cancelar"
         confirmText="Eliminar"
+        data-cy="delete-role-confirmation-modal"
         isOpen={isDeleteModalOpen}
         loading={deleteRoleMutation.isPending}
         message={`¿Estás seguro de querer eliminar "${selectedRole?.name}"?`}
@@ -341,10 +495,10 @@ export function RolesCatalog() {
 
       {selectedRole && (
         <PermissionMatrix
-          isLoading={isLoadingPermissions || isLoadingModules}
           isOpen={isPermissionsModalOpen}
-          modules={modules}
-          permissions={permissions}
+          isLoading={isLoadingPermissions || isLoadingModules}
+          modules={Array.isArray(modules) ? modules : []}
+          permissions={Array.isArray(permissions) ? permissions : []}
           role={selectedRole}
           onClose={() => {
             setIsPermissionsModalOpen(false);
