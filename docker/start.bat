@@ -65,12 +65,10 @@ echo.
 echo 🌐 URLs de acceso:
 echo    [Acceso Local]
 echo      Dashboard:       http://localhost
-echo      Virtual Device:  http://localhost/virtual-device
 echo      Backend API:     http://localhost:3000
 echo.
 echo    [Acceso en Red Local]
 echo      Dashboard:       http://%HOST_IP%
-echo      Virtual Device:  http://%HOST_IP%/virtual-device
 echo      Backend API:     http://%HOST_IP%:3000
 echo.
 echo 💡 Otros equipos en la red pueden acceder usando la IP: %HOST_IP%

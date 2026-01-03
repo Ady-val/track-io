@@ -159,13 +159,11 @@ Después de ejecutar `start.bat` o `start.sh`, verás las URLs de acceso:
 ### Acceso Local (misma computadora):
 
 - **Dashboard**: http://localhost
-- **Virtual Device**: http://localhost/virtual-device
 - **Backend API**: http://localhost:3000
 
 ### Acceso en Red Local (otros dispositivos):
 
 - **Dashboard**: http://[TU_IP]
-- **Virtual Device**: http://[TU_IP]/virtual-device
 - **Backend API**: http://[TU_IP]:3000
 
 **Ejemplo:**
@@ -174,7 +172,6 @@ Después de ejecutar `start.bat` o `start.sh`, verás las URLs de acceso:
 🌐 URLs de acceso:
    [Acceso en Red Local]
      Dashboard:       http://192.168.1.100
-     Virtual Device:  http://192.168.1.100/virtual-device
      Backend API:     http://192.168.1.100:3000
 ```
 
