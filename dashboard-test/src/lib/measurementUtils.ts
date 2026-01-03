@@ -8,6 +8,7 @@ import {
   FaWater,
   FaWaveSquare,
   FaChartLine,
+  FaPowerOff,
 } from "react-icons/fa6";
 
 import type { MeasurementType } from "@/types/dashboard";
@@ -15,7 +16,7 @@ import type { MeasurementType } from "@/types/dashboard";
 export interface MeasurementConfig {
   icon: React.ComponentType<{ className?: string }>;
   unit: string;
-  formatValue: (value: number) => string;
+  formatValue: (value: number | boolean) => string;
   color: string;
   bgColor: string;
 }
@@ -76,6 +77,18 @@ export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
     formatValue: (value: number) => `${value.toFixed(1)}L`,
     color: "#84cc16", // Lima
     bgColor: "rgba(132, 204, 22, 0.1)",
+  },
+  status: {
+    icon: FaPowerOff,
+    unit: "",
+    formatValue: (value: number | boolean) => {
+      if (typeof value === "boolean") {
+        return value ? "ON" : "OFF";
+      }
+      return value !== 0 ? "ON" : "OFF";
+    },
+    color: "#10b981", // Verde
+    bgColor: "rgba(16, 185, 129, 0.1)",
   },
 };
 

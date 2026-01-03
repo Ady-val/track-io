@@ -10,6 +10,7 @@ import {
   CreateDashboardMeasurementGroupDto,
   UpdateDashboardMeasurementGroupDto,
 } from '../dtos/dashboard-measurement-group.dto';
+import { MeasurementType } from '../../../measurements/domain/entities/measurement.entity';
 
 @Injectable()
 export class DashboardMeasurementGroupService {
@@ -107,6 +108,19 @@ export class DashboardMeasurementGroupService {
             `chartMeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
           );
         }
+
+        // Validate that chartMeasurementIds does not include status type measurements
+        const statusMeasurementIds = validMeasurements
+          .filter(dm => dm.measurement?.type === MeasurementType.STATUS)
+          .map(dm => dm.measurementId);
+        const statusIdsInChart = createDto.chartMeasurementIds.filter(id =>
+          statusMeasurementIds.includes(id)
+        );
+        if (statusIdsInChart.length > 0) {
+          throw new BadRequestException(
+            `chartMeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
+          );
+        }
       }
     }
 
@@ -189,6 +203,19 @@ export class DashboardMeasurementGroupService {
         if (invalidIds.length > 0) {
           throw new BadRequestException(
             `chartMeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
+          );
+        }
+
+        // Validate that chartMeasurementIds does not include status type measurements
+        const statusMeasurementIds = group.dashboardMeasurements
+          .filter(dm => dm.measurement?.type === MeasurementType.STATUS)
+          .map(dm => dm.measurementId);
+        const statusIdsInChart = updateDto.chartMeasurementIds.filter(id =>
+          statusMeasurementIds.includes(id)
+        );
+        if (statusIdsInChart.length > 0) {
+          throw new BadRequestException(
+            `chartMeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
           );
         }
       }

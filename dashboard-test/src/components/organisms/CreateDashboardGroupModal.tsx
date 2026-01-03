@@ -396,32 +396,38 @@ export const CreateDashboardGroupModal: React.FC<
                     Measurements para el Chart
                   </Text>
                   <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 max-h-48 overflow-y-auto">
-                    {selectedDashboardMeasurements.map((dm) => {
-                      const measurementId = dm.measurementId;
-                      const chartIds = form.watch("chartMeasurementIds") ?? [];
+                    {selectedDashboardMeasurements
+                      .filter((dm) => dm.measurement.type !== "status")
+                      .map((dm) => {
+                        const measurementId = dm.measurementId;
+                        const chartIds = form.watch("chartMeasurementIds") ?? [];
 
-                      return (
-                        <label
-                          key={dm.id}
-                          className="flex items-center gap-2 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
-                        >
-                          <input
-                            checked={chartIds.includes(measurementId)}
-                            className="w-4 h-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary focus:ring-2"
-                            type="checkbox"
-                            onChange={() =>
-                              handleChartMeasurementToggle(measurementId)
-                            }
-                          />
-                          <Text variant="small">
-                            {dm.measurement.name} ({dm.measurement.externalId})
-                          </Text>
-                        </label>
-                      );
-                    })}
-                    {selectedDashboardMeasurements.length === 0 && (
+                        return (
+                          <label
+                            key={dm.id}
+                            className="flex items-center gap-2 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
+                          >
+                            <input
+                              checked={chartIds.includes(measurementId)}
+                              className="w-4 h-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary focus:ring-2"
+                              type="checkbox"
+                              onChange={() =>
+                                handleChartMeasurementToggle(measurementId)
+                              }
+                            />
+                            <Text variant="small">
+                              {dm.measurement.name} ({dm.measurement.externalId})
+                            </Text>
+                          </label>
+                        );
+                      })}
+                    {selectedDashboardMeasurements.filter(
+                      (dm) => dm.measurement.type !== "status"
+                    ).length === 0 && (
                       <Text color="muted" variant="small">
-                        Agrega dashboard measurements al grupo primero
+                        {selectedDashboardMeasurements.length === 0
+                          ? "Agrega dashboard measurements al grupo primero"
+                          : "No hay measurements disponibles para el chart (los measurements tipo 'status' no pueden agregarse al chart)"}
                       </Text>
                     )}
                   </div>

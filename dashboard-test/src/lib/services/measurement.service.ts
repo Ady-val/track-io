@@ -62,12 +62,25 @@ export const measurementService = {
   },
 
   async create(data: CreateMeasurementData): Promise<Measurement> {
-    const response = await apiClient.post<{
-      message: string;
-      data: Measurement;
-    }>("/measurements", data);
+    try {
+      const response = await apiClient.post<{
+        message: string;
+        data: Measurement;
+      }>("/measurements", data);
 
-    return response.data.data;
+      return response.data.data;
+    } catch (error: any) {
+      console.error("Error creating measurement:", error);
+      if (error.response?.data) {
+        console.error("Error details:", error.response.data);
+        throw new Error(
+          error.response.data.message ||
+            JSON.stringify(error.response.data) ||
+            "Failed to create measurement"
+        );
+      }
+      throw error;
+    }
   },
 };
 

@@ -15,6 +15,7 @@ export enum MeasurementType {
   LEVEL = 'level',
   FLOW = 'flow',
   VIBRATION = 'vibration',
+  STATUS = 'status',
 }
 
 @Entity('measurements')

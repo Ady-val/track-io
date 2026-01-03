@@ -52,7 +52,8 @@ export type MeasurementType =
   | "vibration"
   | "flow"
   | "shape"
-  | "totalizador";
+  | "totalizador"
+  | "status";
 
 export interface DashboardMeasurement {
   id: number;

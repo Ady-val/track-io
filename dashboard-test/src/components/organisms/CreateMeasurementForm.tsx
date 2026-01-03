@@ -25,6 +25,7 @@ const measurementTypeOptions: MeasurementTypeOption[] = [
   { value: "level", label: "Nivel" },
   { value: "flow", label: "Flujo" },
   { value: "vibration", label: "Vibración" },
+  { value: "status", label: "Estado (ON/OFF)" },
 ];
 
 export const CreateMeasurementForm: React.FC<CreateMeasurementFormProps> = ({

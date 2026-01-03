@@ -6,7 +6,8 @@ export type MeasurementType =
   | "vibration"
   | "flow"
   | "shape"
-  | "totalizador";
+  | "totalizador"
+  | "status";
 
 export interface Measurement {
   id: number;

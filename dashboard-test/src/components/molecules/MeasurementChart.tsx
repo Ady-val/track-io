@@ -5,11 +5,12 @@ import type { MeasurementType } from "@/types/dashboard";
 import { GaugeChart } from "./GaugeChart";
 import { HorizontalBarChart } from "./HorizontalBarChart";
 import { VibrationLineChart } from "./VibrationLineChart";
+import { StatusIndicatorCard } from "./StatusIndicatorCard";
 
 export interface MeasurementChartProps {
   title: string;
   subtitle: string;
-  value: number | undefined;
+  value: number | boolean | undefined;
   minValue: number;
   maxValue: number;
   type: MeasurementType;
@@ -82,6 +83,24 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           value={value}
+        />
+      );
+
+    case "status":
+      // Convert value to boolean for status type
+      const isOn =
+        typeof value === "boolean"
+          ? value
+          : typeof value === "number"
+            ? value !== 0
+            : undefined;
+      return (
+        <StatusIndicatorCard
+          isOn={isOn}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
         />
       );
 

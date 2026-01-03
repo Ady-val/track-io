@@ -37,6 +37,9 @@ export type { VibrationLineChartProps } from "./VibrationLineChart";
 export { MeasurementChart } from "./MeasurementChart";
 export type { MeasurementChartProps } from "./MeasurementChart";
 
+export { StatusIndicatorCard } from "./StatusIndicatorCard";
+export type { StatusIndicatorCardProps } from "./StatusIndicatorCard";
+
 export { RealtimeGroupChart } from "./RealtimeGroupChart";
 export type { RealtimeGroupChartProps } from "./RealtimeGroupChart";
 

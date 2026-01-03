@@ -58,7 +58,13 @@ export const useRealtimeGroupChartData = (
         return;
       }
 
+      // Only process numeric values for charts
       const newValue = parseFloat(String(value));
+      if (isNaN(newValue)) {
+        // Skip non-numeric values (e.g., boolean values for status type)
+        return;
+      }
+
       const timestamp = new Date(createdAt);
 
       setData((prev) => {
