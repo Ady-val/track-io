@@ -78,19 +78,27 @@ export const EditDashboardGroupModal: React.FC<
         prevGroupIdRef.current !== groupId;
       
       if (shouldReset) {
+        // Asegurar que los valores numéricos sean números, no strings
+        const minValue = group.chartMinValue != null 
+          ? (typeof group.chartMinValue === 'number' ? group.chartMinValue : Number(group.chartMinValue))
+          : undefined;
+        const maxValue = group.chartMaxValue != null 
+          ? (typeof group.chartMaxValue === 'number' ? group.chartMaxValue : Number(group.chartMaxValue))
+          : undefined;
+        
         resetForm({
           name: group.name,
           dashboardMeasurements: group.dashboardMeasurements.map((dm) => ({
             dashboardMeasurementId: dm.id,
           })),
           chartTimeRange: group.chartTimeRange,
-          chartMinValue: group.chartMinValue,
-          chartMaxValue: group.chartMaxValue,
+          chartMinValue: minValue,
+          chartMaxValue: maxValue,
           chartMeasurementIds: group.chartMeasurementIds ?? [],
         });
-        // Sincronizar estados locales
-        setMinValueInput(group.chartMinValue != null ? String(group.chartMinValue) : "");
-        setMaxValueInput(group.chartMaxValue != null ? String(group.chartMaxValue) : "");
+        // Sincronizar estados locales con valores numéricos convertidos
+        setMinValueInput(minValue != null && !isNaN(minValue) ? String(minValue) : "");
+        setMaxValueInput(maxValue != null && !isNaN(maxValue) ? String(maxValue) : "");
         prevGroupIdRef.current = groupId;
       }
     }
@@ -199,14 +207,14 @@ export const EditDashboardGroupModal: React.FC<
       const submitData: UpdateDashboardMeasurementGroupData = {
         name: data.name.trim(),
         dashboardMeasurements: data.dashboardMeasurements,
-        ...(data.chartTimeRange ||
-        data.chartMinValue ||
-        data.chartMaxValue ||
+        ...(data.chartTimeRange !== undefined ||
+        data.chartMinValue !== undefined ||
+        data.chartMaxValue !== undefined ||
         (data.chartMeasurementIds && data.chartMeasurementIds.length > 0)
           ? {
               chartTimeRange: data.chartTimeRange,
-              chartMinValue: data.chartMinValue,
-              chartMaxValue: data.chartMaxValue,
+              chartMinValue: typeof data.chartMinValue === 'number' ? data.chartMinValue : undefined,
+              chartMaxValue: typeof data.chartMaxValue === 'number' ? data.chartMaxValue : undefined,
               chartMeasurementIds: data.chartMeasurementIds,
             }
           : {}),
@@ -410,13 +418,21 @@ export const EditDashboardGroupModal: React.FC<
                             onChange={(e) => {
                               const value = e.target.value;
                               setMinValueInput(value);
-                              // Actualizar el form solo si es un número válido o está vacío
-                              if (value === "") {
+                              // Solo actualizar el form si el valor está completamente vacío o es un número válido
+                              if (value === "" || value === "-") {
                                 field.onChange(undefined);
                               } else {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue) && value.trim() !== "") {
-                                  field.onChange(numValue);
+                                // Intentar convertir a número solo si el string completo es un número válido
+                                const trimmedValue = value.trim();
+                                if (trimmedValue === "" || trimmedValue === "-") {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(trimmedValue);
+                                  // Solo actualizar si es un número válido (no NaN) y el string original es válido
+                                  if (!isNaN(numValue) && isFinite(numValue) && trimmedValue !== "") {
+                                    field.onChange(numValue);
+                                  }
+                                  // Si no es válido, no actualizar el form (mantener el valor anterior)
                                 }
                               }
                             }}
@@ -424,17 +440,17 @@ export const EditDashboardGroupModal: React.FC<
                               field.onBlur();
                               // Asegurar que el valor esté sincronizado al perder el foco
                               const value = e.target.value.trim();
-                              if (value === "") {
+                              if (value === "" || value === "-") {
                                 setMinValueInput("");
                                 field.onChange(undefined);
                               } else {
                                 const numValue = Number(value);
-                                if (!isNaN(numValue)) {
+                                if (!isNaN(numValue) && isFinite(numValue)) {
                                   setMinValueInput(String(numValue));
                                   field.onChange(numValue);
                                 } else {
-                                  setMinValueInput("");
-                                  field.onChange(undefined);
+                                  // Si no es válido, restaurar el valor anterior del form
+                                  setMinValueInput(field.value != null ? String(field.value) : "");
                                 }
                               }
                             }}
@@ -469,13 +485,21 @@ export const EditDashboardGroupModal: React.FC<
                             onChange={(e) => {
                               const value = e.target.value;
                               setMaxValueInput(value);
-                              // Actualizar el form solo si es un número válido o está vacío
-                              if (value === "") {
+                              // Solo actualizar el form si el valor está completamente vacío o es un número válido
+                              if (value === "" || value === "-") {
                                 field.onChange(undefined);
                               } else {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue) && value.trim() !== "") {
-                                  field.onChange(numValue);
+                                // Intentar convertir a número solo si el string completo es un número válido
+                                const trimmedValue = value.trim();
+                                if (trimmedValue === "" || trimmedValue === "-") {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(trimmedValue);
+                                  // Solo actualizar si es un número válido (no NaN) y el string original es válido
+                                  if (!isNaN(numValue) && isFinite(numValue) && trimmedValue !== "") {
+                                    field.onChange(numValue);
+                                  }
+                                  // Si no es válido, no actualizar el form (mantener el valor anterior)
                                 }
                               }
                             }}
@@ -483,17 +507,17 @@ export const EditDashboardGroupModal: React.FC<
                               field.onBlur();
                               // Asegurar que el valor esté sincronizado al perder el foco
                               const value = e.target.value.trim();
-                              if (value === "") {
+                              if (value === "" || value === "-") {
                                 setMaxValueInput("");
                                 field.onChange(undefined);
                               } else {
                                 const numValue = Number(value);
-                                if (!isNaN(numValue)) {
+                                if (!isNaN(numValue) && isFinite(numValue)) {
                                   setMaxValueInput(String(numValue));
                                   field.onChange(numValue);
                                 } else {
-                                  setMaxValueInput("");
-                                  field.onChange(undefined);
+                                  // Si no es válido, restaurar el valor anterior del form
+                                  setMaxValueInput(field.value != null ? String(field.value) : "");
                                 }
                               }
                             }}

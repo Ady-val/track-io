@@ -358,13 +358,21 @@ export const CreateDashboardGroupModal: React.FC<
                             onChange={(e) => {
                               const value = e.target.value;
                               setMinValueInput(value);
-                              // Actualizar el form solo si es un número válido o está vacío
-                              if (value === "") {
+                              // Solo actualizar el form si el valor está completamente vacío o es un número válido
+                              if (value === "" || value === "-") {
                                 field.onChange(undefined);
                               } else {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue) && value.trim() !== "") {
-                                  field.onChange(numValue);
+                                // Intentar convertir a número solo si el string completo es un número válido
+                                const trimmedValue = value.trim();
+                                if (trimmedValue === "" || trimmedValue === "-") {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(trimmedValue);
+                                  // Solo actualizar si es un número válido (no NaN) y el string original es válido
+                                  if (!isNaN(numValue) && isFinite(numValue) && trimmedValue !== "") {
+                                    field.onChange(numValue);
+                                  }
+                                  // Si no es válido, no actualizar el form (mantener el valor anterior)
                                 }
                               }
                             }}
@@ -372,17 +380,17 @@ export const CreateDashboardGroupModal: React.FC<
                               field.onBlur();
                               // Asegurar que el valor esté sincronizado al perder el foco
                               const value = e.target.value.trim();
-                              if (value === "") {
+                              if (value === "" || value === "-") {
                                 setMinValueInput("");
                                 field.onChange(undefined);
                               } else {
                                 const numValue = Number(value);
-                                if (!isNaN(numValue)) {
+                                if (!isNaN(numValue) && isFinite(numValue)) {
                                   setMinValueInput(String(numValue));
                                   field.onChange(numValue);
                                 } else {
-                                  setMinValueInput("");
-                                  field.onChange(undefined);
+                                  // Si no es válido, restaurar el valor anterior del form
+                                  setMinValueInput(field.value != null ? String(field.value) : "");
                                 }
                               }
                             }}
@@ -417,13 +425,21 @@ export const CreateDashboardGroupModal: React.FC<
                             onChange={(e) => {
                               const value = e.target.value;
                               setMaxValueInput(value);
-                              // Actualizar el form solo si es un número válido o está vacío
-                              if (value === "") {
+                              // Solo actualizar el form si el valor está completamente vacío o es un número válido
+                              if (value === "" || value === "-") {
                                 field.onChange(undefined);
                               } else {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue) && value.trim() !== "") {
-                                  field.onChange(numValue);
+                                // Intentar convertir a número solo si el string completo es un número válido
+                                const trimmedValue = value.trim();
+                                if (trimmedValue === "" || trimmedValue === "-") {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(trimmedValue);
+                                  // Solo actualizar si es un número válido (no NaN) y el string original es válido
+                                  if (!isNaN(numValue) && isFinite(numValue) && trimmedValue !== "") {
+                                    field.onChange(numValue);
+                                  }
+                                  // Si no es válido, no actualizar el form (mantener el valor anterior)
                                 }
                               }
                             }}
@@ -431,17 +447,17 @@ export const CreateDashboardGroupModal: React.FC<
                               field.onBlur();
                               // Asegurar que el valor esté sincronizado al perder el foco
                               const value = e.target.value.trim();
-                              if (value === "") {
+                              if (value === "" || value === "-") {
                                 setMaxValueInput("");
                                 field.onChange(undefined);
                               } else {
                                 const numValue = Number(value);
-                                if (!isNaN(numValue)) {
+                                if (!isNaN(numValue) && isFinite(numValue)) {
                                   setMaxValueInput(String(numValue));
                                   field.onChange(numValue);
                                 } else {
-                                  setMaxValueInput("");
-                                  field.onChange(undefined);
+                                  // Si no es válido, restaurar el valor anterior del form
+                                  setMaxValueInput(field.value != null ? String(field.value) : "");
                                 }
                               }
                             }}
