@@ -43,14 +43,14 @@ echo VITE_API_URL=http://%HOST_IP%:3000 >> .env.host
 
 echo.
 echo 🐳 Iniciando Docker Compose...
-docker-compose down
+docker compose down
 
 if %REBUILD_NEEDED%==1 (
     echo    Reconstruyendo servicios con nueva IP...
-    docker-compose --env-file .env.host up -d --build
+    docker compose --env-file .env.host up -d --build
 ) else (
     echo    Iniciando servicios sin rebuild...
-    docker-compose --env-file .env.host up -d
+    docker compose --env-file .env.host up -d
 )
 
 if %ERRORLEVEL% neq 0 (

@@ -38,14 +38,14 @@ EOF
 
 echo ""
 echo "🐳 Iniciando Docker Compose..."
-docker-compose down
+docker compose down
 
 if [ $REBUILD_NEEDED -eq 1 ]; then
     echo "   Reconstruyendo servicios con nueva IP..."
-    docker-compose --env-file .env.host up -d --build
+    docker compose --env-file .env.host up -d --build
 else
     echo "   Iniciando servicios sin rebuild..."
-    docker-compose --env-file .env.host up -d
+    docker compose --env-file .env.host up -d
 fi
 
 if [ $? -ne 0 ]; then
