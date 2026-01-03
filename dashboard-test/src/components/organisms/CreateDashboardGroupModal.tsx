@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
 import { FaFloppyDisk, FaXmark, FaTrash, FaGaugeHigh } from "react-icons/fa6";
@@ -32,7 +32,7 @@ export const CreateDashboardGroupModal: React.FC<
     error: measurementsError,
   } = useAvailableDashboardMeasurements();
 
-  const { form, modalError, handleBackendError, clearAllErrors, toast } =
+  const { form, modalError, handleBackendError, clearAllErrors, toast, resetForm } =
     useFormValidation({
       schema: createDashboardMeasurementGroupSchema,
       defaultValues: {
@@ -53,10 +53,12 @@ export const CreateDashboardGroupModal: React.FC<
     name: "dashboardMeasurements",
   });
 
+  const prevIsOpenRef = useRef(isOpen);
+
   // Resetear formulario cuando se abre el modal
   useEffect(() => {
-    if (isOpen) {
-      form.reset({
+    if (isOpen && !prevIsOpenRef.current) {
+      resetForm({
         name: "",
         dashboardMeasurements: [],
         chartTimeRange: undefined,
@@ -64,9 +66,9 @@ export const CreateDashboardGroupModal: React.FC<
         chartMaxValue: undefined,
         chartMeasurementIds: [],
       });
-      clearAllErrors();
     }
-  }, [isOpen, form, clearAllErrors]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, resetForm]);
 
   const selectedDashboardMeasurements = useMemo(() => {
     const selectedIds = form.watch("dashboardMeasurements").map(
@@ -152,8 +154,14 @@ export const CreateDashboardGroupModal: React.FC<
   });
 
   const handleClose = () => {
-    form.reset();
-    clearAllErrors();
+    resetForm({
+      name: "",
+      dashboardMeasurements: [],
+      chartTimeRange: undefined,
+      chartMinValue: undefined,
+      chartMaxValue: undefined,
+      chartMeasurementIds: [],
+    });
     onClose();
   };
 
@@ -295,7 +303,6 @@ export const CreateDashboardGroupModal: React.FC<
                     render={({ field, fieldState }) => (
                       <>
                         <Select
-                          {...field}
                           fullWidth
                           value={field.value ? String(field.value) : ""}
                           onChange={(e) =>
@@ -330,7 +337,6 @@ export const CreateDashboardGroupModal: React.FC<
                       render={({ field, fieldState }) => (
                         <>
                           <Input
-                            {...field}
                             fullWidth
                             isDisabled={isLoading}
                             isInvalid={!!fieldState.error}
@@ -347,6 +353,8 @@ export const CreateDashboardGroupModal: React.FC<
                                 e.target.value ? Number(e.target.value) : undefined
                               )
                             }
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                           <FieldError
                             error={fieldState.error?.message}
@@ -363,7 +371,6 @@ export const CreateDashboardGroupModal: React.FC<
                       render={({ field, fieldState }) => (
                         <>
                           <Input
-                            {...field}
                             fullWidth
                             isDisabled={isLoading}
                             isInvalid={!!fieldState.error}
@@ -380,6 +387,8 @@ export const CreateDashboardGroupModal: React.FC<
                                 e.target.value ? Number(e.target.value) : undefined
                               )
                             }
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                           <FieldError
                             error={fieldState.error?.message}
