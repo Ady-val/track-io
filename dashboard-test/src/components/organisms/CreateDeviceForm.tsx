@@ -59,14 +59,16 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
     if (areas.length > 0 && !form.getValues("areaId")) {
       form.setValue("areaId", areas[0]?.id ?? 0);
     }
-  }, [areas, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areas]);
 
-  // Limpiar errores cuando se cancela
+  // Limpiar errores cuando se desmonta el componente
   useEffect(() => {
     return () => {
       clearAllErrors();
     };
-  }, [clearAllErrors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {

@@ -69,14 +69,16 @@ export const CreateDeviceSignalForm: React.FC<CreateDeviceSignalFormProps> = ({
     if (departments.length > 0 && !form.getValues("departmentId")) {
       form.setValue("departmentId", departments[0]?.id ?? 0);
     }
-  }, [departments, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departments]);
 
-  // Limpiar errores cuando se cancela
+  // Limpiar errores cuando se desmonta el componente
   useEffect(() => {
     return () => {
       clearAllErrors();
     };
-  }, [clearAllErrors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {

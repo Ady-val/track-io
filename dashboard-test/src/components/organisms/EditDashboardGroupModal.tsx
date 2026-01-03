@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
 import { FaFloppyDisk, FaXmark, FaTrash, FaGaugeHigh } from "react-icons/fa6";
@@ -38,7 +38,7 @@ export const EditDashboardGroupModal: React.FC<
     loading: measurementsLoading,
   } = useAvailableDashboardMeasurements();
 
-  const { form, modalError, handleBackendError, clearAllErrors, toast } =
+  const { form, modalError, handleBackendError, clearAllErrors, toast, resetForm } =
     useFormValidation({
       schema: updateDashboardMeasurementGroupSchema,
       defaultValues: {
@@ -62,22 +62,33 @@ export const EditDashboardGroupModal: React.FC<
     name: "dashboardMeasurements",
   });
 
+  const prevGroupIdRef = useRef<number | null>(null);
+  const prevIsOpenRef = useRef(isOpen);
+
   // Actualizar valores cuando cambia el group o se abre el modal
   useEffect(() => {
     if (group && isOpen) {
-      form.reset({
-        name: group.name,
-        dashboardMeasurements: group.dashboardMeasurements.map((dm) => ({
-          dashboardMeasurementId: dm.id,
-        })),
-        chartTimeRange: group.chartTimeRange,
-        chartMinValue: group.chartMinValue,
-        chartMaxValue: group.chartMaxValue,
-        chartMeasurementIds: group.chartMeasurementIds ?? [],
-      });
-      clearAllErrors();
+      const groupId = group.id;
+      const shouldReset = 
+        !prevIsOpenRef.current || 
+        prevGroupIdRef.current !== groupId;
+      
+      if (shouldReset) {
+        resetForm({
+          name: group.name,
+          dashboardMeasurements: group.dashboardMeasurements.map((dm) => ({
+            dashboardMeasurementId: dm.id,
+          })),
+          chartTimeRange: group.chartTimeRange,
+          chartMinValue: group.chartMinValue,
+          chartMaxValue: group.chartMaxValue,
+          chartMeasurementIds: group.chartMeasurementIds ?? [],
+        });
+        prevGroupIdRef.current = groupId;
+      }
     }
-  }, [group, isOpen, form, clearAllErrors]);
+    prevIsOpenRef.current = isOpen;
+  }, [group, isOpen, resetForm]);
 
   const selectedDashboardMeasurements = useMemo(() => {
     const allAvailable = [...availableDashboardMeasurements];
@@ -197,7 +208,7 @@ export const EditDashboardGroupModal: React.FC<
 
   const handleClose = () => {
     if (group) {
-      form.reset({
+      resetForm({
         name: group.name,
         dashboardMeasurements: group.dashboardMeasurements.map((dm) => ({
           dashboardMeasurementId: dm.id,
@@ -208,7 +219,6 @@ export const EditDashboardGroupModal: React.FC<
         chartMeasurementIds: group.chartMeasurementIds ?? [],
       });
     }
-    clearAllErrors();
     onClose();
   };
 
