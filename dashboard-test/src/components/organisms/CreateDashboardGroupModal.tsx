@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
 import { FaFloppyDisk, FaXmark, FaTrash, FaGaugeHigh } from "react-icons/fa6";
@@ -55,6 +55,10 @@ export const CreateDashboardGroupModal: React.FC<
 
   const prevIsOpenRef = useRef(isOpen);
 
+  // Estados locales para los inputs numéricos (mejor UX)
+  const [minValueInput, setMinValueInput] = useState<string>("");
+  const [maxValueInput, setMaxValueInput] = useState<string>("");
+
   // Resetear formulario cuando se abre el modal
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current) {
@@ -66,6 +70,9 @@ export const CreateDashboardGroupModal: React.FC<
         chartMaxValue: undefined,
         chartMeasurementIds: [],
       });
+      // Limpiar estados locales
+      setMinValueInput("");
+      setMaxValueInput("");
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, resetForm]);
@@ -346,14 +353,39 @@ export const CreateDashboardGroupModal: React.FC<
                             placeholder="0"
                             size="md"
                             type="number"
-                            value={field.value ? String(field.value) : ""}
+                            value={minValueInput}
                             variant="bordered"
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value ? Number(e.target.value) : undefined
-                              )
-                            }
-                            onBlur={field.onBlur}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setMinValueInput(value);
+                              // Actualizar el form solo si es un número válido o está vacío
+                              if (value === "") {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+                                if (!isNaN(numValue) && value.trim() !== "") {
+                                  field.onChange(numValue);
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              // Asegurar que el valor esté sincronizado al perder el foco
+                              const value = e.target.value.trim();
+                              if (value === "") {
+                                setMinValueInput("");
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+                                if (!isNaN(numValue)) {
+                                  setMinValueInput(String(numValue));
+                                  field.onChange(numValue);
+                                } else {
+                                  setMinValueInput("");
+                                  field.onChange(undefined);
+                                }
+                              }
+                            }}
                             name={field.name}
                           />
                           <FieldError
@@ -380,14 +412,39 @@ export const CreateDashboardGroupModal: React.FC<
                             placeholder="100"
                             size="md"
                             type="number"
-                            value={field.value ? String(field.value) : ""}
+                            value={maxValueInput}
                             variant="bordered"
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value ? Number(e.target.value) : undefined
-                              )
-                            }
-                            onBlur={field.onBlur}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setMaxValueInput(value);
+                              // Actualizar el form solo si es un número válido o está vacío
+                              if (value === "") {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+                                if (!isNaN(numValue) && value.trim() !== "") {
+                                  field.onChange(numValue);
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              // Asegurar que el valor esté sincronizado al perder el foco
+                              const value = e.target.value.trim();
+                              if (value === "") {
+                                setMaxValueInput("");
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+                                if (!isNaN(numValue)) {
+                                  setMaxValueInput(String(numValue));
+                                  field.onChange(numValue);
+                                } else {
+                                  setMaxValueInput("");
+                                  field.onChange(undefined);
+                                }
+                              }
+                            }}
                             name={field.name}
                           />
                           <FieldError
