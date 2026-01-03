@@ -34,7 +34,21 @@ class AlertRuleService {
       `${this.baseUrl}/${id}`
     );
 
-    return response.data.data;
+    const rule = response.data.data;
+    
+    // Normalize messages: ensure messageType is lowercase and map to mensajes for backward compatibility
+    if (rule.messages) {
+      rule.messages = rule.messages.map((msg: any) => ({
+        ...msg,
+        messageType: msg.messageType?.toLowerCase() || msg.messageType,
+        alertRuleId: rule.id.toString(),
+      }));
+      if (!rule.mensajes) {
+        rule.mensajes = rule.messages;
+      }
+    }
+    
+    return rule;
   }
 
   async create(data: CreateAlertRuleData): Promise<AlertRule> {

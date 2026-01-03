@@ -20,6 +20,11 @@ import {
   UpdateAlertRuleDto,
   AlertRuleResponseDto,
 } from '../application/dtos/alert-rule.dto';
+import {
+  AlertMessageResponseDto,
+  MessageGroupResponseDto,
+} from '../application/dtos/alert-message-response.dto';
+import { AlertMessage } from '../../alert-messages/domain/entities/alert-message.entity';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../permissions/guards/permission.guard';
 import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
@@ -80,6 +85,9 @@ export class AlertRuleController {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
+
+    // Transform messages to ensure proper serialization
+    alertRuleResponse.messages = this.transformMessages(rule.messages, rule.id);
 
     return {
       message: 'Alert rule found',
@@ -150,5 +158,65 @@ export class AlertRuleController {
   @RequirePermission(Module.MEASUREMENT_ALERTS, Action.DELETE)
   async deleteAlertRule(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.alertRuleService.deleteAlertRule(id);
+  }
+
+  /**
+   * Transforms AlertMessage entities to AlertMessageResponseDto
+   * @param messages - Array of AlertMessage entities or undefined
+   * @param alertRuleId - The ID of the alert rule
+   * @returns Array of AlertMessageResponseDto
+   */
+  private transformMessages(
+    messages: AlertMessage[] | undefined,
+    alertRuleId: number
+  ): AlertMessageResponseDto[] {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return [];
+    }
+
+    return messages.map((msg) => {
+      const messageDto = plainToInstance(
+        AlertMessageResponseDto,
+        {
+          id: msg.id,
+          messageType: msg.messageType,
+          targetId: msg.targetId,
+          message: msg.message,
+          messageGroupId: msg.messageGroupId,
+          status: msg.status,
+          createdAt: msg.createdAt,
+          updatedAt: msg.updatedAt,
+          alertRuleId: alertRuleId.toString(),
+        },
+        {
+          excludeExtraneousValues: true,
+          enableImplicitConversion: true,
+        }
+      );
+
+      // Add optional color if present
+      if (msg.color) {
+        messageDto.color = msg.color;
+      }
+
+      // Add messageGroup if present
+      if (msg.messageGroup) {
+        messageDto.messageGroup = plainToInstance(
+          MessageGroupResponseDto,
+          {
+            id: msg.messageGroup.id,
+            nombre: msg.messageGroup.name,
+            color: msg.messageGroup.color,
+            descripcion: msg.messageGroup.description,
+          },
+          {
+            excludeExtraneousValues: true,
+            enableImplicitConversion: true,
+          }
+        );
+      }
+
+      return messageDto;
+    });
   }
 }

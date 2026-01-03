@@ -9,7 +9,6 @@ export interface CompactAlertCardProps {
   sensor: Sensor | undefined;
   sensorTypes: SensorType[];
   getSensorIcon: (type: SensorTypeValue) => React.ReactElement;
-  onToggleEnabled: (id: string) => void;
   onClick: (rule: AlertRule) => void;
 }
 
@@ -17,7 +16,6 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
   rule,
   sensor,
   getSensorIcon,
-  onToggleEnabled,
   onClick,
 }) => {
   const getConditionText = (rule: AlertRule): string => {
@@ -28,11 +26,6 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
     }
   };
 
-  const handleToggleClick = (e: React.MouseEvent | React.KeyboardEvent) => {
-    e.stopPropagation();
-    onToggleEnabled(rule.id);
-  };
-
   return (
     <Card
       isPressable
@@ -40,40 +33,16 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
       onPress={() => onClick(rule)}
     >
       <CardBody className="p-4">
-        {/* Header con icono y estado */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {sensor && getSensorIcon(sensor.type)}
-          </div>
-          <div
-            className="chip-toggle"
-            role="button"
-            tabIndex={0}
-            onClick={handleToggleClick}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleToggleClick(e as unknown as React.MouseEvent);
-              }
-            }}
-          >
-            <div
-              className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                rule.isEnabled
-                  ? "bg-green-600 text-white border border-green-500"
-                  : "bg-gray-600 text-white border border-gray-500"
-              }`}
-            >
-              {rule.isEnabled ? "Activa" : "Inactiva"}
-            </div>
-          </div>
-        </div>
-
-        {/* Título */}
-        <div className="mb-3">
-          <Text className="line-clamp-2 min-h-[2.5rem]" variant="h4">
+        {/* Título con icono del sensor */}
+        <div className="flex items-center justify-center mb-3">
+          <Text className="line-clamp-2 min-h-[2.5rem] flex-1 flex flex-col justify-center items-start" variant="h4">
             {rule.name}
           </Text>
+          {sensor && (
+            <div className="flex items-center justify-center gap-2 ml-2 flex-shrink-0">
+              {getSensorIcon(sensor.type)}
+            </div>
+          )}
         </div>
 
         {/* Información del sensor */}

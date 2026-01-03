@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
 import { AlertRuleMode } from '../../domain/entities/alert-rule.entity';
+import { AlertMessageResponseDto } from './alert-message-response.dto';
 
 interface ValidationObject {
   mode: AlertRuleMode;
@@ -131,4 +132,7 @@ export class AlertRuleResponseDto {
     name: string;
     type: string;
   };
+
+  @Expose()
+  messages?: AlertMessageResponseDto[];
 }

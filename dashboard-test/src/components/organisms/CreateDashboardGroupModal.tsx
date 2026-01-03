@@ -48,7 +48,7 @@ export const CreateDashboardGroupModal: React.FC<
       successMessage: "Grupo creado exitosamente",
     });
 
-  const { fields, append, remove } = useFieldArray({
+  const { append, remove } = useFieldArray({
     control: form.control,
     name: "dashboardMeasurements",
   });
@@ -94,7 +94,6 @@ export const CreateDashboardGroupModal: React.FC<
 
   const handleAddMeasurement = (measurementId: number) => {
     append({ dashboardMeasurementId: measurementId });
-    form.setValue("selectedMeasurementId", "");
   };
 
   const handleRemoveMeasurement = (index: number) => {
@@ -451,7 +450,9 @@ export const CreateDashboardGroupModal: React.FC<
           isLoading={form.formState.isSubmitting}
           size="md"
           variant="solid"
-          onPress={form.handleSubmit(handleSubmit)}
+          onPress={() => {
+            void handleSubmit();
+          }}
         >
           <FaFloppyDisk className="mr-2" />
           Crear Grupo

@@ -5,90 +5,30 @@ import {
   IsEnum,
   IsOptional,
   Length,
-  IsObject,
-  IsArray,
-  IsEmail,
+  ValidateIf,
 } from 'class-validator';
+import { MessageType } from '../../domain/entities/alert-message.entity';
 
-interface TelegramMessageData {
-  chatId: string;
-  message: string;
-}
-
-interface TorretaMessageData {
-  color: string;
-  pattern: string;
-}
-
-interface EmailMessageData {
-  to: string;
-  subject: string;
-  body: string;
-}
-
-interface ReceptorMessageData {
-  deviceId: number;
-  signal: string;
-}
-
-type MessageData =
-  | EmailMessageData
-  | ReceptorMessageData
-  | TelegramMessageData
-  | TorretaMessageData;
-
-export class TelegramMessageDataDto {
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 200)
-  title!: string;
+export class CreateAlertMessageDto {
+  @IsEnum(MessageType)
+  messageType!: MessageType;
 
   @IsString()
   @IsNotEmpty()
-  @Length(1, 1000)
-  text!: string;
-}
+  @Length(1, 255)
+  targetId!: string;
 
-export class TorretaMessageDataDto {
-  @IsInt()
-  torretaId!: number;
-
-  @IsInt()
-  colorId!: number;
-}
-
-export class CorreoMessageDataDto {
-  @IsArray()
-  @IsEmail({}, { each: true })
-  emails!: string[];
-
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 200)
-  subject!: string;
-
+  @ValidateIf((o) => o.messageType !== MessageType.TORRETA)
   @IsString()
   @IsNotEmpty()
   @Length(1, 2000)
   message!: string;
-}
 
-export class ReceptorMessageDataDto {
-  @IsInt()
-  receptorId!: number;
-
+  @ValidateIf((o) => o.messageType === MessageType.TORRETA)
   @IsString()
   @IsNotEmpty()
-  @Length(1, 500)
-  message!: string;
-}
-
-export class CreateAlertMessageDto {
-  @IsEnum(['telegram', 'torreta', 'correo', 'receptor'])
-  receptorType!: string;
-
-  @IsObject()
-  messageData!: MessageData;
+  @Length(1, 10)
+  color?: string;
 
   @IsInt()
   messageGroupId!: number;
@@ -101,12 +41,23 @@ export class CreateAlertMessageDto {
 
 export class UpdateAlertMessageDto {
   @IsOptional()
-  @IsEnum(['telegram', 'torreta', 'correo', 'receptor'])
-  receptorType?: string;
+  @IsEnum(MessageType)
+  messageType?: MessageType;
 
   @IsOptional()
-  @IsObject()
-  messageData?: MessageData;
+  @IsString()
+  @Length(1, 255)
+  targetId?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 2000)
+  message?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 10)
+  color?: string;
 
   @IsOptional()
   @IsInt()

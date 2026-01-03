@@ -2,15 +2,13 @@ import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  FaFloppyDisk,
-  FaXmark,
   FaTag,
   FaCubesStacked,
   FaLocationDot,
   FaUsers,
 } from "react-icons/fa6";
 
-import { Button, Input, Select, Text } from "@components/atoms";
+import { Input, Select, Text } from "@components/atoms";
 
 import { useAreas } from "@/hooks/useAreas";
 import { useDepartments, type Department } from "@/hooks/useCatalogs";
@@ -35,7 +33,6 @@ export const CreateDeviceAndSignalForm: React.FC<
   externalId,
   externalValueId,
   onSubmit,
-  onCancel,
   isLoading = false,
   onValidationChange,
 }) => {

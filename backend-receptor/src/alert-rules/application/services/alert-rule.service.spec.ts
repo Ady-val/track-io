@@ -155,7 +155,7 @@ describe('AlertRuleService', () => {
       expect(result).toEqual(mockRule);
       expect(alertRuleRepository.findOne).toHaveBeenCalledWith({
         where: { id },
-        relations: ['measurement'],
+        relations: ['measurement', 'messages', 'messages.messageGroup'],
       });
     });
 
@@ -665,7 +665,7 @@ describe('AlertRuleService', () => {
       // Assert
       expect(alertRuleRepository.findOne).toHaveBeenCalledWith({
         where: { id },
-        relations: ['measurement'],
+        relations: ['measurement', 'messages', 'messages.messageGroup'],
       });
       expect(alertRuleRepository.softDelete).toHaveBeenCalledWith(id);
     });

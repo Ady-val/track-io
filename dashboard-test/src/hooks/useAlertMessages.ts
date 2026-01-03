@@ -11,19 +11,35 @@ export const useCreateAlertMessage = () => {
     mutationFn: ({
       alertRuleId,
       data,
+      messageGroupId,
     }: {
       alertRuleId: string;
       data: NewMessageData;
-    }) =>
-      alertMessageService.create(alertRuleId, {
-        ...data,
-        status:
-          data.grupo === "Critical"
-            ? "critical"
-            : data.grupo === "Warning"
-              ? "warning"
-              : "alert",
-      }),
+      messageGroupId: number;
+    }) => {
+      // For torreta type, color (deviceColorId) is required
+      // For receptor and email, message is required
+      const payload: any = {
+        messageType: data.messageType,
+        targetId: data.targetId,
+        messageGroupId,
+        status: "pending",
+      };
+
+      if (data.messageType === "torreta") {
+        if (!data.color) {
+          throw new Error("Color (deviceColorId) is required for torreta messages");
+        }
+        payload.color = data.color;
+      } else {
+        if (!data.message || data.message.trim().length === 0) {
+          throw new Error("Message is required for receptor and email messages");
+        }
+        payload.message = data.message;
+      }
+
+      return alertMessageService.create(alertRuleId, payload);
+    },
     onSuccess: (_, { alertRuleId }) => {
       queryClient.invalidateQueries({ queryKey: ["alertRules"] });
       queryClient.invalidateQueries({ queryKey: ["alertRule", alertRuleId] });
@@ -56,12 +72,12 @@ export const useDeleteAlertMessage = () => {
 
   return useMutation({
     mutationFn: ({
-      alertRuleId,
+      alertRuleId: _alertRuleId,
       messageId,
     }: {
       alertRuleId: string;
       messageId: number;
-    }) => alertMessageService.delete(alertRuleId, messageId),
+    }) => alertMessageService.delete(messageId),
     onSuccess: (_, { alertRuleId }) => {
       queryClient.invalidateQueries({ queryKey: ["alertRules"] });
       queryClient.invalidateQueries({ queryKey: ["alertRule", alertRuleId] });

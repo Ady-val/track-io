@@ -3,17 +3,19 @@ import { AlertEvaluationService } from './alert-evaluation.service';
 import { AlertRuleService } from './alert-rule.service';
 import { AlertTriggerService } from '../../../alert-triggers/application/services/alert-trigger.service';
 import { AlertMessageService } from '../../../alert-messages/application/services/alert-message.service';
+import { AlertMessageSenderService } from '../../../alert-messages/application/services/alert-message-sender.service';
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import { WebSocketEmitterService } from '../../../websocket/services/websocket-emitter.service';
 import {
   createMockAlertRule,
   createMockMeasurement,
   createMockRawMeasurement,
+  createMockAlertMessage,
 } from '../../../test-helpers';
 import { AlertRuleMode } from '../../domain/entities/alert-rule.entity';
 import {
   type AlertMessage,
-  ReceptorType,
+  MessageType,
 } from '../../../alert-messages/domain/entities/alert-message.entity';
 
 describe('AlertEvaluationService', () => {
@@ -21,6 +23,7 @@ describe('AlertEvaluationService', () => {
   let alertRuleService: jest.Mocked<AlertRuleService>;
   let alertTriggerService: jest.Mocked<AlertTriggerService>;
   let alertMessageService: jest.Mocked<AlertMessageService>;
+  let alertMessageSenderService: jest.Mocked<AlertMessageSenderService>;
   let measurementService: jest.Mocked<MeasurementService>;
   let webSocketEmitterService: jest.Mocked<WebSocketEmitterService>;
 
@@ -47,6 +50,12 @@ describe('AlertEvaluationService', () => {
           },
         },
         {
+          provide: AlertMessageSenderService,
+          useValue: {
+            sendMessages: jest.fn(),
+          },
+        },
+        {
           provide: MeasurementService,
           useValue: {
             getMeasurementByExternalId: jest.fn(),
@@ -65,6 +74,7 @@ describe('AlertEvaluationService', () => {
     alertRuleService = module.get(AlertRuleService);
     alertTriggerService = module.get(AlertTriggerService);
     alertMessageService = module.get(AlertMessageService);
+    alertMessageSenderService = module.get(AlertMessageSenderService);
     measurementService = module.get(MeasurementService);
     webSocketEmitterService = module.get(WebSocketEmitterService);
   });
@@ -829,16 +839,13 @@ describe('AlertEvaluationService', () => {
       const rule = createMockAlertRule({ id: 1 });
       const rawMeasurement = createMockRawMeasurement({ id: 1, value: '30' });
       const mockMessages: AlertMessage[] = [
-        {
+        createMockAlertMessage({
           id: 1,
           alertRuleId: 1,
-          receptorType: ReceptorType.TELEGRAM,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
+          messageType: MessageType.EMAIL,
+          targetId: 'test@example.com',
+          message: 'Test message',
+        }),
       ];
 
       // Mock getAlertRuleById since getMessagesByAlertRuleId calls it
@@ -846,6 +853,7 @@ describe('AlertEvaluationService', () => {
       alertMessageService.getMessagesByAlertRuleId.mockResolvedValue(
         mockMessages
       );
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
 
       // Act
       await service['handleTriggeredAlert'](rule, rawMeasurement);
@@ -859,6 +867,7 @@ describe('AlertEvaluationService', () => {
           messagesTriggered: [1],
         })
       );
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
     });
 
     it('should create AlertTrigger with correct data', async () => {
@@ -873,11 +882,20 @@ describe('AlertEvaluationService', () => {
         id: 1,
         value: '30',
       });
-      const mockMessages: AlertMessage[] = [];
+      const mockMessages: AlertMessage[] = [
+        createMockAlertMessage({
+          id: 1,
+          alertRuleId: 1,
+          messageType: MessageType.EMAIL,
+          targetId: 'user@example.com',
+          message: 'Test message',
+        }),
+      ];
 
       alertMessageService.getMessagesByAlertRuleId.mockResolvedValue(
         mockMessages
       );
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
 
       // Act
       await service['handleTriggeredAlert'](rule, rawMeasurement);
@@ -888,8 +906,9 @@ describe('AlertEvaluationService', () => {
         rawMeasurementId: 1,
         measurementValue: 30,
         conditionResult: '30 > 25 = true',
-        messagesTriggered: [],
+        messagesTriggered: [1],
       });
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
     });
 
     it('should emit WebSocket event alert_triggered', async () => {
@@ -904,11 +923,20 @@ describe('AlertEvaluationService', () => {
         id: 1,
         value: '30',
       });
-      const mockMessages: AlertMessage[] = [];
+      const mockMessages: AlertMessage[] = [
+        createMockAlertMessage({
+          id: 1,
+          alertRuleId: 1,
+          messageType: MessageType.EMAIL,
+          targetId: 'user@example.com',
+          message: 'Test message',
+        }),
+      ];
 
       alertMessageService.getMessagesByAlertRuleId.mockResolvedValue(
         mockMessages
       );
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
 
       // Act
       await service['handleTriggeredAlert'](rule, rawMeasurement);
@@ -918,7 +946,7 @@ describe('AlertEvaluationService', () => {
         alertRule: rule,
         value: 30,
         conditionResult: '30 > 25 = true',
-        messagesCount: 0,
+        messagesCount: 1,
       }) as unknown as {
         alertRule: typeof rule;
         value: number;
@@ -933,6 +961,7 @@ describe('AlertEvaluationService', () => {
         'alert_triggered',
         expectedPayloadContaining
       );
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
     });
 
     it('should continue when AlertTrigger creation fails', async () => {
@@ -944,6 +973,7 @@ describe('AlertEvaluationService', () => {
       alertMessageService.getMessagesByAlertRuleId.mockResolvedValue(
         mockMessages
       );
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
       alertTriggerService.createAlertTrigger.mockRejectedValue(
         new Error('Trigger error')
       );
@@ -1092,152 +1122,163 @@ describe('AlertEvaluationService', () => {
   });
 
   describe('triggerNotifications', () => {
-    it('should handle ReceptorType.TELEGRAM', () => {
+    it('should send messages using AlertMessageSenderService', async () => {
       // Arrange
       const rule = createMockAlertRule();
       const messages: AlertMessage[] = [
-        {
+        createMockAlertMessage({
           id: 1,
           alertRuleId: 1,
-          receptorType: ReceptorType.TELEGRAM,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
+          messageType: MessageType.EMAIL,
+          targetId: 'test@example.com',
+          message: 'Test message',
+        }),
       ];
 
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
+
       // Act
-      service['triggerNotifications'](rule, messages);
+      await service['triggerNotifications'](rule, messages);
 
       // Assert
-      // No error should be thrown
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalledWith(
+        messages,
+        'http://localhost:1880/events'
+      );
     });
 
-    it('should handle ReceptorType.TORRETA', () => {
+    it('should handle empty messages array', async () => {
+      // Arrange
+      const rule = createMockAlertRule();
+      const messages: AlertMessage[] = [];
+
+      // Act
+      await service['triggerNotifications'](rule, messages);
+
+      // Assert
+      expect(alertMessageSenderService.sendMessages).not.toHaveBeenCalled();
+    });
+
+    it('should handle MessageType.TORRETA', async () => {
       // Arrange
       const rule = createMockAlertRule();
       const messages: AlertMessage[] = [
-        {
+        createMockAlertMessage({
           id: 1,
           alertRuleId: 1,
-          receptorType: ReceptorType.TORRETA,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
+          messageType: MessageType.TORRETA,
+          targetId: 'TORRETA_001',
+          color: 'R1',
+          message: '',
+        }),
       ];
 
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
+
       // Act
-      service['triggerNotifications'](rule, messages);
+      await service['triggerNotifications'](rule, messages);
 
       // Assert
-      // No error should be thrown
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
     });
 
-    it('should handle ReceptorType.CORREO', () => {
+    it('should handle MessageType.RECEPTOR', async () => {
       // Arrange
       const rule = createMockAlertRule();
       const messages: AlertMessage[] = [
-        {
+        createMockAlertMessage({
           id: 1,
           alertRuleId: 1,
-          receptorType: ReceptorType.CORREO,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
+          messageType: MessageType.RECEPTOR,
+          targetId: 'RECEPTOR_001',
+          message: 'Alert message',
+        }),
       ];
 
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
+
       // Act
-      service['triggerNotifications'](rule, messages);
+      await service['triggerNotifications'](rule, messages);
 
       // Assert
-      // No error should be thrown
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
     });
 
-    it('should handle ReceptorType.RECEPTOR', () => {
+    it('should handle MessageType.EMAIL', async () => {
       // Arrange
       const rule = createMockAlertRule();
       const messages: AlertMessage[] = [
-        {
+        createMockAlertMessage({
           id: 1,
           alertRuleId: 1,
-          receptorType: ReceptorType.RECEPTOR,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
+          messageType: MessageType.EMAIL,
+          targetId: 'user@example.com',
+          message: 'Alert message',
+        }),
       ];
 
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
+
       // Act
-      service['triggerNotifications'](rule, messages);
+      await service['triggerNotifications'](rule, messages);
 
       // Assert
-      // No error should be thrown
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
     });
 
-    it('should log warning for unknown receptor type', () => {
+    it('should process multiple messages correctly', async () => {
       // Arrange
       const rule = createMockAlertRule();
       const messages: AlertMessage[] = [
-        {
+        createMockAlertMessage({
           id: 1,
           alertRuleId: 1,
-          receptorType: 'unknown' as ReceptorType,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
-      ];
-
-      // Act
-      service['triggerNotifications'](rule, messages);
-
-      // Assert
-      // Warning should be logged (tested via logger spy if needed)
-    });
-
-    it('should process multiple messages correctly', () => {
-      // Arrange
-      const rule = createMockAlertRule();
-      const messages: AlertMessage[] = [
-        {
-          id: 1,
-          alertRuleId: 1,
-          receptorType: ReceptorType.TELEGRAM,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
-        {
+          messageType: MessageType.EMAIL,
+          targetId: 'user1@example.com',
+          message: 'Alert 1',
+        }),
+        createMockAlertMessage({
           id: 2,
           alertRuleId: 1,
-          receptorType: ReceptorType.CORREO,
-          messageData: {},
-          messageGroupId: 1,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as AlertMessage,
+          messageType: MessageType.RECEPTOR,
+          targetId: 'RECEPTOR_001',
+          message: 'Alert 2',
+        }),
       ];
 
+      alertMessageSenderService.sendMessages.mockResolvedValue(true);
+
       // Act
-      service['triggerNotifications'](rule, messages);
+      await service['triggerNotifications'](rule, messages);
 
       // Assert
-      // No error should be thrown
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalledWith(
+        messages,
+        'http://localhost:1880/events'
+      );
+    });
+
+    it('should handle sendMessages failure gracefully', async () => {
+      // Arrange
+      const rule = createMockAlertRule();
+      const messages: AlertMessage[] = [
+        createMockAlertMessage({
+          id: 1,
+          alertRuleId: 1,
+          messageType: MessageType.EMAIL,
+          targetId: 'user@example.com',
+          message: 'Test',
+        }),
+      ];
+
+      alertMessageSenderService.sendMessages.mockResolvedValue(false);
+
+      // Act
+      await service['triggerNotifications'](rule, messages);
+
+      // Assert
+      expect(alertMessageSenderService.sendMessages).toHaveBeenCalled();
+      // Should not throw error
     });
   });
 });

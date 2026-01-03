@@ -10,21 +10,20 @@ import {
   CreateAlertRuleModal,
 } from "@components/organisms";
 
+import { ConfirmationModal } from "@/components/molecules/ConfirmationModal";
 import { DataEmptyState } from "@/components/molecules/DataEmptyState";
 import { DataErrorState } from "@/components/molecules/DataErrorState";
 import { NotificationToast } from "@/components/molecules/NotificationToast";
 import { Module, Action } from "@/constants/permissions";
 import {
   useCreateAlertMessage,
-  useUpdateAlertMessage,
   useDeleteAlertMessage,
-  useDuplicateAlertMessage,
 } from "@/hooks/useAlertMessages";
 import {
   useCreateAlertRule,
   useUpdateAlertRule,
   useDeleteAlertRule,
-  useToggleAlertRule,
+  useAlertRule,
 } from "@/hooks/useAlertRules";
 import { useHasPermission } from "@/hooks/useHasPermission";
 import { useMonitoringConditions } from "@/hooks/useMonitoringConditions";
@@ -32,16 +31,17 @@ import { useNotifications } from "@/hooks/useNotifications";
 import type {
   AlertRule,
   NewMessageData,
-  Message,
   SensorTypeValue,
   CreateAlertRuleData,
   UpdateAlertRuleData,
 } from "@/types/alertRule";
 
 function AlertRules() {
-  const [selectedRule, setSelectedRule] = useState<AlertRule | null>(null);
+  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
 
   const hasCreatePermission = useHasPermission(
     Module.MEASUREMENT_ALERTS,
@@ -53,23 +53,26 @@ function AlertRules() {
     sensors,
     receptors,
     messageGroups,
-    coloresTorreta,
     sensorTypes,
     operators,
-    getColorValue,
     isLoading,
     error,
   } = useMonitoringConditions();
 
+  // Fetch the selected rule with its messages when modal is open
+  const { data: selectedRuleData } = useAlertRule(selectedRuleId ?? "");
+  
+  // Use selectedRuleData if available (has messages), otherwise fallback to rule from list
+  const selectedRule = selectedRuleId 
+    ? (selectedRuleData ?? alertRules.find((r) => r.id === selectedRuleId) ?? null)
+    : null;
+
   const createAlertRuleMutation = useCreateAlertRule();
   const updateAlertRuleMutation = useUpdateAlertRule();
   const deleteAlertRuleMutation = useDeleteAlertRule();
-  const toggleAlertRuleMutation = useToggleAlertRule();
 
   const createAlertMessageMutation = useCreateAlertMessage();
-  const updateAlertMessageMutation = useUpdateAlertMessage();
   const deleteAlertMessageMutation = useDeleteAlertMessage();
-  const duplicateAlertMessageMutation = useDuplicateAlertMessage();
 
   const { notifications, removeNotification, showSuccess, showError } =
     useNotifications();
@@ -124,13 +127,13 @@ function AlertRules() {
   };
 
   const handleOpenDetailModal = (rule: AlertRule) => {
-    setSelectedRule(rule);
+    setSelectedRuleId(rule.id);
     setIsDetailModalOpen(true);
   };
 
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
-    setSelectedRule(null);
+    setSelectedRuleId(null);
   };
 
   const handleEditRule = async (
@@ -168,46 +171,49 @@ function AlertRules() {
     }
   };
 
-  const handleDeleteRule = async (id: string) => {
+  const handleDeleteRule = (id: string) => {
+    // Cerrar el modal de detalle y abrir el modal de confirmación
+    setIsDetailModalOpen(false);
+    setRuleToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!ruleToDelete) return;
+
     try {
-      await deleteAlertRuleMutation.mutateAsync(id);
+      await deleteAlertRuleMutation.mutateAsync(ruleToDelete);
       showSuccess(
         "Regla eliminada",
         "La regla de alerta se ha eliminado exitosamente"
       );
+      setIsDeleteModalOpen(false);
+      setRuleToDelete(null);
     } catch (error) {
       console.error("Error deleting alert rule:", error);
       showError(
         "Error al eliminar regla",
         "No se pudo eliminar la regla de alerta"
       );
+      setIsDeleteModalOpen(false);
+      setRuleToDelete(null);
     }
   };
 
-  const handleToggleEnabled = async (id: string) => {
-    try {
-      await toggleAlertRuleMutation.mutateAsync(id);
-      showSuccess(
-        "Estado actualizado",
-        "El estado de la regla se ha actualizado exitosamente"
-      );
-    } catch (error) {
-      console.error("Error toggling alert rule:", error);
-      showError(
-        "Error al cambiar estado",
-        "No se pudo cambiar el estado de la regla"
-      );
-    }
-  };
 
   const handleCreateMessage = async (
     ruleId: string,
     messageData: NewMessageData
   ) => {
     try {
+      // Find messageGroupId from grupo name
+      const grupo = messageGroups.find((g) => g.nombre === messageData.grupo);
+      const messageGroupId = grupo?.id ?? 1; // Default to 1 if not found
+      
       await createAlertMessageMutation.mutateAsync({
         alertRuleId: ruleId,
         data: messageData,
+        messageGroupId,
       });
       showSuccess(
         "Mensaje creado",
@@ -223,11 +229,11 @@ function AlertRules() {
   };
 
   const handleDeleteMessage = async (messageId: number) => {
-    if (!selectedRule) return;
+    if (!selectedRuleId) return;
 
     try {
       await deleteAlertMessageMutation.mutateAsync({
-        alertRuleId: selectedRule.id,
+        alertRuleId: selectedRuleId,
         messageId,
       });
       showSuccess(
@@ -243,51 +249,6 @@ function AlertRules() {
     }
   };
 
-  const handleDuplicateMessage = async (messageId: number) => {
-    if (!selectedRule) return;
-
-    try {
-      await duplicateAlertMessageMutation.mutateAsync({
-        alertRuleId: selectedRule.id,
-        messageId,
-      });
-      showSuccess(
-        "Mensaje duplicado",
-        "El mensaje de alerta se ha duplicado exitosamente"
-      );
-    } catch (error) {
-      console.error("Error duplicating alert message:", error);
-      showError(
-        "Error al duplicar mensaje",
-        "No se pudo duplicar el mensaje de alerta"
-      );
-    }
-  };
-
-  const handleUpdateMessage = async (
-    messageId: number,
-    updates: Partial<Message>
-  ) => {
-    if (!selectedRule) return;
-
-    try {
-      await updateAlertMessageMutation.mutateAsync({
-        alertRuleId: selectedRule.id,
-        messageId,
-        data: updates,
-      });
-      showSuccess(
-        "Mensaje actualizado",
-        "El mensaje de alerta se ha actualizado exitosamente"
-      );
-    } catch (error) {
-      console.error("Error updating alert message:", error);
-      showError(
-        "Error al actualizar mensaje",
-        "No se pudo actualizar el mensaje de alerta"
-      );
-    }
-  };
 
   if (isLoading) {
     return <LoadingState message="Cargando condiciones de monitoreo..." />;
@@ -347,6 +308,22 @@ function AlertRules() {
           onCreate={handleCreateRule}
         />
 
+        {/* Modal de confirmación de eliminación */}
+        <ConfirmationModal
+          cancelText="Cancelar"
+          confirmText="Eliminar"
+          isOpen={isDeleteModalOpen}
+          loading={deleteAlertRuleMutation.isPending}
+          message="¿Estás seguro de que quieres eliminar esta alerta? Esta acción no se puede deshacer."
+          title="Eliminar Alerta"
+          variant="danger"
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setRuleToDelete(null);
+          }}
+          onConfirm={handleDeleteConfirm}
+        />
+
         {/* Notification Toasts */}
         {notifications.map((notification) => (
           <NotificationToast
@@ -388,7 +365,6 @@ function AlertRules() {
               sensor={sensors.find((s) => s.id === rule.measurementId)}
               sensorTypes={sensorTypes}
               onClick={handleOpenDetailModal}
-              onToggleEnabled={handleToggleEnabled}
             />
           ))}
         </div>
@@ -396,8 +372,6 @@ function AlertRules() {
 
       {/* Modal de detalle/edición */}
       <AlertRuleDetailModal
-        coloresTorreta={coloresTorreta}
-        getColorValue={getColorValue}
         getSensorIcon={getSensorIcon}
         gruposMensajes={messageGroups}
         isOpen={isDetailModalOpen}
@@ -406,15 +380,11 @@ function AlertRules() {
         rule={selectedRule}
         sensorTypes={sensorTypes}
         sensors={sensors}
-        usuariosCorreo={receptors} // Using receptors as email users for now
         onClose={handleCloseDetailModal}
         onCreateMessage={handleCreateMessage}
         onDelete={handleDeleteRule}
         onDeleteMessage={handleDeleteMessage}
-        onDuplicateMessage={handleDuplicateMessage}
         onEdit={handleEditRule}
-        onToggleEnabled={handleToggleEnabled}
-        onUpdateMessage={handleUpdateMessage}
       />
 
       {/* Modal de creación */}
@@ -425,6 +395,22 @@ function AlertRules() {
         sensors={sensors}
         onClose={handleCloseCreateModal}
         onCreate={handleCreateRule}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmationModal
+        cancelText="Cancelar"
+        confirmText="Eliminar"
+        isOpen={isDeleteModalOpen}
+        loading={deleteAlertRuleMutation.isPending}
+        message="¿Estás seguro de que quieres eliminar esta alerta? Esta acción no se puede deshacer."
+        title="Eliminar Alerta"
+        variant="danger"
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setRuleToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
       />
 
       {/* Notification Toasts */}

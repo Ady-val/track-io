@@ -16,20 +16,21 @@ export interface AlertRule {
   messages?: AlertMessage[];
   sensorId?: number;
   edit?: boolean;
-  mensajes?: AlertMessage[];
+  mensajes?: AlertMessage[]; // Legacy field for backward compatibility
 }
 
 export interface AlertMessage {
   id: number;
-  tipoReceptor: "reloj" | "correo" | "torreta";
-  receptor: string;
-  receptorNombre?: string;
+  messageType: "torreta" | "receptor" | "email";
+  targetId: string;
   message: string;
-  grupo: string;
-  status: "warning" | "alert" | "critical";
+  color?: string;
+  messageGroupId: number;
+  status: string;
   alertRuleId: string;
   createdAt?: string;
   updatedAt?: string;
+  grupo?: string; // Keep for backward compatibility with existing code
 }
 
 export interface Measurement {
@@ -77,9 +78,16 @@ export interface GrupoMensaje {
 
 export interface Receptor {
   id: number;
-  nombre: string;
-  capcode: string;
-  departamento: string;
+  externalId: string;
+  name: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  // Legacy fields for backward compatibility
+  nombre?: string;
+  capcode?: string;
+  departamento?: string;
   email?: string;
 }
 
@@ -91,10 +99,10 @@ export interface UsuarioCorreo {
 }
 
 export interface NewMessageData {
-  tipoReceptor: "reloj" | "correo" | "torreta";
-  receptor: string;
-  receptorNombre?: string;
+  messageType: "torreta" | "receptor" | "email";
+  targetId: string;
   message: string;
+  color?: string;
   grupo: string;
 }
 
@@ -169,5 +177,7 @@ export interface TorretaColorsResponse {
 export interface TorretaColor {
   id: number;
   name: string;
-  hexCode: string;
+  hexCode?: string; // Frontend uses hexCode
+  htmlColor?: string; // Backend returns htmlColor
+  deviceColorId: string;
 }

@@ -110,8 +110,9 @@ describe('AlertMessageController', () => {
     it('should create message successfully', async () => {
       const ruleId = 1;
       const createDto = {
-        receptorType: 'correo',
-        messageData: {},
+        messageType: 'email' as const,
+        targetId: 'test@example.com',
+        message: 'Test message',
         messageGroupId: 1,
       };
       const mockMessage = createMockAlertMessage({

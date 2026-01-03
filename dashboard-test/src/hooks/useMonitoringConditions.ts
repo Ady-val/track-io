@@ -67,7 +67,7 @@ export const useMonitoringConditions = () => {
     return (colorName: string): string => {
       const color = torretaColors.find((c) => c.name === colorName);
 
-      return color?.hexCode ?? "#6b7280";
+      return color?.htmlColor || color?.hexCode || "#6b7280";
     };
   }, [torretaColors]);
 

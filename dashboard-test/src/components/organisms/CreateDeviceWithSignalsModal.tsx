@@ -45,9 +45,9 @@ export const CreateDeviceWithSignalsModal: React.FC<
       defaultValues: {
         name: "",
         externalId: "",
-        areaId: areas[0]?.id?.toString() ?? "",
+        areaId: areas[0]?.id ?? 0,
         isVirtualDevice: false,
-        signals: [{ name: "", externalValueId: "", departmentId: "" }],
+        signals: [{ name: "", externalValueId: "", departmentId: 0 }],
       },
       showToastOnError: true,
       showToastOnSuccess: true,
@@ -67,16 +67,16 @@ export const CreateDeviceWithSignalsModal: React.FC<
       resetForm({
         name: "",
         externalId: "",
-        areaId: areas[0]?.id?.toString() ?? "",
+        areaId: areas[0]?.id ?? 0,
         isVirtualDevice: false,
-        signals: [{ name: "", externalValueId: "", departmentId: "" }],
+        signals: [{ name: "", externalValueId: "", departmentId: 0 }],
       });
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, areas, resetForm]);
 
   const addSignal = () => {
-    append({ name: "", externalValueId: "", departmentId: "" });
+    append({ name: "", externalValueId: "", departmentId: 0 });
   };
 
   const removeSignal = (index: number) => {

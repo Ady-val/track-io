@@ -1,160 +1,147 @@
 import type React from "react";
 
-import { FaCopy, FaTrashCan } from "react-icons/fa6";
+import { FaTrash } from "react-icons/fa6";
+import { Button, Text } from "@components/atoms";
 
-import { Card, CardBody, Chip, Input } from "@components/atoms";
-import { SelectField } from "@components/molecules";
+import type { AlertMessage } from "@/types/alertRule";
+import type { Torreta, Receptor, Email, TorretaColor } from "@/types/escalation";
 
-import type { Message, GrupoMensaje, Receptor, UsuarioCorreo } from "@/types";
+const getMessageTypeLabel = (messageType: string | undefined): string => {
+  if (!messageType) return "Sin tipo";
+  const normalized = messageType.toLowerCase();
+  switch (normalized) {
+    case "torreta":
+      return "Torreta";
+    case "receptor":
+      return "Receptor";
+    case "email":
+      return "Email";
+    default:
+      return messageType;
+  }
+};
+
+const getMessageIdentifier = (
+  message: AlertMessage,
+  torretas: Torreta[],
+  receptors: Receptor[],
+  _emails: Email[]
+): string => {
+  const messageType = message.messageType?.toLowerCase();
+  switch (messageType) {
+    case "torreta":
+      const torreta = torretas.find((t) => t.externalId === message.targetId);
+      return torreta ? `TOR${torreta.id}` : message.targetId || "Sin torreta";
+    case "receptor":
+      const receptor = receptors.find((r) => r.externalId === message.targetId);
+      return receptor ? `REC${receptor.id}` : message.targetId || "Sin receptor";
+    case "email":
+      return message.targetId || "Sin email";
+    default:
+      return message.targetId || "Sin identificador";
+  }
+};
+
+const getMessageDisplayInfo = (
+  message: AlertMessage,
+  torretaColors: TorretaColor[]
+): { text: string; color?: string } => {
+  const messageType = message.messageType?.toLowerCase();
+  if (messageType === "torreta") {
+    const torretaColor = torretaColors.find(
+      (c) => c.deviceColorId === message.color
+    );
+    return {
+      text: torretaColor
+        ? `${torretaColor.name} - ${torretaColor.deviceColorId}`
+        : message.color || "Sin color",
+      color: torretaColor?.htmlColor,
+    };
+  }
+  return {
+    text: message.message || "Sin mensaje",
+  };
+};
 
 export interface MessageCardProps {
-  message: Message;
-  gruposMensajes: GrupoMensaje[];
-  receptores: Receptor[];
-  usuariosCorreo: UsuarioCorreo[];
-  coloresTorreta: string[];
-  onUpdate: (messageId: number, updates: Partial<Message>) => void;
-  onDuplicate: (messageId: number) => void;
+  message: AlertMessage;
+  torretas: Torreta[];
+  receptors: Receptor[];
+  emails: Email[];
+  torretaColors: TorretaColor[];
   onDelete: (messageId: number) => void;
-  getColorValue: (colorName: string) => string;
 }
 
 export const MessageCard: React.FC<MessageCardProps> = ({
   message,
-  gruposMensajes,
-  receptores,
-  usuariosCorreo,
-  coloresTorreta,
-  onUpdate,
-  onDuplicate,
+  torretas,
+  receptors,
+  emails,
+  torretaColors,
   onDelete,
-  getColorValue,
 }) => {
+  const messageTypeLabel = getMessageTypeLabel(message.messageType);
+  const messageIdentifier = getMessageIdentifier(
+    message,
+    torretas,
+    receptors,
+    emails
+  );
+  const displayInfo = getMessageDisplayInfo(message, torretaColors);
+
   return (
-    <Card className="bg-slate-700 border-slate-600">
-      <CardBody className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-300">
-              Mensaje {message.id}
-            </span>
-            <Chip
-              size="sm"
-              style={{
-                backgroundColor:
-                  gruposMensajes.find((g) => g.nombre === message.grupo)
-                    ?.color ?? "#6b7280",
-                color: "white",
-              }}
-            >
-              {message.grupo}
-            </Chip>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              className="text-blue-400 hover:text-blue-300 text-sm"
-              title="Duplicar mensaje"
-              onClick={() => onDuplicate(message.id)}
-            >
-              <FaCopy className="w-3 h-3" />
-            </button>
-            <button
-              className="text-red-400 hover:text-red-300 text-sm"
-              title="Eliminar mensaje"
-              onClick={() => onDelete(message.id)}
-            >
-              <FaTrashCan className="w-3 h-3" />
-            </button>
-          </div>
+    <div className="bg-slate-700 rounded-lg p-2 flex items-center justify-between">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Punto azul */}
+        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+
+        {/* Tipo e identificador */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Text className="text-sm font-medium text-slate-100">
+            {messageTypeLabel}
+          </Text>
+          <Text className="text-xs text-slate-400">{messageIdentifier}</Text>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <SelectField
-            id={`tipo-receptor-${message.id}`}
-            label="Tipo de Receptor"
-            value={message.tipoReceptor}
-            onChange={(e) =>
-              onUpdate(message.id, {
-                tipoReceptor: e.target.value as Message["tipoReceptor"],
-              })
-            }
-          >
-            <option value="reloj">Reloj</option>
-            <option value="torreta">Torreta</option>
-            <option value="correo">Correo Electrónico</option>
-            <option value="generico">Genérico</option>
-          </SelectField>
-
-          <SelectField
-            id={`receptor-${message.id}`}
-            label={message.tipoReceptor === "torreta" ? "Color" : "Receptor"}
-            value={message.receptor}
-            onChange={(e) => onUpdate(message.id, { receptor: e.target.value })}
-          >
-            {message.tipoReceptor === "correo"
-              ? usuariosCorreo.map((usuario) => (
-                  <option key={usuario.id} value={usuario.nombre}>
-                    {usuario.nombre} - {usuario.email}
-                  </option>
-                ))
-              : message.tipoReceptor === "torreta"
-                ? coloresTorreta.map((color) => (
-                    <option
-                      key={color}
-                      style={{ backgroundColor: getColorValue(color) }}
-                      value={color}
-                    >
-                      {color}
-                    </option>
-                  ))
-                : receptores.map((receptor) => (
-                    <option key={receptor.id} value={receptor.nombre}>
-                      {receptor.nombre} - {receptor.departamento}
-                    </option>
-                  ))}
-          </SelectField>
-
-          {message.tipoReceptor === "torreta" && (
-            <SelectField
-              id={`receptor-nombre-msg-${message.id}`}
-              label="Receptor"
-              value={message.receptorNombre ?? ""}
-              onChange={(e) =>
-                onUpdate(message.id, { receptorNombre: e.target.value })
-              }
-            >
-              <option value="">Seleccionar receptor...</option>
-              {receptores.map((receptor) => (
-                <option key={receptor.id} value={receptor.nombre}>
-                  {receptor.nombre} - {receptor.departamento}
-                </option>
-              ))}
-            </SelectField>
-          )}
-
-          {(message.tipoReceptor === "reloj" ||
-            message.tipoReceptor === "correo") && (
-            <div className="space-y-2">
-              <label
-                className="block text-sm font-medium text-slate-300"
-                htmlFor={`mensaje-msg-${message.id}`}
-              >
-                Texto del Mensaje
-              </label>
-              <Input
-                id={`mensaje-msg-${message.id}`}
-                placeholder="Ingresa el mensaje..."
-                size="sm"
-                value={message.message ?? ""}
-                variant="bordered"
-                onChange={(e) =>
-                  onUpdate(message.id, { message: e.target.value })
-                }
+        {/* Información adicional */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {message.messageType?.toLowerCase() === "torreta" && displayInfo.color ? (
+            <>
+              <div
+                className="w-4 h-4 rounded flex-shrink-0"
+                style={{ backgroundColor: displayInfo.color }}
               />
-            </div>
+              <Text
+                className="text-xs text-slate-400 truncate"
+                color="muted"
+                variant="caption"
+              >
+                {displayInfo.text}
+              </Text>
+            </>
+          ) : (
+            <Text
+              className="text-xs text-slate-400 truncate"
+              color="muted"
+              variant="caption"
+            >
+              {displayInfo.text}
+            </Text>
           )}
         </div>
-      </CardBody>
-    </Card>
+      </div>
+
+      {/* Botón eliminar */}
+      <Button
+        className="px-3 py-1.5 font-semibold flex-shrink-0"
+        color="danger"
+        size="md"
+        title="Eliminar mensaje"
+        variant="solid"
+        onPress={() => onDelete(message.id)}
+      >
+        <FaTrash className="w-4 h-4" />
+      </Button>
+    </div>
   );
 };

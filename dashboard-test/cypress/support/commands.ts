@@ -118,6 +118,12 @@ declare global {
        * @example cy.visitCatalogsPage()
        */
       visitCatalogsPage(): Chainable<void>;
+
+      /**
+       * Navega a la página de alertas usando el sidebar
+       * @example cy.visitAlertsPage()
+       */
+      visitAlertsPage(): Chainable<void>;
     }
   }
 }
@@ -644,6 +650,35 @@ Cypress.Commands.add("visitCatalogsPage", () => {
 
   // Esperar a que la página cargue verificando el título
   cy.contains("Gestión de Catálogos", { timeout: 10000 }).should("be.visible");
+});
+
+/**
+ * Navega a la página de alertas usando el sidebar
+ */
+Cypress.Commands.add("visitAlertsPage", () => {
+  // Asegurarse de estar en el dashboard
+  cy.url({ timeout: 10000 }).should("include", "/dashboard");
+
+  // Esperar a que el sidebar esté completamente cargado
+  cy.get('a[href="/dashboard/alerts"]', { timeout: 10000 }).should(
+    "be.visible"
+  );
+
+  // Si ya estamos en la página de alertas, no hacer nada
+  cy.url().then((url) => {
+    if (!url.includes("/dashboard/alerts")) {
+      // Hacer click en el link de Alertas en el sidebar
+      cy.get('a[href="/dashboard/alerts"]').click();
+
+      // Esperar a que la URL cambie
+      cy.url({ timeout: 10000 }).should("include", "/dashboard/alerts");
+    }
+  });
+
+  // Esperar a que la página cargue verificando el título
+  cy.contains("Monitoreo de Condiciones", { timeout: 10000 }).should(
+    "be.visible"
+  );
 });
 
 export {};

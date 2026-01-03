@@ -1,28 +1,34 @@
 import { useCallback, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { FieldErrors, UseFormReturn } from "react-hook-form";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
-import {
-  applyBackendErrorsToForm,
-  parseBackendValidationErrors,
-} from "@/lib/utils/backendErrorParser";
+import { parseBackendValidationErrors } from "@/lib/utils/backendErrorParser";
 import { useModalError } from "./useModalError";
 import { useToast } from "./useToast";
 
 /**
+ * Tipo helper para restringir esquemas Zod cuyo output sea compatible con FieldValues
+ * Permite cualquier schema Zod válido - en tiempo de ejecución todos los schemas de formularios
+ * producen objetos compatibles con FieldValues
+ */
+type ZodSchemaWithFieldValues = z.ZodTypeAny;
+
+/**
  * Opciones para el hook useFormValidation
  */
-export interface UseFormValidationOptions<T extends z.ZodType> {
+export interface UseFormValidationOptions<
+  TSchema extends ZodSchemaWithFieldValues
+> {
   /**
    * Esquema Zod para validación
    */
-  schema: T;
+  schema: TSchema;
   /**
    * Valores por defecto del formulario
    */
-  defaultValues?: Partial<z.infer<T>>;
+  defaultValues?: Partial<z.infer<TSchema>>;
   /**
    * Modo de validación de react-hook-form
    * @default "onBlur"
@@ -47,11 +53,13 @@ export interface UseFormValidationOptions<T extends z.ZodType> {
 /**
  * Resultado del hook useFormValidation
  */
-export interface UseFormValidationResult<T extends z.ZodType> {
+export interface UseFormValidationResult<
+  TSchema extends ZodSchemaWithFieldValues
+> {
   /**
    * Instancia de react-hook-form
    */
-  form: UseFormReturn<z.infer<T>>;
+  form: UseFormReturn<z.infer<TSchema> & FieldValues>;
   /**
    * Hook de manejo de errores del modal
    */
@@ -75,16 +83,16 @@ export interface UseFormValidationResult<T extends z.ZodType> {
   /**
    * Resetea el formulario y limpia errores
    */
-  resetForm: (values?: Partial<z.infer<T>>) => void;
+  resetForm: (values?: Partial<z.infer<TSchema>>) => void;
 }
 
 /**
  * Hook unificado que combina react-hook-form, Zod y useModalError
  * Proporciona una API simple para manejar formularios con validación y errores
  */
-export function useFormValidation<T extends z.ZodType>(
-  options: UseFormValidationOptions<T>
-): UseFormValidationResult<T> {
+export function useFormValidation<TSchema extends ZodSchemaWithFieldValues>(
+  options: UseFormValidationOptions<TSchema>
+): UseFormValidationResult<TSchema> {
   const {
     schema,
     defaultValues,
@@ -94,9 +102,17 @@ export function useFormValidation<T extends z.ZodType>(
     successMessage,
   } = options;
 
-  const form = useForm<z.infer<T>>({
+  type FormType = z.infer<TSchema> & FieldValues;
+  
+  const form = useForm<FormType, unknown, FormType>({
+    // @ts-expect-error - zodResolver acepta cualquier schema Zod válido en tiempo de ejecución.
+    // TypeScript no puede inferir correctamente los tipos genéricos complejos de Zod,
+    // pero sabemos que el schema es compatible porque todos los schemas de formularios
+    // producen objetos que son compatibles con FieldValues.
     resolver: zodResolver(schema),
-    defaultValues: defaultValues as z.infer<T>,
+    // @ts-expect-error - defaultValues es Partial<z.infer<TSchema>> que es compatible
+    // con DeepPartial<FormType> que espera useForm, pero TypeScript no puede inferirlo correctamente.
+    defaultValues,
     mode,
   });
 
@@ -111,7 +127,14 @@ export function useFormValidation<T extends z.ZodType>(
       const parseResult = parseBackendValidationErrors(error);
 
       // Aplicar errores a campos específicos del formulario
-      applyBackendErrorsToForm(form, parseResult);
+      Object.entries(parseResult.fieldErrors).forEach(([field, error]) => {
+        if (error && "message" in error && typeof error.message === "string") {
+          form.setError(field as any, {
+            type: "server",
+            message: error.message,
+          });
+        }
+      });
 
       // Mostrar errores de validación generales
       if (parseResult.validationErrors.length > 0) {
@@ -128,7 +151,7 @@ export function useFormValidation<T extends z.ZodType>(
         if (parseResult.isServerError) {
           toast.error(parseResult.serverError || "Error del servidor");
         } else if (parseResult.validationErrors.length > 0) {
-          toast.error(parseResult.validationErrors[0]);
+          toast.error(parseResult.validationErrors[0] || "Error de validación");
         } else if (parseResult.serverError) {
           toast.error(parseResult.serverError);
         }
@@ -158,8 +181,8 @@ export function useFormValidation<T extends z.ZodType>(
    * Resetea el formulario y limpia errores
    */
   const resetForm = useCallback(
-    (values?: Partial<z.infer<T>>) => {
-      form.reset(values as z.infer<T>);
+    (values?: Partial<z.infer<TSchema>>) => {
+      form.reset(values as FormType);
       clearAllErrors();
     },
     [form, clearAllErrors]

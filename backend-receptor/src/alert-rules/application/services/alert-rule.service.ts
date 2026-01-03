@@ -28,7 +28,7 @@ export class AlertRuleService {
   async getAlertRuleById(id: number): Promise<AlertRule> {
     const alertRule = await this.alertRuleRepository.findOne({
       where: { id },
-      relations: ['measurement'],
+      relations: ['measurement', 'messages', 'messages.messageGroup'],
     });
 
     if (!alertRule) {

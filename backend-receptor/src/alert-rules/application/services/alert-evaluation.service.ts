@@ -2,14 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AlertRuleService } from './alert-rule.service';
 import { AlertTriggerService } from '../../../alert-triggers/application/services/alert-trigger.service';
 import { AlertMessageService } from '../../../alert-messages/application/services/alert-message.service';
+import { AlertMessageSenderService } from '../../../alert-messages/application/services/alert-message-sender.service';
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import { WebSocketEmitterService } from '../../../websocket/services/websocket-emitter.service';
 import { RawMeasurement } from '../../../raw-measurements/domain/entities/raw-measurement.entity';
 import { Measurement } from '../../../measurements/domain/entities/measurement.entity';
-import {
-  AlertMessage,
-  ReceptorType,
-} from '../../../alert-messages/domain/entities/alert-message.entity';
+import { AlertMessage } from '../../../alert-messages/domain/entities/alert-message.entity';
 import {
   AlertRule,
   AlertRuleMode,
@@ -23,6 +21,7 @@ export class AlertEvaluationService {
     private readonly alertRuleService: AlertRuleService,
     private readonly alertTriggerService: AlertTriggerService,
     private readonly alertMessageService: AlertMessageService,
+    private readonly alertMessageSenderService: AlertMessageSenderService,
     private readonly measurementService: MeasurementService,
     private readonly webSocketEmitterService: WebSocketEmitterService
   ) {}
@@ -149,7 +148,7 @@ export class AlertEvaluationService {
         messagesTriggered: messageIds,
       });
 
-      this.triggerNotifications(rule, messages);
+      await this.triggerNotifications(rule, messages);
 
       this.webSocketEmitterService.emitToAll('alert_triggered', {
         type: 'alert',
@@ -188,29 +187,35 @@ export class AlertEvaluationService {
     }
   }
 
-  private triggerNotifications(
+  private async triggerNotifications(
     _rule: AlertRule,
     messages: AlertMessage[]
-  ): void {
-    for (const message of messages) {
-      const { receptorType } = message;
+  ): Promise<void> {
+    if (messages.length === 0) {
+      return;
+    }
 
-      switch (receptorType) {
-        case ReceptorType.TELEGRAM:
-          break;
+    try {
+      const endpointUrl = 'http://localhost:1880/events'; // Hardcoded as per plan
+      const success = await this.alertMessageSenderService.sendMessages(
+        messages,
+        endpointUrl
+      );
 
-        case ReceptorType.TORRETA:
-          break;
-
-        case ReceptorType.CORREO:
-          break;
-
-        case ReceptorType.RECEPTOR:
-          break;
-
-        default:
-          this.logger.warn(`Unknown receptor type: ${String(receptorType)}`);
+      if (success) {
+        this.logger.log(
+          `✅ Successfully sent ${messages.length} alert message(s) for rule ${_rule.id}`
+        );
+      } else {
+        this.logger.warn(
+          `⚠️ Failed to send some alert messages for rule ${_rule.id}`
+        );
       }
+    } catch (error) {
+      this.logger.error(
+        `❌ Error sending alert messages for rule ${_rule.id}:`,
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 }

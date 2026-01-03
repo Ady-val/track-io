@@ -11,31 +11,10 @@ import {
 import { AlertRule } from '../../../alert-rules/domain/entities/alert-rule.entity';
 import { MessageGroup } from '../../../message-groups/domain/entities/message-group.entity';
 
-export enum ReceptorType {
-  TELEGRAM = 'telegram',
+export enum MessageType {
   TORRETA = 'torreta',
-  CORREO = 'correo',
   RECEPTOR = 'receptor',
-}
-
-export interface MessageData {
-  telegram?: {
-    title: string;
-    text: string;
-  };
-  torreta?: {
-    torretaId: number;
-    colorId: number;
-  };
-  correo?: {
-    emails: string[];
-    subject: string;
-    message: string;
-  };
-  receptor?: {
-    receptorId: number;
-    message: string;
-  };
+  EMAIL = 'email',
 }
 
 @Entity('alert_messages')
@@ -49,14 +28,20 @@ export class AlertMessage {
   alertRuleId!: number;
 
   @Column({
-    name: 'receptor_type',
+    name: 'message_type',
     type: 'enum',
-    enum: ReceptorType,
+    enum: MessageType,
   })
-  receptorType!: ReceptorType;
+  messageType!: MessageType;
 
-  @Column({ name: 'message_data', type: 'jsonb' })
-  messageData!: MessageData;
+  @Column({ name: 'target_id', type: 'varchar', length: 255 })
+  targetId!: string;
+
+  @Column({ name: 'message', type: 'text' })
+  message!: string;
+
+  @Column({ name: 'color', type: 'varchar', length: 10, nullable: true })
+  color?: string;
 
   @Column({ name: 'message_group_id', type: 'integer' })
   messageGroupId!: number;

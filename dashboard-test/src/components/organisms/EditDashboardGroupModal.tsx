@@ -57,7 +57,7 @@ export const EditDashboardGroupModal: React.FC<
       successMessage: "Grupo actualizado exitosamente",
     });
 
-  const { fields, append, remove } = useFieldArray({
+  const { append, remove } = useFieldArray({
     control: form.control,
     name: "dashboardMeasurements",
   });
@@ -96,9 +96,9 @@ export const EditDashboardGroupModal: React.FC<
       });
     }
 
-    const selectedIds = form.watch("dashboardMeasurements").map(
+    const selectedIds = form.watch("dashboardMeasurements")?.map(
       (dm) => dm.dashboardMeasurementId
-    );
+    ) ?? [];
 
     return allAvailable.filter((dm) => selectedIds.includes(dm.id));
   }, [
@@ -124,9 +124,9 @@ export const EditDashboardGroupModal: React.FC<
       });
     }
 
-    const selectedIds = form.watch("dashboardMeasurements").map(
+    const selectedIds = form.watch("dashboardMeasurements")?.map(
       (dm) => dm.dashboardMeasurementId
-    );
+    ) ?? [];
 
     return allAvailable.filter((dm) => !selectedIds.includes(dm.id));
   }, [
@@ -141,7 +141,6 @@ export const EditDashboardGroupModal: React.FC<
 
   const handleAddMeasurement = (measurementId: number) => {
     append({ dashboardMeasurementId: measurementId });
-    form.setValue("selectedMeasurementId", "");
   };
 
   const handleRemoveMeasurement = (index: number) => {
@@ -492,7 +491,9 @@ export const EditDashboardGroupModal: React.FC<
           isLoading={form.formState.isSubmitting}
           size="md"
           variant="solid"
-          onPress={form.handleSubmit(handleSubmit)}
+          onPress={() => {
+            void handleSubmit();
+          }}
         >
           <FaFloppyDisk className="mr-2" />
           Guardar Cambios

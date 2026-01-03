@@ -6,10 +6,12 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
 import { Measurement } from '../../../measurements/domain/entities/measurement.entity';
+import { AlertMessage } from '../../../alert-messages/domain/entities/alert-message.entity';
 
 export enum AlertRuleMode {
   SETPOINT = 'setpoint',
@@ -85,4 +87,7 @@ export class AlertRule {
   @ManyToOne(() => Measurement, { eager: true })
   @JoinColumn({ name: 'measurement_id' })
   measurement?: Measurement;
+
+  @OneToMany(() => AlertMessage, (message) => message.alertRule)
+  messages?: AlertMessage[];
 }

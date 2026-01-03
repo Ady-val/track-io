@@ -104,14 +104,9 @@ describe('AlertMessageService', () => {
     it('should create message successfully', async () => {
       const alertRuleId = 1;
       const createDto = {
-        receptorType: 'correo',
-        messageData: {
-          correo: {
-            emails: ['test@example.com'],
-            subject: 'Test',
-            message: 'Test message',
-          },
-        },
+        messageType: 'email' as const,
+        targetId: 'test@example.com',
+        message: 'Test message',
         messageGroupId: 1,
       };
       const mockAlertRule = createMockAlertRule({ id: alertRuleId });
@@ -143,8 +138,9 @@ describe('AlertMessageService', () => {
     it('should throw NotFoundException when alertRule does not exist', async () => {
       const alertRuleId = 999;
       const createDto = {
-        receptorType: 'correo',
-        messageData: {},
+        messageType: 'email' as const,
+        targetId: 'test@example.com',
+        message: 'Test message',
         messageGroupId: 1,
       };
 
@@ -160,8 +156,9 @@ describe('AlertMessageService', () => {
     it('should throw NotFoundException when messageGroup does not exist', async () => {
       const alertRuleId = 1;
       const createDto = {
-        receptorType: 'correo',
-        messageData: {},
+        messageType: 'email' as const,
+        targetId: 'test@example.com',
+        message: 'Test message',
         messageGroupId: 999,
       };
       const mockAlertRule = createMockAlertRule({ id: alertRuleId });
@@ -179,8 +176,9 @@ describe('AlertMessageService', () => {
     it('should throw BadRequestException when maximum 5 messages exceeded', async () => {
       const alertRuleId = 1;
       const createDto = {
-        receptorType: 'correo',
-        messageData: {},
+        messageType: 'email' as const,
+        targetId: 'test@example.com',
+        message: 'Test message',
         messageGroupId: 1,
       };
       const mockAlertRule = createMockAlertRule({ id: alertRuleId });

@@ -36,9 +36,6 @@ export const backendToFrontendFieldMap: Record<string, string> = {
   // Receptor fields
   // (same as device fields)
 
-  // Role fields
-  description: "description",
-
   // Measurement fields
   type: "type",
 

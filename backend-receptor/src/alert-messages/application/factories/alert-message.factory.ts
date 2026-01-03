@@ -1,8 +1,4 @@
-import {
-  AlertMessage,
-  type ReceptorType,
-  type MessageData,
-} from '../../domain/entities/alert-message.entity';
+import { AlertMessage, MessageType } from '../../domain/entities/alert-message.entity';
 import type { CreateAlertMessageDto } from '../dtos/alert-message.dto';
 
 export class AlertMessageFactory {
@@ -12,8 +8,12 @@ export class AlertMessageFactory {
   ): AlertMessage {
     const alertMessage = new AlertMessage();
     alertMessage.alertRuleId = alertRuleId;
-    alertMessage.receptorType = dto.receptorType as ReceptorType;
-    alertMessage.messageData = dto.messageData as MessageData;
+    alertMessage.messageType = dto.messageType as MessageType;
+    alertMessage.targetId = dto.targetId;
+    alertMessage.message = dto.message || '';
+    if (dto.color !== undefined) {
+      alertMessage.color = dto.color;
+    }
     alertMessage.messageGroupId = dto.messageGroupId;
     alertMessage.status = dto.status ?? 'pending';
     return alertMessage;
@@ -22,8 +22,12 @@ export class AlertMessageFactory {
   static createFromExisting(original: AlertMessage): AlertMessage {
     const duplicated = new AlertMessage();
     duplicated.alertRuleId = original.alertRuleId;
-    duplicated.receptorType = original.receptorType;
-    duplicated.messageData = original.messageData;
+    duplicated.messageType = original.messageType;
+    duplicated.targetId = original.targetId;
+    duplicated.message = original.message;
+    if (original.color !== undefined) {
+      duplicated.color = original.color;
+    }
     duplicated.messageGroupId = original.messageGroupId;
     duplicated.status = original.status;
     return duplicated;

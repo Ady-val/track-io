@@ -122,3 +122,4 @@ describe("AlertRuleDetailModal", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 });
+

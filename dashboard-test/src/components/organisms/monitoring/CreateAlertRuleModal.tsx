@@ -1,8 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
-
 import { Button, Text, Input, Select } from "@components/atoms";
 
 import type { Sensor, SensorType, Operator } from "@/types";
@@ -97,7 +95,7 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
       title="Nueva Condición de Monitoreo"
       onClose={handleClose}
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         {validationError && (
           <div className="bg-red-900/30 border border-red-700 rounded-lg p-3">
             <Text className="text-red-400" variant="small">
@@ -106,15 +104,16 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
           </div>
         )}
         {/* Información básica */}
-        <div className="bg-slate-900/30 rounded-lg p-4 space-y-4">
+        <div>
           {/* Nombre de la condición */}
           <div>
-            <Text className="mb-2" color="secondary" variant="small">
-              Nombre de la Condición
-            </Text>
             <Input
               autoFocus
+              fullWidth
+              label="Nombre de la Condición"
+              labelPlacement="outside"
               placeholder="Ej: Temperatura Alta Tanque 1"
+              size="md"
               value={ruleName}
               variant="bordered"
               onChange={(e) => setRuleName(e.target.value)}
@@ -122,8 +121,8 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
           </div>
 
           {/* Selector de sensor */}
-          <div>
-            <Text className="mb-2" color="secondary" variant="small">
+          <div className="mt-4">
+            <Text className="mb-2 text-white text-sm" variant="small">
               Sensor a Monitorear
             </Text>
             <Select
@@ -142,8 +141,8 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
         </div>
 
         {/* Configuración de la alerta */}
-        <div className="bg-slate-900/30 rounded-lg p-4">
-          <Text className="mb-3" color="secondary" variant="small">
+        <div>
+          <Text className="mb-3 text-white text-sm" variant="small">
             Configuración de Alerta
           </Text>
 
@@ -177,7 +176,9 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
               </div>
               <div className="col-span-2">
                 <Input
+                  fullWidth
                   placeholder="Valor"
+                  size="md"
                   type="number"
                   value={setpoint}
                   variant="bordered"
@@ -191,11 +192,12 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
           {mode === "window" && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Text className="mb-1.5" color="muted" variant="caption">
-                  Valor Mínimo
-                </Text>
                 <Input
+                  fullWidth
+                  label="Valor Mínimo"
+                  labelPlacement="outside"
                   placeholder="Min"
+                  size="md"
                   type="number"
                   value={minValue}
                   variant="bordered"
@@ -203,11 +205,12 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
                 />
               </div>
               <div>
-                <Text className="mb-1.5" color="muted" variant="caption">
-                  Valor Máximo
-                </Text>
                 <Input
+                  fullWidth
+                  label="Valor Máximo"
+                  labelPlacement="outside"
                   placeholder="Max"
+                  size="md"
                   type="number"
                   value={maxValue}
                   variant="bordered"
@@ -219,12 +222,12 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
         </div>
 
         {/* Botones de acción */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-700/50">
+        <div className="flex justify-end space-x-3 pt-6 border-t border-slate-600">
           <Button
             className="px-6 py-2 font-semibold"
             color="default"
             size="md"
-            startContent={<FaCircleXmark className="w-4 h-4" />}
+            type="button"
             variant="solid"
             onPress={handleClose}
           >
@@ -232,9 +235,10 @@ export const CreateAlertRuleModal: React.FC<CreateAlertRuleModalProps> = ({
           </Button>
           <Button
             className="px-6 py-2 font-semibold"
-            color="success"
+            color="primary"
             size="md"
-            startContent={<FaCircleCheck className="w-4 h-4" />}
+            type="button"
+            variant="solid"
             onPress={handleCreate}
           >
             Crear

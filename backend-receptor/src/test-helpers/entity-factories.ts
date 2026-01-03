@@ -30,13 +30,13 @@ import { AlertEscalationConfig } from '../alert-escalation/domain/entities/alert
 import {
   AlertEscalationMessage,
   AlertLevel,
-  MessageType,
+  MessageType as EscalationMessageType,
 } from '../alert-escalation/domain/entities/alert-escalation-message.entity';
 import { EventAlertLog } from '../alert-escalation/domain/entities/event-alert-log.entity';
 import { Email } from '../emails/domain/entities/email.entity';
 import {
   AlertMessage,
-  ReceptorType,
+  MessageType,
 } from '../alert-messages/domain/entities/alert-message.entity';
 import { AlertTrigger } from '../alert-triggers/domain/entities/alert-trigger.entity';
 import { MessageGroup } from '../message-groups/domain/entities/message-group.entity';
@@ -451,7 +451,7 @@ export const createMockAlertEscalationMessage = (
   message.id = overrides?.id ?? 1;
   message.escalationConfigId = overrides?.escalationConfigId ?? 1;
   message.level = overrides?.level ?? AlertLevel.WARNING;
-  message.messageType = overrides?.messageType ?? MessageType.EMAIL;
+  message.messageType = overrides?.messageType ?? EscalationMessageType.EMAIL;
   message.targetId = overrides?.targetId ?? 'test@example.com';
   message.message = overrides?.message ?? 'Test message';
   message.createdAt = overrides?.createdAt ?? new Date('2025-01-01');
@@ -503,14 +503,12 @@ export const createMockAlertMessage = (
   const message = new AlertMessage();
   message.id = overrides?.id ?? 1;
   message.alertRuleId = overrides?.alertRuleId ?? 1;
-  message.receptorType = overrides?.receptorType ?? ReceptorType.CORREO;
-  message.messageData = overrides?.messageData ?? {
-    correo: {
-      emails: ['test@example.com'],
-      subject: 'Test Subject',
-      message: 'Test Message',
-    },
-  };
+  message.messageType = overrides?.messageType ?? MessageType.EMAIL;
+  message.targetId = overrides?.targetId ?? 'test@example.com';
+  message.message = overrides?.message ?? 'Test Message';
+  if (overrides?.color !== undefined) {
+    message.color = overrides.color;
+  }
   message.messageGroupId = overrides?.messageGroupId ?? 1;
   message.status = overrides?.status ?? 'pending';
   message.createdAt = overrides?.createdAt ?? new Date('2025-01-01');

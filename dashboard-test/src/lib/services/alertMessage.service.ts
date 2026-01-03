@@ -3,21 +3,21 @@ import type { AlertMessage } from "@/types/alertRule";
 import apiClient from "../api";
 
 interface CreateAlertMessageData {
-  tipoReceptor: "reloj" | "correo" | "torreta";
-  receptor: string;
-  receptorNombre?: string;
+  messageType: "torreta" | "receptor" | "email";
+  targetId: string;
   message: string;
-  grupo: string;
-  status: "warning" | "alert" | "critical";
+  color?: string;
+  messageGroupId: number;
+  status?: string;
 }
 
 interface UpdateAlertMessageData {
-  tipoReceptor?: "reloj" | "correo" | "torreta";
-  receptor?: string;
-  receptorNombre?: string;
+  messageType?: "torreta" | "receptor" | "email";
+  targetId?: string;
   message?: string;
-  grupo?: string;
-  status?: "warning" | "alert" | "critical";
+  color?: string;
+  messageGroupId?: number;
+  status?: string;
 }
 
 interface AlertMessageResponse {
@@ -26,14 +26,12 @@ interface AlertMessageResponse {
 }
 
 class AlertMessageService {
-  private readonly baseUrl = "/alert-messages";
-
   async create(
     alertRuleId: string,
     data: CreateAlertMessageData
   ): Promise<AlertMessage> {
     const response = await apiClient.post<AlertMessageResponse>(
-      `${this.baseUrl}/rule/${alertRuleId}`,
+      `/alert-rules/${alertRuleId}/messages`,
       data
     );
 
@@ -41,28 +39,28 @@ class AlertMessageService {
   }
 
   async update(
-    alertRuleId: string,
+    _alertRuleId: string,
     messageId: number,
     data: UpdateAlertMessageData
   ): Promise<AlertMessage> {
     const response = await apiClient.put<AlertMessageResponse>(
-      `${this.baseUrl}/rule/${alertRuleId}/${messageId}`,
+      `/messages/${messageId}`,
       data
     );
 
     return response.data.data;
   }
 
-  async delete(alertRuleId: string, messageId: number): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/rule/${alertRuleId}/${messageId}`);
+  async delete(messageId: number): Promise<void> {
+    await apiClient.delete(`/messages/${messageId}`);
   }
 
   async duplicate(
-    alertRuleId: string,
+    _alertRuleId: string,
     messageId: number
   ): Promise<AlertMessage> {
     const response = await apiClient.post<AlertMessageResponse>(
-      `${this.baseUrl}/rule/${alertRuleId}/${messageId}/duplicate`
+      `/messages/${messageId}/duplicate`
     );
 
     return response.data.data;
