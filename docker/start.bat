@@ -24,13 +24,14 @@ echo    IP detectada: %HOST_IP%
 
 REM Verificar si ya existe .env.host y si la IP cambió
 set REBUILD_NEEDED=1
+set OLD_IP=
 if exist .env.host (
-    findstr /C:"HOST_IP=%HOST_IP%" .env.host >nul
-    if not errorlevel 1 (
-        echo    IP no ha cambiado, omitiendo rebuild...
+    for /f "tokens=2 delims==" %%a in ('findstr /C:"HOST_IP=" .env.host') do set OLD_IP=%%a
+    if "%OLD_IP%"=="%HOST_IP%" (
+        echo    IP no ha cambiado (%HOST_IP%), omitiendo rebuild...
         set REBUILD_NEEDED=0
     ) else (
-        echo    IP cambió, rebuild necesario...
+        echo    IP cambió de %OLD_IP% a %HOST_IP%, rebuild necesario...
     )
 ) else (
     echo    Primera ejecución, generando configuración...
@@ -47,6 +48,8 @@ docker compose down
 
 if %REBUILD_NEEDED%==1 (
     echo    Reconstruyendo servicios con nueva IP...
+    REM Forzar rebuild del servicio nginx sin caché para asegurar que use la nueva IP
+    docker compose --env-file .env.host build --no-cache nginx
     docker compose --env-file .env.host up -d --build
 ) else (
     echo    Iniciando servicios sin rebuild...

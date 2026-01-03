@@ -18,12 +18,14 @@ echo "   IP detectada: $HOST_IP"
 
 # Verificar si ya existe .env.host y si la IP cambió
 REBUILD_NEEDED=1
+OLD_IP=""
 if [ -f .env.host ]; then
-    if grep -q "HOST_IP=$HOST_IP" .env.host; then
-        echo "   IP no ha cambiado, omitiendo rebuild..."
+    OLD_IP=$(grep "^HOST_IP=" .env.host | cut -d'=' -f2 | tr -d '\n\r')
+    if [ "$OLD_IP" = "$HOST_IP" ]; then
+        echo "   IP no ha cambiado ($HOST_IP), omitiendo rebuild..."
         REBUILD_NEEDED=0
     else
-        echo "   IP cambió, rebuild necesario..."
+        echo "   IP cambió de $OLD_IP a $HOST_IP, rebuild necesario..."
     fi
 else
     echo "   Primera ejecución, generando configuración..."
@@ -42,6 +44,8 @@ docker compose down
 
 if [ $REBUILD_NEEDED -eq 1 ]; then
     echo "   Reconstruyendo servicios con nueva IP..."
+    # Forzar rebuild del servicio nginx sin caché para asegurar que use la nueva IP
+    docker compose --env-file .env.host build --no-cache nginx
     docker compose --env-file .env.host up -d --build
 else
     echo "   Iniciando servicios sin rebuild..."
