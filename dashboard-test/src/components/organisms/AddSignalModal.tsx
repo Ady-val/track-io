@@ -1,14 +1,14 @@
 import type { Device } from "../../types/device";
 
 import React, { useEffect, useMemo, useRef } from "react";
-import { Controller } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
 import { FaMicrochip } from "react-icons/fa";
 
 import { useDepartments } from "../../hooks/useCatalogs";
 import { useFormValidation } from "../../hooks/useFormValidation";
-import { createDeviceSignalSchema } from "../../lib/validations/schemas";
 import deviceSignalService from "../../lib/services/device-signal.service";
+import { createDeviceSignalSchema } from "../../lib/validations/schemas";
 import {
   Button,
   Input,
@@ -105,9 +105,9 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
         {/* Error del servidor */}
         {modalError.serverError && (
           <ErrorMessage
+            isServerError={modalError.parsedError?.isServerError ?? false}
             message={modalError.serverError}
             type="server"
-            isServerError={modalError.parsedError?.isServerError ?? false}
           />
         )}
 
@@ -121,17 +121,17 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
         <div className="space-y-4">
           <div>
             <Controller
-              name="name"
               control={form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
                     fullWidth
-                    isInvalid={!!fieldState.error}
                     errorMessage={fieldState.error?.message}
                     id="signal-name"
+                    isInvalid={!!fieldState.error}
                     label="Nombre del Botón"
                     labelPlacement="outside"
                     placeholder="Ej: Botón 1"
@@ -149,16 +149,16 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
 
           <div>
             <Controller
-              name="externalValueId"
               control={form.control}
+              name="externalValueId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     fullWidth
-                    isInvalid={!!fieldState.error}
                     errorMessage={fieldState.error?.message}
                     id="signal-external-value"
+                    isInvalid={!!fieldState.error}
                     label="External Value ID"
                     labelPlacement="outside"
                     placeholder="Ej: 432"
@@ -176,8 +176,8 @@ export const AddSignalModal: React.FC<AddSignalModalProps> = ({
 
           <div>
             <Controller
-              name="departmentId"
               control={form.control}
+              name="departmentId"
               render={({ field, fieldState }) => (
                 <>
                   <label

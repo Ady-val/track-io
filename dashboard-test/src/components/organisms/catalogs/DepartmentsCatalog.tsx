@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
@@ -149,6 +150,7 @@ export function DepartmentsCatalog() {
         name: data.name ?? selectedDepartment.name,
         htmlColor: data.htmlColor ?? selectedDepartment.htmlColor,
       };
+
       await updateDepartmentMutation.mutateAsync({
         id: selectedDepartment.id,
         data: updateData,
@@ -264,15 +266,15 @@ export function DepartmentsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={createForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -291,8 +293,8 @@ export function DepartmentsCatalog() {
 
           <div>
             <Controller
-              name="htmlColor"
               control={createForm.form.control}
+              name="htmlColor"
               render={({ field, fieldState }) => (
                 <>
                   <label
@@ -311,8 +313,8 @@ export function DepartmentsCatalog() {
                     />
                     <Input
                       {...field}
-                      errorMessage={fieldState.error?.message}
                       fullWidth
+                      errorMessage={fieldState.error?.message}
                       id="create-department-color-input"
                       isInvalid={!!fieldState.error}
                       placeholder="#FF0000"
@@ -397,15 +399,15 @@ export function DepartmentsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={editForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -424,8 +426,8 @@ export function DepartmentsCatalog() {
 
           <div>
             <Controller
-              name="htmlColor"
               control={editForm.form.control}
+              name="htmlColor"
               render={({ field, fieldState }) => (
                 <>
                   <label
@@ -444,8 +446,8 @@ export function DepartmentsCatalog() {
                     />
                     <Input
                       {...field}
-                      errorMessage={fieldState.error?.message}
                       fullWidth
+                      errorMessage={fieldState.error?.message}
                       id="edit-department-color-input"
                       isInvalid={!!fieldState.error}
                       placeholder="#FF0000"

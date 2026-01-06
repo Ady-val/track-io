@@ -16,9 +16,7 @@ describe("ErrorMessage", () => {
   });
 
   it("should render custom title", () => {
-    render(
-      <ErrorMessage title="Custom Error Title" message="Error message" />
-    );
+    render(<ErrorMessage title="Custom Error Title" message="Error message" />);
 
     expect(screen.getByText("Custom Error Title")).toBeInTheDocument();
     expect(screen.getByText("Error message")).toBeInTheDocument();
@@ -44,11 +42,7 @@ describe("ErrorMessage", () => {
 
   it("should use server error title when isServerError is true", () => {
     render(
-      <ErrorMessage
-        message="Server error"
-        type="server"
-        isServerError={true}
-      />
+      <ErrorMessage message="Server error" type="server" isServerError={true} />
     );
 
     expect(screen.getByText("Error del servidor:")).toBeInTheDocument();
@@ -72,9 +66,7 @@ describe("ErrorMessage", () => {
   });
 
   it("should apply custom className", () => {
-    render(
-      <ErrorMessage message="Error message" className="custom-class" />
-    );
+    render(<ErrorMessage message="Error message" className="custom-class" />);
 
     const errorElement = screen.getByRole("alert");
 
@@ -92,4 +84,3 @@ describe("ErrorMessage", () => {
     expect(screen.getByText("Custom message node")).toBeInTheDocument();
   });
 });
-

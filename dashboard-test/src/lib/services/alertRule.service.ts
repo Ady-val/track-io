@@ -35,7 +35,7 @@ class AlertRuleService {
     );
 
     const rule = response.data.data;
-    
+
     // Normalize messages: ensure messageType is lowercase and map to mensajes for backward compatibility
     if (rule.messages) {
       rule.messages = rule.messages.map((msg: any) => ({
@@ -47,7 +47,7 @@ class AlertRuleService {
         rule.mensajes = rule.messages;
       }
     }
-    
+
     return rule;
   }
 

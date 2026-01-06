@@ -174,7 +174,7 @@ export class AlertRuleController {
       return [];
     }
 
-    return messages.map((msg) => {
+    return messages.map(msg => {
       const messageDto = plainToInstance(
         AlertMessageResponseDto,
         {

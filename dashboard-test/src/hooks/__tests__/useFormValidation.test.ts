@@ -237,9 +237,7 @@ describe("useFormValidation", () => {
 
       expect(mockParseBackendValidationErrors).toHaveBeenCalledWith(error);
       expect(mockApplyBackendErrorsToForm).toHaveBeenCalled();
-      expect(mockSetValidationErrors).toHaveBeenCalledWith([
-        "General error",
-      ]);
+      expect(mockSetValidationErrors).toHaveBeenCalledWith(["General error"]);
     });
 
     it("should show toast on error when showToastOnError is true", () => {
@@ -305,4 +303,3 @@ describe("useFormValidation", () => {
     });
   });
 });
-

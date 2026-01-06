@@ -4,6 +4,7 @@ import {
   getFriendlyErrorMessage,
   mapBackendFieldToFrontend,
 } from "../validations/fieldMappings";
+
 import { parseApiError, type ParsedError } from "./errorHandler";
 
 /**
@@ -85,13 +86,15 @@ function extractFieldNameFromMessage(message: string): string | null {
   const match = message.match(
     /^([a-zA-Z_][a-zA-Z0-9_]*)\s+(must|is|should|cannot)/i
   );
-  if (match && match[1]) {
+
+  if (match?.[1]) {
     return match[1];
   }
 
   // Patrón alternativo: "fieldName: message"
   const colonMatch = message.match(/^([a-zA-Z_][a-zA-Z0-9_]*):/);
-  if (colonMatch && colonMatch[1]) {
+
+  if (colonMatch?.[1]) {
     return colonMatch[1];
   }
 
@@ -105,6 +108,7 @@ function parseFieldError(
   message: string
 ): { field: string; message: string } | null {
   const fieldName = extractFieldNameFromMessage(message);
+
   if (!fieldName) {
     return null;
   }
@@ -171,6 +175,7 @@ export function parseBackendValidationErrors(
         messages.forEach((msg) => {
           if (typeof msg === "string") {
             const fieldError = parseFieldError(msg);
+
             if (fieldError) {
               // Mapear a formato de react-hook-form
               if (!fieldErrors[fieldError.field]) {
@@ -254,5 +259,6 @@ export function getUserFriendlyErrorTitle(
   if (parseResult.isValidationError) {
     return "Errores de validación";
   }
+
   return "Error";
 }

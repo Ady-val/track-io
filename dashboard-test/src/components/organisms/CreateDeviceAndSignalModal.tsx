@@ -1,19 +1,14 @@
 import type React from "react";
 import { useState } from "react";
 
-import {
-  FaFloppyDisk,
-  FaXmark,
-} from "react-icons/fa6";
+import { FaFloppyDisk, FaXmark } from "react-icons/fa6";
+
+import { Button } from "@components/atoms";
 
 import type { CreateDeviceData } from "@/types/device";
 import type { CreateDeviceSignalData } from "@/types/device-signal";
 
-import { Button } from "@components/atoms";
-
-import {
-  CreateDeviceAndSignalForm,
-} from "./CreateDeviceAndSignalForm";
+import { CreateDeviceAndSignalForm } from "./CreateDeviceAndSignalForm";
 import { Modal } from "./Modal";
 
 export interface CreateDeviceAndSignalModalProps {
@@ -44,6 +39,7 @@ export const CreateDeviceAndSignalModal: React.FC<
     const form = document.getElementById(
       "create-device-and-signal-form"
     ) as HTMLFormElement;
+
     if (form) {
       form.requestSubmit();
     }
@@ -86,8 +82,8 @@ export const CreateDeviceAndSignalModal: React.FC<
         externalValueId={externalValueId}
         isLoading={isLoading}
         onCancel={onClose}
-        onValidationChange={setIsValid}
         onSubmit={onSubmit}
+        onValidationChange={setIsValid}
       />
     </Modal>
   );

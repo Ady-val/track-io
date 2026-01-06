@@ -1,10 +1,17 @@
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Controller, useFieldArray } from "react-hook-form";
 
+import { Controller, useFieldArray } from "react-hook-form";
 import { FaFloppyDisk, FaXmark, FaTrash, FaGaugeHigh } from "react-icons/fa6";
 
-import { Button, Input, Select, Text, ErrorMessage, ValidationErrorList } from "@components/atoms";
+import {
+  Button,
+  Input,
+  Select,
+  Text,
+  ErrorMessage,
+  ValidationErrorList,
+} from "@components/atoms";
 import { FieldError } from "@components/molecules";
 import { CollapsibleSection } from "@components/molecules";
 
@@ -32,21 +39,27 @@ export const CreateDashboardGroupModal: React.FC<
     error: measurementsError,
   } = useAvailableDashboardMeasurements();
 
-  const { form, modalError, handleBackendError, clearAllErrors, toast, resetForm } =
-    useFormValidation({
-      schema: createDashboardMeasurementGroupSchema,
-      defaultValues: {
-        name: "",
-        dashboardMeasurements: [],
-        chartTimeRange: undefined,
-        chartMinValue: undefined,
-        chartMaxValue: undefined,
-        chartMeasurementIds: [],
-      },
-      showToastOnError: true,
-      showToastOnSuccess: true,
-      successMessage: "Grupo creado exitosamente",
-    });
+  const {
+    form,
+    modalError,
+    handleBackendError,
+    clearAllErrors,
+    toast,
+    resetForm,
+  } = useFormValidation({
+    schema: createDashboardMeasurementGroupSchema,
+    defaultValues: {
+      name: "",
+      dashboardMeasurements: [],
+      chartTimeRange: undefined,
+      chartMinValue: undefined,
+      chartMaxValue: undefined,
+      chartMeasurementIds: [],
+    },
+    showToastOnError: true,
+    showToastOnSuccess: true,
+    successMessage: "Grupo creado exitosamente",
+  });
 
   const { append, remove } = useFieldArray({
     control: form.control,
@@ -78,9 +91,9 @@ export const CreateDashboardGroupModal: React.FC<
   }, [isOpen, resetForm]);
 
   const selectedDashboardMeasurements = useMemo(() => {
-    const selectedIds = form.watch("dashboardMeasurements").map(
-      (dm) => dm.dashboardMeasurementId
-    );
+    const selectedIds = form
+      .watch("dashboardMeasurements")
+      .map((dm) => dm.dashboardMeasurementId);
 
     return availableDashboardMeasurements.filter((dm) =>
       selectedIds.includes(dm.id)
@@ -88,9 +101,9 @@ export const CreateDashboardGroupModal: React.FC<
   }, [availableDashboardMeasurements, form.watch("dashboardMeasurements")]);
 
   const availableForSelect = useMemo(() => {
-    const selectedIds = form.watch("dashboardMeasurements").map(
-      (dm) => dm.dashboardMeasurementId
-    );
+    const selectedIds = form
+      .watch("dashboardMeasurements")
+      .map((dm) => dm.dashboardMeasurementId);
 
     return availableDashboardMeasurements.filter(
       (dm) => !selectedIds.includes(dm.id)
@@ -180,7 +193,10 @@ export const CreateDashboardGroupModal: React.FC<
       onClose={handleClose}
     >
       <div className="flex flex-col flex-1 min-h-0">
-        <form onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-y-auto">
+        <form
+          className="flex-1 min-h-0 overflow-y-auto"
+          onSubmit={handleSubmit}
+        >
           {/* Errores de validación generales */}
           {modalError.validationErrors.length > 0 && (
             <ValidationErrorList errors={modalError.validationErrors} />
@@ -189,25 +205,25 @@ export const CreateDashboardGroupModal: React.FC<
           {/* Error del servidor */}
           {modalError.serverError && (
             <ErrorMessage
+              isServerError={modalError.parsedError?.isServerError ?? false}
               message={modalError.serverError}
               type="server"
-              isServerError={modalError.parsedError?.isServerError ?? false}
             />
           )}
 
           <div className="mb-6">
             <Controller
-              name="name"
               control={form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isDisabled={isLoading}
                     isInvalid={!!fieldState.error}
-                    errorMessage={fieldState.error?.message}
                     label="Nombre del Grupo"
                     labelPlacement="outside"
                     placeholder="Ej: Grupo de Temperaturas"
@@ -305,8 +321,8 @@ export const CreateDashboardGroupModal: React.FC<
                     Tiempo del Eje X (Rango de datos)
                   </Text>
                   <Controller
-                    name="chartTimeRange"
                     control={form.control}
+                    name="chartTimeRange"
                     render={({ field, fieldState }) => (
                       <>
                         <Select
@@ -314,7 +330,9 @@ export const CreateDashboardGroupModal: React.FC<
                           value={field.value ? String(field.value) : ""}
                           onChange={(e) =>
                             field.onChange(
-                              e.target.value ? Number(e.target.value) : undefined
+                              e.target.value
+                                ? Number(e.target.value)
+                                : undefined
                             )
                           }
                         >
@@ -339,24 +357,50 @@ export const CreateDashboardGroupModal: React.FC<
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Controller
-                      name="chartMinValue"
                       control={form.control}
+                      name="chartMinValue"
                       render={({ field, fieldState }) => (
                         <>
                           <Input
                             fullWidth
+                            errorMessage={fieldState.error?.message}
                             isDisabled={isLoading}
                             isInvalid={!!fieldState.error}
-                            errorMessage={fieldState.error?.message}
                             label="Valor Mínimo (Eje Y)"
                             labelPlacement="outside"
+                            name={field.name}
                             placeholder="0"
                             size="md"
                             type="number"
                             value={minValueInput}
                             variant="bordered"
+                            onBlur={(e) => {
+                              field.onBlur();
+                              // Asegurar que el valor esté sincronizado al perder el foco
+                              const value = e.target.value.trim();
+
+                              if (value === "" || value === "-") {
+                                setMinValueInput("");
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+
+                                if (!isNaN(numValue) && isFinite(numValue)) {
+                                  setMinValueInput(String(numValue));
+                                  field.onChange(numValue);
+                                } else {
+                                  // Si no es válido, restaurar el valor anterior del form
+                                  setMinValueInput(
+                                    field.value != null
+                                      ? String(field.value)
+                                      : ""
+                                  );
+                                }
+                              }
+                            }}
                             onChange={(e) => {
                               const value = e.target.value;
+
                               setMinValueInput(value);
                               // Solo actualizar el form si el valor está completamente vacío o es un número válido
                               if (value === "" || value === "-") {
@@ -364,37 +408,27 @@ export const CreateDashboardGroupModal: React.FC<
                               } else {
                                 // Intentar convertir a número solo si el string completo es un número válido
                                 const trimmedValue = value.trim();
-                                if (trimmedValue === "" || trimmedValue === "-") {
+
+                                if (
+                                  trimmedValue === "" ||
+                                  trimmedValue === "-"
+                                ) {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = Number(trimmedValue);
+
                                   // Solo actualizar si es un número válido (no NaN) y el string original es válido
-                                  if (!isNaN(numValue) && isFinite(numValue) && trimmedValue !== "") {
+                                  if (
+                                    !isNaN(numValue) &&
+                                    isFinite(numValue) &&
+                                    trimmedValue !== ""
+                                  ) {
                                     field.onChange(numValue);
                                   }
                                   // Si no es válido, no actualizar el form (mantener el valor anterior)
                                 }
                               }
                             }}
-                            onBlur={(e) => {
-                              field.onBlur();
-                              // Asegurar que el valor esté sincronizado al perder el foco
-                              const value = e.target.value.trim();
-                              if (value === "" || value === "-") {
-                                setMinValueInput("");
-                                field.onChange(undefined);
-                              } else {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue) && isFinite(numValue)) {
-                                  setMinValueInput(String(numValue));
-                                  field.onChange(numValue);
-                                } else {
-                                  // Si no es válido, restaurar el valor anterior del form
-                                  setMinValueInput(field.value != null ? String(field.value) : "");
-                                }
-                              }
-                            }}
-                            name={field.name}
                           />
                           <FieldError
                             error={fieldState.error?.message}
@@ -406,24 +440,50 @@ export const CreateDashboardGroupModal: React.FC<
                   </div>
                   <div>
                     <Controller
-                      name="chartMaxValue"
                       control={form.control}
+                      name="chartMaxValue"
                       render={({ field, fieldState }) => (
                         <>
                           <Input
                             fullWidth
+                            errorMessage={fieldState.error?.message}
                             isDisabled={isLoading}
                             isInvalid={!!fieldState.error}
-                            errorMessage={fieldState.error?.message}
                             label="Valor Máximo (Eje Y)"
                             labelPlacement="outside"
+                            name={field.name}
                             placeholder="100"
                             size="md"
                             type="number"
                             value={maxValueInput}
                             variant="bordered"
+                            onBlur={(e) => {
+                              field.onBlur();
+                              // Asegurar que el valor esté sincronizado al perder el foco
+                              const value = e.target.value.trim();
+
+                              if (value === "" || value === "-") {
+                                setMaxValueInput("");
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+
+                                if (!isNaN(numValue) && isFinite(numValue)) {
+                                  setMaxValueInput(String(numValue));
+                                  field.onChange(numValue);
+                                } else {
+                                  // Si no es válido, restaurar el valor anterior del form
+                                  setMaxValueInput(
+                                    field.value != null
+                                      ? String(field.value)
+                                      : ""
+                                  );
+                                }
+                              }
+                            }}
                             onChange={(e) => {
                               const value = e.target.value;
+
                               setMaxValueInput(value);
                               // Solo actualizar el form si el valor está completamente vacío o es un número válido
                               if (value === "" || value === "-") {
@@ -431,37 +491,27 @@ export const CreateDashboardGroupModal: React.FC<
                               } else {
                                 // Intentar convertir a número solo si el string completo es un número válido
                                 const trimmedValue = value.trim();
-                                if (trimmedValue === "" || trimmedValue === "-") {
+
+                                if (
+                                  trimmedValue === "" ||
+                                  trimmedValue === "-"
+                                ) {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = Number(trimmedValue);
+
                                   // Solo actualizar si es un número válido (no NaN) y el string original es válido
-                                  if (!isNaN(numValue) && isFinite(numValue) && trimmedValue !== "") {
+                                  if (
+                                    !isNaN(numValue) &&
+                                    isFinite(numValue) &&
+                                    trimmedValue !== ""
+                                  ) {
                                     field.onChange(numValue);
                                   }
                                   // Si no es válido, no actualizar el form (mantener el valor anterior)
                                 }
                               }
                             }}
-                            onBlur={(e) => {
-                              field.onBlur();
-                              // Asegurar que el valor esté sincronizado al perder el foco
-                              const value = e.target.value.trim();
-                              if (value === "" || value === "-") {
-                                setMaxValueInput("");
-                                field.onChange(undefined);
-                              } else {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue) && isFinite(numValue)) {
-                                  setMaxValueInput(String(numValue));
-                                  field.onChange(numValue);
-                                } else {
-                                  // Si no es válido, restaurar el valor anterior del form
-                                  setMaxValueInput(field.value != null ? String(field.value) : "");
-                                }
-                              }
-                            }}
-                            name={field.name}
                           />
                           <FieldError
                             error={fieldState.error?.message}
@@ -482,7 +532,8 @@ export const CreateDashboardGroupModal: React.FC<
                       .filter((dm) => dm.measurement.type !== "status")
                       .map((dm) => {
                         const measurementId = dm.measurementId;
-                        const chartIds = form.watch("chartMeasurementIds") ?? [];
+                        const chartIds =
+                          form.watch("chartMeasurementIds") ?? [];
 
                         return (
                           <label
@@ -498,7 +549,8 @@ export const CreateDashboardGroupModal: React.FC<
                               }
                             />
                             <Text variant="small">
-                              {dm.measurement.name} ({dm.measurement.externalId})
+                              {dm.measurement.name} ({dm.measurement.externalId}
+                              )
                             </Text>
                           </label>
                         );
@@ -520,31 +572,31 @@ export const CreateDashboardGroupModal: React.FC<
         </form>
 
         <div className="flex items-center justify-end gap-2 pt-4 pb-2 border-t border-slate-600 flex-shrink-0">
-        <Button
-          className="px-6 py-2 font-semibold"
-          color="default"
-          disabled={form.formState.isSubmitting}
-          size="md"
-          variant="solid"
-          onPress={handleClose}
-        >
-          <FaXmark className="mr-2" />
-          Cancelar
-        </Button>
-        <Button
-          className="px-6 py-2 font-semibold"
-          color="primary"
-          disabled={form.formState.isSubmitting}
-          isLoading={form.formState.isSubmitting}
-          size="md"
-          variant="solid"
-          onPress={() => {
-            void handleSubmit();
-          }}
-        >
-          <FaFloppyDisk className="mr-2" />
-          Crear Grupo
-        </Button>
+          <Button
+            className="px-6 py-2 font-semibold"
+            color="default"
+            disabled={form.formState.isSubmitting}
+            size="md"
+            variant="solid"
+            onPress={handleClose}
+          >
+            <FaXmark className="mr-2" />
+            Cancelar
+          </Button>
+          <Button
+            className="px-6 py-2 font-semibold"
+            color="primary"
+            disabled={form.formState.isSubmitting}
+            isLoading={form.formState.isSubmitting}
+            size="md"
+            variant="solid"
+            onPress={() => {
+              void handleSubmit();
+            }}
+          >
+            <FaFloppyDisk className="mr-2" />
+            Crear Grupo
+          </Button>
         </div>
       </div>
     </Modal>

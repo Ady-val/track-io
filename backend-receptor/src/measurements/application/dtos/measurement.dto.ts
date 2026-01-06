@@ -12,7 +12,8 @@ export class CreateMeasurementDto {
   name!: string;
 
   @IsEnum(MeasurementType, {
-    message: 'type must be one of the following values: temperature, humidity, pressure, level, flow, vibration, status',
+    message:
+      'type must be one of the following values: temperature, humidity, pressure, level, flow, vibration, status',
   })
   @IsNotEmpty()
   type!: MeasurementType;
@@ -28,7 +29,8 @@ export class UpdateMeasurementDto {
   name?: string;
 
   @IsEnum(MeasurementType, {
-    message: 'type must be one of the following values: temperature, humidity, pressure, level, flow, vibration, status',
+    message:
+      'type must be one of the following values: temperature, humidity, pressure, level, flow, vibration, status',
   })
   @IsOptional()
   type?: MeasurementType;

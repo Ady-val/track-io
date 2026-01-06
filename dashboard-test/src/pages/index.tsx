@@ -61,10 +61,12 @@ function AlertRules() {
 
   // Fetch the selected rule with its messages when modal is open
   const { data: selectedRuleData } = useAlertRule(selectedRuleId ?? "");
-  
+
   // Use selectedRuleData if available (has messages), otherwise fallback to rule from list
-  const selectedRule = selectedRuleId 
-    ? (selectedRuleData ?? alertRules.find((r) => r.id === selectedRuleId) ?? null)
+  const selectedRule = selectedRuleId
+    ? (selectedRuleData ??
+      alertRules.find((r) => r.id === selectedRuleId) ??
+      null)
     : null;
 
   const createAlertRuleMutation = useCreateAlertRule();
@@ -200,7 +202,6 @@ function AlertRules() {
     }
   };
 
-
   const handleCreateMessage = async (
     ruleId: string,
     messageData: NewMessageData
@@ -209,7 +210,7 @@ function AlertRules() {
       // Find messageGroupId from grupo name
       const grupo = messageGroups.find((g) => g.nombre === messageData.grupo);
       const messageGroupId = grupo?.id ?? 1; // Default to 1 if not found
-      
+
       await createAlertMessageMutation.mutateAsync({
         alertRuleId: ruleId,
         data: messageData,
@@ -248,7 +249,6 @@ function AlertRules() {
       );
     }
   };
-
 
   if (isLoading) {
     return <LoadingState message="Cargando condiciones de monitoreo..." />;

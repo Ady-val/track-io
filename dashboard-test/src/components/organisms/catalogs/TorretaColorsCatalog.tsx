@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
@@ -9,8 +10,8 @@ import {
   useDeleteTorretaColor,
   type TorretaColor,
 } from "@/hooks/useCatalogs";
-import { useHasPermission } from "@/hooks/useHasPermission";
 import { useFormValidation } from "@/hooks/useFormValidation";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import {
   createTorretaColorSchema,
   updateTorretaColorSchema,
@@ -18,9 +19,9 @@ import {
 
 import { ErrorMessage, ValidationErrorList, Button, Input } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
-import { FieldError } from "../../molecules/FieldError";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
+import { FieldError } from "../../molecules/FieldError";
 import { Modal } from "../Modal";
 
 export function TorretaColorsCatalog() {
@@ -154,6 +155,7 @@ export function TorretaColorsCatalog() {
         htmlColor: data.htmlColor ?? selectedColor.htmlColor,
         deviceColorId: data.deviceColorId ?? selectedColor.deviceColorId,
       };
+
       await updateColorMutation.mutateAsync({
         id: selectedColor.id,
         data: updateData,
@@ -262,15 +264,15 @@ export function TorretaColorsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={createForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -289,8 +291,8 @@ export function TorretaColorsCatalog() {
 
           <div>
             <Controller
-              name="htmlColor"
               control={createForm.form.control}
+              name="htmlColor"
               render={({ field, fieldState }) => (
                 <>
                   <label
@@ -309,8 +311,8 @@ export function TorretaColorsCatalog() {
                     />
                     <Input
                       {...field}
-                      errorMessage={fieldState.error?.message}
                       fullWidth
+                      errorMessage={fieldState.error?.message}
                       isInvalid={!!fieldState.error}
                       placeholder="#000000"
                       size="md"
@@ -341,14 +343,14 @@ export function TorretaColorsCatalog() {
 
           <div>
             <Controller
-              name="deviceColorId"
               control={createForm.form.control}
+              name="deviceColorId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="ID del Dispositivo"
                     labelPlacement="outside"
@@ -420,15 +422,15 @@ export function TorretaColorsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={editForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -447,8 +449,8 @@ export function TorretaColorsCatalog() {
 
           <div>
             <Controller
-              name="htmlColor"
               control={editForm.form.control}
+              name="htmlColor"
               render={({ field, fieldState }) => (
                 <>
                   <label
@@ -467,8 +469,8 @@ export function TorretaColorsCatalog() {
                     />
                     <Input
                       {...field}
-                      errorMessage={fieldState.error?.message}
                       fullWidth
+                      errorMessage={fieldState.error?.message}
                       isInvalid={!!fieldState.error}
                       placeholder="#000000"
                       size="md"
@@ -499,14 +501,14 @@ export function TorretaColorsCatalog() {
 
           <div>
             <Controller
-              name="deviceColorId"
               control={editForm.form.control}
+              name="deviceColorId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="ID del Dispositivo"
                     labelPlacement="outside"

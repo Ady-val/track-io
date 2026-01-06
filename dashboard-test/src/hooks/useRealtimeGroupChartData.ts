@@ -60,6 +60,7 @@ export const useRealtimeGroupChartData = (
 
       // Only process numeric values for charts
       const newValue = parseFloat(String(value));
+
       if (isNaN(newValue)) {
         // Skip non-numeric values (e.g., boolean values for status type)
         return;

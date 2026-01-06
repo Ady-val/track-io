@@ -163,7 +163,10 @@ describe('JwtAuthGuard', () => {
       mockGetRequest.mockReturnValue(request);
       // Mock super.canActivate() to return true (token validation passes)
       jest
-        .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+        .spyOn(
+          Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+          'canActivate'
+        )
         .mockResolvedValue(true);
       sessionRepository.findByToken.mockResolvedValue(mockSession);
 

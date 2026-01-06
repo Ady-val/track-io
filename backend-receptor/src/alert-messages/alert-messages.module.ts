@@ -19,7 +19,15 @@ import { TorretaColorsModule } from '../torreta-colors/torreta-colors.module';
     TorretaColorsModule,
   ],
   controllers: [AlertMessageController],
-  providers: [AlertMessageService, AlertMessageSenderService, AlertMessageRepository],
-  exports: [AlertMessageService, AlertMessageSenderService, AlertMessageRepository],
+  providers: [
+    AlertMessageService,
+    AlertMessageSenderService,
+    AlertMessageRepository,
+  ],
+  exports: [
+    AlertMessageService,
+    AlertMessageSenderService,
+    AlertMessageRepository,
+  ],
 })
 export class AlertMessagesModule {}

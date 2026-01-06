@@ -32,10 +32,10 @@ export const FieldError: React.FC<FieldErrorProps> = ({
 
   return (
     <div
+      aria-live="polite"
       className={`mt-1 ${className}`}
       id={fieldId ? `${fieldId}-error` : undefined}
       role="alert"
-      aria-live="polite"
     >
       <Text className="text-red-400" variant="caption">
         {typeof error === "string" ? error : error}

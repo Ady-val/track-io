@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
@@ -137,6 +138,7 @@ export function TorretasCatalog() {
         externalId: data.externalId?.trim() || undefined,
         isActive: data.isActive,
       };
+
       await createTorretaMutation.mutateAsync(cleanedData);
       createForm.toast.success("Torreta creada exitosamente");
       createForm.resetForm({
@@ -163,6 +165,7 @@ export function TorretasCatalog() {
         externalId: data.externalId?.trim() || undefined,
         isActive: data.isActive ?? selectedTorreta.isActive,
       };
+
       await updateTorretaMutation.mutateAsync({
         id: selectedTorreta.id,
         data: cleanedData,
@@ -273,15 +276,15 @@ export function TorretasCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={createForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -300,14 +303,14 @@ export function TorretasCatalog() {
 
           <div>
             <Controller
-              name="description"
               control={createForm.form.control}
+              name="description"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Descripción (Opcional)"
                     labelPlacement="outside"
@@ -327,14 +330,14 @@ export function TorretasCatalog() {
 
           <div>
             <Controller
-              name="externalId"
               control={createForm.form.control}
+              name="externalId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="External ID (Opcional)"
                     labelPlacement="outside"
@@ -407,15 +410,15 @@ export function TorretasCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={editForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -434,14 +437,14 @@ export function TorretasCatalog() {
 
           <div>
             <Controller
-              name="description"
               control={editForm.form.control}
+              name="description"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Descripción (Opcional)"
                     labelPlacement="outside"
@@ -461,14 +464,14 @@ export function TorretasCatalog() {
 
           <div>
             <Controller
-              name="externalId"
               control={editForm.form.control}
+              name="externalId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="External ID (Opcional)"
                     labelPlacement="outside"

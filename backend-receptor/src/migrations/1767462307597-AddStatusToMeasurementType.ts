@@ -28,4 +28,3 @@ export class AddStatusToMeasurementType1767462307597
     `);
   }
 }
-

@@ -123,7 +123,7 @@ export const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
         <div className="mt-1 text-center">
           <Text className="text-xs text-slate-500" variant="caption">
             {hasValue && timestamp
-              ? `Actualizado: ${new Date(timestamp).toLocaleTimeString()}`
+              ? `Actualizado: ${new Date(timestamp).toLocaleDateString()} ${new Date(timestamp).toLocaleTimeString()}`
               : "Esperando señal"}
           </Text>
         </div>

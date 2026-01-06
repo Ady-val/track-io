@@ -18,13 +18,13 @@ export class CreateAlertMessageDto {
   @Length(1, 255)
   targetId!: string;
 
-  @ValidateIf((o) => o.messageType !== MessageType.TORRETA)
+  @ValidateIf(o => o.messageType !== MessageType.TORRETA)
   @IsString()
   @IsNotEmpty()
   @Length(1, 2000)
   message!: string;
 
-  @ValidateIf((o) => o.messageType === MessageType.TORRETA)
+  @ValidateIf(o => o.messageType === MessageType.TORRETA)
   @IsString()
   @IsNotEmpty()
   @Length(1, 10)

@@ -1,4 +1,4 @@
-import { AlertMessage, MessageType } from '../../domain/entities/alert-message.entity';
+import { AlertMessage } from '../../domain/entities/alert-message.entity';
 import type { CreateAlertMessageDto } from '../dtos/alert-message.dto';
 
 export class AlertMessageFactory {
@@ -8,7 +8,7 @@ export class AlertMessageFactory {
   ): AlertMessage {
     const alertMessage = new AlertMessage();
     alertMessage.alertRuleId = alertRuleId;
-    alertMessage.messageType = dto.messageType as MessageType;
+    alertMessage.messageType = dto.messageType;
     alertMessage.targetId = dto.targetId;
     alertMessage.message = dto.message || '';
     if (dto.color !== undefined) {

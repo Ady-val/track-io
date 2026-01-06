@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
@@ -9,8 +10,8 @@ import {
   useDeleteReceptor,
   type Receptor,
 } from "@/hooks/useCatalogs";
-import { useHasPermission } from "@/hooks/useHasPermission";
 import { useFormValidation } from "@/hooks/useFormValidation";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import {
   createReceptorSchema,
   updateReceptorSchema,
@@ -18,9 +19,9 @@ import {
 
 import { ErrorMessage, ValidationErrorList, Button, Input } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
-import { FieldError } from "../../molecules/FieldError";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
+import { FieldError } from "../../molecules/FieldError";
 import { Modal } from "../Modal";
 
 export function ReceptorsCatalog() {
@@ -101,9 +102,7 @@ export function ReceptorsCatalog() {
       component: (value) => (
         <span
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            value
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
+            value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
           }`}
         >
           {value ? "Activo" : "Inactivo"}
@@ -162,6 +161,7 @@ export function ReceptorsCatalog() {
         name: data.name ?? selectedReceptor.name,
         isActive: data.isActive ?? selectedReceptor.isActive,
       };
+
       await updateReceptorMutation.mutateAsync({
         id: selectedReceptor.id,
         data: updateData,
@@ -270,15 +270,15 @@ export function ReceptorsCatalog() {
 
           <div>
             <Controller
-              name="externalId"
               control={createForm.form.control}
+              name="externalId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="ID Externo"
                     labelPlacement="outside"
@@ -297,14 +297,14 @@ export function ReceptorsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={createForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -376,15 +376,15 @@ export function ReceptorsCatalog() {
 
           <div>
             <Controller
-              name="externalId"
               control={editForm.form.control}
+              name="externalId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="ID Externo"
                     labelPlacement="outside"
@@ -403,14 +403,14 @@ export function ReceptorsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={editForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"

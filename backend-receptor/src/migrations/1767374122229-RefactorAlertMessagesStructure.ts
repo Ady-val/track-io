@@ -49,18 +49,24 @@ export class RefactorAlertMessagesStructure1767374122229
           messageType = 'torreta';
           if (message_data?.torreta?.torretaId) {
             // Get externalId from torretas table
-            const torretaResult = await queryRunner.query(`
+            const torretaResult = await queryRunner.query(
+              `
               SELECT external_id FROM torretas WHERE id = $1 AND deleted_at IS NULL
-            `, [message_data.torreta.torretaId]);
+            `,
+              [message_data.torreta.torretaId]
+            );
             if (torretaResult.length > 0 && torretaResult[0].external_id) {
               targetId = torretaResult[0].external_id;
             }
           }
           if (message_data?.torreta?.colorId) {
             // Get deviceColorId from torreta_colors table
-            const colorResult = await queryRunner.query(`
+            const colorResult = await queryRunner.query(
+              `
               SELECT device_color_id FROM torreta_colors WHERE id = $1
-            `, [message_data.torreta.colorId]);
+            `,
+              [message_data.torreta.colorId]
+            );
             if (colorResult.length > 0 && colorResult[0].device_color_id) {
               color = colorResult[0].device_color_id;
             }
@@ -71,9 +77,12 @@ export class RefactorAlertMessagesStructure1767374122229
           messageType = 'receptor';
           if (message_data?.receptor?.receptorId) {
             // Get externalId from receptors table
-            const receptorResult = await queryRunner.query(`
+            const receptorResult = await queryRunner.query(
+              `
               SELECT external_id FROM receptors WHERE id = $1 AND deleted_at IS NULL
-            `, [message_data.receptor.receptorId]);
+            `,
+              [message_data.receptor.receptorId]
+            );
             if (receptorResult.length > 0 && receptorResult[0].external_id) {
               targetId = receptorResult[0].external_id;
             }
@@ -85,7 +94,10 @@ export class RefactorAlertMessagesStructure1767374122229
 
         case 'correo':
           messageType = 'email';
-          if (message_data?.correo?.emails && message_data.correo.emails.length > 0) {
+          if (
+            message_data?.correo?.emails &&
+            message_data.correo.emails.length > 0
+          ) {
             targetId = message_data.correo.emails[0];
           }
           if (message_data?.correo?.message) {
@@ -100,7 +112,8 @@ export class RefactorAlertMessagesStructure1767374122229
 
       // Update the row with migrated data
       if (messageType) {
-        await queryRunner.query(`
+        await queryRunner.query(
+          `
           UPDATE alert_messages
           SET 
             message_type = $1,
@@ -108,7 +121,9 @@ export class RefactorAlertMessagesStructure1767374122229
             message = $3,
             color = $4
           WHERE id = $5
-        `, [messageType, targetId, message, color, id]);
+        `,
+          [messageType, targetId, message, color, id]
+        );
       }
     }
 
@@ -168,14 +183,19 @@ export class RefactorAlertMessagesStructure1767374122229
         case 'torreta':
           receptorType = 'torreta';
           // Try to find torreta by externalId
-          const torretaResult = await queryRunner.query(`
+          const torretaResult = await queryRunner.query(
+            `
             SELECT id FROM torretas WHERE external_id = $1 AND deleted_at IS NULL LIMIT 1
-          `, [target_id]);
+          `,
+            [target_id]
+          );
           // Try to find color by deviceColorId
-          const colorResult = await queryRunner.query(`
+          const colorResult = await queryRunner.query(
+            `
             SELECT id FROM torreta_colors WHERE device_color_id = $1 LIMIT 1
-          `, [color || '']);
-          
+          `,
+            [color || '']
+
           messageData = {
             torreta: {
               torretaId: torretaResult.length > 0 ? torretaResult[0].id : null,
@@ -187,13 +207,16 @@ export class RefactorAlertMessagesStructure1767374122229
         case 'receptor':
           receptorType = 'receptor';
           // Try to find receptor by externalId
-          const receptorResult = await queryRunner.query(`
+          const receptorResult = await queryRunner.query(
+            `
             SELECT id FROM receptors WHERE external_id = $1 AND deleted_at IS NULL LIMIT 1
-          `, [target_id]);
-          
+          `,
+            [target_id]
+
           messageData = {
             receptor: {
-              receptorId: receptorResult.length > 0 ? receptorResult[0].id : null,
+              receptorId:
+                receptorResult.length > 0 ? receptorResult[0].id : null,
               message: message || '',
             },
           };
@@ -212,13 +235,16 @@ export class RefactorAlertMessagesStructure1767374122229
       }
 
       if (receptorType && messageData) {
-        await queryRunner.query(`
+        await queryRunner.query(
+          `
           UPDATE alert_messages
           SET 
             receptor_type = $1,
             message_data = $2
           WHERE id = $3
-        `, [receptorType, JSON.stringify(messageData), id]);
+        `,
+          [receptorType, JSON.stringify(messageData), id]
+        );
       }
     }
 
@@ -244,4 +270,3 @@ export class RefactorAlertMessagesStructure1767374122229
     `);
   }
 }
-

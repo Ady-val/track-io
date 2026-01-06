@@ -24,10 +24,10 @@ export const ValidationErrorList: React.FC<ValidationErrorListProps> = ({
 
   return (
     <div
-      id={id}
-      role="alert"
       aria-live="polite"
       className={`bg-red-900/20 border border-red-500 rounded-lg p-4 mb-4 ${className}`}
+      id={id}
+      role="alert"
     >
       <h4 className="text-red-400 font-semibold mb-2">{title}</h4>
       <ul className="text-red-300 text-sm space-y-1 list-disc list-inside">

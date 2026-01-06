@@ -57,7 +57,8 @@ export default function DashboardMeasurementsPage() {
   } = useDashboardMeasurementGroups();
   const { dashboards, loading, error, refetch } =
     useDashboardMeasurements(selectedGroupId);
-  const { values, getTimestamp, getHistory } = useRealtimeMeasurementValues();
+  const { values, getTimestamp, getHistory, getOnStartTime } =
+    useRealtimeMeasurementValues();
   const { isConnected } = useWebSocket();
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
@@ -234,19 +235,56 @@ export default function DashboardMeasurementsPage() {
           >
             <div className="flex-1 overflow-y-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-4">
-                {dashboards.map((dashboard) => (
-                  <MeasurementChart
-                    key={dashboard.id}
-                    history={getHistory(dashboard.measurementId)}
-                    maxValue={dashboard.maxValue ?? 100}
-                    minValue={dashboard.minValue ?? 0}
-                    subtitle={dashboard.measurement.externalId}
-                    timestamp={getTimestamp(dashboard.measurementId)}
-                    title={dashboard.measurement.name}
-                    type={dashboard.measurement.type}
-                    value={values[dashboard.measurementId]?.value ?? undefined}
-                  />
-                ))}
+                {dashboards.map((dashboard) => {
+                  const parseValue = (
+                    value: string | undefined
+                  ): number | boolean | undefined => {
+                    if (!value) return undefined;
+                    const str = String(value).toLowerCase().trim();
+
+                    if (str === "true" || str === "1" || str === "on")
+                      return true;
+                    if (str === "false" || str === "0" || str === "off")
+                      return false;
+                    const num = parseFloat(str);
+
+                    return isNaN(num) ? undefined : num;
+                  };
+
+                  const realtimeValue = values[dashboard.measurementId]?.value;
+                  const backendValue = parseValue(dashboard.latestValue?.value);
+                  const displayValue =
+                    realtimeValue !== undefined ? realtimeValue : backendValue;
+
+                  const realtimeTimestamp = getTimestamp(
+                    dashboard.measurementId
+                  );
+                  const backendTimestamp = dashboard.latestValue?.createdAt;
+                  const displayTimestamp =
+                    realtimeTimestamp ?? backendTimestamp;
+
+                  const realtimeOnStartTime = getOnStartTime(
+                    dashboard.measurementId
+                  );
+                  const backendOnStartTime = dashboard.onStartTime;
+                  const displayOnStartTime =
+                    realtimeOnStartTime ?? backendOnStartTime;
+
+                  return (
+                    <MeasurementChart
+                      key={dashboard.id}
+                      history={getHistory(dashboard.measurementId)}
+                      maxValue={dashboard.maxValue ?? 100}
+                      minValue={dashboard.minValue ?? 0}
+                      subtitle={dashboard.measurement.externalId}
+                      timestamp={displayTimestamp}
+                      title={dashboard.measurement.name}
+                      type={dashboard.measurement.type}
+                      value={displayValue}
+                      onStartTime={displayOnStartTime}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>

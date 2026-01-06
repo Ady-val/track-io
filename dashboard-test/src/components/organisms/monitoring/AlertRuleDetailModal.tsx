@@ -6,10 +6,10 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
 import { Button, Text, Chip, Input, Select } from "@components/atoms";
 
 import { Module, Action } from "@/constants/permissions";
-import { useHasPermission } from "@/hooks/useHasPermission";
-import { useTorretas } from "@/hooks/useTorretas";
 import { useEmails } from "@/hooks/useEmails";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import { useTorretaColors } from "@/hooks/useTorretaColors";
+import { useTorretas } from "@/hooks/useTorretas";
 import type {
   AlertRule,
   Sensor,
@@ -94,11 +94,13 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
     // Use htmlColor if available (from backend), otherwise use hexCode (legacy)
     const htmlColor = (c as any).htmlColor || c.hexCode;
     const deviceColorId = (c as any).deviceColorId || c.deviceColorId;
-    
+
     if (!deviceColorId) {
-      console.warn(`Torreta color ${c.id} (${c.name}) is missing deviceColorId`);
+      console.warn(
+        `Torreta color ${c.id} (${c.name}) is missing deviceColorId`
+      );
     }
-    
+
     return {
       id: c.id,
       name: c.name,
@@ -175,6 +177,7 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
 
     // Use first message group if grupo is not set
     const grupoToUse = newMessageData.grupo || gruposMensajes[0]?.nombre || "";
+
     onCreateMessage(rule.id, { ...newMessageData, grupo: grupoToUse });
     setNewMessageData({
       messageType: "receptor" as "torreta" | "receptor" | "email",
@@ -249,7 +252,9 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
               </div>
 
               <div>
-                <Text className="text-sm text-slate-300 mb-2">Sensor a Monitorear</Text>
+                <Text className="text-sm text-slate-300 mb-2">
+                  Sensor a Monitorear
+                </Text>
                 <Select
                   fullWidth
                   value={selectedSensorId?.toString() ?? "0"}
@@ -268,7 +273,9 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
 
               <div>
                 <div className="mb-3">
-                  <Text className="text-sm text-slate-300 mb-2">Configuración de Alerta</Text>
+                  <Text className="text-sm text-slate-300 mb-2">
+                    Configuración de Alerta
+                  </Text>
                   <Select
                     fullWidth
                     value={mode}
@@ -534,7 +541,8 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
 
           {!collapsedMessages && (
             <>
-              {(rule.messages ?? rule.mensajes) && (rule.messages ?? rule.mensajes)!.length > 0 ? (
+              {(rule.messages ?? rule.mensajes) &&
+              (rule.messages ?? rule.mensajes)!.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                   {(rule.messages ?? rule.mensajes)!.map((message, index) => {
                     // Map receptors to the format expected by MessageCard
@@ -542,6 +550,7 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                     const mappedReceptors = receptores
                       .filter((r) => {
                         const externalId = r.externalId || r.capcode;
+
                         return externalId && externalId.trim() !== "";
                       })
                       .map((r) => ({
@@ -550,15 +559,17 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                         externalId: r.externalId || r.capcode || "",
                         isActive: r.isActive ?? true,
                       }));
-                    
+
                     return (
                       <MessageCard
-                        key={message.id || `message-${index}-${message.targetId}`}
-                        message={message}
-                        torretas={torretas}
-                        receptors={mappedReceptors}
+                        key={
+                          message.id || `message-${index}-${message.targetId}`
+                        }
                         emails={emails}
+                        message={message}
+                        receptors={mappedReceptors}
                         torretaColors={torretaColors}
+                        torretas={torretas}
                         onDelete={onDeleteMessage}
                       />
                     );
@@ -575,11 +586,12 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
               {showAddMessageForm && (
                 <div className="mt-3">
                   <MessageForm
+                    emails={emails}
                     messageData={newMessageData}
-                    torretas={torretas}
                     receptors={receptores
                       .filter((r) => {
                         const externalId = r.externalId || r.capcode;
+
                         return externalId && externalId.trim() !== "";
                       })
                       .map((r) => ({
@@ -588,13 +600,16 @@ export const AlertRuleDetailModal: React.FC<AlertRuleDetailModalProps> = ({
                         externalId: r.externalId || r.capcode || "",
                         isActive: r.isActive ?? true,
                       }))}
-                    emails={emails}
                     torretaColors={torretaColors}
+                    torretas={torretas}
                     onCreate={() => {
                       handleCreateMessage();
                       setShowAddMessageForm(false);
                       setNewMessageData({
-                        messageType: "receptor" as "torreta" | "receptor" | "email",
+                        messageType: "receptor" as
+                          | "torreta"
+                          | "receptor"
+                          | "email",
                         targetId: "",
                         message: "",
                         color: undefined,

@@ -28,12 +28,16 @@ export const useCreateAlertMessage = () => {
 
       if (data.messageType === "torreta") {
         if (!data.color) {
-          throw new Error("Color (deviceColorId) is required for torreta messages");
+          throw new Error(
+            "Color (deviceColorId) is required for torreta messages"
+          );
         }
         payload.color = data.color;
       } else {
         if (!data.message || data.message.trim().length === 0) {
-          throw new Error("Message is required for receptor and email messages");
+          throw new Error(
+            "Message is required for receptor and email messages"
+          );
         }
         payload.message = data.message;
       }

@@ -94,7 +94,10 @@ describe("useToast", () => {
 
       result.current.warning("Test message");
 
-      expect(mockShowWarning).toHaveBeenCalledWith("Advertencia", "Test message");
+      expect(mockShowWarning).toHaveBeenCalledWith(
+        "Advertencia",
+        "Test message"
+      );
     });
 
     it("should call info method and use useNotifications", () => {
@@ -110,8 +113,10 @@ describe("useToast", () => {
 
       result.current.success("Test message", "Custom Title");
 
-      expect(mockShowSuccess).toHaveBeenCalledWith("Custom Title", "Test message");
+      expect(mockShowSuccess).toHaveBeenCalledWith(
+        "Custom Title",
+        "Test message"
+      );
     });
   });
 });
-

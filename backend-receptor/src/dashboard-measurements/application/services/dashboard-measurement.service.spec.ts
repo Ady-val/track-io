@@ -5,21 +5,25 @@ import { DashboardMeasurementService } from './dashboard-measurement.service';
 import { DashboardMeasurementRepository } from '../../domain/repositories/dashboard-measurement.repository';
 import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
+import { MeasurementValueRepository } from '../../../measurements/domain/repositories/measurement-value.repository';
 import {
   createMockDashboardMeasurement,
   createMockMeasurement,
   createMockDashboardMeasurementGroup,
+  createMockMeasurementValue,
 } from '../../../test-helpers';
 import type {
   CreateDashboardMeasurementDto,
   UpdateDashboardMeasurementDto,
 } from '../dtos/dashboard-measurement.dto';
+import { MeasurementType } from '../../../measurements/domain/entities/measurement.entity';
 
 describe('DashboardMeasurementService', () => {
   let service: DashboardMeasurementService;
   let dashboardMeasurementRepository: jest.Mocked<DashboardMeasurementRepository>;
   let measurementService: jest.Mocked<MeasurementService>;
   let groupRepository: jest.Mocked<DashboardMeasurementGroupRepository>;
+  let measurementValueRepository: jest.Mocked<MeasurementValueRepository>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,6 +54,13 @@ describe('DashboardMeasurementService', () => {
             findOneOrFail: jest.fn(),
           },
         },
+        {
+          provide: MeasurementValueRepository,
+          useValue: {
+            findLatestValueByMeasurementId: jest.fn(),
+            findStatusOnStartTime: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -59,6 +70,7 @@ describe('DashboardMeasurementService', () => {
     dashboardMeasurementRepository = module.get(DashboardMeasurementRepository);
     measurementService = module.get(MeasurementService);
     groupRepository = module.get(DashboardMeasurementGroupRepository);
+    measurementValueRepository = module.get(MeasurementValueRepository);
   });
 
   afterEach(() => {
@@ -68,45 +80,244 @@ describe('DashboardMeasurementService', () => {
   describe('getAllDashboardMeasurements', () => {
     it('should return all dashboard measurements when no groupId provided', async () => {
       const mockMeasurements = [
-        createMockDashboardMeasurement({ id: 1 }),
-        createMockDashboardMeasurement({ id: 2 }),
+        createMockDashboardMeasurement({ id: 1, measurementId: 1 }),
+        createMockDashboardMeasurement({ id: 2, measurementId: 2 }),
       ];
 
       dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue(
         mockMeasurements
       );
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        null
+      );
 
       const result = await service.getAllDashboardMeasurements();
 
-      expect(result).toEqual(mockMeasurements);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({
+        id: 1,
+        measurementId: 1,
+      });
+      expect(result[1]).toMatchObject({
+        id: 2,
+        measurementId: 2,
+      });
       expect(
         dashboardMeasurementRepository.findAllWithMeasurements
       ).toHaveBeenCalledTimes(1);
       expect(
         dashboardMeasurementRepository.findByGroupId
       ).not.toHaveBeenCalled();
+      expect(
+        measurementValueRepository.findLatestValueByMeasurementId
+      ).toHaveBeenCalledTimes(2);
     });
 
     it('should return dashboard measurements filtered by groupId', async () => {
       const groupId = 1;
       const mockMeasurements = [
-        createMockDashboardMeasurement({ id: 1, groupId }),
-        createMockDashboardMeasurement({ id: 2, groupId }),
+        createMockDashboardMeasurement({ id: 1, groupId, measurementId: 1 }),
+        createMockDashboardMeasurement({ id: 2, groupId, measurementId: 2 }),
       ];
 
       dashboardMeasurementRepository.findByGroupId.mockResolvedValue(
         mockMeasurements
       );
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        null
+      );
 
       const result = await service.getAllDashboardMeasurements(groupId);
 
-      expect(result).toEqual(mockMeasurements);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({
+        id: 1,
+        groupId,
+        measurementId: 1,
+      });
       expect(dashboardMeasurementRepository.findByGroupId).toHaveBeenCalledWith(
         groupId
       );
       expect(
         dashboardMeasurementRepository.findAllWithMeasurements
       ).not.toHaveBeenCalled();
+      expect(
+        measurementValueRepository.findLatestValueByMeasurementId
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('should include latestValue when available', async () => {
+      const mockMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+      });
+      const mockLatestValue = createMockMeasurementValue({
+        id: 1,
+        measurementId: 1,
+        value: '25.5',
+        createdAt: new Date('2025-01-01T10:00:00Z'),
+      });
+
+      dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue([
+        mockMeasurement,
+      ]);
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        mockLatestValue
+      );
+
+      const result = await service.getAllDashboardMeasurements();
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('latestValue');
+      expect(result[0].latestValue).toEqual({
+        value: '25.5',
+        createdAt: '2025-01-01T10:00:00.000Z',
+      });
+    });
+
+    it('should include onStartTime for status type measurements', async () => {
+      const mockStatusMeasurement = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.STATUS,
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        measurement: mockStatusMeasurement,
+      });
+      const onStartTime = new Date('2025-01-01T10:00:00Z');
+
+      dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue([
+        mockDashboardMeasurement,
+      ]);
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        null
+      );
+      measurementValueRepository.findStatusOnStartTime.mockResolvedValue(
+        onStartTime
+      );
+
+      const result = await service.getAllDashboardMeasurements();
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('onStartTime');
+      expect(result[0].onStartTime).toBe('2025-01-01T10:00:00.000Z');
+      expect(
+        measurementValueRepository.findStatusOnStartTime
+      ).toHaveBeenCalledWith(1);
+    });
+
+    it('should not include onStartTime for non-status type measurements', async () => {
+      const mockTemperatureMeasurement = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        measurement: mockTemperatureMeasurement,
+      });
+
+      dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue([
+        mockDashboardMeasurement,
+      ]);
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        null
+      );
+
+      const result = await service.getAllDashboardMeasurements();
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty('onStartTime');
+      expect(
+        measurementValueRepository.findStatusOnStartTime
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors when fetching latestValue gracefully', async () => {
+      const mockMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+      });
+
+      dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue([
+        mockMeasurement,
+      ]);
+      measurementValueRepository.findLatestValueByMeasurementId.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const result = await service.getAllDashboardMeasurements();
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty('latestValue');
+    });
+
+    it('should handle errors when fetching onStartTime gracefully', async () => {
+      const mockStatusMeasurement = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.STATUS,
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        measurement: mockStatusMeasurement,
+      });
+
+      dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue([
+        mockDashboardMeasurement,
+      ]);
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        null
+      );
+      measurementValueRepository.findStatusOnStartTime.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const result = await service.getAllDashboardMeasurements();
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty('onStartTime');
+    });
+
+    it('should include both latestValue and onStartTime for status measurements', async () => {
+      const mockStatusMeasurement = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.STATUS,
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        measurement: mockStatusMeasurement,
+      });
+      const mockLatestValue = createMockMeasurementValue({
+        id: 1,
+        measurementId: 1,
+        value: 'true',
+        createdAt: new Date('2025-01-01T10:00:00Z'),
+      });
+      const onStartTime = new Date('2025-01-01T09:00:00Z');
+
+      dashboardMeasurementRepository.findAllWithMeasurements.mockResolvedValue([
+        mockDashboardMeasurement,
+      ]);
+      measurementValueRepository.findLatestValueByMeasurementId.mockResolvedValue(
+        mockLatestValue
+      );
+      measurementValueRepository.findStatusOnStartTime.mockResolvedValue(
+        onStartTime
+      );
+
+      const result = await service.getAllDashboardMeasurements();
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('latestValue');
+      expect(result[0]).toHaveProperty('onStartTime');
+      expect(result[0].latestValue).toEqual({
+        value: 'true',
+        createdAt: '2025-01-01T10:00:00.000Z',
+      });
+      expect(result[0].onStartTime).toBe('2025-01-01T09:00:00.000Z');
     });
   });
 

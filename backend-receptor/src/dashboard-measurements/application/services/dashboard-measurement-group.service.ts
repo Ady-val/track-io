@@ -99,7 +99,9 @@ export class DashboardMeasurementGroupService {
       }
 
       if (createDto.chartMeasurementIds) {
-        const groupMeasurementIds = validMeasurements.map(dm => dm.measurementId);
+        const groupMeasurementIds = validMeasurements.map(
+          dm => dm.measurementId
+        );
         const invalidIds = createDto.chartMeasurementIds.filter(
           id => !groupMeasurementIds.includes(id)
         );
@@ -109,9 +111,11 @@ export class DashboardMeasurementGroupService {
           );
         }
 
-        // Validate that chartMeasurementIds does not include status type measurements
         const statusMeasurementIds = validMeasurements
-          .filter(dm => dm.measurement?.type === MeasurementType.STATUS)
+          .filter(
+            dm =>
+              dm.measurement && dm.measurement.type === MeasurementType.STATUS
+          )
           .map(dm => dm.measurementId);
         const statusIdsInChart = createDto.chartMeasurementIds.filter(id =>
           statusMeasurementIds.includes(id)
@@ -206,9 +210,11 @@ export class DashboardMeasurementGroupService {
           );
         }
 
-        // Validate that chartMeasurementIds does not include status type measurements
         const statusMeasurementIds = group.dashboardMeasurements
-          .filter(dm => dm.measurement?.type === MeasurementType.STATUS)
+          .filter(
+            dm =>
+              dm.measurement && dm.measurement.type === MeasurementType.STATUS
+          )
           .map(dm => dm.measurementId);
         const statusIdsInChart = updateDto.chartMeasurementIds.filter(id =>
           statusMeasurementIds.includes(id)
@@ -295,5 +301,3 @@ export class DashboardMeasurementGroupService {
     await this.groupRepository.softDelete(id);
   }
 }
-
-

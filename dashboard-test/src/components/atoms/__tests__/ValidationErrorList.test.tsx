@@ -37,9 +37,7 @@ describe("ValidationErrorList", () => {
       />
     );
 
-    expect(
-      screen.getByText("Custom Validation Errors:")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Custom Validation Errors:")).toBeInTheDocument();
   });
 
   it("should have role alert and aria-live polite", () => {
@@ -101,4 +99,3 @@ describe("ValidationErrorList", () => {
     expect(screen.getByTestId("error-2")).toBeInTheDocument();
   });
 });
-

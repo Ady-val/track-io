@@ -1,12 +1,7 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  FaTag,
-  FaCubesStacked,
-  FaLocationDot,
-  FaUsers,
-} from "react-icons/fa6";
+import { FaTag, FaCubesStacked, FaLocationDot, FaUsers } from "react-icons/fa6";
 
 import { Input, Select, Text } from "@components/atoms";
 

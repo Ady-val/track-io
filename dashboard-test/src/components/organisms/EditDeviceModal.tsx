@@ -1,13 +1,13 @@
 import type { Device, UpdateDeviceData } from "../../types/device";
 
 import React, { useEffect, useRef } from "react";
-import { Controller } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
 import { FaMicrochip, FaDesktop } from "react-icons/fa";
 
 import { useFormValidation } from "../../hooks/useFormValidation";
-import { updateDeviceSchema } from "../../lib/validations/schemas";
 import deviceService from "../../lib/services/device.service";
+import { updateDeviceSchema } from "../../lib/validations/schemas";
 import {
   Button,
   Checkbox,
@@ -97,9 +97,9 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
         {/* Error del servidor */}
         {modalError.serverError && (
           <ErrorMessage
+            isServerError={modalError.parsedError?.isServerError ?? false}
             message={modalError.serverError}
             type="server"
-            isServerError={modalError.parsedError?.isServerError ?? false}
           />
         )}
 
@@ -113,18 +113,18 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
         <div className="space-y-4">
           <div>
             <Controller
-              name="name"
               control={form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
                     fullWidth
-                    isDisabled={form.formState.isSubmitting}
-                    isInvalid={!!fieldState.error}
                     errorMessage={fieldState.error?.message}
                     id="edit-device-name"
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
                     label="Nombre del Dispositivo"
                     labelPlacement="outside"
                     placeholder="Ej: Controlador Principal"
@@ -142,17 +142,17 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 
           <div>
             <Controller
-              name="externalId"
               control={form.control}
+              name="externalId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     fullWidth
-                    isDisabled={form.formState.isSubmitting}
-                    isInvalid={!!fieldState.error}
                     errorMessage={fieldState.error?.message}
                     id="edit-device-external-id"
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
                     label="External ID"
                     labelPlacement="outside"
                     placeholder="Ej: CTR-1433"
@@ -172,8 +172,8 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
             <Input
               disabled
               fullWidth
-              id="edit-device-area"
               isDisabled
+              id="edit-device-area"
               label="Área (No editable)"
               labelPlacement="outside"
               size="md"
@@ -190,8 +190,8 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
               </span>
             </div>
             <Controller
-              name="isVirtualDevice"
               control={form.control}
+              name="isVirtualDevice"
               render={({ field }) => (
                 <Checkbox
                   color="primary"

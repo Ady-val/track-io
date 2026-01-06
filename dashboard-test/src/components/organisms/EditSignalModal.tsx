@@ -2,14 +2,14 @@ import type { Device } from "../../types/device";
 import type { DeviceSignal } from "../../types/device-signal";
 
 import React, { useEffect, useRef } from "react";
-import { Controller } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
 import { FaMicrochip } from "react-icons/fa";
 
 import { useDepartments, type Department } from "../../hooks/useCatalogs";
 import { useFormValidation } from "../../hooks/useFormValidation";
-import { updateDeviceSignalSchema } from "../../lib/validations/schemas";
 import deviceSignalService from "../../lib/services/device-signal.service";
+import { updateDeviceSignalSchema } from "../../lib/validations/schemas";
 import {
   Button,
   Input,
@@ -102,9 +102,9 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
         {/* Error del servidor */}
         {modalError.serverError && (
           <ErrorMessage
+            isServerError={modalError.parsedError?.isServerError ?? false}
             message={modalError.serverError}
             type="server"
-            isServerError={modalError.parsedError?.isServerError ?? false}
           />
         )}
 
@@ -118,18 +118,18 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
         <div className="space-y-4">
           <div>
             <Controller
-              name="name"
               control={form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
                     fullWidth
-                    isDisabled={form.formState.isSubmitting}
-                    isInvalid={!!fieldState.error}
                     errorMessage={fieldState.error?.message}
                     id="edit-signal-name"
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
                     label="Nombre del Botón"
                     labelPlacement="outside"
                     placeholder="Ej: Botón 1"
@@ -147,17 +147,17 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
 
           <div>
             <Controller
-              name="externalValueId"
               control={form.control}
+              name="externalValueId"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     fullWidth
-                    isDisabled={form.formState.isSubmitting}
-                    isInvalid={!!fieldState.error}
                     errorMessage={fieldState.error?.message}
                     id="edit-signal-external-value"
+                    isDisabled={form.formState.isSubmitting}
+                    isInvalid={!!fieldState.error}
                     label="External Value ID"
                     labelPlacement="outside"
                     placeholder="Ej: 432"
@@ -175,8 +175,8 @@ export const EditSignalModal: React.FC<EditSignalModalProps> = ({
 
           <div>
             <Controller
-              name="departmentId"
               control={form.control}
+              name="departmentId"
               render={({ field, fieldState }) => (
                 <>
                   <label

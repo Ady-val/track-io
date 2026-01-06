@@ -371,6 +371,7 @@ export const createAlertRuleSchema = z
           data.setpoint !== undefined
         );
       }
+
       return true;
     },
     {
@@ -383,6 +384,7 @@ export const createAlertRuleSchema = z
       if (data.mode === "window") {
         return data.minValue !== undefined && data.maxValue !== undefined;
       }
+
       return true;
     },
     {
@@ -399,6 +401,7 @@ export const createAlertRuleSchema = z
       ) {
         return data.minValue < data.maxValue;
       }
+
       return true;
     },
     {
@@ -430,6 +433,7 @@ export const updateAlertRuleSchema = z
       if (data.mode === "setpoint" && data.operator !== undefined) {
         return data.setpoint !== undefined;
       }
+
       return true;
     },
     {
@@ -442,6 +446,7 @@ export const updateAlertRuleSchema = z
       if (data.mode === "window") {
         return data.minValue !== undefined && data.maxValue !== undefined;
       }
+
       return true;
     },
     {

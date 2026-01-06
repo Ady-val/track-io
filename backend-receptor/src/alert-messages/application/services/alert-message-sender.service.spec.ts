@@ -3,8 +3,14 @@ import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AlertMessageSenderService } from './alert-message-sender.service';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
-import { AlertMessage, MessageType } from '../../domain/entities/alert-message.entity';
-import { createMockAlertMessage, createMockTorretaColor } from '../../../test-helpers';
+import {
+  type AlertMessage,
+  MessageType,
+} from '../../domain/entities/alert-message.entity';
+import {
+  createMockAlertMessage,
+  createMockTorretaColor,
+} from '../../../test-helpers';
 
 describe('AlertMessageSenderService', () => {
   let service: AlertMessageSenderService;
@@ -74,7 +80,7 @@ describe('AlertMessageSenderService', () => {
 
       expect(result).toBe(true);
       expect(httpService.post).toHaveBeenCalledTimes(1);
-      
+
       const [url, payload, config] = httpService.post.mock.calls[0];
       expect(url).toContain('localhost:1880/events');
 
@@ -131,9 +137,9 @@ describe('AlertMessageSenderService', () => {
       const result = await service.sendMessages(messages);
 
       expect(result).toBe(true);
-      expect(torretaColorService.getTorretaColorByHtmlColor).toHaveBeenCalledWith(
-        '#FF0000'
-      );
+      expect(
+        torretaColorService.getTorretaColorByHtmlColor
+      ).toHaveBeenCalledWith('#FF0000');
 
       const [, payload] = httpService.post.mock.calls[0];
       expect(payload).toEqual({
@@ -164,7 +170,9 @@ describe('AlertMessageSenderService', () => {
       const result = await service.sendMessages(messages);
 
       expect(result).toBe(true);
-      expect(torretaColorService.getTorretaColorByHtmlColor).not.toHaveBeenCalled();
+      expect(
+        torretaColorService.getTorretaColorByHtmlColor
+      ).not.toHaveBeenCalled();
 
       const [, payload] = httpService.post.mock.calls[0];
       expect(payload).toEqual({
@@ -352,7 +360,7 @@ describe('AlertMessageSenderService', () => {
       await service.sendMessages(messages);
 
       const [, payload] = httpService.post.mock.calls[0];
-      
+
       // Expected format: { data: [{ type: 'torreta', torreta: string, color: string }] }
       expect(payload).toHaveProperty('data');
       expect(Array.isArray(payload.data)).toBe(true);
@@ -363,4 +371,3 @@ describe('AlertMessageSenderService', () => {
     });
   });
 });
-

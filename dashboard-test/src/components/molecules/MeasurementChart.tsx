@@ -4,8 +4,8 @@ import type { MeasurementType } from "@/types/dashboard";
 
 import { GaugeChart } from "./GaugeChart";
 import { HorizontalBarChart } from "./HorizontalBarChart";
-import { VibrationLineChart } from "./VibrationLineChart";
 import { StatusIndicatorCard } from "./StatusIndicatorCard";
+import { VibrationLineChart } from "./VibrationLineChart";
 
 export interface MeasurementChartProps {
   title: string;
@@ -16,6 +16,7 @@ export interface MeasurementChartProps {
   type: MeasurementType;
   timestamp?: string;
   history?: number[];
+  onStartTime?: string;
 }
 
 export const MeasurementChart: React.FC<MeasurementChartProps> = ({
@@ -27,6 +28,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   type,
   timestamp,
   history,
+  onStartTime,
 }) => {
   switch (type) {
     case "temperature":
@@ -40,7 +42,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           timestamp={timestamp}
           title={title}
           type={type}
-          value={value}
+          value={typeof value === "number" ? value : undefined}
         />
       );
 
@@ -53,7 +55,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           timestamp={timestamp}
           title={title}
           type={type}
-          value={value}
+          value={typeof value === "number" ? value : undefined}
         />
       );
 
@@ -68,7 +70,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           timestamp={timestamp}
           title={title}
           type={type}
-          value={value}
+          value={typeof value === "number" ? value : undefined}
         />
       );
 
@@ -82,18 +84,18 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           timestamp={timestamp}
           title={title}
           type={type}
-          value={value}
+          value={typeof value === "number" ? value : undefined}
         />
       );
 
     case "status":
-      // Convert value to boolean for status type
       const isOn =
         typeof value === "boolean"
           ? value
           : typeof value === "number"
             ? value !== 0
             : undefined;
+
       return (
         <StatusIndicatorCard
           isOn={isOn}
@@ -101,6 +103,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           timestamp={timestamp}
           title={title}
           type={type}
+          onStartTime={onStartTime}
         />
       );
 
@@ -114,7 +117,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           timestamp={timestamp}
           title={title}
           type={type}
-          value={value}
+          value={typeof value === "number" ? value : undefined}
         />
       );
   }

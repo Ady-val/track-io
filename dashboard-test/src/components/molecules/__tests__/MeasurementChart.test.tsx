@@ -28,6 +28,22 @@ jest.mock("../VibrationLineChart", () => ({
   ),
 }));
 
+jest.mock("../StatusIndicatorCard", () => ({
+  StatusIndicatorCard: ({
+    title,
+    type,
+    isOn,
+  }: {
+    title: string;
+    type: string;
+    isOn?: boolean;
+  }) => (
+    <div data-testid="status-indicator-card">
+      {title} - {type} - {isOn ? "ON" : "OFF"}
+    </div>
+  ),
+}));
+
 describe("MeasurementChart", () => {
   const defaultProps = {
     title: "Test Chart",
@@ -144,5 +160,46 @@ describe("MeasurementChart", () => {
     );
 
     expect(getByTestId("gauge-chart")).toBeInTheDocument();
+  });
+
+  it("should render StatusIndicatorCard for status type", () => {
+    const { getByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="status"
+        value={true}
+        onStartTime="2024-01-01T00:00:00Z"
+      />
+    );
+
+    expect(getByTestId("status-indicator-card")).toBeInTheDocument();
+    expect(getByTestId("status-indicator-card")).toHaveTextContent(
+      "Test Chart - status - ON"
+    );
+  });
+
+  it("should render StatusIndicatorCard with OFF status", () => {
+    const { getByTestId } = render(
+      <MeasurementChart {...defaultProps} type="status" value={false} />
+    );
+
+    expect(getByTestId("status-indicator-card")).toBeInTheDocument();
+    expect(getByTestId("status-indicator-card")).toHaveTextContent(
+      "Test Chart - status - OFF"
+    );
+  });
+
+  it("should pass onStartTime to StatusIndicatorCard", () => {
+    const onStartTime = "2024-01-01T10:00:00Z";
+    const { getByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="status"
+        value={true}
+        onStartTime={onStartTime}
+      />
+    );
+
+    expect(getByTestId("status-indicator-card")).toBeInTheDocument();
   });
 });

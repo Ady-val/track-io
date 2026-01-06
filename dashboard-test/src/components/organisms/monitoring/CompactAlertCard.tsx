@@ -35,7 +35,10 @@ export const CompactAlertCard: React.FC<CompactAlertCardProps> = ({
       <CardBody className="p-4">
         {/* Título con icono del sensor */}
         <div className="flex items-center justify-center mb-3">
-          <Text className="line-clamp-2 min-h-[2.5rem] flex-1 flex flex-col justify-center items-start" variant="h4">
+          <Text
+            className="line-clamp-2 min-h-[2.5rem] flex-1 flex flex-col justify-center items-start"
+            variant="h4"
+          >
             {rule.name}
           </Text>
           {sensor && (

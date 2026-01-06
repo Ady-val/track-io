@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
@@ -11,7 +12,10 @@ import {
 } from "@/hooks/useCatalogs";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useHasPermission } from "@/hooks/useHasPermission";
-import { createEmailSchema, updateEmailSchema } from "@/lib/validations/schemas";
+import {
+  createEmailSchema,
+  updateEmailSchema,
+} from "@/lib/validations/schemas";
 
 import { Button, ErrorMessage, Input, ValidationErrorList } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
@@ -132,6 +136,7 @@ export function EmailsCatalog() {
         name: data.name ?? selectedEmail.name,
         email: data.email ?? selectedEmail.email,
       };
+
       await updateEmailMutation.mutateAsync({
         id: selectedEmail.id,
         data: updateData,
@@ -160,7 +165,10 @@ export function EmailsCatalog() {
   const handleCancel = () => {
     createForm.resetForm({ name: "", email: "" });
     if (selectedEmail?.name) {
-      editForm.resetForm({ name: selectedEmail.name, email: selectedEmail.email });
+      editForm.resetForm({
+        name: selectedEmail.name,
+        email: selectedEmail.email,
+      });
     }
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
@@ -244,15 +252,15 @@ export function EmailsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={createForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -271,14 +279,14 @@ export function EmailsCatalog() {
 
           <div>
             <Controller
-              name="email"
               control={createForm.form.control}
+              name="email"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Correo Electrónico"
                     labelPlacement="outside"
@@ -351,15 +359,15 @@ export function EmailsCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={editForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -378,14 +386,14 @@ export function EmailsCatalog() {
 
           <div>
             <Controller
-              name="email"
               control={editForm.form.control}
+              name="email"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Correo Electrónico"
                     labelPlacement="outside"

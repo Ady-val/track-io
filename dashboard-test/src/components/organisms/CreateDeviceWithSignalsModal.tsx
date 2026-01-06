@@ -4,16 +4,16 @@ import type {
 } from "../../types/device";
 
 import React, { useEffect, useRef } from "react";
-import { Controller, useFieldArray } from "react-hook-form";
 
+import { Controller, useFieldArray } from "react-hook-form";
 import { FaMicrochip, FaPlus, FaTrash, FaDesktop } from "react-icons/fa";
 
 import { useAreas } from "../../hooks/useAreas";
 import { useDepartments } from "../../hooks/useCatalogs";
 import { useFormValidation } from "../../hooks/useFormValidation";
-import { createDeviceWithSignalsSchema } from "../../lib/validations/schemas";
 import deviceSignalService from "../../lib/services/device-signal.service";
 import deviceService from "../../lib/services/device.service";
+import { createDeviceWithSignalsSchema } from "../../lib/validations/schemas";
 import {
   Button,
   Checkbox,
@@ -142,9 +142,9 @@ export const CreateDeviceWithSignalsModal: React.FC<
         {/* Error del servidor */}
         {modalError.serverError && (
           <ErrorMessage
+            isServerError={modalError.parsedError?.isServerError ?? false}
             message={modalError.serverError}
             type="server"
-            isServerError={modalError.parsedError?.isServerError ?? false}
           />
         )}
 
@@ -159,17 +159,17 @@ export const CreateDeviceWithSignalsModal: React.FC<
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Controller
-                name="name"
                 control={form.control}
+                name="name"
                 render={({ field, fieldState }) => (
                   <>
                     <Input
                       {...field}
                       autoFocus
                       fullWidth
-                      isInvalid={!!fieldState.error}
                       errorMessage={fieldState.error?.message}
                       id="device-name"
+                      isInvalid={!!fieldState.error}
                       label="Nombre del Dispositivo"
                       labelPlacement="outside"
                       placeholder="Ej: Controlador Principal"
@@ -187,16 +187,16 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
             <div>
               <Controller
-                name="externalId"
                 control={form.control}
+                name="externalId"
                 render={({ field, fieldState }) => (
                   <>
                     <Input
                       {...field}
                       fullWidth
-                      isInvalid={!!fieldState.error}
                       errorMessage={fieldState.error?.message}
                       id="device-external-id"
+                      isInvalid={!!fieldState.error}
                       label="External ID"
                       labelPlacement="outside"
                       placeholder="Ej: CTR-1433"
@@ -215,8 +215,8 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
           <div>
             <Controller
-              name="areaId"
               control={form.control}
+              name="areaId"
               render={({ field, fieldState }) => (
                 <>
                   <label
@@ -255,8 +255,8 @@ export const CreateDeviceWithSignalsModal: React.FC<
               </span>
             </div>
             <Controller
-              name="isVirtualDevice"
               control={form.control}
+              name="isVirtualDevice"
               render={({ field }) => (
                 <Checkbox
                   color="primary"
@@ -320,8 +320,8 @@ export const CreateDeviceWithSignalsModal: React.FC<
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="min-w-0">
                   <Controller
-                    name={`signals.${index}.name`}
                     control={form.control}
+                    name={`signals.${index}.name`}
                     render={({ field: signalField, fieldState }) => (
                       <>
                         <label
@@ -350,8 +350,8 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
                 <div className="min-w-0">
                   <Controller
-                    name={`signals.${index}.externalValueId`}
                     control={form.control}
+                    name={`signals.${index}.externalValueId`}
                     render={({ field: signalField, fieldState }) => (
                       <>
                         <label
@@ -380,8 +380,8 @@ export const CreateDeviceWithSignalsModal: React.FC<
 
                 <div className="min-w-0">
                   <Controller
-                    name={`signals.${index}.departmentId`}
                     control={form.control}
+                    name={`signals.${index}.departmentId`}
                     render={({ field: signalField, fieldState }) => (
                       <>
                         <label

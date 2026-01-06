@@ -1,14 +1,21 @@
 import type React from "react";
 
 import { FaTrash } from "react-icons/fa6";
+
 import { Button, Text } from "@components/atoms";
 
 import type { AlertMessage } from "@/types/alertRule";
-import type { Torreta, Receptor, Email, TorretaColor } from "@/types/escalation";
+import type {
+  Torreta,
+  Receptor,
+  Email,
+  TorretaColor,
+} from "@/types/escalation";
 
 const getMessageTypeLabel = (messageType: string | undefined): string => {
   if (!messageType) return "Sin tipo";
   const normalized = messageType.toLowerCase();
+
   switch (normalized) {
     case "torreta":
       return "Torreta";
@@ -28,13 +35,18 @@ const getMessageIdentifier = (
   _emails: Email[]
 ): string => {
   const messageType = message.messageType?.toLowerCase();
+
   switch (messageType) {
     case "torreta":
       const torreta = torretas.find((t) => t.externalId === message.targetId);
+
       return torreta ? `TOR${torreta.id}` : message.targetId || "Sin torreta";
     case "receptor":
       const receptor = receptors.find((r) => r.externalId === message.targetId);
-      return receptor ? `REC${receptor.id}` : message.targetId || "Sin receptor";
+
+      return receptor
+        ? `REC${receptor.id}`
+        : message.targetId || "Sin receptor";
     case "email":
       return message.targetId || "Sin email";
     default:
@@ -47,10 +59,12 @@ const getMessageDisplayInfo = (
   torretaColors: TorretaColor[]
 ): { text: string; color?: string } => {
   const messageType = message.messageType?.toLowerCase();
+
   if (messageType === "torreta") {
     const torretaColor = torretaColors.find(
       (c) => c.deviceColorId === message.color
     );
+
     return {
       text: torretaColor
         ? `${torretaColor.name} - ${torretaColor.deviceColorId}`
@@ -58,6 +72,7 @@ const getMessageDisplayInfo = (
       color: torretaColor?.htmlColor,
     };
   }
+
   return {
     text: message.message || "Sin mensaje",
   };
@@ -105,7 +120,8 @@ export const MessageCard: React.FC<MessageCardProps> = ({
 
         {/* Información adicional */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {message.messageType?.toLowerCase() === "torreta" && displayInfo.color ? (
+          {message.messageType?.toLowerCase() === "torreta" &&
+          displayInfo.color ? (
             <>
               <div
                 className="w-4 h-4 rounded flex-shrink-0"

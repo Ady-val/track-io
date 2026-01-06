@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect } from "react";
-import { Controller } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
 import {
   FaFloppyDisk,
   FaXmark,
@@ -94,9 +94,9 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
       {/* Error del servidor */}
       {modalError.serverError && (
         <ErrorMessage
+          isServerError={modalError.parsedError?.isServerError ?? false}
           message={modalError.serverError}
           type="server"
-          isServerError={modalError.parsedError?.isServerError ?? false}
         />
       )}
 
@@ -116,17 +116,17 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
       {/* Name Input */}
       <div className="mb-4">
         <Controller
-          name="name"
           control={form.control}
+          name="name"
           render={({ field, fieldState }) => (
             <>
               <Input
                 {...field}
                 autoFocus
                 fullWidth
+                errorMessage={fieldState.error?.message}
                 isDisabled={isLoading}
                 isInvalid={!!fieldState.error}
-                errorMessage={fieldState.error?.message}
                 label="Nombre del Dispositivo"
                 labelPlacement="outside"
                 placeholder="Ej: Sensor Principal de Temperatura"
@@ -150,8 +150,8 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
           </Text>
         </div>
         <Controller
-          name="areaId"
           control={form.control}
+          name="areaId"
           render={({ field, fieldState }) => (
             <>
               <Select
@@ -188,8 +188,8 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
           </Text>
         </div>
         <Controller
-          name="isVirtualDevice"
           control={form.control}
+          name="isVirtualDevice"
           render={({ field }) => (
             <Checkbox
               color="primary"
@@ -208,24 +208,24 @@ export const CreateDeviceForm: React.FC<CreateDeviceFormProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-600">
         <Button
+          className="px-6 py-2 font-semibold"
           color="default"
           disabled={isLoading}
           size="md"
           variant="solid"
           onPress={onCancel}
-          className="px-6 py-2 font-semibold"
         >
           <FaXmark className="mr-2" />
           Cancelar
         </Button>
         <Button
+          className="px-6 py-2 font-semibold"
           color="primary"
           disabled={isLoading}
           isLoading={isLoading}
           size="md"
           type="submit"
           variant="solid"
-          className="px-6 py-2 font-semibold"
         >
           <FaFloppyDisk className="mr-2" />
           Crear Dispositivo

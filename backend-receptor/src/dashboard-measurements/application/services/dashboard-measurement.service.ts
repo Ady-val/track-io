@@ -12,22 +12,141 @@ import {
 } from '../dtos/dashboard-measurement.dto';
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
+import { MeasurementValueRepository } from '../../../measurements/domain/repositories/measurement-value.repository';
+import { MeasurementType } from '../../../measurements/domain/entities/measurement.entity';
 
 @Injectable()
 export class DashboardMeasurementService {
   constructor(
     private readonly dashboardMeasurementRepository: DashboardMeasurementRepository,
     private readonly measurementService: MeasurementService,
-    private readonly groupRepository: DashboardMeasurementGroupRepository
+    private readonly groupRepository: DashboardMeasurementGroupRepository,
+    private readonly measurementValueRepository: MeasurementValueRepository
   ) {}
 
-  async getAllDashboardMeasurements(
-    groupId?: number
-  ): Promise<DashboardMeasurement[]> {
+  async getAllDashboardMeasurements(groupId?: number): Promise<
+    Array<
+      DashboardMeasurement & {
+        onStartTime?: string;
+        latestValue?: { value: string; createdAt: string };
+      }
+    >
+  > {
+    let dashboards: DashboardMeasurement[];
     if (groupId) {
-      return this.dashboardMeasurementRepository.findByGroupId(groupId);
+      dashboards =
+        await this.dashboardMeasurementRepository.findByGroupId(groupId);
+    } else {
+      dashboards =
+        await this.dashboardMeasurementRepository.findAllWithMeasurements();
     }
-    return this.dashboardMeasurementRepository.findAllWithMeasurements();
+
+    const latestValuePromises = dashboards.map(async dm => {
+      try {
+        const latestValue =
+          await this.measurementValueRepository.findLatestValueByMeasurementId(
+            dm.measurementId
+          );
+        return {
+          dashboard: dm,
+          latestValue: latestValue
+            ? {
+                value: latestValue.value,
+                createdAt: latestValue.createdAt,
+              }
+            : undefined,
+        };
+      } catch (_error) {
+        return {
+          dashboard: dm,
+          latestValue: undefined,
+        };
+      }
+    });
+
+    const latestValueResults = await Promise.all(latestValuePromises);
+    const latestValueMap = new Map(
+      latestValueResults.map(result => [
+        result.dashboard.id,
+        result.latestValue,
+      ])
+    );
+
+    const statusMeasurements = dashboards.filter(
+      dm => dm.measurement && dm.measurement.type === MeasurementType.STATUS
+    );
+
+    if (statusMeasurements.length > 0) {
+      const onStartTimePromises = statusMeasurements.map(async dm => {
+        try {
+          const onStartTime =
+            await this.measurementValueRepository.findStatusOnStartTime(
+              dm.measurementId
+            );
+          return {
+            dashboard: dm,
+            onStartTime: onStartTime ? onStartTime.toISOString() : undefined,
+          };
+        } catch (_error) {
+          return {
+            dashboard: dm,
+            onStartTime: undefined,
+          };
+        }
+      });
+
+      const onStartTimeResults = await Promise.all(onStartTimePromises);
+      const onStartTimeMap = new Map(
+        onStartTimeResults.map(result => [
+          result.dashboard.id,
+          result.onStartTime,
+        ])
+      );
+
+      return dashboards.map(dm => {
+        const latestValue = latestValueMap.get(dm.id);
+        const onStartTime = onStartTimeMap.get(dm.id);
+
+        const result: DashboardMeasurement & {
+          onStartTime?: string;
+          latestValue?: { value: string; createdAt: string };
+        } = {
+          ...dm,
+        };
+
+        if (onStartTime !== undefined) {
+          result.onStartTime = onStartTime;
+        }
+
+        if (latestValue) {
+          result.latestValue = {
+            value: latestValue.value,
+            createdAt: latestValue.createdAt.toISOString(),
+          };
+        }
+
+        return result;
+      });
+    }
+
+    return dashboards.map(dm => {
+      const latestValue = latestValueMap.get(dm.id);
+
+      const result: DashboardMeasurement & {
+        latestValue?: { value: string; createdAt: string };
+      } = {
+        ...dm,
+      };
+
+      if (latestValue) {
+        result.latestValue = {
+          value: latestValue.value,
+          createdAt: latestValue.createdAt.toISOString(),
+        };
+      }
+
+      return result;
+    });
   }
 
   async getDashboardMeasurementById(id: number): Promise<DashboardMeasurement> {

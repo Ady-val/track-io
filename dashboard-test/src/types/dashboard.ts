@@ -68,6 +68,11 @@ export interface DashboardMeasurement {
   status: "active" | "inactive" | "maintenance";
   maxValue?: number;
   minValue?: number;
+  onStartTime?: string;
+  latestValue?: {
+    value: string;
+    createdAt: string;
+  };
   measurement: {
     id: number;
     name: string;

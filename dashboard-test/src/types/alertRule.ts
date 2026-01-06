@@ -55,7 +55,8 @@ export type SensorTypeValue =
   | "vibration"
   | "flow"
   | "shape"
-  | "totalizador";
+  | "totalizador"
+  | "status";
 
 export interface SensorType {
   value: SensorTypeValue;

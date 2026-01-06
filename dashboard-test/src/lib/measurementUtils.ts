@@ -25,57 +25,65 @@ export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
   temperature: {
     icon: FaTemperatureHalf,
     unit: "°C",
-    formatValue: (value: number) => `${value.toFixed(1)}°C`,
-    color: "#ef4444", // Rojo original
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(1)}°C` : "N/A",
+    color: "#ef4444",
     bgColor: "rgba(239, 68, 68, 0.1)",
   },
   humidity: {
     icon: FaDroplet,
     unit: "%",
-    formatValue: (value: number) => `${value.toFixed(1)}%`,
-    color: "#3b82f6", // Azul original
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(1)}%` : "N/A",
+    color: "#3b82f6",
     bgColor: "rgba(59, 130, 246, 0.1)",
   },
   pressure: {
     icon: FaGaugeHigh,
     unit: "Pa",
-    formatValue: (value: number) => `${value.toFixed(2)} Pa`,
-    color: "#8b5cf6", // Púrpura original
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(2)} Pa` : "N/A",
+    color: "#8b5cf6",
     bgColor: "rgba(139, 92, 246, 0.1)",
   },
   level: {
     icon: FaArrowsUpDown,
     unit: "",
-    formatValue: (value: number) => value.toFixed(2),
-    color: "#10b981", // Verde original
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? value.toFixed(2) : "N/A",
+    color: "#10b981",
     bgColor: "rgba(16, 185, 129, 0.1)",
   },
   flow: {
     icon: FaWater,
     unit: "L/s",
-    formatValue: (value: number) => `${value.toFixed(2)} L/s`,
-    color: "#06b6d4", // Cyan original
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(2)} L/s` : "N/A",
+    color: "#06b6d4",
     bgColor: "rgba(6, 182, 212, 0.1)",
   },
   vibration: {
     icon: FaWaveSquare,
     unit: "Hz",
-    formatValue: (value: number) => `${value.toFixed(2)} Hz`,
-    color: "#06b6d4", // Azul cyan original
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(2)} Hz` : "N/A",
+    color: "#06b6d4",
     bgColor: "rgba(6, 182, 212, 0.1)",
   },
   shape: {
     icon: FaChartLine,
     unit: "mm",
-    formatValue: (value: number) => `${value.toFixed(2)}mm`,
-    color: "#6366f1", // Índigo
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(2)}mm` : "N/A",
+    color: "#6366f1",
     bgColor: "rgba(99, 102, 241, 0.1)",
   },
   totalizador: {
     icon: FaChartLine,
     unit: "L",
-    formatValue: (value: number) => `${value.toFixed(1)}L`,
-    color: "#84cc16", // Lima
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(1)}L` : "N/A",
+    color: "#84cc16",
     bgColor: "rgba(132, 204, 22, 0.1)",
   },
   status: {
@@ -85,9 +93,10 @@ export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
       if (typeof value === "boolean") {
         return value ? "ON" : "OFF";
       }
+
       return value !== 0 ? "ON" : "OFF";
     },
-    color: "#10b981", // Verde
+    color: "#10b981",
     bgColor: "rgba(16, 185, 129, 0.1)",
   },
 };

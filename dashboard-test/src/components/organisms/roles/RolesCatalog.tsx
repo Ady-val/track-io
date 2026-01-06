@@ -1,9 +1,10 @@
 import { useState } from "react";
+
 import { Controller } from "react-hook-form";
 
 import { Module, Action } from "@/constants/permissions";
-import { useHasPermission } from "@/hooks/useHasPermission";
 import { useFormValidation } from "@/hooks/useFormValidation";
+import { useHasPermission } from "@/hooks/useHasPermission";
 import {
   useRoles,
   useCreateRole,
@@ -18,9 +19,9 @@ import { createRoleSchema, updateRoleSchema } from "@/lib/validations/schemas";
 
 import { ErrorMessage, ValidationErrorList, Button, Input } from "../../atoms";
 import { SearchInput } from "../../atoms/SearchInput";
-import { FieldError } from "../../molecules/FieldError";
 import { ConfirmationModal } from "../../molecules/ConfirmationModal";
 import { DataTable, type TableColumn } from "../../molecules/DataTable";
+import { FieldError } from "../../molecules/FieldError";
 import { Pagination } from "../../molecules/Pagination";
 import { Modal } from "../Modal";
 
@@ -96,7 +97,6 @@ export function RolesCatalog() {
     showToastOnSuccess: true,
     successMessage: "Rol actualizado exitosamente",
   });
-
 
   const columns: Array<TableColumn<Role>> = [
     {
@@ -294,15 +294,15 @@ export function RolesCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={createForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -321,14 +321,14 @@ export function RolesCatalog() {
 
           <div>
             <Controller
-              name="description"
               control={createForm.form.control}
+              name="description"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Descripción (Opcional)"
                     labelPlacement="outside"
@@ -401,15 +401,15 @@ export function RolesCatalog() {
 
           <div>
             <Controller
-              name="name"
               control={editForm.form.control}
+              name="name"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
                     autoFocus
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Nombre"
                     labelPlacement="outside"
@@ -428,14 +428,14 @@ export function RolesCatalog() {
 
           <div>
             <Controller
-              name="description"
               control={editForm.form.control}
+              name="description"
               render={({ field, fieldState }) => (
                 <>
                   <Input
                     {...field}
-                    errorMessage={fieldState.error?.message}
                     fullWidth
+                    errorMessage={fieldState.error?.message}
                     isInvalid={!!fieldState.error}
                     label="Descripción (Opcional)"
                     labelPlacement="outside"
@@ -495,8 +495,8 @@ export function RolesCatalog() {
 
       {selectedRole && (
         <PermissionMatrix
-          isOpen={isPermissionsModalOpen}
           isLoading={isLoadingPermissions || isLoadingModules}
+          isOpen={isPermissionsModalOpen}
           modules={Array.isArray(modules) ? modules : []}
           permissions={Array.isArray(permissions) ? permissions : []}
           role={selectedRole}

@@ -1,10 +1,16 @@
-import { useCallback, useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
-import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
-import { parseBackendValidationErrors } from "@/lib/utils/backendErrorParser";
+import { useCallback, useEffect } from "react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import {
+  parseBackendValidationErrors,
+  applyBackendErrorsToForm,
+} from "@/lib/utils/backendErrorParser";
+
 import { useModalError } from "./useModalError";
 import { useToast } from "./useToast";
 
@@ -19,7 +25,7 @@ type ZodSchemaWithFieldValues = z.ZodTypeAny;
  * Opciones para el hook useFormValidation
  */
 export interface UseFormValidationOptions<
-  TSchema extends ZodSchemaWithFieldValues
+  TSchema extends ZodSchemaWithFieldValues,
 > {
   /**
    * Esquema Zod para validación
@@ -54,7 +60,7 @@ export interface UseFormValidationOptions<
  * Resultado del hook useFormValidation
  */
 export interface UseFormValidationResult<
-  TSchema extends ZodSchemaWithFieldValues
+  TSchema extends ZodSchemaWithFieldValues,
 > {
   /**
    * Instancia de react-hook-form
@@ -103,7 +109,7 @@ export function useFormValidation<TSchema extends ZodSchemaWithFieldValues>(
   } = options;
 
   type FormType = z.infer<TSchema> & FieldValues;
-  
+
   const form = useForm<FormType, unknown, FormType>({
     // @ts-expect-error - zodResolver acepta cualquier schema Zod válido en tiempo de ejecución.
     // TypeScript no puede inferir correctamente los tipos genéricos complejos de Zod,
@@ -126,15 +132,7 @@ export function useFormValidation<TSchema extends ZodSchemaWithFieldValues>(
     (error: unknown) => {
       const parseResult = parseBackendValidationErrors(error);
 
-      // Aplicar errores a campos específicos del formulario
-      Object.entries(parseResult.fieldErrors).forEach(([field, error]) => {
-        if (error && "message" in error && typeof error.message === "string") {
-          form.setError(field as any, {
-            type: "server",
-            message: error.message,
-          });
-        }
-      });
+      applyBackendErrorsToForm(form as any, parseResult);
 
       // Mostrar errores de validación generales
       if (parseResult.validationErrors.length > 0) {

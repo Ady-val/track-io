@@ -49,4 +49,3 @@ export class AlertMessageResponseDto {
   @Expose()
   messageGroup?: MessageGroupResponseDto;
 }
-

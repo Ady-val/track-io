@@ -88,6 +88,6 @@ export class AlertRule {
   @JoinColumn({ name: 'measurement_id' })
   measurement?: Measurement;
 
-  @OneToMany(() => AlertMessage, (message) => message.alertRule)
+  @OneToMany(() => AlertMessage, message => message.alertRule)
   messages?: AlertMessage[];
 }

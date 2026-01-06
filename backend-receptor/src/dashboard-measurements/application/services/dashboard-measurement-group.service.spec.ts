@@ -12,6 +12,7 @@ import type {
   CreateDashboardMeasurementGroupDto,
   UpdateDashboardMeasurementGroupDto,
 } from '../dtos/dashboard-measurement-group.dto';
+import { MeasurementType } from '../../../measurements/domain/entities/measurement.entity';
 
 describe('DashboardMeasurementGroupService', () => {
   let service: DashboardMeasurementGroupService;
@@ -257,6 +258,134 @@ describe('DashboardMeasurementGroupService', () => {
         'Database error'
       );
     });
+
+    it('should throw BadRequestException when chartMeasurementIds includes status type measurement', async () => {
+      const createDtoWithChart: CreateDashboardMeasurementGroupDto = {
+        name: 'Test Group',
+        dashboardMeasurements: [
+          {
+            dashboardMeasurementId: 1,
+          },
+          {
+            dashboardMeasurementId: 2,
+          },
+        ],
+        chartMeasurementIds: [1, 2],
+      };
+      const mockStatusMeasurement = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.STATUS,
+      });
+      const mockTemperatureMeasurement = createMockMeasurement({
+        id: 2,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const mockDashboardMeasurements = [
+        createMockDashboardMeasurement({
+          id: 1,
+          measurementId: 1,
+          groupId: null,
+          measurement: mockStatusMeasurement,
+        }),
+        createMockDashboardMeasurement({
+          id: 2,
+          measurementId: 2,
+          groupId: null,
+          measurement: mockTemperatureMeasurement,
+        }),
+      ];
+
+      // Configure mocks for both test assertions
+      dashboardMeasurementRepository.findOne
+        .mockResolvedValueOnce(mockDashboardMeasurements[0])
+        .mockResolvedValueOnce(mockDashboardMeasurements[1])
+        .mockResolvedValueOnce(mockDashboardMeasurements[0])
+        .mockResolvedValueOnce(mockDashboardMeasurements[1]);
+
+      await expect(service.createGroup(createDtoWithChart)).rejects.toThrow(
+        BadRequestException
+      );
+      await expect(service.createGroup(createDtoWithChart)).rejects.toThrow(
+        'chartMeasurementIds cannot include status type measurements. Invalid IDs: 1'
+      );
+    });
+
+    it('should allow chartMeasurementIds with non-status type measurements', async () => {
+      const createDtoWithChart: CreateDashboardMeasurementGroupDto = {
+        name: 'Test Group',
+        dashboardMeasurements: [
+          {
+            dashboardMeasurementId: 1,
+          },
+          {
+            dashboardMeasurementId: 2,
+          },
+        ],
+        chartMeasurementIds: [1, 2],
+        chartTimeRange: 10,
+        chartMinValue: 0,
+        chartMaxValue: 100,
+      };
+      const mockTemperatureMeasurement1 = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const mockTemperatureMeasurement2 = createMockMeasurement({
+        id: 2,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const mockDashboardMeasurements = [
+        createMockDashboardMeasurement({
+          id: 1,
+          measurementId: 1,
+          groupId: null,
+          measurement: mockTemperatureMeasurement1,
+        }),
+        createMockDashboardMeasurement({
+          id: 2,
+          measurementId: 2,
+          groupId: null,
+          measurement: mockTemperatureMeasurement2,
+        }),
+      ];
+      const mockGroup = createMockDashboardMeasurementGroup({
+        id: 1,
+        name: createDtoWithChart.name,
+        chartMeasurementIds: [1, 2],
+        chartTimeRange: 10,
+        chartMinValue: 0,
+        chartMaxValue: 100,
+      });
+      const savedGroup = createMockDashboardMeasurementGroup({
+        id: 1,
+        name: createDtoWithChart.name,
+        chartMeasurementIds: [1, 2],
+        chartTimeRange: 10,
+        chartMinValue: 0,
+        chartMaxValue: 100,
+      });
+
+      dashboardMeasurementRepository.findOne
+        .mockResolvedValueOnce(mockDashboardMeasurements[0])
+        .mockResolvedValueOnce(mockDashboardMeasurements[1]);
+      groupRepository.create.mockReturnValue(mockGroup);
+      groupRepository.save.mockResolvedValue(savedGroup);
+      dashboardMeasurementRepository.save
+        .mockResolvedValueOnce({
+          ...mockDashboardMeasurements[0],
+          groupId: savedGroup.id,
+        })
+        .mockResolvedValueOnce({
+          ...mockDashboardMeasurements[1],
+          groupId: savedGroup.id,
+        });
+      groupRepository.findByIdWithMeasurements.mockResolvedValue(savedGroup);
+
+      const result = await service.createGroup(createDtoWithChart);
+
+      expect(result).toEqual(savedGroup);
+      expect(result.chartMeasurementIds).toEqual([1, 2]);
+    });
   });
 
   describe('updateGroup', () => {
@@ -423,6 +552,99 @@ describe('DashboardMeasurementGroupService', () => {
       expect(dashboardMeasurementRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ groupId: id })
       );
+    });
+
+    it('should throw BadRequestException when chartMeasurementIds includes status type measurement', async () => {
+      const id = 1;
+      const mockStatusMeasurement = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.STATUS,
+      });
+      const mockTemperatureMeasurement = createMockMeasurement({
+        id: 2,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const existingGroup = createMockDashboardMeasurementGroup({
+        id,
+        dashboardMeasurements: [
+          createMockDashboardMeasurement({
+            id: 1,
+            measurementId: 1,
+            groupId: id,
+            measurement: mockStatusMeasurement,
+          }),
+          createMockDashboardMeasurement({
+            id: 2,
+            measurementId: 2,
+            groupId: id,
+            measurement: mockTemperatureMeasurement,
+          }),
+        ],
+      });
+      const updateDtoWithChart: UpdateDashboardMeasurementGroupDto = {
+        chartMeasurementIds: [1, 2],
+      };
+
+      groupRepository.findByIdWithMeasurements.mockResolvedValue(existingGroup);
+
+      await expect(service.updateGroup(id, updateDtoWithChart)).rejects.toThrow(
+        BadRequestException
+      );
+      await expect(service.updateGroup(id, updateDtoWithChart)).rejects.toThrow(
+        'chartMeasurementIds cannot include status type measurements. Invalid IDs: 1'
+      );
+    });
+
+    it('should allow chartMeasurementIds with non-status type measurements in update', async () => {
+      const id = 1;
+      const mockTemperatureMeasurement1 = createMockMeasurement({
+        id: 1,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const mockTemperatureMeasurement2 = createMockMeasurement({
+        id: 2,
+        type: MeasurementType.TEMPERATURE,
+      });
+      const existingGroup = createMockDashboardMeasurementGroup({
+        id,
+        dashboardMeasurements: [
+          createMockDashboardMeasurement({
+            id: 1,
+            measurementId: 1,
+            groupId: id,
+            measurement: mockTemperatureMeasurement1,
+          }),
+          createMockDashboardMeasurement({
+            id: 2,
+            measurementId: 2,
+            groupId: id,
+            measurement: mockTemperatureMeasurement2,
+          }),
+        ],
+      });
+      const updateDtoWithChart: UpdateDashboardMeasurementGroupDto = {
+        chartMeasurementIds: [1, 2],
+        chartTimeRange: 10,
+        chartMinValue: 0,
+        chartMaxValue: 100,
+      };
+      const updatedGroup = createMockDashboardMeasurementGroup({
+        id,
+        chartMeasurementIds: [1, 2],
+        chartTimeRange: 10,
+        chartMinValue: 0,
+        chartMaxValue: 100,
+      });
+
+      groupRepository.findByIdWithMeasurements
+        .mockResolvedValueOnce(existingGroup)
+        .mockResolvedValueOnce(updatedGroup);
+      groupRepository.save.mockResolvedValue(updatedGroup);
+
+      const result = await service.updateGroup(id, updateDtoWithChart);
+
+      expect(result).toEqual(updatedGroup);
+      expect(result.chartMeasurementIds).toEqual([1, 2]);
     });
 
     it('should throw error when save fails', async () => {

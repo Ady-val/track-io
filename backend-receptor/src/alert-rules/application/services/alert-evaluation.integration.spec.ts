@@ -1,6 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
 import { AlertEvaluationService } from './alert-evaluation.service';
 import { AlertRuleService } from './alert-rule.service';
 import { AlertTriggerService } from '../../../alert-triggers/application/services/alert-trigger.service';
@@ -9,10 +8,13 @@ import { AlertMessageSenderService } from '../../../alert-messages/application/s
 import { MeasurementService } from '../../../measurements/application/services/measurement.service';
 import { WebSocketEmitterService } from '../../../websocket/services/websocket-emitter.service';
 import {
-  AlertRule,
+  type AlertRule,
   AlertRuleMode,
 } from '../../domain/entities/alert-rule.entity';
-import { AlertMessage, MessageType } from '../../../alert-messages/domain/entities/alert-message.entity';
+import {
+  type AlertMessage,
+  MessageType,
+} from '../../../alert-messages/domain/entities/alert-message.entity';
 import {
   createMockAlertRule,
   createMockAlertMessage,
@@ -199,7 +201,9 @@ describe('AlertEvaluationService - Integration Tests', () => {
       await service.evaluateMeasurement(rawMeasurement);
 
       // Should not send messages
-      expect(alertMessageService.getMessagesByAlertRuleId).not.toHaveBeenCalled();
+      expect(
+        alertMessageService.getMessagesByAlertRuleId
+      ).not.toHaveBeenCalled();
       expect(alertMessageSenderService.sendMessages).not.toHaveBeenCalled();
     });
 
@@ -367,4 +371,3 @@ describe('AlertEvaluationService - Integration Tests', () => {
     });
   });
 });
-

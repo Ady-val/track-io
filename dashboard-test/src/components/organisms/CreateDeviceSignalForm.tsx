@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useMemo } from "react";
-import { Controller } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
 import {
   FaFloppyDisk,
   FaXmark,
@@ -104,9 +104,9 @@ export const CreateDeviceSignalForm: React.FC<CreateDeviceSignalFormProps> = ({
       {/* Error del servidor */}
       {modalError.serverError && (
         <ErrorMessage
+          isServerError={modalError.parsedError?.isServerError ?? false}
           message={modalError.serverError}
           type="server"
-          isServerError={modalError.parsedError?.isServerError ?? false}
         />
       )}
 
@@ -142,17 +142,17 @@ export const CreateDeviceSignalForm: React.FC<CreateDeviceSignalFormProps> = ({
       {/* Name Input */}
       <div className="mb-4">
         <Controller
-          name="name"
           control={form.control}
+          name="name"
           render={({ field, fieldState }) => (
             <>
               <Input
                 {...field}
                 autoFocus
                 fullWidth
+                errorMessage={fieldState.error?.message}
                 isDisabled={isLoading}
                 isInvalid={!!fieldState.error}
-                errorMessage={fieldState.error?.message}
                 label="Nombre de la Señal"
                 labelPlacement="outside"
                 placeholder="Ej: Temperatura Principal"
@@ -176,8 +176,8 @@ export const CreateDeviceSignalForm: React.FC<CreateDeviceSignalFormProps> = ({
           </Text>
         </div>
         <Controller
-          name="departmentId"
           control={form.control}
+          name="departmentId"
           render={({ field, fieldState }) => (
             <>
               <Select

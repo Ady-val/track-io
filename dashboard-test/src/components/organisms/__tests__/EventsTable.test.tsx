@@ -151,4 +151,3 @@ describe("EventsTable", () => {
     expect(tableContainer).toBeInTheDocument();
   });
 });
-

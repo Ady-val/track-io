@@ -47,4 +47,3 @@ describe("DevicesTable", () => {
     expect(tableContainer).toBeInTheDocument();
   });
 });
-

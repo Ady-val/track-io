@@ -90,6 +90,7 @@ export function PermissionMatrix({
 
     safePermissions.forEach((perm) => {
       const key = `${perm.module}:${perm.action}`;
+
       map.set(key, perm);
     });
 
@@ -113,7 +114,9 @@ export function PermissionMatrix({
   };
 
   const handleSelectAllModule = (module: string) => {
-    const modulePermissions = safePermissions.filter((p) => p.module === module);
+    const modulePermissions = safePermissions.filter(
+      (p) => p.module === module
+    );
     const allSelected = modulePermissions.every((p) =>
       selectedPermissions.has(p.id)
     );
@@ -131,7 +134,9 @@ export function PermissionMatrix({
   };
 
   const handleSelectAll = () => {
-    const allSelected = safePermissions.every((p) => selectedPermissions.has(p.id));
+    const allSelected = safePermissions.every((p) =>
+      selectedPermissions.has(p.id)
+    );
 
     if (allSelected) {
       setSelectedPermissions(new Set());
@@ -183,7 +188,9 @@ export function PermissionMatrix({
   };
 
   const isModuleFullySelected = (module: string) => {
-    const modulePermissions = safePermissions.filter((p) => p.module === module);
+    const modulePermissions = safePermissions.filter(
+      (p) => p.module === module
+    );
 
     return (
       modulePermissions.length > 0 &&
@@ -192,7 +199,9 @@ export function PermissionMatrix({
   };
 
   const isModulePartiallySelected = (module: string) => {
-    const modulePermissions = safePermissions.filter((p) => p.module === module);
+    const modulePermissions = safePermissions.filter(
+      (p) => p.module === module
+    );
     const selectedCount = modulePermissions.filter((p) =>
       selectedPermissions.has(p.id)
     ).length;
@@ -200,8 +209,12 @@ export function PermissionMatrix({
     return selectedCount > 0 && selectedCount < modulePermissions.length;
   };
 
-  const allSelected = safePermissions.every((p) => selectedPermissions.has(p.id));
-  const someSelected = safePermissions.some((p) => selectedPermissions.has(p.id));
+  const allSelected = safePermissions.every((p) =>
+    selectedPermissions.has(p.id)
+  );
+  const someSelected = safePermissions.some((p) =>
+    selectedPermissions.has(p.id)
+  );
 
   return (
     <Modal
@@ -262,7 +275,9 @@ export function PermissionMatrix({
               </thead>
               <tbody>
                 {safeModules.map((module) => {
-                  const modulePermissions = safePermissions.filter((p) => p.module === module);
+                  const modulePermissions = safePermissions.filter(
+                    (p) => p.module === module
+                  );
 
                   if (modulePermissions.length === 0) return null;
 

@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { AlertMessage, MessageType } from '../../domain/entities/alert-message.entity';
+import {
+  AlertMessage,
+  MessageType,
+} from '../../domain/entities/alert-message.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
 
 type TorretaPayload = {
@@ -213,4 +216,3 @@ export class AlertMessageSenderService {
     }
   }
 }
-

@@ -1,10 +1,16 @@
 import type React from "react";
 
 import { FaPlus } from "react-icons/fa6";
+
 import { Button, Input, Select } from "@components/atoms";
 
 import type { NewMessageData } from "@/types/alertRule";
-import type { Torreta, Receptor, Email, TorretaColor } from "@/types/escalation";
+import type {
+  Torreta,
+  Receptor,
+  Email,
+  TorretaColor,
+} from "@/types/escalation";
 
 const MESSAGE_TYPES = [
   { value: "torreta", label: "Torreta" },
@@ -35,7 +41,7 @@ const getTargetOptions = (
         ? torretas
             .filter((t) => t.externalId != null && t.externalId.trim() !== "")
             .map((t) => ({
-              value: t.externalId!,
+              value: t.externalId,
               label: `${t.name} (${t.externalId})`,
             }))
         : [];
@@ -67,6 +73,7 @@ const isMessageFormValid = (messageData: NewMessageData): boolean => {
   if (messageData.messageType === "torreta") {
     return !!messageData.color;
   }
+
   return !!messageData.message && messageData.message.trim().length > 0;
 };
 
@@ -159,8 +166,8 @@ export const MessageForm: React.FC<MessageFormProps> = ({
 
         {messageData.messageType !== "torreta" && (
           <Input
-            className="flex-1 min-w-0"
             fullWidth
+            className="flex-1 min-w-0"
             placeholder="Mensaje"
             size="md"
             value={messageData.message ?? ""}
