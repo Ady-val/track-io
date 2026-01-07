@@ -27,12 +27,16 @@ import { AuthModule } from './auth/auth.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { TestSeedService } from './seed/test-seed.service';
 import { User } from './users/domain/entities/user.entity';
+import systemModulesConfig from './config/system-modules.config';
+import { APP_GUARD } from '@nestjs/core';
+import { SystemModuleGuard } from './common/guards/system-module.guard';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
+      load: [systemModulesConfig],
     }),
     ScheduleModule.forRoot(),
     HttpModule,
@@ -76,6 +80,13 @@ import { User } from './users/domain/entities/user.entity';
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, TestSeedService],
+  providers: [
+    AppService,
+    TestSeedService,
+    {
+      provide: APP_GUARD,
+      useClass: SystemModuleGuard,
+    },
+  ],
 })
 export class AppModule {}

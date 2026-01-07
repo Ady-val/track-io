@@ -40,6 +40,8 @@ services:
       CORS_ORIGIN: '*'
       # Permitir sincronización de schema en testing
       TYPEORM_SYNCHRONIZE: "true"
+      MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
+      MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
     ports:
       - "3001:3001"  # Puerto diferente para testing
     depends_on:

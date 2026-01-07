@@ -18,7 +18,7 @@ export enum Module {
   USERS = "users",
   DASHBOARD = "dashboard",
   ROLES_AND_PERMISSIONS = "roles-and-permissions",
-  CATALOGS = "catalogs", // Unifica AREAS, DEPARTMENTS, TORRETAS, TORRETA_COLORS, RECEPTORS, EMAILS
+  CATALOGS = "catalogs",
 }
 
 export enum Action {

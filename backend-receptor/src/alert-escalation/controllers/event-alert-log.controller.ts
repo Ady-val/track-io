@@ -1,7 +1,10 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { EventAlertLogService } from '../application/services/event-alert-log.service';
 import { AlertLevel } from '../domain/entities/alert-escalation-message.entity';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.SIGNALS)
 @Controller('event-alert-logs')
 export class EventAlertLogController {
   constructor(private readonly eventAlertLogService: EventAlertLogService) {}

@@ -23,7 +23,10 @@ import {
   Module,
   Action,
 } from '../../permissions/constants/permissions.constants';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.MEASUREMENTS)
 @Controller('dashboard-measurement-groups')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 export class DashboardMeasurementGroupController {

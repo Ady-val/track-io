@@ -1,116 +1,23 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-import {
-  FaChartLine,
-  FaGaugeHigh,
-  FaIndustry,
-  FaClock,
-  FaDatabase,
-  FaMicrochip,
-  FaUsers,
-  FaShieldHalved,
-  FaRightFromBracket,
-} from "react-icons/fa6";
-import { PiWaveSineBold } from "react-icons/pi";
+import { FaRightFromBracket } from "react-icons/fa6";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { Module, Action, ADMIN_USERNAME } from "@/constants/permissions";
+import { Action, ADMIN_USERNAME } from "@/constants/permissions";
+import { SidebarItems } from "@/constants/sidebarItems";
 import { useAuth } from "@/contexts/AuthContext";
-import { useHasPermission } from "@/hooks/useHasPermission";
+import { usePermissions } from "@/contexts/PermissionsContext";
 import AuthService from "@/lib/services/auth.service";
-
-interface SidebarItem {
-  path: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}
-
-const sidebarItems: SidebarItem[] = [
-  {
-    path: "/dashboard/alerts",
-    icon: FaChartLine,
-    label: "Alertas",
-  },
-  {
-    path: "/dashboard/measurements",
-    icon: FaGaugeHigh,
-    label: "Mediciones",
-  },
-  {
-    path: "/dashboard/signals",
-    icon: PiWaveSineBold,
-    label: "Señales",
-  },
-  {
-    path: "/dashboard/industrial",
-    icon: FaIndustry,
-    label: "Dashboard Industrial",
-  },
-  {
-    path: "/dashboard/downtimes",
-    icon: FaClock,
-    label: "Tiempos de Paro",
-  },
-  {
-    path: "/dashboard/devices",
-    icon: FaMicrochip,
-    label: "Dispositivos",
-  },
-  {
-    path: "/dashboard/catalogs",
-    icon: FaDatabase,
-    label: "Catálogos",
-  },
-  {
-    path: "/dashboard/users",
-    icon: FaUsers,
-    label: "Usuarios",
-  },
-  {
-    path: "/dashboard/roles",
-    icon: FaShieldHalved,
-    label: "Roles y Permisos",
-  },
-];
 
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { permissions, modules } = usePermissions();
   const { logout: logoutContext, token, user } = useAuth();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const hasAlertsRead = useHasPermission(
-    Module.MEASUREMENT_ALERTS,
-    Action.READ
-  );
-  const hasMeasurementsRead = useHasPermission(
-    Module.MEASUREMENTS,
-    Action.READ
-  );
-  const hasUsersRead = useHasPermission(Module.USERS, Action.READ);
-  const hasDevicesRead = useHasPermission(Module.DEVICES, Action.READ);
-  const hasRolesAndPermissionsRead = useHasPermission(
-    Module.ROLES_AND_PERMISSIONS,
-    Action.READ
-  );
-  const hasAreaDowntimeRead = useHasPermission(
-    Module.AREA_DOWNTIME,
-    Action.READ
-  );
-  const hasCatalogsRead = useHasPermission(Module.CATALOGS, Action.READ);
   const isAdmin = user?.username === ADMIN_USERNAME;
-
-  const routePermissions: Record<string, () => boolean> = {
-    "/dashboard/alerts": () => hasAlertsRead,
-    "/dashboard/measurements": () => hasMeasurementsRead,
-    "/dashboard/users": () => hasUsersRead,
-    "/dashboard/devices": () => hasDevicesRead,
-    "/dashboard/roles": () => hasRolesAndPermissionsRead,
-    "/dashboard/signals": () => isAdmin,
-    "/dashboard/downtimes": () => hasAreaDowntimeRead,
-    "/dashboard/catalogs": () => hasCatalogsRead,
-  };
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -136,10 +43,21 @@ export default function Sidebar() {
     }
   };
 
-  const visibleSidebarItems = sidebarItems.filter((item) => {
-    const checkPermission = routePermissions[item.path];
+  const visibleSidebarItems = SidebarItems.filter((item) => {
+    if (item.isAdminOnly) {
+      return isAdmin;
+    }
 
-    return checkPermission ? checkPermission() : true;
+    const hasReadPermission = isAdmin
+      ? true
+      : permissions.some(
+          (permission) =>
+            permission.module === item.module &&
+            permission.action === Action.READ
+        );
+    const isActiveModule = item.moduleType ? modules[item.moduleType] : true;
+
+    return hasReadPermission && isActiveModule;
   });
 
   return (

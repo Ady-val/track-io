@@ -35,6 +35,8 @@ services:
       DATABASE_NAME: ${POSTGRES_DB:-track_io}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-track_io}
       CORS_ORIGIN: '*'
+      MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
+      MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
     ports:
       - "0.0.0.0:3000:3000"  # Exponer en todas las interfaces de red para acceso remoto
     depends_on:

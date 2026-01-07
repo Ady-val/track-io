@@ -10,6 +10,16 @@ import apiClient from "../lib/api";
 
 import { useAuth } from "./AuthContext";
 
+export enum ModuleType {
+  SIGNALS = "signals",
+  MEASUREMENTS = "measurements",
+}
+
+export interface UserModulesType {
+  [ModuleType.SIGNALS]: boolean;
+  [ModuleType.MEASUREMENTS]: boolean;
+}
+
 export interface Permission {
   id: number;
   module: string;
@@ -24,15 +34,21 @@ export interface UserPermissions {
     username: string;
   };
   permissions: Permission[];
+  modules: {
+    signals: boolean;
+    measurements: boolean;
+  };
 }
 
 interface PermissionsContextType {
   permissions: Permission[];
   user: UserPermissions["user"] | null;
+  modules: UserPermissions["modules"];
   isLoading: boolean;
   error: string | null;
   refreshPermissions: () => Promise<void>;
   hasPermission: (module: string, action: string) => boolean;
+  hasModule: (module: ModuleType) => boolean;
 }
 
 const PermissionsContext = createContext<PermissionsContextType | undefined>(
@@ -47,6 +63,10 @@ export function PermissionsProvider({
   const { token, isAuthenticated } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [user, setUser] = useState<UserPermissions["user"] | null>(null);
+  const [modules, setModules] = useState<UserModulesType>({
+    [ModuleType.SIGNALS]: false,
+    [ModuleType.MEASUREMENTS]: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,15 +82,18 @@ export function PermissionsProvider({
     try {
       setIsLoading(true);
       setError(null);
-      const response = await apiClient.get<{
+      const { data: response } = await apiClient.get<{
         message: string;
         data: UserPermissions;
       }>("/auth/me");
+      const { user, permissions, modules } = response.data;
 
-      const permissionsData = response.data.data.permissions || [];
-
-      setPermissions(permissionsData);
-      setUser(response.data.data.user);
+      setPermissions(permissions);
+      setUser(user);
+      setModules({
+        [ModuleType.SIGNALS]: modules.signals,
+        [ModuleType.MEASUREMENTS]: modules.measurements,
+      });
     } catch (err) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -81,6 +104,10 @@ export function PermissionsProvider({
       setError(errorMessage);
       setPermissions([]);
       setUser(null);
+      setModules({
+        [ModuleType.SIGNALS]: false,
+        [ModuleType.MEASUREMENTS]: false,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,13 +130,22 @@ export function PermissionsProvider({
     [permissions]
   );
 
+  const hasModule = useCallback(
+    (module: ModuleType): boolean => {
+      return modules[module];
+    },
+    [modules]
+  );
+
   const value: PermissionsContextType = {
     permissions,
     user,
+    modules,
     isLoading,
     error,
     refreshPermissions: fetchPermissions,
     hasPermission,
+    hasModule,
   };
 
   return (

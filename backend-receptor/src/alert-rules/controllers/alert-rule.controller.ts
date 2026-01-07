@@ -32,6 +32,8 @@ import {
   Module,
   Action,
 } from '../../permissions/constants/permissions.constants';
+import { SystemModule } from 'src/common/enums/system-module.enum';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
 
 interface AlertRuleFilters {
   measurementId?: number;
@@ -39,6 +41,7 @@ interface AlertRuleFilters {
   mode?: string;
 }
 
+@SystemModuleTag(SystemModule.MEASUREMENTS)
 @Controller('alert-rules')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 export class AlertRuleController {

@@ -9,6 +9,7 @@ import {
   Request,
   Delete,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { AuthService } from '../application/services/auth.service';
 import { LoginDto, LoginResponseDto } from '../application/dtos/auth.dto';
@@ -17,6 +18,9 @@ import {
   CurrentUser,
   CurrentUser as CurrentUserType,
 } from '../decorators/current-user.decorator';
+import systemModulesConfig from 'src/config/system-modules.config';
+import type { ConfigType } from '@nestjs/config';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
 interface AuthenticatedRequest {
   headers: { authorization?: string; 'user-agent'?: string };
@@ -26,7 +30,11 @@ interface AuthenticatedRequest {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(systemModulesConfig.KEY)
+    private readonly modulesConfig: ConfigType<typeof systemModulesConfig>
+  ) {}
 
   private extractTokenFromRequest(req: AuthenticatedRequest): string {
     const authHeader = req.headers.authorization;
@@ -112,16 +120,29 @@ export class AuthController {
         action: string;
         description?: string;
       }>;
+      modules: {
+        signals: boolean;
+        measurements: boolean;
+      };
     };
   }> {
     const userPermissions = await this.authService.getUserPermissions(user.id);
     const userData = await this.authService.getUserData(user.id);
+    const modules = this.modulesConfig;
+
+    // Access config values using enum keys (uppercase) and map to lowercase for API response
+    const signalsEnabled = modules[SystemModule.SIGNALS] ?? false;
+    const measurementsEnabled = modules[SystemModule.MEASUREMENTS] ?? false;
 
     return {
       message: 'Current user retrieved successfully',
       data: {
         user: userData,
         permissions: userPermissions,
+        modules: {
+          signals: signalsEnabled,
+          measurements: measurementsEnabled,
+        },
       },
     };
   }

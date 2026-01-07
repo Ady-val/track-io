@@ -17,7 +17,10 @@ import {
 import { SignalService } from '../application/services/signal.service';
 import { RawSignal } from '../domain/entities/raw-signal.entity';
 import { RawSignalFilters } from '../domain/repositories/raw-signal.repository';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.SIGNALS)
 @Controller('signals')
 export class SignalController {
   constructor(private readonly signalService: SignalService) {}

@@ -11,6 +11,8 @@ import IndexPage from "@/pages/index";
 import LoginPage from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
+import { RedirectToModuleTypeRoute } from "./components/auth/RedirectToModuleTypeRoute";
+import { ModuleType } from "./contexts/PermissionsContext";
 import { AreaDowntimesPage } from "./pages/AreaDowntimesPage";
 import { CatalogsPage } from "./pages/CatalogsPage";
 import DashboardMeasurementsPage from "./pages/dashboardMeasurements";
@@ -36,7 +38,7 @@ function App() {
           <Route
             element={
               <ProtectedRoute>
-                <Navigate replace to="/dashboard/industrial" />
+                <Navigate replace to="/dashboard" />
               </ProtectedRoute>
             }
             path="/"
@@ -49,15 +51,13 @@ function App() {
             }
             path="/dashboard"
           >
-            <Route
-              index
-              element={<Navigate replace to="/dashboard/industrial" />}
-            />
+            <Route index element={<RedirectToModuleTypeRoute />} />
             <Route
               element={
                 <PermissionProtectedRoute
                   action={Action.READ}
                   module={Module.MEASUREMENT_ALERTS}
+                  moduleType={ModuleType.MEASUREMENTS}
                 >
                   <IndexPage />
                 </PermissionProtectedRoute>
@@ -69,6 +69,7 @@ function App() {
                 <PermissionProtectedRoute
                   action={Action.READ}
                   module={Module.MEASUREMENTS}
+                  moduleType={ModuleType.MEASUREMENTS}
                 >
                   <DashboardMeasurementsPage />
                 </PermissionProtectedRoute>
@@ -83,12 +84,24 @@ function App() {
               }
               path="signals"
             />
-            <Route element={<IndustrialDashboard />} path="industrial" />
+            <Route
+              element={
+                <PermissionProtectedRoute
+                  action={Action.READ}
+                  module={Module.DASHBOARD}
+                  moduleType={ModuleType.SIGNALS}
+                >
+                  <IndustrialDashboard />
+                </PermissionProtectedRoute>
+              }
+              path="industrial"
+            />
             <Route
               element={
                 <PermissionProtectedRoute
                   action={Action.READ}
                   module={Module.AREA_DOWNTIME}
+                  moduleType={ModuleType.SIGNALS}
                 >
                   <AreaDowntimesPage />
                 </PermissionProtectedRoute>
@@ -100,6 +113,7 @@ function App() {
                 <PermissionProtectedRoute
                   action={Action.READ}
                   module={Module.DEVICES}
+                  moduleType={ModuleType.SIGNALS}
                 >
                   <DevicesPage />
                 </PermissionProtectedRoute>

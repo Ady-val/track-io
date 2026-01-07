@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { ModuleType, usePermissions } from "@/contexts/PermissionsContext";
+
 import { Card } from "../components/atoms/Card";
 import { Icon } from "../components/atoms/Icon";
 import { AreasCatalog } from "../components/organisms/catalogs/AreasCatalog";
@@ -18,8 +20,18 @@ type CatalogId =
   | "emails";
 
 const allCatalogs = [
-  { id: "areas" as CatalogId, name: "Áreas", icon: "building" },
-  { id: "departments" as CatalogId, name: "Departamentos", icon: "users" },
+  {
+    id: "areas" as CatalogId,
+    name: "Áreas",
+    icon: "building",
+    moduleType: ModuleType.SIGNALS,
+  },
+  {
+    id: "departments" as CatalogId,
+    name: "Departamentos",
+    icon: "users",
+    moduleType: ModuleType.SIGNALS,
+  },
   { id: "torretas" as CatalogId, name: "Torretas", icon: "tower" },
   {
     id: "torreta-colors" as CatalogId,
@@ -28,16 +40,26 @@ const allCatalogs = [
   },
   { id: "receptors" as CatalogId, name: "Receptores", icon: "radio" },
   { id: "emails" as CatalogId, name: "Correos", icon: "mail" },
-] as const;
+];
 
 export function CatalogsPage() {
-  const [activeCatalog, setActiveCatalog] = useState<CatalogId>("areas");
+  const { modules } = usePermissions();
+  const filteredCatalogs = allCatalogs.filter((catalog) =>
+    catalog.moduleType ? modules[catalog.moduleType] : true
+  );
+  const [activeCatalog, setActiveCatalog] = useState<CatalogId>(
+    filteredCatalogs[0]?.id ?? "areas"
+  );
 
   const renderCatalog = () => {
     switch (activeCatalog) {
       case "areas":
+        if (!modules[ModuleType.SIGNALS]) return null;
+
         return <AreasCatalog />;
       case "departments":
+        if (!modules[ModuleType.SIGNALS]) return null;
+
         return <DepartmentsCatalog />;
       case "torretas":
         return <TorretasCatalog />;
@@ -55,7 +77,6 @@ export function CatalogsPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-shrink-0 p-6 pb-0">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">
             Gestión de Catálogos
@@ -65,10 +86,9 @@ export function CatalogsPage() {
           </p>
         </div>
 
-        {/* Catalog Tabs Navigation */}
         <div className="mb-6">
           <nav className="flex space-x-1 border-b border-slate-600 overflow-x-auto">
-            {allCatalogs.map((catalog) => (
+            {filteredCatalogs.map((catalog) => (
               <button
                 key={catalog.id}
                 className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
@@ -89,14 +109,13 @@ export function CatalogsPage() {
         </div>
       </div>
 
-      {/* Content Area */}
       <div className="flex-1 px-6 pb-6 min-h-0 overflow-hidden">
         <Card className="bg-slate-800 border-slate-700 h-full flex flex-col">
           <div className="p-6 flex flex-col h-full min-h-0">
             <div className="flex items-center justify-between mb-6 flex-shrink-0">
               <div>
                 <h2 className="text-xl font-semibold text-white">
-                  {allCatalogs.find((c) => c.id === activeCatalog)?.name}
+                  {filteredCatalogs.find((c) => c.id === activeCatalog)?.name}
                 </h2>
                 <p className="text-slate-400">
                   Gestiona los registros de este catálogo

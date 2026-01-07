@@ -16,7 +16,10 @@ import {
   CreateMessageGroupDto,
   UpdateMessageGroupDto,
 } from '../application/dtos/message-group.dto';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.MEASUREMENTS)
 @Controller('message-groups')
 export class MessageGroupController {
   constructor(private readonly messageGroupService: MessageGroupService) {}

@@ -9,7 +9,10 @@ import {
 import { AlertTriggerService } from '../application/services/alert-trigger.service';
 import { AlertTrigger } from '../domain/entities/alert-trigger.entity';
 import { AlertTriggerFilters } from '../domain/repositories/alert-trigger.repository';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.MEASUREMENTS)
 @Controller()
 export class AlertTriggerController {
   constructor(private readonly alertTriggerService: AlertTriggerService) {}

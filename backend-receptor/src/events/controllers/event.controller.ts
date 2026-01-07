@@ -10,7 +10,10 @@ import {
 import { TypeOrmEventRepository } from '../domain/repositories/typeorm-event.repository';
 import { EventFilters } from '../domain/repositories/event.repository';
 import { EventStatus } from '../domain/entities/event.entity';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.SIGNALS)
 @Controller('events')
 export class EventController {
   constructor(private readonly eventRepository: TypeOrmEventRepository) {}

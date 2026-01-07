@@ -16,7 +16,10 @@ import {
   UpdateAreaTorretaConfigDto,
 } from '../application/dtos/area-torreta-config.dto';
 import { AreaTorretaConfig } from '../domain/entities/area-torreta-config.entity';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.SIGNALS)
 @Controller('area-torreta-configs')
 export class AreaTorretaConfigController {
   constructor(

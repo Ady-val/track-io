@@ -1,6 +1,9 @@
 import { Controller, Get, Param, Logger } from '@nestjs/common';
 import { DashboardService } from '../application/services/dashboard.service';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.SIGNALS)
 @Controller('api/dashboard')
 export class DashboardController {
   private readonly logger = new Logger(DashboardController.name);

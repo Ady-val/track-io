@@ -14,7 +14,10 @@ import { RawMeasurementDto } from '../application/dtos/raw-measurement.dto';
 import { RawMeasurementService } from '../application/services/raw-measurement.service';
 import { RawMeasurement } from '../domain/entities/raw-measurement.entity';
 import { RawMeasurementFilters } from '../domain/repositories/raw-measurement.repository';
+import { SystemModuleTag } from 'src/common/decorators/system-module.decorator';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
+@SystemModuleTag(SystemModule.MEASUREMENTS)
 @Controller('raw-measurements')
 export class RawMeasurementController {
   constructor(private readonly rawMeasurementService: RawMeasurementService) {}

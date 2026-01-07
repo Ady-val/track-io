@@ -346,12 +346,60 @@ docker/
 
 ---
 
+## ⚙️ Variables de Entorno
+
+Puedes configurar el sistema mediante variables de entorno. Crea un archivo `.env` en la carpeta `docker/` o exporta las variables antes de ejecutar `start.bat` o `start.sh`:
+
+### Variables de Módulos del Sistema
+
+Controla qué módulos están habilitados en el sistema:
+
+```bash
+# Habilitar/deshabilitar módulo de Mediciones (default: true)
+MODULE_MEASUREMENTS_ENABLED=true
+
+# Habilitar/deshabilitar módulo de Señales (default: true)
+MODULE_SIGNALS_ENABLED=true
+```
+
+**Ejemplo de uso:**
+
+```bash
+# Deshabilitar solo el módulo de señales
+export MODULE_SIGNALS_ENABLED=false
+./start.sh
+
+# O crear un archivo .env en docker/
+echo "MODULE_SIGNALS_ENABLED=false" > docker/.env
+./start.sh
+```
+
+**Nota:** Estas variables controlan:
+- **Backend**: Qué endpoints están disponibles y protegidos por el `SystemModuleGuard`
+- **Frontend**: Qué módulos se muestran en el sidebar y qué catálogos están disponibles
+
+### Otras Variables Disponibles
+
+```bash
+# Base de datos
+POSTGRES_DB=track_io
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
+# Backend
+NODE_ENV=production
+VITE_API_URL=http://localhost:3000
+```
+
+---
+
 ## 📝 Notas Importantes
 
 - **Primera ejecución**: Puede tardar 5-10 minutos mientras descarga imágenes y compila
 - **Reinicio del equipo**: Los contenedores se iniciarán automáticamente gracias a `restart: always`
 - **Cambio de red**: Si cambias de WiFi a Ethernet, ejecuta `start.bat` o `start.sh` de nuevo
 - **Migraciones**: Se ejecutan automáticamente al iniciar, no necesitas ejecutarlas manualmente
+- **Módulos del sistema**: Puedes habilitar/deshabilitar módulos mediante variables de entorno sin modificar código
 
 ---
 

@@ -182,19 +182,14 @@ export class RefactorAlertMessagesStructure1767374122229
       switch (message_type) {
         case 'torreta':
           receptorType = 'torreta';
-          // Try to find torreta by externalId
           const torretaResult = await queryRunner.query(
-            `
-            SELECT id FROM torretas WHERE external_id = $1 AND deleted_at IS NULL LIMIT 1
-          `,
+            `SELECT id FROM torretas WHERE external_id = $1 AND deleted_at IS NULL LIMIT 1`,
             [target_id]
           );
-          // Try to find color by deviceColorId
           const colorResult = await queryRunner.query(
-            `
-            SELECT id FROM torreta_colors WHERE device_color_id = $1 LIMIT 1
-          `,
+            `SELECT id FROM torreta_colors WHERE device_color_id = $1 LIMIT 1`,
             [color || '']
+          );
 
           messageData = {
             torreta: {
@@ -206,17 +201,16 @@ export class RefactorAlertMessagesStructure1767374122229
 
         case 'receptor':
           receptorType = 'receptor';
-          // Try to find receptor by externalId
-          const receptorResult = await queryRunner.query(
-            `
-            SELECT id FROM receptors WHERE external_id = $1 AND deleted_at IS NULL LIMIT 1
-          `,
+          let receptorId: string | null = null;
+          const result = await queryRunner.query(
+            `SELECT id FROM receptors WHERE external_id = $1 AND deleted_at IS NULL LIMIT 1`,
             [target_id]
+          );
+          receptorId = result.length > 0 ? result[0].id : null;
 
           messageData = {
             receptor: {
-              receptorId:
-                receptorResult.length > 0 ? receptorResult[0].id : null,
+              receptorId: receptorId,
               message: message || '',
             },
           };
