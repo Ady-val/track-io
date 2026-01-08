@@ -5,25 +5,91 @@ import { MeasurementChart } from "../MeasurementChart";
 
 // Mock de los componentes de gráficos
 jest.mock("../GaugeChart", () => ({
-  GaugeChart: ({ title, type }: { title: string; type: string }) => (
+  GaugeChart: ({
+    title,
+    type,
+    onEdit,
+    onDelete,
+    showActions,
+  }: {
+    title: string;
+    type: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    showActions?: boolean;
+  }) => (
     <div data-testid="gauge-chart">
       {title} - {type}
+      {showActions && onEdit && (
+        <button data-testid="gauge-edit-button" onClick={onEdit}>
+          Edit
+        </button>
+      )}
+      {showActions && onDelete && (
+        <button data-testid="gauge-delete-button" onClick={onDelete}>
+          Delete
+        </button>
+      )}
     </div>
   ),
 }));
 
 jest.mock("../HorizontalBarChart", () => ({
-  HorizontalBarChart: ({ title, type }: { title: string; type: string }) => (
+  HorizontalBarChart: ({
+    title,
+    type,
+    onEdit,
+    onDelete,
+    showActions,
+  }: {
+    title: string;
+    type: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    showActions?: boolean;
+  }) => (
     <div data-testid="horizontal-bar-chart">
       {title} - {type}
+      {showActions && onEdit && (
+        <button data-testid="bar-edit-button" onClick={onEdit}>
+          Edit
+        </button>
+      )}
+      {showActions && onDelete && (
+        <button data-testid="bar-delete-button" onClick={onDelete}>
+          Delete
+        </button>
+      )}
     </div>
   ),
 }));
 
 jest.mock("../VibrationLineChart", () => ({
-  VibrationLineChart: ({ title, type }: { title: string; type: string }) => (
+  VibrationLineChart: ({
+    title,
+    type,
+    onEdit,
+    onDelete,
+    showActions,
+  }: {
+    title: string;
+    type: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    showActions?: boolean;
+  }) => (
     <div data-testid="vibration-line-chart">
       {title} - {type}
+      {showActions && onEdit && (
+        <button data-testid="vibration-edit-button" onClick={onEdit}>
+          Edit
+        </button>
+      )}
+      {showActions && onDelete && (
+        <button data-testid="vibration-delete-button" onClick={onDelete}>
+          Delete
+        </button>
+      )}
     </div>
   ),
 }));
@@ -33,13 +99,29 @@ jest.mock("../StatusIndicatorCard", () => ({
     title,
     type,
     isOn,
+    onEdit,
+    onDelete,
+    showActions,
   }: {
     title: string;
     type: string;
     isOn?: boolean;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    showActions?: boolean;
   }) => (
     <div data-testid="status-indicator-card">
       {title} - {type} - {isOn ? "ON" : "OFF"}
+      {showActions && onEdit && (
+        <button data-testid="status-edit-button" onClick={onEdit}>
+          Edit
+        </button>
+      )}
+      {showActions && onDelete && (
+        <button data-testid="status-delete-button" onClick={onDelete}>
+          Delete
+        </button>
+      )}
     </div>
   ),
 }));
@@ -201,5 +283,96 @@ describe("MeasurementChart", () => {
     );
 
     expect(getByTestId("status-indicator-card")).toBeInTheDocument();
+  });
+
+  it("should pass onEdit and onDelete to child components when showActions is true", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    const { getByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="temperature"
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    expect(getByTestId("gauge-chart")).toBeInTheDocument();
+    expect(getByTestId("gauge-edit-button")).toBeInTheDocument();
+    expect(getByTestId("gauge-delete-button")).toBeInTheDocument();
+  });
+
+  it("should not show action buttons when showActions is false", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    const { queryByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="temperature"
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={false}
+      />
+    );
+
+    expect(queryByTestId("gauge-edit-button")).not.toBeInTheDocument();
+    expect(queryByTestId("gauge-delete-button")).not.toBeInTheDocument();
+  });
+
+  it("should pass onEdit and onDelete to HorizontalBarChart", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    const { getByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="pressure"
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    expect(getByTestId("horizontal-bar-chart")).toBeInTheDocument();
+    expect(getByTestId("bar-edit-button")).toBeInTheDocument();
+    expect(getByTestId("bar-delete-button")).toBeInTheDocument();
+  });
+
+  it("should pass onEdit and onDelete to VibrationLineChart", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    const { getByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="vibration"
+        history={[1, 2, 3]}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    expect(getByTestId("vibration-line-chart")).toBeInTheDocument();
+    expect(getByTestId("vibration-edit-button")).toBeInTheDocument();
+    expect(getByTestId("vibration-delete-button")).toBeInTheDocument();
+  });
+
+  it("should pass onEdit and onDelete to StatusIndicatorCard", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    const { getByTestId } = render(
+      <MeasurementChart
+        {...defaultProps}
+        type="status"
+        value={true}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    expect(getByTestId("status-indicator-card")).toBeInTheDocument();
+    expect(getByTestId("status-edit-button")).toBeInTheDocument();
+    expect(getByTestId("status-delete-button")).toBeInTheDocument();
   });
 });

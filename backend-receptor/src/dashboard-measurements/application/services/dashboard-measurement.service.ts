@@ -14,6 +14,14 @@ import { MeasurementService } from '../../../measurements/application/services/m
 import { DashboardMeasurementGroupRepository } from '../../domain/repositories/dashboard-measurement-group.repository';
 import { MeasurementValueRepository } from '../../../measurements/domain/repositories/measurement-value.repository';
 import { MeasurementType } from '../../../measurements/domain/entities/measurement.entity';
+import {
+  CreateMeasurementWithDashboardDto,
+  UpdateMeasurementWithDashboardDto,
+} from '../dtos/dashboard-measurement.dto';
+import {
+  CreateMeasurementDto,
+  UpdateMeasurementDto,
+} from '../../../measurements/application/dtos/measurement.dto';
 
 @Injectable()
 export class DashboardMeasurementService {
@@ -191,6 +199,55 @@ export class DashboardMeasurementService {
     return this.dashboardMeasurementRepository.save(dashboard);
   }
 
+  /**
+   * Create a Measurement and its DashboardMeasurement configuration
+   * in a single operation.
+   */
+  async createMeasurementWithDashboard(
+    dto: CreateMeasurementWithDashboardDto
+  ): Promise<DashboardMeasurement> {
+    if (dto.minValue >= dto.maxValue) {
+      throw new BadRequestException('minValue must be less than maxValue');
+    }
+
+    // Validate group if provided BEFORE creating measurement
+    // This ensures no orphaned measurements are created if group validation fails
+    if (dto.groupId !== undefined && dto.groupId !== null) {
+      await this.groupRepository.findOneOrFail({
+        where: { id: dto.groupId },
+      });
+    }
+
+    // Create Measurement after all validations pass
+    const measurementPayload: CreateMeasurementDto = {
+      externalId: dto.externalId,
+      name: dto.name,
+      type: dto.type,
+    };
+    const measurement =
+      await this.measurementService.createMeasurement(measurementPayload);
+
+    // Create Dashboard Measurement
+    const dashboardData: {
+      measurementId: number;
+      groupId?: number;
+      minValue: number;
+      maxValue: number;
+    } = {
+      measurementId: measurement.id,
+      minValue: dto.minValue,
+      maxValue: dto.maxValue,
+    };
+
+    if (dto.groupId !== undefined && dto.groupId !== null) {
+      dashboardData.groupId = dto.groupId;
+    }
+
+    const dashboard = this.dashboardMeasurementRepository.create(dashboardData);
+
+    return this.dashboardMeasurementRepository.save(dashboard);
+  }
+
   async updateDashboardMeasurement(
     id: number,
     updateDto: UpdateDashboardMeasurementDto
@@ -218,9 +275,63 @@ export class DashboardMeasurementService {
     return this.dashboardMeasurementRepository.save(dashboard);
   }
 
+  /**
+   * Update both Measurement and DashboardMeasurement in one operation.
+   */
+  async updateMeasurementWithDashboard(
+    id: number,
+    dto: UpdateMeasurementWithDashboardDto
+  ): Promise<DashboardMeasurement> {
+    const dashboard = await this.getDashboardMeasurementById(id);
+
+    // Update Measurement if any field provided
+    const hasMeasurementUpdates =
+      dto.externalId !== undefined ||
+      dto.name !== undefined ||
+      dto.type !== undefined;
+    if (hasMeasurementUpdates) {
+      const measurementPayload: UpdateMeasurementDto = {};
+      if (dto.externalId !== undefined)
+        measurementPayload.externalId = dto.externalId;
+      if (dto.name !== undefined) measurementPayload.name = dto.name;
+      if (dto.type !== undefined) measurementPayload.type = dto.type;
+      await this.measurementService.updateMeasurement(
+        dashboard.measurementId,
+        measurementPayload
+      );
+    }
+
+    // Validate and update DashboardMeasurement fields
+    if (dto.groupId !== undefined) {
+      if (dto.groupId === null) {
+        // Remove group assignment - set to null in database
+        // TypeORM requires explicit null for nullable columns
+        Object.assign(dashboard, { groupId: null as any });
+      } else {
+        await this.groupRepository.findOneOrFail({
+          where: { id: dto.groupId },
+        });
+        dashboard.groupId = dto.groupId;
+      }
+    }
+
+    const newMin = dto.minValue ?? dashboard.minValue;
+    const newMax = dto.maxValue ?? dashboard.maxValue;
+    if (newMin >= newMax) {
+      throw new BadRequestException('minValue must be less than maxValue');
+    }
+    if (dto.minValue !== undefined) dashboard.minValue = dto.minValue;
+    if (dto.maxValue !== undefined) dashboard.maxValue = dto.maxValue;
+
+    return this.dashboardMeasurementRepository.save(dashboard);
+  }
+
   async deleteDashboardMeasurement(id: number): Promise<void> {
-    await this.getDashboardMeasurementById(id);
+    const dashboard = await this.getDashboardMeasurementById(id);
+    // Soft delete dashboard-measurement
     await this.dashboardMeasurementRepository.softDelete(id);
+    // Soft delete the underlying measurement as requested
+    await this.measurementService.deleteMeasurement(dashboard.measurementId);
   }
 
   async getAvailableDashboardMeasurements(): Promise<DashboardMeasurement[]> {

@@ -1,8 +1,10 @@
 import type React from "react";
 
 import { Card, CardBody, Text } from "@components/atoms";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 import { useStatusDuration } from "@/hooks/useStatusDuration";
+import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
 import { getMeasurementConfig } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
@@ -14,6 +16,9 @@ export interface StatusIndicatorCardProps {
   timestamp?: string;
   onStartTime?: string;
   className?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  showActions?: boolean;
 }
 
 export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
@@ -24,11 +29,19 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
   timestamp,
   onStartTime,
   className = "",
+  onEdit,
+  onDelete,
+  showActions = false,
 }) => {
   const config = getMeasurementConfig(type);
   const Icon = config.icon;
   const hasValue = isOn !== null && isOn !== undefined;
   const { duration, isActive } = useStatusDuration(onStartTime, isOn);
+  
+  const { titleRef, titleClassName } = useAdaptiveTitleSize({
+    title,
+    baseSize: "xl",
+  });
 
   const getStatusColor = () => {
     if (!hasValue) return "bg-gray-500";
@@ -49,16 +62,44 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
   };
 
   return (
-    <Card className={`bg-slate-800/50 border-slate-700 ${className}`}>
+    <Card className={`bg-slate-800/50 border-slate-700 ${className} group relative`}>
       <CardBody className="p-4 flex flex-col h-full">
+        {showActions && (onEdit || onDelete) && (
+          <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            {onEdit && (
+              <button
+                className="w-7 h-7 rounded bg-yellow-600/80 hover:bg-yellow-600 text-white flex items-center justify-center"
+                aria-label="Editar"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
+                <FaEdit className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                className="w-7 h-7 rounded bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center"
+                aria-label="Eliminar"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                <FaTrash className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex-shrink-0 mb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <div style={{ color: config.color }}>
+          <div className="flex items-center gap-2 mb-1 min-w-0">
+            <div style={{ color: config.color }} className="flex-shrink-0">
               <Icon className="w-5 h-5" />
             </div>
-            <Text className="text-xl font-semibold text-slate-100">
+            <div ref={titleRef} className={titleClassName}>
               {title}
-            </Text>
+            </div>
           </div>
           <Text
             className="text-xs text-slate-400"

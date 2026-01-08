@@ -15,6 +15,8 @@ import {
 import type {
   CreateDashboardMeasurementDto,
   UpdateDashboardMeasurementDto,
+  CreateMeasurementWithDashboardDto,
+  UpdateMeasurementWithDashboardDto,
 } from '../dtos/dashboard-measurement.dto';
 import { MeasurementType } from '../../../measurements/domain/entities/measurement.entity';
 
@@ -46,6 +48,9 @@ describe('DashboardMeasurementService', () => {
           provide: MeasurementService,
           useValue: {
             getMeasurementById: jest.fn(),
+            createMeasurement: jest.fn(),
+            updateMeasurement: jest.fn(),
+            deleteMeasurement: jest.fn(),
           },
         },
         {
@@ -634,12 +639,19 @@ describe('DashboardMeasurementService', () => {
   });
 
   describe('deleteDashboardMeasurement', () => {
-    it('should delete dashboard measurement successfully', async () => {
+    it('should soft delete both dashboard measurement and measurement successfully', async () => {
       const id = 1;
-      const mockMeasurement = createMockDashboardMeasurement({ id });
+      const measurementId = 10;
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id,
+        measurementId,
+      });
 
-      dashboardMeasurementRepository.findOne.mockResolvedValue(mockMeasurement);
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        mockDashboardMeasurement
+      );
       dashboardMeasurementRepository.softDelete.mockResolvedValue(undefined);
+      measurementService.deleteMeasurement.mockResolvedValue(undefined);
 
       await service.deleteDashboardMeasurement(id);
 
@@ -649,6 +661,9 @@ describe('DashboardMeasurementService', () => {
       });
       expect(dashboardMeasurementRepository.softDelete).toHaveBeenCalledWith(
         id
+      );
+      expect(measurementService.deleteMeasurement).toHaveBeenCalledWith(
+        measurementId
       );
     });
 
@@ -660,6 +675,351 @@ describe('DashboardMeasurementService', () => {
       await expect(service.deleteDashboardMeasurement(id)).rejects.toThrow(
         NotFoundException
       );
+      expect(measurementService.deleteMeasurement).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createMeasurementWithDashboard', () => {
+    const createDto: CreateMeasurementWithDashboardDto = {
+      externalId: 'TEST-001',
+      name: 'Test Measurement',
+      type: MeasurementType.TEMPERATURE,
+      minValue: 0,
+      maxValue: 100,
+    };
+
+    it('should create measurement and dashboard measurement successfully', async () => {
+      const mockMeasurement = createMockMeasurement({
+        id: 1,
+        externalId: 'TEST-001',
+        name: 'Test Measurement',
+        type: MeasurementType.TEMPERATURE,
+      });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        minValue: 0,
+        maxValue: 100,
+      });
+
+      measurementService.createMeasurement.mockResolvedValue(mockMeasurement);
+      dashboardMeasurementRepository.create.mockReturnValue(
+        mockDashboardMeasurement
+      );
+      dashboardMeasurementRepository.save.mockResolvedValue(
+        mockDashboardMeasurement
+      );
+
+      const result = await service.createMeasurementWithDashboard(createDto);
+
+      expect(result).toEqual(mockDashboardMeasurement);
+      expect(measurementService.createMeasurement).toHaveBeenCalledWith({
+        externalId: 'TEST-001',
+        name: 'Test Measurement',
+        type: MeasurementType.TEMPERATURE,
+      });
+      expect(dashboardMeasurementRepository.create).toHaveBeenCalledWith({
+        measurementId: 1,
+        minValue: 0,
+        maxValue: 100,
+      });
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalled();
+    });
+
+    it('should create with groupId when provided', async () => {
+      const createDtoWithGroup: CreateMeasurementWithDashboardDto = {
+        ...createDto,
+        groupId: 1,
+      };
+      const mockMeasurement = createMockMeasurement({ id: 1 });
+      const mockGroup = createMockDashboardMeasurementGroup({ id: 1 });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        groupId: 1,
+      });
+
+      measurementService.createMeasurement.mockResolvedValue(mockMeasurement);
+      groupRepository.findOneOrFail.mockResolvedValue(mockGroup);
+      dashboardMeasurementRepository.create.mockReturnValue(
+        mockDashboardMeasurement
+      );
+      dashboardMeasurementRepository.save.mockResolvedValue(
+        mockDashboardMeasurement
+      );
+
+      const result =
+        await service.createMeasurementWithDashboard(createDtoWithGroup);
+
+      expect(result).toEqual(mockDashboardMeasurement);
+      expect(groupRepository.findOneOrFail).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
+      expect(dashboardMeasurementRepository.create).toHaveBeenCalledWith({
+        measurementId: 1,
+        groupId: 1,
+        minValue: 0,
+        maxValue: 100,
+      });
+    });
+
+    it('should handle null groupId correctly', async () => {
+      const createDtoWithNullGroup: CreateMeasurementWithDashboardDto = {
+        ...createDto,
+        groupId: null as any,
+      };
+      const mockMeasurement = createMockMeasurement({ id: 1 });
+      const mockDashboardMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+        groupId: null,
+      });
+
+      measurementService.createMeasurement.mockResolvedValue(mockMeasurement);
+      dashboardMeasurementRepository.create.mockReturnValue(
+        mockDashboardMeasurement
+      );
+      dashboardMeasurementRepository.save.mockResolvedValue(
+        mockDashboardMeasurement
+      );
+
+      const result =
+        await service.createMeasurementWithDashboard(createDtoWithNullGroup);
+
+      expect(result).toEqual(mockDashboardMeasurement);
+      expect(groupRepository.findOneOrFail).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when minValue >= maxValue', async () => {
+      const invalidDto: CreateMeasurementWithDashboardDto = {
+        ...createDto,
+        minValue: 100,
+        maxValue: 50,
+      };
+
+      await expect(
+        service.createMeasurementWithDashboard(invalidDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createMeasurementWithDashboard(invalidDto)
+      ).rejects.toThrow('minValue must be less than maxValue');
+      expect(measurementService.createMeasurement).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when group does not exist', async () => {
+      const createDtoWithGroup: CreateMeasurementWithDashboardDto = {
+        ...createDto,
+        groupId: 999,
+      };
+
+      groupRepository.findOneOrFail.mockRejectedValue(
+        new NotFoundException('Group not found')
+      );
+
+      await expect(
+        service.createMeasurementWithDashboard(createDtoWithGroup)
+      ).rejects.toThrow(NotFoundException);
+
+      // Verify measurement is not created when group validation fails
+      expect(measurementService.createMeasurement).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateMeasurementWithDashboard', () => {
+    const updateDto: UpdateMeasurementWithDashboardDto = {
+      name: 'Updated Measurement',
+      minValue: 10,
+      maxValue: 90,
+    };
+
+    it('should update both measurement and dashboard measurement successfully', async () => {
+      const id = 1;
+      const measurementId = 10;
+      const existingDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        minValue: 0,
+        maxValue: 100,
+      });
+      const updatedDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        minValue: 10,
+        maxValue: 90,
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        existingDashboard
+      );
+      measurementService.updateMeasurement.mockResolvedValue(undefined);
+      dashboardMeasurementRepository.save.mockResolvedValue(updatedDashboard);
+
+      const result = await service.updateMeasurementWithDashboard(id, updateDto);
+
+      expect(result).toEqual(updatedDashboard);
+      expect(measurementService.updateMeasurement).toHaveBeenCalledWith(
+        measurementId,
+        { name: 'Updated Measurement' }
+      );
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalled();
+    });
+
+    it('should update only dashboard measurement fields when measurement fields not provided', async () => {
+      const id = 1;
+      const measurementId = 10;
+      const dashboardOnlyUpdate: UpdateMeasurementWithDashboardDto = {
+        minValue: 10,
+        maxValue: 90,
+      };
+      const existingDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        minValue: 0,
+        maxValue: 100,
+      });
+      const updatedDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        minValue: 10,
+        maxValue: 90,
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        existingDashboard
+      );
+      dashboardMeasurementRepository.save.mockResolvedValue(updatedDashboard);
+
+      const result = await service.updateMeasurementWithDashboard(
+        id,
+        dashboardOnlyUpdate
+      );
+
+      expect(result).toEqual(updatedDashboard);
+      expect(measurementService.updateMeasurement).not.toHaveBeenCalled();
+    });
+
+    it('should update groupId when provided', async () => {
+      const id = 1;
+      const measurementId = 10;
+      const updateDtoWithGroup: UpdateMeasurementWithDashboardDto = {
+        ...updateDto,
+        groupId: 2,
+      };
+      const existingDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+      });
+      const mockGroup = createMockDashboardMeasurementGroup({ id: 2 });
+      const updatedDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        groupId: 2,
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        existingDashboard
+      );
+      groupRepository.findOneOrFail.mockResolvedValue(mockGroup);
+      measurementService.updateMeasurement.mockResolvedValue(undefined);
+      dashboardMeasurementRepository.save.mockResolvedValue(updatedDashboard);
+
+      await service.updateMeasurementWithDashboard(id, updateDtoWithGroup);
+
+      expect(groupRepository.findOneOrFail).toHaveBeenCalledWith({
+        where: { id: 2 },
+      });
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalled();
+    });
+
+    it('should remove group assignment when groupId is null', async () => {
+      const id = 1;
+      const measurementId = 10;
+      const updateDtoWithNullGroup: UpdateMeasurementWithDashboardDto = {
+        ...updateDto,
+        groupId: null,
+      };
+      const existingDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        groupId: 1,
+      });
+      const updatedDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+        groupId: null,
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        existingDashboard
+      );
+      measurementService.updateMeasurement.mockResolvedValue(undefined);
+      dashboardMeasurementRepository.save.mockResolvedValue(updatedDashboard);
+
+      await service.updateMeasurementWithDashboard(
+        id,
+        updateDtoWithNullGroup
+      );
+
+      expect(groupRepository.findOneOrFail).not.toHaveBeenCalled();
+      expect(dashboardMeasurementRepository.save).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when minValue >= maxValue', async () => {
+      const id = 1;
+      const invalidUpdateDto: UpdateMeasurementWithDashboardDto = {
+        minValue: 100,
+        maxValue: 50,
+      };
+      const existingDashboard = createMockDashboardMeasurement({
+        id,
+        minValue: 0,
+        maxValue: 100,
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        existingDashboard
+      );
+
+      await expect(
+        service.updateMeasurementWithDashboard(id, invalidUpdateDto)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateMeasurementWithDashboard(id, invalidUpdateDto)
+      ).rejects.toThrow('minValue must be less than maxValue');
+    });
+
+    it('should throw NotFoundException when dashboard measurement does not exist', async () => {
+      const id = 999;
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.updateMeasurementWithDashboard(id, updateDto)
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw error when group does not exist', async () => {
+      const id = 1;
+      const measurementId = 10;
+      const updateDtoWithGroup: UpdateMeasurementWithDashboardDto = {
+        ...updateDto,
+        groupId: 999,
+      };
+      const existingDashboard = createMockDashboardMeasurement({
+        id,
+        measurementId,
+      });
+
+      dashboardMeasurementRepository.findOne.mockResolvedValue(
+        existingDashboard
+      );
+      groupRepository.findOneOrFail.mockRejectedValue(
+        new NotFoundException('Group not found')
+      );
+
+      await expect(
+        service.updateMeasurementWithDashboard(id, updateDtoWithGroup)
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

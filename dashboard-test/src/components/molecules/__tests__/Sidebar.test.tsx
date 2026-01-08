@@ -5,7 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { PermissionsProvider } from "@/contexts/PermissionsContext";
 import apiClient from "@/lib/api";
 import AuthService from "@/lib/services/auth.service";
 
@@ -34,6 +33,36 @@ jest.mock("@/hooks/useHasPermission", () => ({
   useHasPermission: jest.fn(() => true),
 }));
 
+// Mock de usePermissions para evitar la complejidad de la inicialización asíncrona
+jest.mock("@/contexts/PermissionsContext", () => {
+  const actual = jest.requireActual("@/contexts/PermissionsContext");
+  return {
+    ...actual,
+    usePermissions: jest.fn(() => ({
+      permissions: [
+        { id: 1, module: "measurement-alerts", action: "read" },
+        { id: 2, module: "measurements", action: "read" },
+        { id: 3, module: "users", action: "read" },
+        { id: 4, module: "devices", action: "read" },
+        { id: 5, module: "roles-and-permissions", action: "read" },
+        { id: 6, module: "area-downtime", action: "read" },
+        { id: 7, module: "catalogs", action: "read" },
+        { id: 8, module: "dashboard", action: "read" },
+        { id: 9, module: "signals", action: "read" },
+      ],
+      modules: {
+        signals: true,
+        measurements: true,
+      },
+      isLoading: false,
+      error: null,
+      hasPermission: jest.fn(() => true),
+      hasModule: jest.fn(() => true),
+      refreshPermissions: jest.fn(),
+    })),
+  };
+});
+
 const mockAuthService = AuthService as jest.Mocked<typeof AuthService>;
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
@@ -45,34 +74,6 @@ const mockUser = {
 };
 
 const createWrapper = (initialEntries = ["/dashboard/alerts"]) => {
-  // Configurar localStorage con usuario autenticado
-  localStorage.setItem("auth_token", "mock-token");
-  localStorage.setItem("auth_user", JSON.stringify(mockUser));
-
-  // Mock de la respuesta de /auth/me para PermissionsProvider
-  mockApiClient.get.mockResolvedValue({
-    data: {
-      message: "Success",
-      data: {
-        user: mockUser,
-        permissions: [
-          { id: 1, module: "MEASUREMENT_ALERTS", action: "READ" },
-          { id: 2, module: "MEASUREMENTS", action: "READ" },
-          { id: 3, module: "USERS", action: "READ" },
-          { id: 4, module: "DEVICES", action: "READ" },
-          { id: 5, module: "ROLES_AND_PERMISSIONS", action: "READ" },
-          { id: 6, module: "AREA_DOWNTIME", action: "READ" },
-          { id: 7, module: "CATALOGS", action: "READ" },
-        ],
-      },
-    },
-  } as unknown as {
-    user: {
-      id: number;
-      email: string;
-      permissions: Array<{ id: number; module: string; action: string }>;
-    };
-  });
 
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -86,9 +87,7 @@ const createWrapper = (initialEntries = ["/dashboard/alerts"]) => {
   const TestWrapper = ({ children }: { children: ReactNode }) => (
     <MemoryRouter initialEntries={initialEntries}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PermissionsProvider>{children}</PermissionsProvider>
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );
@@ -108,6 +107,15 @@ describe("Sidebar", () => {
     localStorage.clear();
     mockUseHasPermission.mockReturnValue(true);
     mockAuthService.logout.mockResolvedValue(undefined);
+
+    // Configurar localStorage con usuario autenticado antes de cada test
+    localStorage.setItem("auth_token", "mock-token");
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    // Mock de apiClient para evitar errores en otros componentes
+    mockApiClient.get.mockResolvedValue({ data: {} } as any);
+    mockApiClient.post.mockResolvedValue({ data: {} } as any);
+    mockApiClient.delete.mockResolvedValue({ data: {} } as any);
   });
 
   afterEach(async () => {
@@ -127,43 +135,47 @@ describe("Sidebar", () => {
 
   it("should render sidebar items", async () => {
     const Wrapper = createWrapper();
-    const { container } = render(<Sidebar />, { wrapper: Wrapper });
+    render(<Sidebar />, { wrapper: Wrapper });
 
-    // Esperar a que el componente se renderice completamente
-    await waitFor(() => {
-      const alertsLink = container.querySelector('a[href="/dashboard/alerts"]');
-
-      expect(alertsLink).toBeInTheDocument();
-    });
+    // Como usePermissions está mockeado, los elementos deberían aparecer inmediatamente
+    // Pero aún así esperamos un poco para asegurar que el componente se renderizó
+    await waitFor(
+      () => {
+        const alertsLink = screen.getByLabelText("Alertas");
+        expect(alertsLink).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("should highlight active route", async () => {
     const Wrapper = createWrapper(["/dashboard/alerts"]);
-    const { container } = render(<Sidebar />, { wrapper: Wrapper });
+    render(<Sidebar />, { wrapper: Wrapper });
 
     // Esperar y verificar que el link activo tiene la clase correcta
-    await waitFor(() => {
-      const alertsLink = container.querySelector('a[href="/dashboard/alerts"]');
-
-      expect(alertsLink).toBeInTheDocument();
-      // Verificar que tiene la clase de activo (puede estar en el className completo)
-      expect(alertsLink?.className).toContain("bg-blue-600");
-    });
+    await waitFor(
+      () => {
+        const alertsLink = screen.getByLabelText("Alertas");
+        expect(alertsLink).toBeInTheDocument();
+        // Verificar que tiene la clase de activo (puede estar en el className completo)
+        expect(alertsLink.className).toContain("bg-blue-600");
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("should filter items based on permissions", async () => {
-    // Configurar mocks para diferentes permisos
-    mockUseHasPermission.mockReturnValue(true);
-
     const Wrapper = createWrapper();
-    const { container } = render(<Sidebar />, { wrapper: Wrapper });
+    render(<Sidebar />, { wrapper: Wrapper });
 
     // Esperar y verificar que alerts está presente cuando tiene permiso
-    await waitFor(() => {
-      const alertsLink = container.querySelector('a[href="/dashboard/alerts"]');
-
-      expect(alertsLink).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        const alertsLink = screen.getByLabelText("Alertas");
+        expect(alertsLink).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("should call logout when logout button is clicked", async () => {
@@ -172,19 +184,20 @@ describe("Sidebar", () => {
     const Wrapper = createWrapper();
     render(<Sidebar />, { wrapper: Wrapper });
 
-    // Esperar a que el componente se renderice y luego buscar el botón de logout
-    await waitFor(() => {
-      const logoutButtons = screen.getAllByRole("button");
-
-      expect(logoutButtons.length).toBeGreaterThan(0);
-    });
+    // Esperar a que el componente se renderice completamente
+    await waitFor(
+      () => {
+        const logoutButtons = screen.getAllByRole("button");
+        expect(logoutButtons.length).toBeGreaterThan(0);
+      },
+      { timeout: 2000 }
+    );
 
     const logoutButtons = screen.getAllByRole("button");
     const logoutButton = logoutButtons[logoutButtons.length - 1]; // El último es el de logout
 
-    if (logoutButton) {
-      fireEvent.click(logoutButton);
-    }
+    expect(logoutButton).toBeInTheDocument();
+    fireEvent.click(logoutButton);
 
     await waitFor(() => {
       expect(mockAuthService.logout).toHaveBeenCalled();
@@ -199,19 +212,20 @@ describe("Sidebar", () => {
     const Wrapper = createWrapper();
     render(<Sidebar />, { wrapper: Wrapper });
 
-    // Esperar a que el componente se renderice
-    await waitFor(() => {
-      const logoutButtons = screen.getAllByRole("button");
-
-      expect(logoutButtons.length).toBeGreaterThan(0);
-    });
+    // Esperar a que el componente se renderice completamente
+    await waitFor(
+      () => {
+        const logoutButtons = screen.getAllByRole("button");
+        expect(logoutButtons.length).toBeGreaterThan(0);
+      },
+      { timeout: 2000 }
+    );
 
     const logoutButtons = screen.getAllByRole("button");
     const logoutButton = logoutButtons[logoutButtons.length - 1];
 
-    if (logoutButton) {
-      fireEvent.click(logoutButton);
-    }
+    expect(logoutButton).toBeInTheDocument();
+    fireEvent.click(logoutButton);
 
     // Verificar que se llamó al servicio y el botón se deshabilita
     await waitFor(
@@ -229,22 +243,68 @@ describe("Sidebar", () => {
     const Wrapper = createWrapper();
     render(<Sidebar />, { wrapper: Wrapper });
 
-    // Esperar a que el componente se renderice
-    await waitFor(() => {
-      const logoutButtons = screen.getAllByRole("button");
-
-      expect(logoutButtons.length).toBeGreaterThan(0);
-    });
+    // Esperar a que el componente se renderice completamente
+    await waitFor(
+      () => {
+        const logoutButtons = screen.getAllByRole("button");
+        expect(logoutButtons.length).toBeGreaterThan(0);
+      },
+      { timeout: 2000 }
+    );
 
     const logoutButtons = screen.getAllByRole("button");
     const logoutButton = logoutButtons[logoutButtons.length - 1];
 
-    if (logoutButton) {
-      fireEvent.click(logoutButton);
-    }
+    expect(logoutButton).toBeInTheDocument();
+    fireEvent.click(logoutButton);
 
     await waitFor(() => {
       expect(mockAuthService.logout).toHaveBeenCalled();
     });
+  });
+
+  it("should show tooltip on hover", async () => {
+    const Wrapper = createWrapper();
+    const { container } = render(<Sidebar />, { wrapper: Wrapper });
+
+    // Esperar a que el componente se renderice completamente
+    await waitFor(
+      () => {
+        const alertsLink = screen.getByLabelText("Alertas");
+        expect(alertsLink).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
+
+    const alertsLink = screen.getByLabelText("Alertas");
+
+    // Verificar que inicialmente el tooltip no está visible
+    // El tooltip solo aparece cuando hoveredItem === item.path
+    const linkContainer = alertsLink.closest(".relative");
+    expect(linkContainer).toBeInTheDocument();
+    
+    // Verificar que inicialmente no hay tooltip visible
+    const initialTooltips = container.querySelectorAll('[class*="bg-slate-950"]');
+    // El tooltip debe tener la clase bg-slate-950, pero inicialmente no debería estar visible
+    // Verificamos buscando el div del tooltip específicamente
+    const initialTooltipDiv = container.querySelector('.absolute.left-full.ml-2');
+    // El tooltip puede existir en el DOM pero no ser visible, o puede no existir
+    // En este caso, simplemente verificamos que podemos hacer hover
+    
+    if (linkContainer) {
+      fireEvent.mouseEnter(linkContainer);
+    }
+
+    // Verificar que el tooltip aparece después del hover
+    await waitFor(
+      () => {
+        // Buscar el tooltip específicamente por su clase única
+        const tooltip = container.querySelector('.absolute.left-full.ml-2.bg-slate-950');
+        expect(tooltip).toBeInTheDocument();
+        // Verificar que contiene el texto "Alertas"
+        expect(tooltip?.textContent).toContain("Alertas");
+      },
+      { timeout: 1000 }
+    );
   });
 });

@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@/test-utils/custom-render";
 
 import { StatusIndicatorCard } from "../StatusIndicatorCard";
@@ -189,5 +190,117 @@ describe("StatusIndicatorCard", () => {
 
     const statusText = container.querySelector(".text-slate-400");
     expect(statusText).toBeTruthy();
+  });
+
+  it("should render edit and delete buttons when showActions is true", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    render(
+      <StatusIndicatorCard
+        {...defaultProps}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    const editButton = screen.getByLabelText("Editar");
+    const deleteButton = screen.getByLabelText("Eliminar");
+
+    expect(editButton).toBeInTheDocument();
+    expect(deleteButton).toBeInTheDocument();
+  });
+
+  it("should not render action buttons when showActions is false", () => {
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    render(
+      <StatusIndicatorCard
+        {...defaultProps}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={false}
+      />
+    );
+
+    const editButton = screen.queryByLabelText("Editar");
+    const deleteButton = screen.queryByLabelText("Eliminar");
+
+    expect(editButton).not.toBeInTheDocument();
+    expect(deleteButton).not.toBeInTheDocument();
+  });
+
+  it("should call onEdit when edit button is clicked", async () => {
+    const user = userEvent.setup();
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    render(
+      <StatusIndicatorCard
+        {...defaultProps}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    const editButton = screen.getByLabelText("Editar");
+    await user.click(editButton);
+
+    expect(mockOnEdit).toHaveBeenCalledTimes(1);
+    expect(mockOnDelete).not.toHaveBeenCalled();
+  });
+
+  it("should call onDelete when delete button is clicked", async () => {
+    const user = userEvent.setup();
+    const mockOnEdit = jest.fn();
+    const mockOnDelete = jest.fn();
+    render(
+      <StatusIndicatorCard
+        {...defaultProps}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    const deleteButton = screen.getByLabelText("Eliminar");
+    await user.click(deleteButton);
+
+    expect(mockOnDelete).toHaveBeenCalledTimes(1);
+    expect(mockOnEdit).not.toHaveBeenCalled();
+  });
+
+  it("should only render edit button when onDelete is not provided", () => {
+    const mockOnEdit = jest.fn();
+    render(
+      <StatusIndicatorCard
+        {...defaultProps}
+        onEdit={mockOnEdit}
+        showActions={true}
+      />
+    );
+
+    const editButton = screen.getByLabelText("Editar");
+    const deleteButton = screen.queryByLabelText("Eliminar");
+
+    expect(editButton).toBeInTheDocument();
+    expect(deleteButton).not.toBeInTheDocument();
+  });
+
+  it("should only render delete button when onEdit is not provided", () => {
+    const mockOnDelete = jest.fn();
+    render(
+      <StatusIndicatorCard
+        {...defaultProps}
+        onDelete={mockOnDelete}
+        showActions={true}
+      />
+    );
+
+    const editButton = screen.queryByLabelText("Editar");
+    const deleteButton = screen.getByLabelText("Eliminar");
+
+    expect(editButton).not.toBeInTheDocument();
+    expect(deleteButton).toBeInTheDocument();
   });
 });

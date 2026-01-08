@@ -9,9 +9,11 @@ import {
   DoughnutController,
   type ChartConfiguration,
 } from "chart.js";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 import { Card, CardBody, Text } from "@components/atoms";
 
+import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
@@ -26,6 +28,9 @@ export interface GaugeChartProps {
   type: MeasurementType;
   timestamp?: string;
   degrees?: number; // 180 o 270 grados
+  onEdit?: () => void;
+  onDelete?: () => void;
+  showActions?: boolean;
 }
 
 export const GaugeChart: React.FC<GaugeChartProps> = ({
@@ -37,6 +42,9 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
   type,
   timestamp,
   degrees = 180,
+  onEdit,
+  onDelete,
+  showActions = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS | null>(null);
@@ -67,7 +75,7 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
       },
       options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         cutout: "75%",
         plugins: {
           legend: {
@@ -140,19 +148,51 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
   };
 
   const hasValue = value !== undefined;
+  const { titleRef, titleClassName } = useAdaptiveTitleSize({
+    title,
+    baseSize: "lg",
+  });
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
+    <Card className="bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
+        {showActions && (onEdit || onDelete) && (
+          <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            {onEdit && (
+              <button
+                aria-label="Editar"
+                className="w-7 h-7 rounded bg-yellow-600/80 hover:bg-yellow-600 text-white flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
+                <FaEdit className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                aria-label="Eliminar"
+                className="w-7 h-7 rounded bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                <FaTrash className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-0">
-              <div style={{ color: config.color }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0 min-w-0">
+              <div className="flex-shrink-0" style={{ color: config.color }}>
                 <Icon className="w-4 h-4" />
               </div>
-              <Text className="text-lg font-semibold text-slate-100">
+              <div ref={titleRef} className={titleClassName}>
                 {title}
-              </Text>
+              </div>
             </div>
             <Text
               className="text-xs text-slate-400"
@@ -164,16 +204,13 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
           </div>
         </div>
 
-        <div className="grow relative mb-3 flex justify-center">
-          <div className="w-72 h-36 flex items-center justify-center">
-            <canvas ref={canvasRef} />
+        <div className="grow relative mb-3 flex items-center justify-center min-h-[220px] w-full overflow-hidden">
+          <div className="relative w-full h-full max-w-[320px] max-h-[176px] flex items-center justify-center">
+            <canvas ref={canvasRef} className="w-full h-full" />
           </div>
 
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className="text-center"
-              style={{ transform: "translateY(10px) translateX(0px)" }}
-            >
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center">
               <div className={`text-4xl font-bold ${getValueColor()}`}>
                 {hasValue ? value.toFixed(1) : "N/A"}
               </div>

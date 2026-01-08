@@ -6,6 +6,7 @@ import {
   createMockDashboardMeasurement,
   createMockMeasurement,
 } from '../../test-helpers';
+import { MeasurementType } from 'src/measurements/domain/entities/measurement.entity';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -31,7 +32,9 @@ describe('DashboardMeasurementController', () => {
             getDashboardMeasurementById: jest.fn(),
             getDashboardMeasurementByMeasurementId: jest.fn(),
             createDashboardMeasurement: jest.fn(),
+            createMeasurementWithDashboard: jest.fn(),
             updateDashboardMeasurement: jest.fn(),
+            updateMeasurementWithDashboard: jest.fn(),
             deleteDashboardMeasurement: jest.fn(),
           },
         },
@@ -263,6 +266,112 @@ describe('DashboardMeasurementController', () => {
       await expect(
         controller.updateDashboardMeasurement(id, updateDto)
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('createWithMeasurement', () => {
+    it('should create measurement and dashboard measurement successfully', async () => {
+      const createDto = {
+        externalId: 'TEST-001',
+        name: 'Test Measurement',
+        type: MeasurementType.TEMPERATURE,
+        minValue: 0,
+        maxValue: 100,
+      };
+      const mockMeasurement = createMockDashboardMeasurement({
+        id: 1,
+        measurementId: 1,
+      });
+      service.createMeasurementWithDashboard.mockResolvedValue(
+        mockMeasurement
+      );
+
+      const result = await controller.createWithMeasurement(createDto);
+
+      expect(result.message).toBe(
+        'Measurement and dashboard measurement created successfully'
+      );
+      expect(result.data).toEqual(mockMeasurement);
+      expect(service.createMeasurementWithDashboard).toHaveBeenCalledWith(
+        createDto
+      );
+    });
+
+    it('should throw BadRequestException when minValue >= maxValue', async () => {
+      const invalidDto = {
+        externalId: 'TEST-001',
+        name: 'Test Measurement',
+        type: MeasurementType.TEMPERATURE,
+        minValue: 100,
+        maxValue: 50,
+      };
+      service.createMeasurementWithDashboard.mockRejectedValue(
+        new BadRequestException('minValue must be less than maxValue')
+      );
+
+      await expect(
+        controller.createWithMeasurement(invalidDto)
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateWithMeasurement', () => {
+    it('should update both measurement and dashboard measurement successfully', async () => {
+      const id = 1;
+      const updateDto = {
+        name: 'Updated Measurement',
+        minValue: 10,
+        maxValue: 90,
+      };
+      const mockMeasurement = createMockDashboardMeasurement({
+        id,
+        ...updateDto,
+      });
+      service.updateMeasurementWithDashboard.mockResolvedValue(
+        mockMeasurement
+      );
+
+      const result = await controller.updateWithMeasurement(id, updateDto);
+
+      expect(result.message).toBe(
+        'Measurement and dashboard measurement updated successfully'
+      );
+      expect(result.data).toEqual(mockMeasurement);
+      expect(service.updateMeasurementWithDashboard).toHaveBeenCalledWith(
+        id,
+        updateDto
+      );
+    });
+
+    it('should throw NotFoundException when dashboard measurement does not exist', async () => {
+      const id = 999;
+      const updateDto = {
+        name: 'Updated Measurement',
+        minValue: 10,
+        maxValue: 90,
+      };
+      service.updateMeasurementWithDashboard.mockRejectedValue(
+        new NotFoundException(`Dashboard measurement with ID ${id} not found`)
+      );
+
+      await expect(
+        controller.updateWithMeasurement(id, updateDto)
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException when minValue >= maxValue', async () => {
+      const id = 1;
+      const invalidDto = {
+        minValue: 100,
+        maxValue: 50,
+      };
+      service.updateMeasurementWithDashboard.mockRejectedValue(
+        new BadRequestException('minValue must be less than maxValue')
+      );
+
+      await expect(
+        controller.updateWithMeasurement(id, invalidDto)
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

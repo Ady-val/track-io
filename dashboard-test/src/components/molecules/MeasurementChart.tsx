@@ -17,6 +17,9 @@ export interface MeasurementChartProps {
   timestamp?: string;
   history?: number[];
   onStartTime?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  showActions?: boolean;
 }
 
 export const MeasurementChart: React.FC<MeasurementChartProps> = ({
@@ -29,6 +32,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   timestamp,
   history,
   onStartTime,
+  onEdit,
+  onDelete,
+  showActions = false,
 }) => {
   switch (type) {
     case "temperature":
@@ -43,6 +49,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
         />
       );
 
@@ -56,6 +65,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
         />
       );
 
@@ -71,6 +83,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
         />
       );
 
@@ -85,6 +100,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
         />
       );
 
@@ -104,6 +122,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           onStartTime={onStartTime}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
         />
       );
 
@@ -118,6 +139,9 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
         />
       );
   }

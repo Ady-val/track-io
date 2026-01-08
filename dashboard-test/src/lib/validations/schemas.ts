@@ -111,6 +111,70 @@ export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 // ============================================================================
+// Dashboard Measurement (with Measurement) Schemas
+// ============================================================================
+
+const measurementTypeEnum = z.enum([
+  "temperature",
+  "humidity",
+  "pressure",
+  "level",
+  "flow",
+  "vibration",
+  "status",
+]);
+
+export const createDashboardMeasurementWithMeasurementSchema = z
+  .object({
+    externalId: z.string().min(1, "El External ID no puede estar vacío"),
+    name: z.string().min(1, "El nombre no puede estar vacío"),
+    type: measurementTypeEnum,
+    groupId: z.number().int().positive().nullable().optional(),
+    minValue: z.number({
+      required_error: "El valor mínimo es requerido",
+      invalid_type_error: "El valor mínimo debe ser un número",
+    }),
+    maxValue: z.number({
+      required_error: "El valor máximo es requerido",
+      invalid_type_error: "El valor máximo debe ser un número",
+    }),
+  })
+  .refine((data) => data.minValue < data.maxValue, {
+    message: "El valor mínimo debe ser menor que el valor máximo",
+    path: ["minValue"],
+  });
+
+export const updateDashboardMeasurementWithMeasurementSchema = z
+  .object({
+    externalId: z.string().min(1, "El External ID no puede estar vacío").optional(),
+    name: z.string().min(1, "El nombre no puede estar vacío").optional(),
+    type: measurementTypeEnum.optional(),
+    groupId: z.number().int().positive().nullable().optional(),
+    minValue: z
+      .number({
+        required_error: "El valor mínimo es requerido",
+        invalid_type_error: "El valor mínimo debe ser un número",
+      })
+      .optional(),
+    maxValue: z
+      .number({
+        required_error: "El valor máximo es requerido",
+        invalid_type_error: "El valor máximo debe ser un número",
+      })
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      data.minValue === undefined ||
+      data.maxValue === undefined ||
+      data.minValue < data.maxValue,
+    {
+      message: "El valor mínimo debe ser menor que el valor máximo",
+      path: ["minValue"],
+    }
+  );
+
+// ============================================================================
 // Email Schemas
 // ============================================================================
 

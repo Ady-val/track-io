@@ -192,7 +192,7 @@ export const useRealtimeMeasurementValues = () => {
     if (typeof newValue === "number") {
       setHistory((prev) => {
         const currentHistory = prev[measurementId] ?? [];
-        const newHistory = [...currentHistory, newValue].slice(-20);
+        const newHistory = [...currentHistory, newValue].slice(-25);
 
         return {
           ...prev,

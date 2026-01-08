@@ -16,6 +16,8 @@ import { DashboardMeasurementService } from '../application/services/dashboard-m
 import {
   CreateDashboardMeasurementDto,
   UpdateDashboardMeasurementDto,
+  CreateMeasurementWithDashboardDto,
+  UpdateMeasurementWithDashboardDto,
 } from '../application/dtos/dashboard-measurement.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../permissions/guards/permission.guard';
@@ -104,6 +106,23 @@ export class DashboardMeasurementController {
     };
   }
 
+  @Post('with-measurement')
+  @HttpCode(HttpStatus.CREATED)
+  @RequirePermission(Module.MEASUREMENTS, Action.CREATE)
+  async createWithMeasurement(
+    @Body() createDto: CreateMeasurementWithDashboardDto
+  ) {
+    const dashboard =
+      await this.dashboardMeasurementService.createMeasurementWithDashboard(
+        createDto
+      );
+    return {
+      message:
+        'Measurement and dashboard measurement created successfully',
+      data: dashboard,
+    };
+  }
+
   @Put(':id')
   @RequirePermission(Module.MEASUREMENTS, Action.UPDATE)
   async updateDashboardMeasurement(
@@ -117,6 +136,24 @@ export class DashboardMeasurementController {
       );
     return {
       message: 'Dashboard measurement updated successfully',
+      data: dashboard,
+    };
+  }
+
+  @Put(':id/with-measurement')
+  @RequirePermission(Module.MEASUREMENTS, Action.UPDATE)
+  async updateWithMeasurement(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: UpdateMeasurementWithDashboardDto
+  ) {
+    const dashboard =
+      await this.dashboardMeasurementService.updateMeasurementWithDashboard(
+        id,
+        updateDto
+      );
+    return {
+      message:
+        'Measurement and dashboard measurement updated successfully',
       data: dashboard,
     };
   }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type React from "react";
 
+import { FaEdit, FaTrash } from "react-icons/fa";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,6 +18,7 @@ import annotationPlugin from "chartjs-plugin-annotation";
 
 import { Card, CardBody, Text } from "@components/atoms";
 
+import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
@@ -41,6 +43,9 @@ export interface VibrationLineChartProps {
   type: MeasurementType;
   timestamp?: string;
   history?: number[];
+  onEdit?: () => void;
+  onDelete?: () => void;
+  showActions?: boolean;
 }
 
 export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
@@ -52,6 +57,9 @@ export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
   type,
   timestamp,
   history = [],
+  onEdit,
+  onDelete,
+  showActions = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS | null>(null);
@@ -256,19 +264,51 @@ export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
   };
 
   const hasValue = value !== undefined;
+  const { titleRef, titleClassName } = useAdaptiveTitleSize({
+    title,
+    baseSize: "lg",
+  });
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
+    <Card className="bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
+        {showActions && (onEdit || onDelete) && (
+          <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            {onEdit && (
+              <button
+                className="w-7 h-7 rounded bg-yellow-600/80 hover:bg-yellow-600 text-white flex items-center justify-center"
+                aria-label="Editar"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
+                <FaEdit className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                className="w-7 h-7 rounded bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center"
+                aria-label="Eliminar"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                <FaTrash className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-0">
-              <div style={{ color: config.color }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0 min-w-0">
+              <div style={{ color: config.color }} className="flex-shrink-0">
                 <Icon className="w-4 h-4" />
               </div>
-              <Text className="text-lg font-semibold text-slate-100">
+              <div ref={titleRef} className={titleClassName}>
                 {title}
-              </Text>
+              </div>
             </div>
             <Text
               className="text-xs text-slate-400"

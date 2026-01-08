@@ -377,13 +377,14 @@ describe("useRealtimeMeasurementValues", () => {
     expect(result.current.getHistory(1)).toEqual([10, 20, 30]);
   });
 
-  it("should limit history to 20 items", () => {
+  it("should limit history to 25 items", () => {
     const { result } = renderHook(() => useRealtimeMeasurementValues());
 
     const handler = mockSocket.on.mock.calls[0][1];
 
-    // Add 25 values
-    for (let i = 0; i < 25; i++) {
+    // Add 27 values (starting from 2 to avoid boolean interpretation of 0 and 1)
+    // This will test that only the last 25 are kept
+    for (let i = 2; i < 29; i++) {
       act(() => {
         handler({
           data: {
@@ -396,9 +397,10 @@ describe("useRealtimeMeasurementValues", () => {
     }
 
     const history = result.current.getHistory(1);
-    expect(history).toHaveLength(20);
-    expect(history[0]).toBe(5); // First 5 should be removed
-    expect(history[19]).toBe(24); // Last should be 24
+    expect(history).toHaveLength(25);
+    // First two values (2 and 3) should be removed, leaving 4-28 (25 items)
+    expect(history[0]).toBe(4); // First item should be 4
+    expect(history[24]).toBe(28); // Last should be 28
   });
 
   it("should handle message with nested data structure", () => {

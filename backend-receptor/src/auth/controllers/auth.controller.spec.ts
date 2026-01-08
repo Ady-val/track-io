@@ -4,6 +4,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from '../application/services/auth.service';
 import type { LoginDto } from '../application/dtos/auth.dto';
 import type { CurrentUser } from '../decorators/current-user.decorator';
+import systemModulesConfig from 'src/config/system-modules.config';
+import { SystemModule } from 'src/common/enums/system-module.enum';
 
 const mockJwtAuthGuard = {
   canActivate: jest.fn(() => true),
@@ -26,6 +28,13 @@ describe('AuthController', () => {
             logoutAllExceptCurrent: jest.fn(),
             getUserPermissions: jest.fn(),
             getUserData: jest.fn(),
+          },
+        },
+        {
+          provide: systemModulesConfig.KEY,
+          useValue: {
+            [SystemModule.MEASUREMENTS]: true,
+            [SystemModule.SIGNALS]: true,
           },
         },
       ],
@@ -212,6 +221,10 @@ describe('AuthController', () => {
       expect(result.message).toBe('Current user retrieved successfully');
       expect(result.data.user).toEqual(mockUserData);
       expect(result.data.permissions).toEqual(mockPermissions);
+      expect(result.data.modules).toEqual({
+        signals: true,
+        measurements: true,
+      });
       expect(service.getUserPermissions).toHaveBeenCalledWith(mockUser.id);
       expect(service.getUserData).toHaveBeenCalledWith(mockUser.id);
     });
