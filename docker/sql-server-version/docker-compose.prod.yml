@@ -1,6 +1,10 @@
 # Track.IO - Docker Compose para Producción con SQL Server
 # Este compose crea el entorno de producción completo con Microsoft SQL Server 2022
 # Grupo de contenedores: track_iq_production_sql_server
+#
+# CONFIGURACIÓN DE BASE DE DATOS:
+# - Base de datos INTERNA: docker-compose --profile internal-db -f docker-compose.prod.yml up -d
+# - Base de datos EXTERNA: Configura DATABASE_HOST_PROD en .env.production y ejecuta sin --profile internal-db
 
 version: '3.8'
 
@@ -9,6 +13,8 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: track-io-sqlserver-prod
     restart: unless-stopped
+    profiles:
+      - internal-db  # Solo se levanta si se usa --profile internal-db
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: ${MSSQL_SA_PASSWORD_PROD}
@@ -36,6 +42,8 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: track-io-db-init-prod
     restart: "no"
+    profiles:
+      - internal-db  # Solo se levanta si se usa --profile internal-db
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: ${MSSQL_SA_PASSWORD_PROD}
@@ -64,12 +72,12 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_TYPE: mssql
-      DATABASE_HOST: track_io_sql_server_prod
-      DATABASE_PORT: 1433
+      DATABASE_HOST: ${DATABASE_HOST_PROD:-track_io_sql_server_prod}
+      DATABASE_PORT: ${MSSQL_PORT_PROD:-1433}
       DATABASE_USERNAME: ${MSSQL_USER_PROD:-sa}
       DATABASE_PASSWORD: ${MSSQL_SA_PASSWORD_PROD}
       DATABASE_NAME: ${MSSQL_DB_PROD:-track_io_prod}
-      DATABASE_URL: mssql://${MSSQL_USER_PROD:-sa}:${MSSQL_SA_PASSWORD_PROD}@track_io_sql_server_prod:1433/${MSSQL_DB_PROD:-track_io_prod}
+      DATABASE_URL: mssql://${MSSQL_USER_PROD:-sa}:${MSSQL_SA_PASSWORD_PROD}@${DATABASE_HOST_PROD:-track_io_sql_server_prod}:${MSSQL_PORT_PROD:-1433}/${MSSQL_DB_PROD:-track_io_prod}
       CORS_ORIGIN: ${CORS_ORIGIN_PROD:-*}
       MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
       MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
@@ -80,11 +88,9 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "0.0.0.0:${BACKEND_PORT_PROD:-3000}:3000"  # Expuesto en todas las interfaces para acceso desde red
-    depends_on:
-      track_io_sql_server_prod:
-        condition: service_healthy
-      db_init_prod:
-        condition: service_completed_successfully
+    # Nota: depends_on removido para permitir uso de BD externa
+    # Si usas BD interna (--profile internal-db), asegúrate de que SQL Server esté listo antes del backend
+    # El backend maneja reconexiones automáticas con TypeORM
     networks:
       - track_iq_production_sql_server
     logging:

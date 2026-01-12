@@ -2,10 +2,12 @@ import { defineConfig } from "cypress";
 
 export default defineConfig({
   e2e: {
-    baseUrl: "http://localhost:5173", // Vite default port
+    baseUrl: "http://192.168.68.108/", // Vite default port
+    // baseUrl: "http://localhost:5173", // Vite default port
     env: {
       // URL del backend de testing (diferente del dev/prod)
-      apiUrl: "http://localhost:3001",
+      apiUrl: "http://192.168.68.108:3000",
+      // apiUrl: "http://localhost:3001",
     },
     setupNodeEvents(on, config) {
       // implement node event listeners here
