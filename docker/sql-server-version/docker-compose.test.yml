@@ -1,0 +1,73 @@
+# Track.IO - Docker Compose para Testing (E2E con Cypress) - SQL Server
+# Este compose crea un entorno aislado para testing que no interfiere con dev/prod
+
+services:
+  sqlserver_test:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: track_io_sqlserver_test
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${MSSQL_SA_PASSWORD_TEST:-YourStrong@Password123Test}
+      MSSQL_PID: "Developer"
+    ports:
+      - "1435:1433"  # Puerto diferente para testing (1435) para no conflictuar con dev/prod (1434)
+    volumes:
+      - sqlserver_test_data:/var/opt/mssql
+    networks:
+      - track_io_test_network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q \"SELECT 1\" -C || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend_test:
+    build:
+      context: ../../backend-receptor
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: track_io_backend_sqlserver_test
+    restart: unless-stopped
+    environment:
+      NODE_ENV: test
+      PORT: 3001  # Puerto diferente para testing
+      DATABASE_TYPE: mssql
+      DATABASE_HOST: sqlserver_test
+      DATABASE_PORT: 1433
+      DATABASE_USERNAME: sa
+      DATABASE_PASSWORD: ${MSSQL_SA_PASSWORD_TEST:-YourStrong@Password123Test}
+      DATABASE_NAME: ${MSSQL_DB_TEST:-track_io_test}
+      DATABASE_URL: mssql://sa:${MSSQL_SA_PASSWORD_TEST:-YourStrong@Password123Test}@sqlserver_test:1433/${MSSQL_DB_TEST:-track_io_test}
+      CORS_ORIGIN: '*'
+      # Permitir sincronización de schema en testing
+      TYPEORM_SYNCHRONIZE: "true"
+      MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
+      MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
+      # Configuración SSL para testing (deshabilitada por defecto)
+      MSSQL_ENCRYPT: ${MSSQL_ENCRYPT_TEST:-false}
+      MSSQL_TRUST_SERVER_CERTIFICATE: ${MSSQL_TRUST_SERVER_CERTIFICATE_TEST:-true}
+    ports:
+      - "3001:3001"  # Puerto diferente para testing
+    depends_on:
+      sqlserver_test:
+        condition: service_healthy
+    networks:
+      - track_io_test_network
+    healthcheck:
+      # Verificar que el backend responda en el puerto configurado
+      # Usar wget para hacer una petición HTTP básica
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  sqlserver_test_data:
+    name: track_io_sqlserver_test_data
+
+networks:
+  track_io_test_network:
+    name: track_io_test_network
+    driver: bridge

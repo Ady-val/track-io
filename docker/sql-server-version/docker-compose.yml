@@ -1,0 +1,71 @@
+services:
+  track_io_sql_server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: track-io-sqlserver
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong@Password123}
+      MSSQL_PID: "Developer"
+    ports:
+      - "1434:1433"  # Exponer SQL Server en puerto 1434 (host) -> 1433 (container)
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - track_io_network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q \"SELECT 1\" -C || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ../../backend-receptor
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: track_io_backend_sqlserver
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      DATABASE_TYPE: mssql
+      DATABASE_HOST: track_io_sql_server
+      DATABASE_PORT: 1433
+      DATABASE_USERNAME: sa
+      DATABASE_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong@Password123}
+      DATABASE_NAME: ${MSSQL_DB:-track_io_test}
+      DATABASE_URL: mssql://sa:${MSSQL_SA_PASSWORD:-YourStrong@Password123}@track_io_sql_server:1433/${MSSQL_DB:-track_io_test}
+      CORS_ORIGIN: '*'
+      MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
+      MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
+    ports:
+      - "0.0.0.0:3000:3000"  # Exponer en todas las interfaces de red para acceso remoto
+    depends_on:
+      track_io_sql_server:
+        condition: service_healthy
+    networks:
+      - track_io_network
+    # Migrations should be run manually if needed, or use synchronize in development
+
+  nginx:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.unified
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}  # URL del backend para los frontends
+    container_name: track_io_nginx_sqlserver
+    restart: always
+    ports:
+      - "0.0.0.0:80:80"  # Exponer en todas las interfaces de red para acceso remoto
+    depends_on:
+      - backend
+    networks:
+      - track_io_network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  track_io_network:
+    driver: bridge
