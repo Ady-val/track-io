@@ -47,7 +47,7 @@ export class DeviceRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('device.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(device.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }

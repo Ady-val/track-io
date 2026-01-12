@@ -32,7 +32,6 @@ export class AlertRule {
   measurementId!: number;
 
   @Column({
-    type: 'enum',
     enum: AlertRuleMode,
   })
   mode!: AlertRuleMode;
@@ -61,24 +60,24 @@ export class AlertRule {
   })
   maxValue?: number;
 
-  @Column({ name: 'is_enabled', type: 'boolean', default: true })
+  @Column({ name: 'is_enabled',  default: true })
   isEnabled!: boolean;
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
-    type: 'timestamp with time zone',
+    
     nullable: true,
   })
   deletedAt?: Date;

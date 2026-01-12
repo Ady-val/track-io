@@ -28,24 +28,24 @@ export class Device {
   @Column({ name: 'external_id', type: 'varchar', length: 255, unique: true })
   externalId!: string;
 
-  @Column({ name: 'is_virtual_device', type: 'boolean', default: false })
+  @Column({ name: 'is_virtual_device',  default: false })
   isVirtualDevice!: boolean;
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
-    type: 'timestamp with time zone',
+    
   })
   deletedAt?: Date;
 

@@ -55,7 +55,7 @@ export class DeviceSignalRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('deviceSignal.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(deviceSignal.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }

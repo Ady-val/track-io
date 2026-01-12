@@ -42,19 +42,61 @@ import { SystemModuleGuard } from './common/guards/system-module.guard';
     HttpModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres' as const,
+      useFactory: (configService: ConfigService) => {
+        // Determine database type from environment variable (default: postgres)
+        const databaseType = (configService.get<string>('DATABASE_TYPE') ?? 'postgres').toLowerCase();
+        
+        // Base configuration common to all database types
+        const baseConfig = {
         host: configService.get<string>('DATABASE_HOST') ?? 'localhost',
-        port: configService.get<number>('DATABASE_PORT') ?? 5432,
-        username: configService.get<string>('DATABASE_USERNAME') ?? 'postgres',
-        password: configService.get<string>('DATABASE_PASSWORD') ?? 'postgres',
+          username: configService.get<string>('DATABASE_USERNAME') ?? (databaseType === 'mssql' || databaseType === 'sqlserver' ? 'sa' : 'postgres'),
+          password: configService.get<string>('DATABASE_PASSWORD') ?? (databaseType === 'mssql' || databaseType === 'sqlserver' ? '' : 'postgres'),
         database: configService.get<string>('DATABASE_NAME') ?? 'track_io',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize:
           configService.get<string>('NODE_ENV') === 'development' ||
           configService.get<string>('NODE_ENV') === 'test' ||
           configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true',
-      }),
+        };
+
+        // SQL Server configuration
+        if (databaseType === 'mssql' || databaseType === 'sqlserver') {
+          const portStr = configService.get<string>('DATABASE_PORT');
+          const port = portStr ? parseInt(portStr, 10) : 1433;
+          
+          // Get encrypt setting - default to false for local development
+          // Set MSSQL_ENCRYPT=true to enable encryption
+          const encryptEnv = configService.get<string>('MSSQL_ENCRYPT');
+          const encrypt = encryptEnv === 'true';
+          
+          // Get trustServerCertificate setting - default to true when encrypt is enabled
+          // Set MSSQL_TRUST_SERVER_CERTIFICATE=false to disable trust (only if encrypt=true)
+          const trustCertEnv = configService.get<string>('MSSQL_TRUST_SERVER_CERTIFICATE');
+          const trustServerCertificate = encrypt 
+            ? (trustCertEnv !== 'false') // Default to true when encrypt is enabled
+            : false; // Not needed when encrypt is false
+          
+          return {
+            type: 'mssql' as const,
+            ...baseConfig,
+            port: port,
+            options: {
+              encrypt: encrypt,
+              trustServerCertificate: trustServerCertificate,
+              enableArithAbort: true,
+            },
+          };
+        }
+        
+        // PostgreSQL configuration (default)
+        const portStr = configService.get<string>('DATABASE_PORT');
+        const port = portStr ? parseInt(portStr, 10) : 5432;
+        return {
+          type: 'postgres' as const,
+          ...baseConfig,
+          port: port,
+        };
+      },
       inject: [ConfigService],
     }),
     CatalogsGlobalModule,

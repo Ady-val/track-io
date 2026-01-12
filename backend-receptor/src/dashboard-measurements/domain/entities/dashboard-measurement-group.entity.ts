@@ -49,7 +49,7 @@ export class DashboardMeasurementGroup {
 
   @Column({
     name: 'chart_measurement_ids',
-    type: 'jsonb',
+    type: 'nvarchar', length: 'max',
     nullable: true,
   })
   chartMeasurementIds?: number[];

@@ -29,7 +29,6 @@ export class AlertMessage {
 
   @Column({
     name: 'message_type',
-    type: 'enum',
     enum: MessageType,
   })
   messageType!: MessageType;
@@ -51,13 +50,13 @@ export class AlertMessage {
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 

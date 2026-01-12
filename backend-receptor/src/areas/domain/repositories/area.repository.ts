@@ -41,7 +41,7 @@ export class AreaRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('area.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(area.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }

@@ -27,20 +27,20 @@ export class AreaDowntimeEvent {
 
   @Column({
     name: 'added_at',
-    type: 'timestamp with time zone',
+    
     default: () => 'CURRENT_TIMESTAMP',
   })
   addedAt!: Date;
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 

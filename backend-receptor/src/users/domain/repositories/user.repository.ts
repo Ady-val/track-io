@@ -47,13 +47,13 @@ export class UserRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('user.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(user.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }
 
     if (filters.username) {
-      queryBuilder.andWhere('user.username ILIKE :username', {
+      queryBuilder.andWhere('LOWER(user.username) LIKE LOWER(:username)', {
         username: `%${filters.username}%`,
       });
     }

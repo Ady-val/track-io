@@ -17,13 +17,80 @@ import {
  * - permissions (56 records - CRITICAL for RBAC system)
  * - message_groups (5 records - CRITICAL for alert system)
  * - torreta_colors (8 records - IMPORTANT for torreta system)
+ *
+ * SUPPORTS: PostgreSQL and SQL Server (Microsoft)
  */
 export class InitialSchema1000000000000 implements MigrationInterface {
+  /**
+   * Helper function to detect database type
+   */
+  private isMSSQL(queryRunner: QueryRunner): boolean {
+    return queryRunner.connection.options.type === 'mssql';
+  }
+
+  /**
+   * Helper function to get timestamp column type based on database
+   */
+  private getTimestampType(queryRunner: QueryRunner): string {
+    return this.isMSSQL(queryRunner) ? 'datetimeoffset' : 'timestamp with time zone';
+  }
+
+  /**
+   * Helper function to get default timestamp value based on database
+   */
+  private getTimestampDefault(queryRunner: QueryRunner): string {
+    return this.isMSSQL(queryRunner) ? 'SYSDATETIMEOFFSET()' : 'now()';
+  }
+
+  /**
+   * Helper function to get boolean column type based on database
+   */
+  private getBooleanType(queryRunner: QueryRunner): string {
+    return this.isMSSQL(queryRunner) ? 'bit' : 'boolean';
+  }
+
+  /**
+   * Helper function to get serial/integer type for primary keys based on database
+   */
+  private getSerialType(_queryRunner: QueryRunner): string {
+    // Both PostgreSQL and SQL Server use 'integer' for IDENTITY/SERIAL columns
+    // The generationStrategy handles the difference
+    return 'integer';
+  }
+
+  /**
+   * Helper function to create CHECK constraint for enum in SQL Server
+   */
+  private async createEnumCheckConstraint(
+    queryRunner: QueryRunner,
+    tableName: string,
+    columnName: string,
+    enumValues: string[],
+    constraintName: string
+  ): Promise<void> {
+    if (this.isMSSQL(queryRunner)) {
+      const values = enumValues.map((v) => `'${v.replace(/'/g, "''")}'`).join(', ');
+      // Escape table and column names for SQL Server
+      const escapedTableName = `[${tableName}]`;
+      const escapedColumnName = `[${columnName}]`;
+      await queryRunner.query(
+        `IF NOT EXISTS (SELECT * FROM sys.check_constraints WHERE name = '${constraintName}')
+         ALTER TABLE ${escapedTableName} ADD CONSTRAINT [${constraintName}] 
+         CHECK (${escapedColumnName} IN (${values}));`
+      );
+    }
+    // For PostgreSQL, enum types are handled separately
+  }
+
   public async up(queryRunner: QueryRunner): Promise<void> {
+    const isMSSQL = this.isMSSQL(queryRunner);
     // ============================================================================
-    // STEP 1: Create ENUM types (must be created before tables that use them)
+    // STEP 1: Create ENUM types (PostgreSQL) or prepare for CHECK constraints (SQL Server)
     // ============================================================================
 
+    // For PostgreSQL: Create ENUM types
+    // For SQL Server: ENUMs will be created as CHECK constraints after tables are created
+    if (!isMSSQL) {
     // Measurement type enum
     await queryRunner.query(`
       DO $$ BEGIN
@@ -103,6 +170,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
         WHEN duplicate_object THEN null;
       END $$;
     `);
+    }
 
     // ============================================================================
     // STEP 2: Create base tables (no foreign key dependencies)
@@ -128,19 +196,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -190,19 +258,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -259,25 +327,25 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'is_active',
-            type: 'boolean',
+            type: this.getBooleanType(queryRunner),
             isNullable: false,
-            default: true,
+            default: this.isMSSQL(queryRunner) ? 1 : true,
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -333,19 +401,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -389,25 +457,25 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'is_active',
-            type: 'boolean',
+            type: this.getBooleanType(queryRunner),
             isNullable: false,
-            default: true,
+            default: this.isMSSQL(queryRunner) ? 1 : true,
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -450,19 +518,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -509,15 +577,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -560,6 +628,12 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'type',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
             type: 'enum',
             enum: [
               'temperature',
@@ -569,23 +643,24 @@ export class InitialSchema1000000000000 implements MigrationInterface {
               'flow',
               'vibration',
             ],
+                }),
             isNullable: false,
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -628,15 +703,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -669,15 +744,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -710,9 +785,9 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'virtual_device',
-            type: 'boolean',
+            type: this.getBooleanType(queryRunner),
             isNullable: false,
-            default: false,
+            default: this.isMSSQL(queryRunner) ? 0 : false,
           },
           {
             name: 'reason',
@@ -727,15 +802,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -797,19 +872,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -873,15 +948,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -922,19 +997,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -943,6 +1018,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
     );
 
     // Create partial unique index on roles.name (only for non-deleted roles)
+    // SQL Server supports filtered indexes with same syntax as PostgreSQL
     await queryRunner.query(`
       CREATE UNIQUE INDEX "IDX_ROLES_NAME_UNIQUE" 
       ON roles (name) 
@@ -985,25 +1061,25 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'is_virtual_device',
-            type: 'boolean',
+            type: this.getBooleanType(queryRunner),
             isNullable: false,
-            default: false,
+            default: this.isMSSQL(queryRunner) ? 0 : false,
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -1049,7 +1125,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
         columnNames: ['area_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'areas',
-        onDelete: 'RESTRICT',
+        onDelete: this.isMSSQL(queryRunner) ? 'NO ACTION' : 'RESTRICT',
         onUpdate: 'CASCADE',
         name: 'FK_devices_area_id',
       })
@@ -1091,19 +1167,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -1141,7 +1217,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
         columnNames: ['device_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'devices',
-        onDelete: 'RESTRICT',
+        onDelete: this.isMSSQL(queryRunner) ? 'NO ACTION' : 'RESTRICT',
         onUpdate: 'CASCADE',
         name: 'FK_device_signals_device_id',
       })
@@ -1153,7 +1229,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
         columnNames: ['department_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'departments',
-        onDelete: 'RESTRICT',
+        onDelete: this.isMSSQL(queryRunner) ? 'NO ACTION' : 'RESTRICT',
         onUpdate: 'CASCADE',
         name: 'FK_device_signals_department_id',
       })
@@ -1184,9 +1260,9 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -1245,8 +1321,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'mode',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
             type: 'enum',
             enum: ['setpoint', 'window'],
+                }),
             isNullable: false,
           },
           {
@@ -1278,25 +1361,25 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'is_enabled',
-            type: 'boolean',
+            type: this.getBooleanType(queryRunner),
             isNullable: false,
-            default: true,
+            default: this.isMSSQL(queryRunner) ? 1 : true,
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -1350,13 +1433,27 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'receptor_type',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
             type: 'enum',
             enum: ['telegram', 'torreta', 'correo', 'receptor'],
+                }),
             isNullable: false,
           },
           {
             name: 'message_data',
+            ...(isMSSQL
+              ? {
+                  type: 'nvarchar',
+                  length: 'max',
+                }
+              : {
             type: 'jsonb',
+                }),
             isNullable: false,
           },
           {
@@ -1373,15 +1470,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -1421,7 +1518,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
         columnNames: ['message_group_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'message_groups',
-        onDelete: 'RESTRICT',
+        onDelete: this.isMSSQL(queryRunner) ? 'NO ACTION' : 'RESTRICT',
         name: 'FK_alert_messages_message_group_id',
       })
     );
@@ -1456,15 +1553,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -1529,31 +1626,38 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'status',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
             type: 'enum',
             enum: ['open', 'in-progress', 'closed'],
+                }),
             isNullable: false,
             default: "'open'",
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'in_progress_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
           {
             name: 'closed_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
           {
@@ -1563,9 +1667,9 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'virtual_device',
-            type: 'boolean',
+            type: this.getBooleanType(queryRunner),
             isNullable: false,
-            default: false,
+            default: this.isMSSQL(queryRunner) ? 0 : false,
           },
           {
             name: 'reason',
@@ -1674,12 +1778,12 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'start_time',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
           },
           {
             name: 'end_time',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
           {
@@ -1695,19 +1799,19 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'deleted_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: true,
           },
         ],
@@ -1749,15 +1853,15 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
           {
             name: 'updated_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -1785,90 +1889,240 @@ export class InitialSchema1000000000000 implements MigrationInterface {
     );
 
     // Create area_torreta_configs table (depends on areas)
-    await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "area_torreta_configs" (
-        "id" SERIAL NOT NULL,
-        "area_id" integer NOT NULL,
-        "torreta_external_id" character varying(255) NOT NULL,
-        "configuration_type" "public"."area_torreta_configs_configuration_type_enum" NOT NULL DEFAULT 'area',
-        "is_active" boolean NOT NULL DEFAULT true,
-        "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "deleted_at" TIMESTAMP WITH TIME ZONE,
-        CONSTRAINT "PK_area_torreta_configs" PRIMARY KEY ("id")
+    await queryRunner.createTable(
+      new Table({
+        name: 'area_torreta_configs',
+        columns: [
+          {
+            name: 'id',
+            type: this.getSerialType(queryRunner),
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'area_id',
+            type: 'integer',
+            isNullable: false,
+          },
+          {
+            name: 'torreta_external_id',
+            type: 'varchar',
+            length: '255',
+            isNullable: false,
+          },
+          {
+            name: 'configuration_type',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
+                  type: 'enum',
+                  enum: ['area', 'department'],
+                }),
+            isNullable: false,
+            default: "'area'",
+          },
+          {
+            name: 'is_active',
+            type: this.getBooleanType(queryRunner),
+            isNullable: false,
+            default: this.isMSSQL(queryRunner) ? 1 : true,
+          },
+          {
+            name: 'created_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'updated_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'deleted_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: true,
+          },
+        ],
+      })
+    );
+
+    // Create enum CHECK constraint for SQL Server
+    if (isMSSQL) {
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'area_torreta_configs',
+        'configuration_type',
+        ['area', 'department'],
+        'CK_area_torreta_configs_configuration_type'
       );
-    `);
+    }
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "IDX_area_torreta_configs_area_id_torreta_external_id" 
-      ON "area_torreta_configs" ("area_id", "torreta_external_id");
-    `);
+    await queryRunner.createIndex(
+      'area_torreta_configs',
+      new TableIndex({
+        name: 'IDX_area_torreta_configs_area_id_torreta_external_id',
+        columnNames: ['area_id', 'torreta_external_id'],
+      })
+    );
 
-    await queryRunner.query(`
-      DO $$ BEGIN
-        ALTER TABLE "area_torreta_configs"
-        ADD CONSTRAINT "FK_area_torreta_configs_area_id"
-        FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE CASCADE;
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    await queryRunner.createForeignKey(
+      'area_torreta_configs',
+      new TableForeignKey({
+        columnNames: ['area_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'areas',
+        onDelete: 'CASCADE',
+        name: 'FK_area_torreta_configs_area_id',
+      })
+    );
 
     // Create dashboard_measurement_groups table
-    await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS dashboard_measurement_groups (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        deleted_at TIMESTAMP WITH TIME ZONE NULL
-      );
-    `);
+    await queryRunner.createTable(
+      new Table({
+        name: 'dashboard_measurement_groups',
+        columns: [
+          {
+            name: 'id',
+            type: this.getSerialType(queryRunner),
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'name',
+            type: 'varchar',
+            length: '255',
+            isNullable: false,
+          },
+          {
+            name: 'created_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'updated_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'deleted_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: true,
+          },
+        ],
+      })
+    );
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS IDX_dashboard_measurement_groups_name
-      ON dashboard_measurement_groups (name);
-    `);
+    await queryRunner.createIndex(
+      'dashboard_measurement_groups',
+      new TableIndex({
+        name: 'IDX_dashboard_measurement_groups_name',
+        columnNames: ['name'],
+      })
+    );
 
     // Create dashboard_measurements table (depends on measurements and dashboard_measurement_groups)
-    await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS dashboard_measurements (
-        id SERIAL PRIMARY KEY,
-        measurement_id INTEGER NOT NULL,
-        group_id INTEGER NULL,
-        min_value DECIMAL(10, 2) NOT NULL,
-        max_value DECIMAL(10, 2) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        deleted_at TIMESTAMP WITH TIME ZONE NULL,
-        CONSTRAINT FK_dashboard_measurements_measurement_id
-          FOREIGN KEY (measurement_id)
-          REFERENCES measurements(id)
-          ON DELETE CASCADE
-      );
-    `);
+    await queryRunner.createTable(
+      new Table({
+        name: 'dashboard_measurements',
+        columns: [
+          {
+            name: 'id',
+            type: this.getSerialType(queryRunner),
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'measurement_id',
+            type: 'integer',
+            isNullable: false,
+          },
+          {
+            name: 'group_id',
+            type: 'integer',
+            isNullable: true,
+          },
+          {
+            name: 'min_value',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
+            isNullable: false,
+          },
+          {
+            name: 'max_value',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
+            isNullable: false,
+          },
+          {
+            name: 'created_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'updated_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'deleted_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: true,
+          },
+        ],
+      })
+    );
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS IDX_dashboard_measurements_measurement_id
-      ON dashboard_measurements (measurement_id);
-    `);
+    await queryRunner.createIndex(
+      'dashboard_measurements',
+      new TableIndex({
+        name: 'IDX_dashboard_measurements_measurement_id',
+        columnNames: ['measurement_id'],
+      })
+    );
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS IDX_dashboard_measurements_group_id
-      ON dashboard_measurements (group_id);
-    `);
+    await queryRunner.createIndex(
+      'dashboard_measurements',
+      new TableIndex({
+        name: 'IDX_dashboard_measurements_group_id',
+        columnNames: ['group_id'],
+      })
+    );
 
-    await queryRunner.query(`
-      DO $$ BEGIN
-        ALTER TABLE dashboard_measurements
-        ADD CONSTRAINT FK_dashboard_measurements_group_id
-          FOREIGN KEY (group_id)
-          REFERENCES dashboard_measurement_groups(id)
-          ON DELETE SET NULL;
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    await queryRunner.createForeignKey(
+      'dashboard_measurements',
+      new TableForeignKey({
+        columnNames: ['measurement_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'measurements',
+        onDelete: 'CASCADE',
+        name: 'FK_dashboard_measurements_measurement_id',
+      })
+    );
+
+    await queryRunner.createForeignKey(
+      'dashboard_measurements',
+      new TableForeignKey({
+        columnNames: ['group_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'dashboard_measurement_groups',
+        onDelete: 'SET NULL',
+        name: 'FK_dashboard_measurements_group_id',
+      })
+    );
 
     // Create sessions table (depends on users)
     await queryRunner.createTable(
@@ -1907,9 +2161,9 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -1971,9 +2225,9 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -2037,9 +2291,9 @@ export class InitialSchema1000000000000 implements MigrationInterface {
           },
           {
             name: 'created_at',
-            type: 'timestamp with time zone',
+            type: this.getTimestampType(queryRunner),
             isNullable: false,
-            default: 'now()',
+            default: this.getTimestampDefault(queryRunner),
           },
         ],
       }),
@@ -2085,115 +2339,341 @@ export class InitialSchema1000000000000 implements MigrationInterface {
     );
 
     // Create alert_escalation_configs table (depends on devices and device_signals)
-    await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "alert_escalation_configs" (
-        "id" SERIAL NOT NULL,
-        "device_id" integer NOT NULL,
-        "device_signal_id" integer NOT NULL,
-        "endpoint_url" character varying(500) NOT NULL DEFAULT 'http://host.docker.internal:1880/events',
-        "warning_delay_minutes" integer NOT NULL DEFAULT '20',
-        "escalation1_delay_minutes" integer NOT NULL DEFAULT '40',
-        "escalation2_delay_minutes" integer NOT NULL DEFAULT '60',
-        "escalation3_delay_minutes" integer NOT NULL DEFAULT '80',
-        "is_active" boolean NOT NULL DEFAULT true,
-        "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "deleted_at" TIMESTAMP WITH TIME ZONE,
-        CONSTRAINT "PK_alert_escalation_configs" PRIMARY KEY ("id")
-      );
-    `);
+    await queryRunner.createTable(
+      new Table({
+        name: 'alert_escalation_configs',
+        columns: [
+          {
+            name: 'id',
+            type: this.getSerialType(queryRunner),
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'device_id',
+            type: 'integer',
+            isNullable: false,
+          },
+          {
+            name: 'device_signal_id',
+            type: 'integer',
+            isNullable: false,
+          },
+          {
+            name: 'endpoint_url',
+            type: 'varchar',
+            length: '500',
+            isNullable: false,
+            default: "'http://host.docker.internal:1880/events'",
+          },
+          {
+            name: 'warning_delay_minutes',
+            type: 'integer',
+            isNullable: false,
+            default: '20',
+          },
+          {
+            name: 'escalation1_delay_minutes',
+            type: 'integer',
+            isNullable: false,
+            default: '40',
+          },
+          {
+            name: 'escalation2_delay_minutes',
+            type: 'integer',
+            isNullable: false,
+            default: '60',
+          },
+          {
+            name: 'escalation3_delay_minutes',
+            type: 'integer',
+            isNullable: false,
+            default: '80',
+          },
+          {
+            name: 'is_active',
+            type: this.getBooleanType(queryRunner),
+            isNullable: false,
+            default: this.isMSSQL(queryRunner) ? 1 : true,
+          },
+          {
+            name: 'created_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'updated_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'deleted_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: true,
+          },
+        ],
+      })
+    );
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "IDX_alert_escalation_configs_device_signal" 
-      ON "alert_escalation_configs" ("device_id", "device_signal_id");
-    `);
+    await queryRunner.createIndex(
+      'alert_escalation_configs',
+      new TableIndex({
+        name: 'IDX_alert_escalation_configs_device_signal',
+        columnNames: ['device_id', 'device_signal_id'],
+      })
+    );
 
-    await queryRunner.query(`
-      DO $$ BEGIN
-        ALTER TABLE "alert_escalation_configs" 
-        ADD CONSTRAINT "FK_alert_escalation_configs_device" 
-        FOREIGN KEY ("device_id") REFERENCES "devices"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    await queryRunner.createForeignKey(
+      'alert_escalation_configs',
+      new TableForeignKey({
+        columnNames: ['device_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'devices',
+        onDelete: 'NO ACTION',
+        onUpdate: 'NO ACTION',
+        name: 'FK_alert_escalation_configs_device',
+      })
+    );
 
-    await queryRunner.query(`
-      DO $$ BEGIN
-        ALTER TABLE "alert_escalation_configs" 
-        ADD CONSTRAINT "FK_alert_escalation_configs_device_signal" 
-        FOREIGN KEY ("device_signal_id") REFERENCES "device_signals"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    await queryRunner.createForeignKey(
+      'alert_escalation_configs',
+      new TableForeignKey({
+        columnNames: ['device_signal_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'device_signals',
+        onDelete: 'NO ACTION',
+        onUpdate: 'NO ACTION',
+        name: 'FK_alert_escalation_configs_device_signal',
+      })
+    );
 
     // Create alert_escalation_messages table (depends on alert_escalation_configs)
-    await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "alert_escalation_messages" (
-        "id" SERIAL NOT NULL,
-        "escalation_config_id" integer NOT NULL,
-        "level" "public"."alert_escalation_messages_level_enum" NOT NULL,
-        "message_type" "public"."alert_escalation_messages_message_type_enum" NOT NULL,
-        "target_id" character varying(255) NOT NULL,
-        "message" text NOT NULL,
-        "color" character varying(7),
-        "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "deleted_at" TIMESTAMP WITH TIME ZONE,
-        CONSTRAINT "PK_alert_escalation_messages" PRIMARY KEY ("id")
+    await queryRunner.createTable(
+      new Table({
+        name: 'alert_escalation_messages',
+        columns: [
+          {
+            name: 'id',
+            type: this.getSerialType(queryRunner),
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'escalation_config_id',
+            type: 'integer',
+            isNullable: false,
+          },
+          {
+            name: 'level',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
+                  type: 'enum',
+                  enum: ['alert', 'warning', 'escalation1', 'escalation2', 'escalation3', 'close'],
+                }),
+            isNullable: false,
+          },
+          {
+            name: 'message_type',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
+                  type: 'enum',
+                  enum: ['torreta', 'receptor', 'email'],
+                }),
+            isNullable: false,
+          },
+          {
+            name: 'target_id',
+            type: 'varchar',
+            length: '255',
+            isNullable: false,
+          },
+          {
+            name: 'message',
+            type: 'text',
+            isNullable: false,
+          },
+          {
+            name: 'color',
+            type: 'varchar',
+            length: '7',
+            isNullable: true,
+          },
+          {
+            name: 'created_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'updated_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+            default: this.getTimestampDefault(queryRunner),
+          },
+          {
+            name: 'deleted_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: true,
+          },
+        ],
+      })
+    );
+
+    // Create enum CHECK constraints for SQL Server
+    if (isMSSQL) {
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'alert_escalation_messages',
+        'level',
+        ['alert', 'warning', 'escalation1', 'escalation2', 'escalation3', 'close'],
+        'CK_alert_escalation_messages_level'
       );
-    `);
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'alert_escalation_messages',
+        'message_type',
+        ['torreta', 'receptor', 'email'],
+        'CK_alert_escalation_messages_message_type'
+      );
+    }
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "IDX_alert_escalation_messages_config_level" 
-      ON "alert_escalation_messages" ("escalation_config_id", "level");
-    `);
+    await queryRunner.createIndex(
+      'alert_escalation_messages',
+      new TableIndex({
+        name: 'IDX_alert_escalation_messages_config_level',
+        columnNames: ['escalation_config_id', 'level'],
+      })
+    );
 
-    await queryRunner.query(`
-      DO $$ BEGIN
-        ALTER TABLE "alert_escalation_messages" 
-        ADD CONSTRAINT "FK_alert_escalation_messages_config" 
-        FOREIGN KEY ("escalation_config_id") REFERENCES "alert_escalation_configs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    await queryRunner.createForeignKey(
+      'alert_escalation_messages',
+      new TableForeignKey({
+        columnNames: ['escalation_config_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'alert_escalation_configs',
+        onDelete: 'NO ACTION',
+        onUpdate: 'NO ACTION',
+        name: 'FK_alert_escalation_messages_config',
+      })
+    );
 
     // Create event_alert_logs table (depends on events)
-    await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "event_alert_logs" (
-        "id" SERIAL NOT NULL,
-        "event_id" integer NOT NULL,
-        "level" "public"."event_alert_logs_level_enum" NOT NULL,
-        "sent_at" TIMESTAMP WITH TIME ZONE NOT NULL,
-        "messages_sent" jsonb NOT NULL,
-        "success" boolean NOT NULL,
-        "error_message" text,
-        "endpoint_url" character varying(500) NOT NULL,
-        CONSTRAINT "PK_event_alert_logs" PRIMARY KEY ("id")
+    await queryRunner.createTable(
+      new Table({
+        name: 'event_alert_logs',
+        columns: [
+          {
+            name: 'id',
+            type: this.getSerialType(queryRunner),
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'event_id',
+            type: 'integer',
+            isNullable: false,
+          },
+          {
+            name: 'level',
+            ...(isMSSQL
+              ? {
+                  type: 'varchar',
+                  length: '50',
+                }
+              : {
+                  type: 'enum',
+                  enum: ['alert', 'warning', 'escalation1', 'escalation2', 'escalation3', 'close'],
+                }),
+            isNullable: false,
+          },
+          {
+            name: 'sent_at',
+            type: this.getTimestampType(queryRunner),
+            isNullable: false,
+          },
+          {
+            name: 'messages_sent',
+            ...(isMSSQL
+              ? {
+                  type: 'nvarchar',
+                  length: 'max',
+                }
+              : {
+                  type: 'jsonb',
+                }),
+            isNullable: false,
+          },
+          {
+            name: 'success',
+            type: this.getBooleanType(queryRunner),
+            isNullable: false,
+          },
+          {
+            name: 'error_message',
+            type: 'text',
+            isNullable: true,
+          },
+          {
+            name: 'endpoint_url',
+            type: 'varchar',
+            length: '500',
+            isNullable: false,
+          },
+        ],
+      })
+    );
+
+    // Create enum CHECK constraint for SQL Server
+    if (isMSSQL) {
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'event_alert_logs',
+        'level',
+        ['alert', 'warning', 'escalation1', 'escalation2', 'escalation3', 'close'],
+        'CK_event_alert_logs_level'
       );
-    `);
+    }
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "IDX_event_alert_logs_event_level" 
-      ON "event_alert_logs" ("event_id", "level");
-    `);
+    await queryRunner.createIndex(
+      'event_alert_logs',
+      new TableIndex({
+        name: 'IDX_event_alert_logs_event_level',
+        columnNames: ['event_id', 'level'],
+      })
+    );
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "IDX_event_alert_logs_sent_at" 
-      ON "event_alert_logs" ("sent_at");
-    `);
+    await queryRunner.createIndex(
+      'event_alert_logs',
+      new TableIndex({
+        name: 'IDX_event_alert_logs_sent_at',
+        columnNames: ['sent_at'],
+      })
+    );
 
-    await queryRunner.query(`
-      DO $$ BEGIN
-        ALTER TABLE "event_alert_logs" 
-        ADD CONSTRAINT "FK_event_alert_logs_event" 
-        FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    await queryRunner.createForeignKey(
+      'event_alert_logs',
+      new TableForeignKey({
+        columnNames: ['event_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'events',
+        onDelete: 'NO ACTION',
+        onUpdate: 'NO ACTION',
+        name: 'FK_event_alert_logs_event',
+      })
+    );
 
     // ============================================================================
     // STEP 4: Insert initial data (CRITICAL for system functionality)
@@ -2219,19 +2699,49 @@ export class InitialSchema1000000000000 implements MigrationInterface {
 
     const actions = ['create', 'read', 'update', 'delete'];
 
+    const nowFunc = isMSSQL ? 'SYSDATETIMEOFFSET()' : 'NOW()';
+    const onConflictSQL = isMSSQL 
+      ? '' // SQL Server uses MERGE or IF NOT EXISTS pattern
+      : 'ON CONFLICT (module, action) DO NOTHING';
+
     for (const module of modules) {
       for (const action of actions) {
         const description = `Permission to ${action} ${module}`;
+        if (isMSSQL) {
+          // SQL Server: Use IF NOT EXISTS with @0, @1, @2 placeholders
+          await queryRunner.query(
+            `IF NOT EXISTS (SELECT 1 FROM permissions WHERE module = @0 AND action = @1)
+             INSERT INTO permissions (module, action, description, created_at, updated_at)
+             VALUES (@0, @1, @2, ${nowFunc}, ${nowFunc})`,
+            [module, action, description]
+          );
+        } else {
+          // PostgreSQL
         await queryRunner.query(
           `INSERT INTO permissions (module, action, description, created_at, updated_at)
-           VALUES ($1, $2, $3, NOW(), NOW())
-           ON CONFLICT (module, action) DO NOTHING`,
+             VALUES ($1, $2, $3, ${nowFunc}, ${nowFunc})
+             ${onConflictSQL}`,
           [module, action, description]
         );
+        }
       }
     }
 
     // Insert message_groups (5 records - CRITICAL)
+    if (isMSSQL) {
+      await queryRunner.query(`
+        IF NOT EXISTS (SELECT 1 FROM message_groups WHERE name = 'Alert')
+          INSERT INTO message_groups (name, color, description, [order]) VALUES ('Alert', '#eab308', 'Alerta Amarilla', 1);
+        IF NOT EXISTS (SELECT 1 FROM message_groups WHERE name = 'Warning')
+          INSERT INTO message_groups (name, color, description, [order]) VALUES ('Warning', '#f97316', 'Advertencia Naranja', 2);
+        IF NOT EXISTS (SELECT 1 FROM message_groups WHERE name = 'Critical')
+          INSERT INTO message_groups (name, color, description, [order]) VALUES ('Critical', '#ef4444', 'Crítico Rojo', 3);
+        IF NOT EXISTS (SELECT 1 FROM message_groups WHERE name = 'Final Escalation')
+          INSERT INTO message_groups (name, color, description, [order]) VALUES ('Final Escalation', '#dc2626', 'Escalación Final Rojo Oscuro', 4);
+        IF NOT EXISTS (SELECT 1 FROM message_groups WHERE name = 'Running')
+          INSERT INTO message_groups (name, color, description, [order]) VALUES ('Running', '#22c55e', 'En Funcionamiento Verde', 5);
+      `);
+    } else {
     await queryRunner.query(`
       INSERT INTO message_groups (name, color, description, "order") VALUES
       ('Alert', '#eab308', 'Alerta Amarilla', 1),
@@ -2241,8 +2751,29 @@ export class InitialSchema1000000000000 implements MigrationInterface {
       ('Running', '#22c55e', 'En Funcionamiento Verde', 5)
       ON CONFLICT (name) DO NOTHING;
     `);
+    }
 
     // Insert torreta_colors (8 records - IMPORTANT)
+    if (isMSSQL) {
+      await queryRunner.query(`
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Rojo')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Rojo', '#ef4444', 'R1', 1);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Verde')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Verde', '#22c55e', 'G1', 2);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Azul')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Azul', '#3b82f6', 'B1', 3);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Amarillo')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Amarillo', '#eab308', 'Y1', 4);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Naranja')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Naranja', '#f97316', 'O1', 5);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Morado')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Morado', '#a855f7', 'P1', 6);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Rosa')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Rosa', '#ec4899', 'PK1', 7);
+        IF NOT EXISTS (SELECT 1 FROM torreta_colors WHERE name = 'Blanco')
+          INSERT INTO torreta_colors (name, html_color, device_color_id, [order]) VALUES ('Blanco', '#ffffff', 'W1', 8);
+      `);
+    } else {
     await queryRunner.query(`
       INSERT INTO torreta_colors (name, html_color, device_color_id, "order") VALUES
       ('Rojo', '#ef4444', 'R1', 1),
@@ -2255,6 +2786,46 @@ export class InitialSchema1000000000000 implements MigrationInterface {
       ('Blanco', '#ffffff', 'W1', 8)
       ON CONFLICT (name) DO NOTHING;
     `);
+    }
+
+    // ============================================================================
+    // STEP 5: Create CHECK constraints for ENUMs in SQL Server
+    // ============================================================================
+    
+    if (isMSSQL) {
+      // Create CHECK constraints for enum columns in SQL Server
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'measurements',
+        'type',
+        ['temperature', 'humidity', 'pressure', 'level', 'flow', 'vibration'],
+        'CK_measurements_type'
+      );
+
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'events',
+        'status',
+        ['open', 'in-progress', 'closed'],
+        'CK_events_status'
+      );
+
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'alert_rules',
+        'mode',
+        ['setpoint', 'window'],
+        'CK_alert_rules_mode'
+      );
+
+      await this.createEnumCheckConstraint(
+        queryRunner,
+        'alert_messages',
+        'receptor_type',
+        ['telegram', 'torreta', 'correo', 'receptor'],
+        'CK_alert_messages_receptor_type'
+      );
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -2298,7 +2869,30 @@ export class InitialSchema1000000000000 implements MigrationInterface {
     await queryRunner.dropTable('departments');
     await queryRunner.dropTable('areas');
 
-    // Drop enum types
+    // Drop enum types (PostgreSQL) or CHECK constraints (SQL Server)
+    const isMSSQL = this.isMSSQL(queryRunner);
+    
+    if (isMSSQL) {
+      // Drop CHECK constraints for SQL Server
+      await queryRunner.query(
+        `IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_measurements_type')
+         ALTER TABLE measurements DROP CONSTRAINT CK_measurements_type;`
+      );
+      await queryRunner.query(
+        `IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_events_status')
+         ALTER TABLE events DROP CONSTRAINT CK_events_status;`
+      );
+      await queryRunner.query(
+        `IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_alert_rules_mode')
+         ALTER TABLE alert_rules DROP CONSTRAINT CK_alert_rules_mode;`
+      );
+      await queryRunner.query(
+        `IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_alert_messages_receptor_type')
+         ALTER TABLE alert_messages DROP CONSTRAINT CK_alert_messages_receptor_type;`
+      );
+      // Add more CHECK constraints drops if needed for other enum columns
+    } else {
+      // Drop ENUM types for PostgreSQL
     await queryRunner.query(
       `DROP TYPE IF EXISTS "public"."event_alert_logs_level_enum"`
     );
@@ -2323,5 +2917,6 @@ export class InitialSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(
       `DROP TYPE IF EXISTS "public"."measurements_type_enum"`
     );
+    }
   }
 }

@@ -11,7 +11,7 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
-  UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../application/services/user.service';
@@ -21,8 +21,8 @@ import {
   UserResponseDto,
 } from '../application/dtos/user.dto';
 import { UserFilters } from '../domain/repositories/user.repository';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { PermissionGuard } from '../../permissions/guards/permission.guard';
+// import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+// import { PermissionGuard } from '../../permissions/guards/permission.guard';
 import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
 import {
   Module,
@@ -32,7 +32,7 @@ import { RoleResponseDto } from '../../permissions/application/dtos/role.dto';
 import { PermissionResponseDto } from '../../permissions/application/dtos/permission.dto';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, PermissionGuard)
+// @UseGuards(JwtAuthGuard, PermissionGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

@@ -53,7 +53,6 @@ export class Event {
   deviceSignalName!: string;
 
   @Column({
-    type: 'enum',
     enum: EventStatus,
     default: EventStatus.OPEN,
   })
@@ -61,26 +60,22 @@ export class Event {
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
   })
   updatedAt!: Date;
 
   @Column({
     name: 'in_progress_at',
-    type: 'timestamp with time zone',
     nullable: true,
   })
   inProgressAt?: Date;
 
   @Column({
     name: 'closed_at',
-    type: 'timestamp with time zone',
     nullable: true,
   })
   closedAt?: Date;
@@ -92,7 +87,7 @@ export class Event {
   })
   durationSeconds?: number;
 
-  @Column({ name: 'virtual_device', type: 'boolean', default: false })
+  @Column({ name: 'virtual_device',  default: false })
   virtualDevice!: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

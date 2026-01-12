@@ -44,13 +44,13 @@ export class EmailRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('email.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(email.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }
 
     if (filters.email) {
-      queryBuilder.andWhere('email.email ILIKE :email', {
+      queryBuilder.andWhere('LOWER(email.email) LIKE LOWER(:email)', {
         email: `%${filters.email}%`,
       });
     }

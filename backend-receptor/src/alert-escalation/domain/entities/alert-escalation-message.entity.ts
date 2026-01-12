@@ -37,14 +37,12 @@ export class AlertEscalationMessage {
 
   @Column({
     name: 'level',
-    type: 'enum',
     enum: AlertLevel,
   })
   level!: AlertLevel;
 
   @Column({
     name: 'message_type',
-    type: 'enum',
     enum: MessageType,
   })
   messageType!: MessageType;
@@ -60,19 +58,19 @@ export class AlertEscalationMessage {
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
-    type: 'timestamp with time zone',
+    
     nullable: true,
   })
   deletedAt?: Date;

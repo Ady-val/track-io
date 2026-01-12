@@ -35,12 +35,12 @@ export class AlertTrigger {
   @Column({ name: 'condition_result', type: 'varchar', length: 500 })
   conditionResult!: string;
 
-  @Column({ name: 'messages_triggered', type: 'jsonb' })
+  @Column({ name: 'messages_triggered', type: 'nvarchar', length: 'max' })
   messagesTriggered!: number[];
 
   @CreateDateColumn({
     name: 'triggered_at',
-    type: 'timestamp with time zone',
+    
   })
   triggeredAt!: Date;
 

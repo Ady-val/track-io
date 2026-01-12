@@ -21,18 +21,17 @@ export class EventAlertLog {
 
   @Column({
     name: 'level',
-    type: 'enum',
     enum: AlertLevel,
   })
   level!: AlertLevel;
 
-  @Column({ name: 'sent_at', type: 'timestamp with time zone' })
+  @Column({ name: 'sent_at' })
   sentAt!: Date;
 
-  @Column({ name: 'messages_sent', type: 'jsonb' })
+  @Column({ name: 'messages_sent', type: 'nvarchar', length: 'max' })
   messagesSent!: unknown[];
 
-  @Column({ name: 'success', type: 'boolean' })
+  @Column({ name: 'success' })
   success!: boolean;
 
   @Column({ name: 'error_message', type: 'text', nullable: true })

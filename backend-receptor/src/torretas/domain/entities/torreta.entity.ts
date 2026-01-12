@@ -27,24 +27,21 @@ export class Torreta {
   })
   externalId?: string;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
+  @Column({ name: 'is_active', default: true })
   isActive!: boolean;
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
   })
   updatedAt!: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
-    type: 'timestamp with time zone',
     nullable: true,
   })
   deletedAt?: Date;

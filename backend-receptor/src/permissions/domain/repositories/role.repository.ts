@@ -44,7 +44,7 @@ export class RoleRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('role.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(role.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }

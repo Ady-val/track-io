@@ -124,6 +124,12 @@ declare global {
        * @example cy.visitAlertsPage()
        */
       visitAlertsPage(): Chainable<void>;
+
+      /**
+       * Navega a la página de measurements usando el sidebar
+       * @example cy.visitMeasurementsPage()
+       */
+      visitMeasurementsPage(): Chainable<void>;
     }
   }
 }
@@ -677,6 +683,35 @@ Cypress.Commands.add("visitAlertsPage", () => {
 
   // Esperar a que la página cargue verificando el título
   cy.contains("Monitoreo de Condiciones", { timeout: 10000 }).should(
+    "be.visible"
+  );
+});
+
+/**
+ * Navega a la página de measurements usando el sidebar
+ */
+Cypress.Commands.add("visitMeasurementsPage", () => {
+  // Asegurarse de estar en el dashboard
+  cy.url({ timeout: 10000 }).should("include", "/dashboard");
+
+  // Esperar a que el sidebar esté completamente cargado
+  cy.get('a[href="/dashboard/measurements"]', { timeout: 10000 }).should(
+    "be.visible"
+  );
+
+  // Si ya estamos en la página de measurements, no hacer nada
+  cy.url().then((url) => {
+    if (!url.includes("/dashboard/measurements")) {
+      // Hacer click en el link de Measurements en el sidebar
+      cy.get('a[href="/dashboard/measurements"]').click();
+
+      // Esperar a que la URL cambie
+      cy.url({ timeout: 10000 }).should("include", "/dashboard/measurements");
+    }
+  });
+
+  // Esperar a que la página cargue verificando el título
+  cy.contains("Dashboard de Mediciones", { timeout: 10000 }).should(
     "be.visible"
   );
 });

@@ -25,33 +25,33 @@ export class AreaDowntime {
 
   @Column({
     name: 'start_at',
-    type: 'timestamp with time zone',
+    
   })
   startAt!: Date;
 
   @Column({
     name: 'is_active',
-    type: 'boolean',
+    
     default: true,
   })
   isActive!: boolean;
 
   @Column({
     name: 'ends_at',
-    type: 'timestamp with time zone',
+    
     nullable: true,
   })
   endsAt?: Date;
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 

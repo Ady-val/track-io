@@ -20,7 +20,7 @@ export class RawMeasurement {
   @Column({ type: 'varchar', length: 255 })
   value!: string;
 
-  @Column({ name: 'virtual_device', type: 'boolean', default: false })
+  @Column({ name: 'virtual_device',  default: false })
   virtualDevice!: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -31,13 +31,13 @@ export class RawMeasurement {
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp with time zone',
+    
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    
   })
   updatedAt!: Date;
 }

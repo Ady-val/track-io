@@ -44,7 +44,7 @@ export class DepartmentRepository {
     }
 
     if (filters.name) {
-      queryBuilder.andWhere('department.name ILIKE :name', {
+      queryBuilder.andWhere('LOWER(department.name) LIKE LOWER(:name)', {
         name: `%${filters.name}%`,
       });
     }
