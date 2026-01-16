@@ -123,7 +123,31 @@ docker compose -f docker-compose.prod.yml --env-file .env.production --env-file 
 echo ""
 if [ $REBUILD_NEEDED -eq 1 ]; then
     echo "🔨 Reconstruyendo servicios con nueva IP..."
-    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod
+    # Opcional: usar builder legacy si BuildKit causa problemas de red
+    if [ "${FORCE_LEGACY_DOCKER_BUILD:-}" = "1" ]; then
+        export DOCKER_BUILDKIT=0
+        export COMPOSE_DOCKER_CLI_BUILD=0
+    fi
+
+    # Reintentos para mitigar fallos DNS intermitentes (EAI_AGAIN)
+    BUILD_ATTEMPTS=${BUILD_ATTEMPTS:-3}
+    BUILD_SLEEP=${BUILD_SLEEP:-5}
+    BUILD_OK=0
+    for i in $(seq 1 "$BUILD_ATTEMPTS"); do
+        if docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod; then
+            BUILD_OK=1
+            break
+        fi
+        if [ "$i" -lt "$BUILD_ATTEMPTS" ]; then
+            echo "   ⚠️  Fallo en build (intento $i). Reintentando en ${BUILD_SLEEP}s..."
+            sleep "$BUILD_SLEEP"
+        fi
+    done
+    if [ "$BUILD_OK" -ne 1 ]; then
+        echo "❌ Falló el build de nginx_prod tras $BUILD_ATTEMPTS intentos."
+        echo "   Posible problema de DNS/red. Revisa la conectividad a registry.npmjs.org"
+        exit 1
+    fi
     docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d --build
 else
     echo "▶️  Iniciando servicios sin rebuild..."
