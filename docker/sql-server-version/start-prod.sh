@@ -35,16 +35,24 @@ echo "🔍 Detectando IP del equipo..."
 
 # Detectar la IP de la interfaz de red principal (activa, no virtual)
 # Usa la IP de la ruta por defecto, que es la interfaz de red principal activa
-HOST_IP=$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K[\d.]+' | head -n 1)
+HOST_IP=$(ip -4 route show default 2>/dev/null | grep -oP 'src \K[\d.]+' | head -n 1)
 
-# Si no se encuentra usando ip route, intentar obtener de interfaces activas (excluyendo Docker/virtuales)
+# Si no se encuentra usando la ruta por defecto, intentar desde la interfaz de la ruta por defecto
 if [ -z "$HOST_IP" ]; then
-    HOST_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127\.|^169\.254\.|^172\.(17|22)\.' | head -n 1)
+    DEFAULT_IFACE=$(ip -4 route show default 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p' | head -n 1)
+    if [ -n "$DEFAULT_IFACE" ]; then
+        HOST_IP=$(ip -4 addr show dev "$DEFAULT_IFACE" scope global 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
+    fi
 fi
 
-# Si aún no se encuentra, usar hostname -I pero filtrar IPs de Docker/virtuales
+# Si no se encuentra usando la ruta por defecto, intentar obtener de interfaces globales (excluyendo virtuales)
 if [ -z "$HOST_IP" ]; then
-    HOST_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -vE '^127\.|^169\.254\.|^172\.(17|22)\.' | head -n 1)
+    HOST_IP=$(ip -4 addr show scope global 2>/dev/null | grep -vE 'scope global.*(docker|br-|veth|virbr|lo)' | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
+fi
+
+# Si aún no se encuentra, usar hostname -I pero filtrar IPs de localhost/link-local
+if [ -z "$HOST_IP" ]; then
+    HOST_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -vE '^127\.|^169\.254\.' | head -n 1)
 fi
 
 if [ -z "$HOST_IP" ]; then
