@@ -63,19 +63,15 @@ fi
 
 echo "   IP detectada: $HOST_IP"
 
-# Verificar si ya existe .env.host.prod y si la IP cambió
+# Verificar si ya existe .env.host.prod para comparar configuración
 REBUILD_NEEDED=1
 OLD_IP=""
+OLD_VITE_API_URL=""
+OLD_CORS_ORIGIN=""
 if [ -f .env.host.prod ]; then
     OLD_IP=$(grep "^HOST_IP=" .env.host.prod | cut -d'=' -f2 | tr -d '\n\r')
-    if [ "$OLD_IP" = "$HOST_IP" ]; then
-        echo "   IP no ha cambiado ($HOST_IP), omitiendo rebuild..."
-        REBUILD_NEEDED=0
-    else
-        echo "   IP cambió de $OLD_IP a $HOST_IP, rebuild necesario..."
-    fi
-else
-    echo "   Primera ejecución, generando configuración..."
+    OLD_VITE_API_URL=$(grep "^VITE_API_URL_PROD=" .env.host.prod | cut -d'=' -f2- | tr -d '\n\r')
+    OLD_CORS_ORIGIN=$(grep "^CORS_ORIGIN_PROD=" .env.host.prod | cut -d'=' -f2- | tr -d '\n\r')
 fi
 
 echo ""
@@ -96,9 +92,25 @@ else
     CORS_ORIGIN="http://localhost:${NGINX_PORT_PROD:-80},http://$HOST_IP:${NGINX_PORT_PROD:-80}"
 fi
 
+DESIRED_VITE_API_URL="http://$HOST_IP:${BACKEND_PORT_PROD:-3000}"
+
+# Determinar si es necesario rebuild según cambios detectados
+if [ -f .env.host.prod ]; then
+    if [ "$OLD_IP" = "$HOST_IP" ] && \
+       [ "$OLD_VITE_API_URL" = "$DESIRED_VITE_API_URL" ] && \
+       [ "$OLD_CORS_ORIGIN" = "$CORS_ORIGIN" ]; then
+        echo "   Configuración no ha cambiado, omitiendo rebuild..."
+        REBUILD_NEEDED=0
+    else
+        echo "   Configuración cambió, rebuild necesario..."
+    fi
+else
+    echo "   Primera ejecución, generando configuración..."
+fi
+
 cat > .env.host.prod << EOF
 HOST_IP=$HOST_IP
-VITE_API_URL_PROD=http://$HOST_IP:${BACKEND_PORT_PROD:-3000}
+VITE_API_URL_PROD=$DESIRED_VITE_API_URL
 CORS_ORIGIN_PROD=$CORS_ORIGIN
 EOF
 
