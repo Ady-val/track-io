@@ -99,22 +99,22 @@ echo    CORS_ORIGIN configurado: %CORS_ORIGIN%
 
 echo.
 echo 🐳 Deteniendo contenedores existentes...
-docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod down
+docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod --profile internal-db down
 
 echo.
 if %REBUILD_NEEDED%==1 (
     echo 🔨 Reconstruyendo servicios con nueva IP...
-    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod
-    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d --build
+    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod --profile internal-db build --no-cache nginx_prod
+    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod --profile internal-db up -d --build
 ) else (
     echo ▶️  Iniciando servicios sin rebuild...
-    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d
+    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod --profile internal-db up -d
 )
 
 if %ERRORLEVEL% neq 0 (
     echo.
     echo ❌ Error al iniciar los servicios
-    echo    Revisa los logs: docker compose -f docker-compose.prod.yml logs
+    echo    Revisa los logs: docker compose -f docker-compose.prod.yml --profile internal-db logs
     pause
     exit /b 1
 )
@@ -145,8 +145,8 @@ echo    - Backend NestJS (Node.js)
 echo    - Nginx (Reverse Proxy)
 echo.
 echo 📝 Comandos útiles:
-echo    Ver logs:          docker compose -f docker-compose.prod.yml logs -f
-echo    Ver estado:        docker compose -f docker-compose.prod.yml ps
+echo    Ver logs:          docker compose -f docker-compose.prod.yml --profile internal-db logs -f
+echo    Ver estado:        docker compose -f docker-compose.prod.yml --profile internal-db ps
 echo    Detener:           stop-prod.bat
 echo.
 pause
