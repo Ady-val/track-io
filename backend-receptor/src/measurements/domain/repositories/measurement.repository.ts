@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Measurement } from '../entities/measurement.entity';
 import {
   CreateMeasurementDto,
@@ -76,7 +76,7 @@ export class MeasurementRepository {
     externalId: string
   ): Promise<Measurement | null> {
     return await this.measurementRepository.findOne({
-      where: { externalId, deletedAt: null },
+      where: { externalId, deletedAt: IsNull() },
     });
   }
 
