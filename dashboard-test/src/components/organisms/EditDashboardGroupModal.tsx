@@ -193,17 +193,27 @@ export const EditDashboardGroupModal: React.FC<
     append({ dashboardMeasurementId: measurementId });
   };
 
-  const handleRemoveMeasurement = (index: number) => {
-    const removedMeasurement = selectedDashboardMeasurements[index];
+  const handleRemoveMeasurement = (dashboardMeasurementId: number) => {
+    const currentMeasurements = form.getValues("dashboardMeasurements") ?? [];
+    const indexToRemove = currentMeasurements.findIndex(
+      (dm) => dm.dashboardMeasurementId === dashboardMeasurementId
+    );
 
-    remove(index);
-    if (removedMeasurement) {
-      const currentChartIds = form.getValues("chartMeasurementIds") ?? [];
-
-      form.setValue(
-        "chartMeasurementIds",
-        currentChartIds.filter((id) => id !== removedMeasurement.measurementId)
+    if (indexToRemove !== -1) {
+      const removedMeasurement = selectedDashboardMeasurements.find(
+        (dm) => dm.id === dashboardMeasurementId
       );
+
+      remove(indexToRemove);
+      
+      if (removedMeasurement) {
+        const currentChartIds = form.getValues("chartMeasurementIds") ?? [];
+
+        form.setValue(
+          "chartMeasurementIds",
+          currentChartIds.filter((id) => id !== removedMeasurement.measurementId)
+        );
+      }
     }
   };
 
@@ -220,12 +230,14 @@ export const EditDashboardGroupModal: React.FC<
     }
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    if (!group) return;
+  const handleSubmit = form.handleSubmit(
+    async (data) => {
+      if (!group) return;
 
-    try {
-      clearAllErrors();
+      try {
+        clearAllErrors();
 
+      // Preparar valores de gráfica solo si alguno tiene valor
       const chartTimeRangeValue =
         typeof data.chartTimeRange === "number"
           ? data.chartTimeRange
@@ -233,35 +245,57 @@ export const EditDashboardGroupModal: React.FC<
             ? Number(data.chartTimeRange)
             : undefined;
 
+      const chartMinValue =
+        typeof data.chartMinValue === "number" ? data.chartMinValue : undefined;
+      const chartMaxValue =
+        typeof data.chartMaxValue === "number" ? data.chartMaxValue : undefined;
+      const chartMeasurementIds =
+        data.chartMeasurementIds && data.chartMeasurementIds.length > 0
+          ? data.chartMeasurementIds
+          : undefined;
+
+      // Solo incluir campos de gráfica si al menos uno tiene valor
+      const hasChartConfig =
+        chartTimeRangeValue !== undefined ||
+        chartMinValue !== undefined ||
+        chartMaxValue !== undefined ||
+        chartMeasurementIds !== undefined;
+
       const submitData: UpdateDashboardMeasurementGroupData = {
-        name: data.name?.trim(),
-        dashboardMeasurements: data.dashboardMeasurements,
-        ...(chartTimeRangeValue !== undefined ||
-        data.chartMinValue !== undefined ||
-        data.chartMaxValue !== undefined ||
-        (data.chartMeasurementIds && data.chartMeasurementIds.length > 0)
+        ...(data.name?.trim() ? { name: data.name.trim() } : {}),
+        ...(data.dashboardMeasurements &&
+        data.dashboardMeasurements.length > 0
+          ? { dashboardMeasurements: data.dashboardMeasurements }
+          : {}),
+        ...(hasChartConfig
           ? {
-              chartTimeRange: chartTimeRangeValue,
-              chartMinValue:
-                typeof data.chartMinValue === "number"
-                  ? data.chartMinValue
-                  : undefined,
-              chartMaxValue:
-                typeof data.chartMaxValue === "number"
-                  ? data.chartMaxValue
-                  : undefined,
-              chartMeasurementIds: data.chartMeasurementIds,
+              ...(chartTimeRangeValue !== undefined
+                ? { chartTimeRange: chartTimeRangeValue }
+                : {}),
+              ...(chartMinValue !== undefined
+                ? { chartMinValue }
+                : {}),
+              ...(chartMaxValue !== undefined ? { chartMaxValue } : {}),
+              ...(chartMeasurementIds !== undefined
+                ? { chartMeasurementIds }
+                : {}),
             }
           : {}),
       };
 
-      await onSubmit(group.id, submitData);
-      toast.success("Grupo actualizado exitosamente");
-      onClose();
-    } catch (error) {
-      handleBackendError(error);
+        await onSubmit(group.id, submitData);
+        toast.success("Grupo actualizado exitosamente");
+        onClose();
+      } catch (error) {
+        handleBackendError(error);
+      }
+    },
+    (errors) => {
+      // Manejar errores de validación del formulario
+      console.error("Errores de validación:", errors);
+      // Los errores ya se muestran automáticamente por react-hook-form
     }
-  });
+  );
 
   const handleClose = () => {
     if (group) {
@@ -287,6 +321,35 @@ export const EditDashboardGroupModal: React.FC<
       size="lg"
       title="Editar Grupo de Dashboard Measurements"
       onClose={handleClose}
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            className="px-6 py-2 font-semibold"
+            color="default"
+            disabled={form.formState.isSubmitting}
+            size="md"
+            variant="solid"
+            onPress={handleClose}
+          >
+            <FaXmark className="mr-2" />
+            Cancelar
+          </Button>
+          <Button
+            className="px-6 py-2 font-semibold"
+            color="primary"
+            disabled={form.formState.isSubmitting}
+            isLoading={form.formState.isSubmitting}
+            size="md"
+            variant="solid"
+            onPress={() => {
+              void handleSubmit();
+            }}
+          >
+            <FaFloppyDisk className="mr-2" />
+            Guardar Cambios
+          </Button>
+        </div>
+      }
     >
       <div className="flex flex-col flex-1 min-h-0">
         <form
@@ -344,7 +407,7 @@ export const EditDashboardGroupModal: React.FC<
 
             {selectedDashboardMeasurements.length > 0 && (
               <div className="mb-4 space-y-2">
-                {selectedDashboardMeasurements.map((dm, index) => (
+                {selectedDashboardMeasurements.map((dm) => (
                   <div
                     key={dm.id}
                     className="bg-slate-700/50 rounded-lg p-3 border border-slate-600 flex items-center justify-between"
@@ -358,7 +421,7 @@ export const EditDashboardGroupModal: React.FC<
                       size="sm"
                       type="button"
                       variant="flat"
-                      onPress={() => handleRemoveMeasurement(index)}
+                      onPress={() => handleRemoveMeasurement(dm.id)}
                     >
                       <FaTrash className="w-4 h-4" />
                     </Button>
@@ -413,13 +476,13 @@ export const EditDashboardGroupModal: React.FC<
                           name={field.name}
                           value={field.value ? String(field.value) : ""}
                           onBlur={field.onBlur}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Convertir string vacío a undefined explícitamente
                             field.onChange(
-                              e.target.value
-                                ? Number(e.target.value)
-                                : undefined
-                            )
-                          }
+                              value && value !== "" ? Number(value) : undefined
+                            );
+                          }}
                         >
                           <option value="">Seleccionar tiempo...</option>
                           <option value="1">1 minuto</option>
@@ -655,34 +718,6 @@ export const EditDashboardGroupModal: React.FC<
             </CollapsibleSection>
           </div>
         </form>
-
-        <div className="flex items-center justify-end gap-2 pt-4 pb-2 border-t border-slate-600 flex-shrink-0">
-          <Button
-            className="px-6 py-2 font-semibold"
-            color="default"
-            disabled={form.formState.isSubmitting}
-            size="md"
-            variant="solid"
-            onPress={handleClose}
-          >
-            <FaXmark className="mr-2" />
-            Cancelar
-          </Button>
-          <Button
-            className="px-6 py-2 font-semibold"
-            color="primary"
-            disabled={form.formState.isSubmitting}
-            isLoading={form.formState.isSubmitting}
-            size="md"
-            variant="solid"
-            onPress={() => {
-              void handleSubmit();
-            }}
-          >
-            <FaFloppyDisk className="mr-2" />
-            Guardar Cambios
-          </Button>
-        </div>
       </div>
     </Modal>
   );

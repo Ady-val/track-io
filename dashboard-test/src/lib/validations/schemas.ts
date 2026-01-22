@@ -558,12 +558,18 @@ export const updateDashboardMeasurementGroupSchema = z.object({
     .min(1, "Debes seleccionar al menos un dashboard measurement")
     .optional(),
   chartTimeRange: z
-    .number()
-    .int()
-    .refine((val) => [1, 10, 30, 60, 120, 240, 480].includes(val), {
-      message:
-        "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
-    })
+    .union([z.number().int(), z.null(), z.undefined()])
+    .refine(
+      (val) =>
+        val === undefined ||
+        val === null ||
+        [1, 10, 30, 60, 120, 240, 480].includes(val),
+      {
+        message:
+          "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
+      }
+    )
+    .transform((val) => (val === null ? undefined : val))
     .optional(),
   chartMinValue: z.number().optional(),
   chartMaxValue: z.number().optional(),
