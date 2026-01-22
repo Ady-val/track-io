@@ -72,6 +72,14 @@ export class MeasurementRepository {
     });
   }
 
+  async findActiveByExternalId(
+    externalId: string
+  ): Promise<Measurement | null> {
+    return await this.measurementRepository.findOne({
+      where: { externalId, deletedAt: null },
+    });
+  }
+
   async update(
     id: number,
     updateData: UpdateMeasurementDto

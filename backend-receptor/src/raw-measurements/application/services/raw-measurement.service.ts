@@ -56,7 +56,9 @@ export class RawMeasurementService {
   ): Promise<void> {
     try {
       const measurement =
-        await this.measurementService.getMeasurementByExternalId(externalId);
+        await this.measurementService.getActiveMeasurementByExternalId(
+          externalId
+        );
 
       if (measurement) {
         await this.measurementValueRepository.create({
