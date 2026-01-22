@@ -198,11 +198,40 @@ export class DashboardMeasurementGroupService {
       }
 
       if (updateDto.chartMeasurementIds) {
-        const currentMeasurementIds = group.dashboardMeasurements.map(
-          dm => dm.measurementId
+        const targetDashboardMeasurementIds = updateDto.dashboardMeasurements
+          ? updateDto.dashboardMeasurements.map(dm => dm.dashboardMeasurementId)
+          : group.dashboardMeasurements.map(dm => dm.id);
+
+        const targetDashboardMeasurements = updateDto.dashboardMeasurements
+          ? await Promise.all(
+              targetDashboardMeasurementIds.map(dashboardMeasurementId =>
+                this.dashboardMeasurementRepository.findOne({
+                  where: { id: dashboardMeasurementId },
+                  relations: ['measurement'],
+                })
+              )
+            )
+          : group.dashboardMeasurements;
+
+        const missingTargetIds = targetDashboardMeasurements
+          .map((dm, index) =>
+            !dm ? targetDashboardMeasurementIds[index] : null
+          )
+          .filter((id): id is number => id !== null);
+
+        if (missingTargetIds.length > 0) {
+          throw new BadRequestException(
+            `Dashboard measurements not found: ${missingTargetIds.join(', ')}`
+          );
+        }
+
+        const validTargets = targetDashboardMeasurements.filter(
+          (dm): dm is NonNullable<typeof dm> => dm !== null
         );
+
+        const allowedMeasurementIds = validTargets.map(dm => dm.measurementId);
         const invalidIds = updateDto.chartMeasurementIds.filter(
-          measurementId => !currentMeasurementIds.includes(measurementId)
+          measurementId => !allowedMeasurementIds.includes(measurementId)
         );
         if (invalidIds.length > 0) {
           throw new BadRequestException(
@@ -210,7 +239,7 @@ export class DashboardMeasurementGroupService {
           );
         }
 
-        const statusMeasurementIds = group.dashboardMeasurements
+        const statusMeasurementIds = validTargets
           .filter(
             dm =>
               dm.measurement && dm.measurement.type === MeasurementType.STATUS
@@ -293,7 +322,16 @@ export class DashboardMeasurementGroupService {
 
     await this.groupRepository.save(group);
 
-    return this.getGroupById(id);
+    const refreshedGroup = await this.groupRepository.findByIdWithMeasurements(
+      id
+    );
+    if (!refreshedGroup) {
+      throw new NotFoundException(
+        `Dashboard measurement group with ID ${id} not found`
+      );
+    }
+
+    return refreshedGroup;
   }
 
   async deleteGroup(id: number): Promise<void> {

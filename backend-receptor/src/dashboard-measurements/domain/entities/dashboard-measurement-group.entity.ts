@@ -6,8 +6,49 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  ValueTransformer,
 } from 'typeorm';
 import { DashboardMeasurement } from './dashboard-measurement.entity';
+
+const chartMeasurementIdsTransformer: ValueTransformer = {
+  to(value?: number[] | null): string | null {
+    if (!value || value.length === 0) {
+      return null;
+    }
+
+    return JSON.stringify(value);
+  },
+  from(value?: string | number[] | null): number[] | null {
+    if (!value) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(Number).filter(Number.isFinite);
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map(Number).filter(Number.isFinite);
+        }
+      } catch {
+        // fall through to comma-separated parsing
+      }
+
+      return trimmed
+        .split(',')
+        .map(item => Number(item.trim()))
+        .filter(Number.isFinite);
+    }
+
+    return null;
+  },
+};
 
 @Entity('dashboard_measurement_groups')
 export class DashboardMeasurementGroup {
@@ -51,6 +92,7 @@ export class DashboardMeasurementGroup {
     name: 'chart_measurement_ids',
     type: 'nvarchar', length: 'max',
     nullable: true,
+    transformer: chartMeasurementIdsTransformer,
   })
   chartMeasurementIds?: number[];
 

@@ -69,6 +69,11 @@ export interface DashboardMeasurement {
   maxValue?: number;
   minValue?: number;
   onStartTime?: string;
+  offStartTime?: string;
+  statusState?: "on" | "off" | "unknown";
+  statusStartTime?: string;
+  statusDurationSeconds?: number;
+  serverTime?: string;
   latestValue?: {
     value: string;
     createdAt: string;

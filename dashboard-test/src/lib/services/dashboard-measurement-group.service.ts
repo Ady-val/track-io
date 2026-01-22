@@ -11,13 +11,58 @@ import apiClient from "../api";
 class DashboardMeasurementGroupService {
   private readonly baseUrl = "/dashboard-measurement-groups";
 
+  private normalizeChartMeasurementIds(
+    value: unknown
+  ): number[] | undefined {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => Number(item))
+        .filter((item) => Number.isFinite(item));
+    }
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed) return undefined;
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item) => Number(item))
+            .filter((item) => Number.isFinite(item));
+        }
+      } catch {
+        // fall through to comma-separated parsing
+      }
+
+      return trimmed
+        .split(",")
+        .map((item) => Number(item.trim()))
+        .filter((item) => Number.isFinite(item));
+    }
+
+    return undefined;
+  }
+
+  private normalizeGroup(
+    group: DashboardMeasurementGroup
+  ): DashboardMeasurementGroup {
+    return {
+      ...group,
+      chartMeasurementIds: this.normalizeChartMeasurementIds(
+        group.chartMeasurementIds
+      ),
+    };
+  }
+
   async getAll(): Promise<DashboardMeasurementGroup[]> {
     try {
       const response = await apiClient.get<DashboardMeasurementGroupResponse>(
         this.baseUrl
       );
 
-      return response.data.data || [];
+      const data = response.data.data || [];
+      return data.map((group) => this.normalizeGroup(group));
     } catch (error) {
       console.error("Error fetching dashboard measurement groups:", error);
 
@@ -32,7 +77,8 @@ class DashboardMeasurementGroupService {
           `${this.baseUrl}/${id}`
         );
 
-      return response.data.data || null;
+      const group = response.data.data || null;
+      return group ? this.normalizeGroup(group) : null;
     } catch (error) {
       console.error("Error fetching dashboard measurement group by ID:", error);
 
@@ -49,7 +95,7 @@ class DashboardMeasurementGroupService {
         data
       );
 
-    return response.data.data;
+    return this.normalizeGroup(response.data.data);
   }
 
   async update(
@@ -62,7 +108,7 @@ class DashboardMeasurementGroupService {
         data
       );
 
-    return response.data.data;
+    return this.normalizeGroup(response.data.data);
   }
 
   async delete(id: number): Promise<void> {

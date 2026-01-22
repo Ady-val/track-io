@@ -17,6 +17,8 @@ export interface MeasurementChartProps {
   timestamp?: string;
   history?: number[];
   onStartTime?: string;
+  offStartTime?: string;
+  statusDurationSeconds?: number;
   onEdit?: () => void;
   onDelete?: () => void;
   showActions?: boolean;
@@ -32,6 +34,8 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   timestamp,
   history,
   onStartTime,
+  offStartTime,
+  statusDurationSeconds,
   onEdit,
   onDelete,
   showActions = false,
@@ -122,6 +126,8 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           onStartTime={onStartTime}
+          offStartTime={offStartTime}
+          statusDurationSeconds={statusDurationSeconds}
           onEdit={onEdit}
           onDelete={onDelete}
           showActions={showActions}

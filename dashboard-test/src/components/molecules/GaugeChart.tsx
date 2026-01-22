@@ -12,6 +12,7 @@ import {
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 import { Card, CardBody, Text } from "@components/atoms";
+import { formatLocalDateTime } from "@/lib/dateTime";
 
 import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
@@ -153,6 +154,8 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
     baseSize: "lg",
   });
 
+  const formattedTimestamp = formatLocalDateTime(timestamp);
+
   return (
     <Card className="bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
@@ -236,8 +239,8 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
         </div>
         <div className="mt-1 text-center">
           <Text className="text-xs text-slate-500" variant="caption">
-            {hasValue && timestamp
-              ? `Actualizado: ${new Date(timestamp).toLocaleDateString()} ${new Date(timestamp).toLocaleTimeString()}`
+            {hasValue && formattedTimestamp
+              ? `Actualizado: ${formattedTimestamp}`
               : "Esperando señal"}
           </Text>
         </div>

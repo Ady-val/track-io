@@ -76,11 +76,15 @@ export class RawMeasurementService {
 
   private emitWebSocketEvent(rawMeasurement: RawMeasurement): void {
     try {
+      const createdAtIso =
+        rawMeasurement.createdAt instanceof Date
+          ? rawMeasurement.createdAt.toISOString()
+          : new Date(rawMeasurement.createdAt).toISOString();
       this.webSocketEmitterService.emitNewRawMeasurement({
         id: rawMeasurement.id,
         externalId: rawMeasurement.externalId,
         value: rawMeasurement.value,
-        createdAt: rawMeasurement.createdAt,
+        createdAt: createdAtIso,
       });
       this.logger.log(
         `WebSocket event emitted: ${WEBSOCKET_EVENTS.NEW_RAW_MEASUREMENT}`

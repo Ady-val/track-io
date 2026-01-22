@@ -31,10 +31,27 @@ export const useDashboardMeasurementGroups = () => {
     fetchGroups();
   }, []);
 
+  const updateGroup = (updated: DashboardMeasurementGroup) => {
+    setGroups((prev) => {
+      const exists = prev.some((group) => group.id === updated.id);
+      if (!exists) {
+        return [updated, ...prev];
+      }
+
+      return prev.map((group) => (group.id === updated.id ? updated : group));
+    });
+  };
+
+  const deleteGroupById = (id: number) => {
+    setGroups((prev) => prev.filter((group) => group.id !== id));
+  };
+
   return {
     groups,
     loading,
     error,
     refetch: fetchGroups,
+    updateGroup,
+    deleteGroupById,
   };
 };

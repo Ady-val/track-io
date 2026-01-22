@@ -3,7 +3,8 @@ import type React from "react";
 import { Card, CardBody, Text } from "@components/atoms";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-import { useStatusDuration } from "@/hooks/useStatusDuration";
+import { useDurationTicker } from "@/hooks/useDurationTicker";
+import { formatLocalDateTime } from "@/lib/dateTime";
 import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
 import { getMeasurementConfig } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
@@ -15,6 +16,8 @@ export interface StatusIndicatorCardProps {
   type: MeasurementType;
   timestamp?: string;
   onStartTime?: string;
+  offStartTime?: string;
+  statusDurationSeconds?: number;
   className?: string;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -28,6 +31,8 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
   type,
   timestamp,
   onStartTime,
+  offStartTime,
+  statusDurationSeconds,
   className = "",
   onEdit,
   onDelete,
@@ -36,8 +41,20 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
   const config = getMeasurementConfig(type);
   const Icon = config.icon;
   const hasValue = isOn !== null && isOn !== undefined;
-  const { duration, isActive } = useStatusDuration(onStartTime, isOn);
-  
+
+  const activeDuration = useDurationTicker(
+    isOn === true ? statusDurationSeconds : null,
+    isOn === true
+  );
+
+  const inactiveDuration = useDurationTicker(
+    isOn === false ? statusDurationSeconds : null,
+    isOn === false
+  );
+
+  const isActive = isOn === true;
+  const isInactive = isOn === false;
+
   const { titleRef, titleClassName } = useAdaptiveTitleSize({
     title,
     baseSize: "xl",
@@ -60,6 +77,8 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
 
     return isOn ? "text-green-400" : "text-red-400";
   };
+
+  const formattedTimestamp = formatLocalDateTime(timestamp);
 
   return (
     <Card className={`bg-slate-800/50 border-slate-700 ${className} group relative`}>
@@ -123,7 +142,11 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
           <div className="text-center min-h-[4rem] flex items-center justify-center">
             {isActive ? (
               <span className="text-[2.4rem] font-bold text-green-400 leading-none">
-                {duration}
+                {activeDuration}
+              </span>
+            ) : isInactive ? (
+              <span className="text-[2.4rem] font-bold text-red-400 leading-none">
+                {inactiveDuration}
               </span>
             ) : (
               <span className="text-[2.4rem] font-bold text-transparent leading-none">
@@ -136,8 +159,8 @@ export const StatusIndicatorCard: React.FC<StatusIndicatorCardProps> = ({
         <div className="flex-shrink-0 mt-2">
           <div className="text-center">
             <Text className="text-xs text-slate-500" variant="caption">
-              {hasValue && timestamp
-                ? `Actualizado: ${new Date(timestamp).toLocaleDateString()} ${new Date(timestamp).toLocaleTimeString()}`
+              {hasValue && formattedTimestamp
+                ? `Actualizado: ${formattedTimestamp}`
                 : "Esperando señal"}
             </Text>
           </div>

@@ -226,15 +226,22 @@ export const EditDashboardGroupModal: React.FC<
     try {
       clearAllErrors();
 
+      const chartTimeRangeValue =
+        typeof data.chartTimeRange === "number"
+          ? data.chartTimeRange
+          : data.chartTimeRange
+            ? Number(data.chartTimeRange)
+            : undefined;
+
       const submitData: UpdateDashboardMeasurementGroupData = {
         name: data.name?.trim(),
         dashboardMeasurements: data.dashboardMeasurements,
-        ...(data.chartTimeRange !== undefined ||
+        ...(chartTimeRangeValue !== undefined ||
         data.chartMinValue !== undefined ||
         data.chartMaxValue !== undefined ||
         (data.chartMeasurementIds && data.chartMeasurementIds.length > 0)
           ? {
-              chartTimeRange: data.chartTimeRange,
+              chartTimeRange: chartTimeRangeValue,
               chartMinValue:
                 typeof data.chartMinValue === "number"
                   ? data.chartMinValue

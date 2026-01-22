@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { FaChartLine, FaPlus, FaLayerGroup } from "react-icons/fa6";
@@ -26,6 +26,7 @@ import { useDashboardMeasurementGroups } from "@/hooks/useDashboardMeasurementGr
 import { useDashboardMeasurements } from "@/hooks/useDashboardMeasurements";
 import { useHasPermission } from "@/hooks/useHasPermission";
 import { useRealtimeMeasurementValues } from "@/hooks/useRealtimeMeasurementValues";
+import { diffSecondsUtc, normalizeTimestampString } from "@/lib/dateTime";
 import dashboardMeasurementGroupService from "@/lib/services/dashboard-measurement-group.service";
 import dashboardMeasurementService from "@/lib/services/dashboard-measurement.service";
 import type {
@@ -73,14 +74,57 @@ export default function DashboardMeasurementsPage() {
     groups,
     loading: groupsLoading,
     refetch: refetchGroups,
+    updateGroup,
+    deleteGroupById,
   } = useDashboardMeasurementGroups();
   const { dashboards, loading, error, refetch } =
     useDashboardMeasurements(selectedGroupId);
-  const { values, getTimestamp, getHistory, getOnStartTime } =
+  const {
+    values,
+    getTimestamp,
+    getHistory,
+    getOnStartTime,
+    getOffStartTime,
+    getStatusDurationSeconds,
+    initializeValue,
+  } =
     useRealtimeMeasurementValues();
   const { isConnected } = useWebSocket();
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
+
+  // Initialize values from backend when dashboards are loaded
+  useEffect(() => {
+    if (!dashboards || dashboards.length === 0 || loading) {
+      return;
+    }
+
+    dashboards.forEach((dashboard) => {
+      // Only initialize for status type measurements
+      if (dashboard.measurement?.type !== "status") {
+        return;
+      }
+
+      if (!dashboard.latestValue) {
+        return;
+      }
+
+      const { value, createdAt } = dashboard.latestValue;
+      if (!value || !createdAt) {
+        return;
+      }
+
+      // Initialize the value with onStartTime/offStartTime from backend
+      initializeValue(
+        dashboard.measurementId,
+        value,
+        createdAt,
+        dashboard.onStartTime,
+        dashboard.offStartTime,
+        dashboard.statusDurationSeconds
+      );
+    });
+  }, [dashboards, initializeValue, loading]);
 
   const hasChartConfig =
     selectedGroup?.chartTimeRange &&
@@ -104,6 +148,32 @@ export default function DashboardMeasurementsPage() {
           }))
       : [];
 
+  const chartInitialPoints =
+    hasChartConfig && selectedGroup
+      ? dashboards
+          .filter((dashboard) =>
+            selectedGroup.chartMeasurementIds?.includes(dashboard.measurementId)
+          )
+          .map((dashboard) => {
+            const latestValue = dashboard.latestValue;
+            if (!latestValue?.value || !latestValue?.createdAt) {
+              return null;
+            }
+
+            const numericValue = parseFloat(String(latestValue.value));
+            if (!Number.isFinite(numericValue)) {
+              return null;
+            }
+
+            return {
+              measurementId: dashboard.measurementId,
+              value: numericValue,
+              createdAt: latestValue.createdAt,
+            };
+          })
+          .filter((point): point is { measurementId: number; value: number; createdAt: string } => point !== null)
+      : [];
+
   const handleCreateGroup = async (
     data: CreateDashboardMeasurementGroupData
   ) => {
@@ -125,9 +195,16 @@ export default function DashboardMeasurementsPage() {
   ) => {
     setIsUpdatingGroup(true);
     try {
-      await dashboardMeasurementGroupService.update(id, data);
-      await refetchGroups();
-      await refetch();
+      const updatedGroup = await dashboardMeasurementGroupService.update(
+        id,
+        data
+      );
+      updateGroup(updatedGroup);
+      setSelectedGroupId(updatedGroup.id);
+      void refetchGroups();
+      if (data.dashboardMeasurements) {
+        await refetch();
+      }
       setIsEditModalOpen(false);
     } catch (error) {
       console.error("Error updating group:", error);
@@ -137,7 +214,10 @@ export default function DashboardMeasurementsPage() {
   };
 
   const handleDeleteGroup = async () => {
-    await refetchGroups();
+    if (selectedGroup) {
+      deleteGroupById(selectedGroup.id);
+    }
+    void refetchGroups();
     setSelectedGroupId(null);
     setIsDeleteModalOpen(false);
   };
@@ -342,8 +422,9 @@ export default function DashboardMeasurementsPage() {
                     dashboard.measurementId
                   );
                   const backendTimestamp = dashboard.latestValue?.createdAt;
-                  const displayTimestamp =
-                    realtimeTimestamp ?? backendTimestamp;
+                  const displayTimestamp = normalizeTimestampString(
+                    realtimeTimestamp ?? backendTimestamp
+                  );
 
                   const realtimeOnStartTime = getOnStartTime(
                     dashboard.measurementId
@@ -351,6 +432,27 @@ export default function DashboardMeasurementsPage() {
                   const backendOnStartTime = dashboard.onStartTime;
                   const displayOnStartTime =
                     realtimeOnStartTime ?? backendOnStartTime;
+
+                  const realtimeOffStartTime = getOffStartTime(
+                    dashboard.measurementId
+                  );
+                  const backendOffStartTime = dashboard.offStartTime;
+                  const displayOffStartTime =
+                    realtimeOffStartTime ?? backendOffStartTime;
+                  const realtimeStatusDurationSeconds =
+                    getStatusDurationSeconds(dashboard.measurementId);
+                  const backendStatusDurationSeconds =
+                    dashboard.statusDurationSeconds ??
+                    diffSecondsUtc(
+                      dashboard.statusStartTime,
+                      dashboard.serverTime
+                    );
+                  const displayStatusDurationSeconds =
+                    realtimeStatusDurationSeconds ?? backendStatusDurationSeconds;
+
+                  // Log for status measurements only
+                  if (dashboard.measurement?.type === "status") {
+                  }
 
                   return (
                     <MeasurementChart
@@ -364,6 +466,8 @@ export default function DashboardMeasurementsPage() {
                       type={dashboard.measurement.type}
                       value={displayValue}
                       onStartTime={displayOnStartTime}
+                      offStartTime={displayOffStartTime}
+                      statusDurationSeconds={displayStatusDurationSeconds}
                       showActions={hasUpdatePermission || hasDeletePermission}
                       onEdit={
                         hasUpdatePermission
@@ -395,6 +499,7 @@ export default function DashboardMeasurementsPage() {
                 measurementIds={selectedGroup.chartMeasurementIds ?? []}
                 measurements={chartMeasurements}
                 minValue={selectedGroup.chartMinValue ?? 0}
+                initialPoints={chartInitialPoints}
                 timeRange={selectedGroup.chartTimeRange ?? 10}
               />
             </div>
