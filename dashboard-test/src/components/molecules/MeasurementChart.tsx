@@ -3,6 +3,7 @@ import type React from "react";
 import type { MeasurementType } from "@/types/dashboard";
 
 import { GaugeChart } from "./GaugeChart";
+import { LiquidFillGauge } from "./LiquidFillGauge";
 import { HorizontalBarChart } from "./HorizontalBarChart";
 import { StatusIndicatorCard } from "./StatusIndicatorCard";
 import { VibrationLineChart } from "./VibrationLineChart";
@@ -42,10 +43,25 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
 }) => {
   switch (type) {
     case "temperature":
-    case "humidity":
       return (
         <GaugeChart
           degrees={270}
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
+        />
+      );
+
+    case "humidity":
+      return (
+        <LiquidFillGauge
           maxValue={maxValue}
           minValue={minValue}
           subtitle={subtitle}
