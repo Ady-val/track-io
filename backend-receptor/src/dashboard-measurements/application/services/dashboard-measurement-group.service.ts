@@ -133,6 +133,8 @@ export class DashboardMeasurementGroupService {
       dashboardMeasurements: validMeasurements,
     };
 
+    groupData.dashboardMeasurementOrder = dashboardMeasurementIds;
+
     if (createDto.chartTimeRange !== undefined) {
       groupData.chartTimeRange = createDto.chartTimeRange;
     }
@@ -177,6 +179,7 @@ export class DashboardMeasurementGroupService {
       const validTimeRanges = [1, 10, 30, 60, 120, 240, 480];
       if (
         updateDto.chartTimeRange !== undefined &&
+        updateDto.chartTimeRange !== null &&
         !validTimeRanges.includes(updateDto.chartTimeRange)
       ) {
         throw new BadRequestException(
@@ -184,12 +187,20 @@ export class DashboardMeasurementGroupService {
         );
       }
 
-      const chartMinValue = updateDto.chartMinValue ?? group.chartMinValue;
-      const chartMaxValue = updateDto.chartMaxValue ?? group.chartMaxValue;
+      const chartMinValue =
+        updateDto.chartMinValue !== undefined
+          ? updateDto.chartMinValue
+          : group.chartMinValue;
+      const chartMaxValue =
+        updateDto.chartMaxValue !== undefined
+          ? updateDto.chartMaxValue
+          : group.chartMaxValue;
 
       if (
         chartMinValue !== undefined &&
+        chartMinValue !== null &&
         chartMaxValue !== undefined &&
+        chartMaxValue !== null &&
         chartMinValue >= chartMaxValue
       ) {
         throw new BadRequestException(
@@ -197,7 +208,7 @@ export class DashboardMeasurementGroupService {
         );
       }
 
-      if (updateDto.chartMeasurementIds) {
+      if (updateDto.chartMeasurementIds !== undefined) {
         const targetDashboardMeasurementIds = updateDto.dashboardMeasurements
           ? updateDto.dashboardMeasurements.map(dm => dm.dashboardMeasurementId)
           : group.dashboardMeasurements.map(dm => dm.id);
@@ -302,6 +313,8 @@ export class DashboardMeasurementGroupService {
       const validMeasurements = dashboardMeasurements.filter(
         (dm): dm is NonNullable<typeof dm> => dm !== null
       );
+
+      group.dashboardMeasurementOrder = dashboardMeasurementIds;
 
       // Desasignar measurements actuales del grupo usando query builder
       await this.dashboardMeasurementRepository

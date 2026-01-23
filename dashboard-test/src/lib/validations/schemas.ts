@@ -571,9 +571,11 @@ export const updateDashboardMeasurementGroupSchema = z.object({
     )
     .transform((val) => (val === null ? undefined : val))
     .optional(),
-  chartMinValue: z.number().optional(),
-  chartMaxValue: z.number().optional(),
-  chartMeasurementIds: z.array(z.number().int().positive()).optional(),
+  chartMinValue: z.union([z.number(), z.null()]).optional(),
+  chartMaxValue: z.union([z.number(), z.null()]).optional(),
+  chartMeasurementIds: z
+    .union([z.array(z.number().int().positive()), z.null()])
+    .optional(),
 });
 
 export type CreateDashboardMeasurementGroupInput = z.infer<

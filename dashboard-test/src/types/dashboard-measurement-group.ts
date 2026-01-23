@@ -21,9 +21,10 @@ export interface DashboardMeasurementGroup {
   deletedAt?: string | null;
   dashboardMeasurements: DashboardMeasurementItem[];
   chartTimeRange?: number; // minutos
-  chartMinValue?: number;
-  chartMaxValue?: number;
-  chartMeasurementIds?: number[];
+  chartMinValue?: number | null;
+  chartMaxValue?: number | null;
+  chartMeasurementIds?: number[] | null;
+  dashboardMeasurementOrder?: number[];
 }
 
 export interface DashboardMeasurementGroupResponse {
@@ -45,16 +46,16 @@ export interface CreateDashboardMeasurementGroupData {
   name: string;
   dashboardMeasurements: DashboardMeasurementItemInput[];
   chartTimeRange?: number;
-  chartMinValue?: number;
-  chartMaxValue?: number;
-  chartMeasurementIds?: number[];
+  chartMinValue?: number | null;
+  chartMaxValue?: number | null;
+  chartMeasurementIds?: number[] | null;
 }
 
 export interface UpdateDashboardMeasurementGroupData {
   name?: string;
   dashboardMeasurements?: DashboardMeasurementItemInput[];
-  chartTimeRange?: number;
-  chartMinValue?: number;
-  chartMaxValue?: number;
-  chartMeasurementIds?: number[];
+  chartTimeRange?: number | null;
+  chartMinValue?: number | null;
+  chartMaxValue?: number | null;
+  chartMeasurementIds?: number[] | null;
 }

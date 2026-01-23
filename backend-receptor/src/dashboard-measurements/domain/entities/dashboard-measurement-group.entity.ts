@@ -96,6 +96,14 @@ export class DashboardMeasurementGroup {
   })
   chartMeasurementIds?: number[];
 
+  @Column({
+    name: 'dashboard_measurement_order',
+    type: 'nvarchar', length: 'max',
+    nullable: true,
+    transformer: chartMeasurementIdsTransformer,
+  })
+  dashboardMeasurementOrder?: number[];
+
   @OneToMany(
     () => DashboardMeasurement,
     dashboardMeasurement => dashboardMeasurement.group,

@@ -44,6 +44,11 @@ export class CreateDashboardMeasurementGroupDto {
   @IsArray()
   @IsInt({ each: true })
   chartMeasurementIds?: number[];
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  dashboardMeasurementOrder?: number[];
 }
 
 export class UpdateDashboardMeasurementGroupDto {
@@ -76,4 +81,9 @@ export class UpdateDashboardMeasurementGroupDto {
   @IsArray()
   @IsInt({ each: true })
   chartMeasurementIds?: number[];
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  dashboardMeasurementOrder?: number[];
 }

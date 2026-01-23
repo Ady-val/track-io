@@ -1,8 +1,31 @@
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Controller, useFieldArray } from "react-hook-form";
-import { FaFloppyDisk, FaXmark, FaTrash, FaGaugeHigh } from "react-icons/fa6";
+import {
+  FaArrowDown,
+  FaArrowUp,
+  FaFloppyDisk,
+  FaGaugeHigh,
+  FaTrash,
+  FaXmark,
+} from "react-icons/fa6";
 
 import {
   Button,
@@ -37,6 +60,70 @@ export interface EditDashboardGroupModalProps {
   isLoading?: boolean;
 }
 
+interface SortableMeasurementItemProps {
+  measurement: DashboardMeasurement;
+  displayText: string;
+  onRemove: (dashboardMeasurementId: number) => void;
+}
+
+const SortableMeasurementItem: React.FC<SortableMeasurementItemProps> = ({
+  measurement,
+  displayText,
+  onRemove,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: measurement.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`bg-slate-700/50 rounded-lg p-3 border border-slate-600 flex items-center justify-between ${
+        isDragging ? "opacity-50" : ""
+      }`}
+      style={style}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          ref={setActivatorNodeRef}
+          aria-label="Reordenar"
+          className="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 cursor-grab active:cursor-grabbing"
+          type="button"
+          {...attributes}
+          {...listeners}
+        >
+          <FaArrowUp className="w-3 h-3" />
+          <FaArrowDown className="w-3 h-3 -mt-1" />
+        </button>
+        <Text className="text-slate-200" variant="small">
+          {displayText}
+        </Text>
+      </div>
+      <Button
+        isIconOnly
+        color="danger"
+        size="sm"
+        type="button"
+        variant="flat"
+        onPress={() => onRemove(measurement.id)}
+      >
+        <FaTrash className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+};
+
 export const EditDashboardGroupModal: React.FC<
   EditDashboardGroupModalProps
 > = ({ isOpen, onClose, onSubmit, group, isLoading = false }) => {
@@ -70,7 +157,7 @@ export const EditDashboardGroupModal: React.FC<
     successMessage: "Grupo actualizado exitosamente",
   });
 
-  const { append, remove } = useFieldArray({
+  const { append, remove, move } = useFieldArray({
     control: form.control,
     name: "dashboardMeasurements",
   });
@@ -81,6 +168,7 @@ export const EditDashboardGroupModal: React.FC<
   // Estados locales para los inputs numéricos (mejor UX)
   const [minValueInput, setMinValueInput] = useState<string>("");
   const [maxValueInput, setMaxValueInput] = useState<string>("");
+  const [isChartConfigCleared, setIsChartConfigCleared] = useState(false);
 
   // Actualizar valores cuando cambia el group o se abre el modal
   useEffect(() => {
@@ -149,7 +237,9 @@ export const EditDashboardGroupModal: React.FC<
         .watch("dashboardMeasurements")
         ?.map((dm) => dm.dashboardMeasurementId) ?? [];
 
-    return allAvailable.filter((dm) => selectedIds.includes(dm.id));
+    return selectedIds
+      .map((id) => allAvailable.find((dm) => dm.id === id))
+      .filter((dm): dm is DashboardMeasurement => dm !== undefined);
   }, [
     availableDashboardMeasurements,
     form.watch("dashboardMeasurements"),
@@ -185,8 +275,54 @@ export const EditDashboardGroupModal: React.FC<
     group,
   ]);
 
+  const chartTimeRangeValue = form.watch("chartTimeRange");
+  const chartMinValueValue = form.watch("chartMinValue");
+  const chartMaxValueValue = form.watch("chartMaxValue");
+  const chartMeasurementIdsValue = form.watch("chartMeasurementIds");
+
+  const hasChartConfig =
+    chartTimeRangeValue !== undefined ||
+    chartMinValueValue !== undefined ||
+    chartMaxValueValue !== undefined ||
+    (chartMeasurementIdsValue?.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (hasChartConfig && isChartConfigCleared) {
+      setIsChartConfigCleared(false);
+    }
+  }, [hasChartConfig, isChartConfigCleared]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const formatMeasurementDisplay = (dm: DashboardMeasurement): string => {
     return `${dm.measurement.name} - ${dm.measurement.externalId} | ${dm.measurement.type} | ${dm.minValue ?? 0} - ${dm.maxValue ?? 100}`;
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const currentMeasurements = form.getValues("dashboardMeasurements") ?? [];
+    const oldIndex = currentMeasurements.findIndex(
+      (dm) => dm.dashboardMeasurementId === Number(active.id)
+    );
+    const newIndex = currentMeasurements.findIndex(
+      (dm) => dm.dashboardMeasurementId === Number(over.id)
+    );
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    move(oldIndex, newIndex);
   };
 
   const handleAddMeasurement = (measurementId: number) => {
@@ -230,6 +366,16 @@ export const EditDashboardGroupModal: React.FC<
     }
   };
 
+  const handleClearChartConfig = () => {
+    form.setValue("chartTimeRange", undefined);
+    form.setValue("chartMinValue", undefined);
+    form.setValue("chartMaxValue", undefined);
+    form.setValue("chartMeasurementIds", []);
+    setMinValueInput("");
+    setMaxValueInput("");
+    setIsChartConfigCleared(true);
+  };
+
   const handleSubmit = form.handleSubmit(
     async (data) => {
       if (!group) return;
@@ -267,20 +413,27 @@ export const EditDashboardGroupModal: React.FC<
         data.dashboardMeasurements.length > 0
           ? { dashboardMeasurements: data.dashboardMeasurements }
           : {}),
-        ...(hasChartConfig
+        ...(isChartConfigCleared
           ? {
-              ...(chartTimeRangeValue !== undefined
-                ? { chartTimeRange: chartTimeRangeValue }
-                : {}),
-              ...(chartMinValue !== undefined
-                ? { chartMinValue }
-                : {}),
-              ...(chartMaxValue !== undefined ? { chartMaxValue } : {}),
-              ...(chartMeasurementIds !== undefined
-                ? { chartMeasurementIds }
-                : {}),
+              chartTimeRange: null,
+              chartMinValue: null,
+              chartMaxValue: null,
+              chartMeasurementIds: [],
             }
-          : {}),
+          : hasChartConfig
+            ? {
+                ...(chartTimeRangeValue !== undefined
+                  ? { chartTimeRange: chartTimeRangeValue }
+                  : {}),
+                ...(chartMinValue !== undefined
+                  ? { chartMinValue }
+                  : {}),
+                ...(chartMaxValue !== undefined ? { chartMaxValue } : {}),
+                ...(chartMeasurementIds !== undefined
+                  ? { chartMeasurementIds }
+                  : {}),
+              }
+            : {}),
       };
 
         await onSubmit(group.id, submitData);
@@ -406,28 +559,27 @@ export const EditDashboardGroupModal: React.FC<
             </Text>
 
             {selectedDashboardMeasurements.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {selectedDashboardMeasurements.map((dm) => (
-                  <div
-                    key={dm.id}
-                    className="bg-slate-700/50 rounded-lg p-3 border border-slate-600 flex items-center justify-between"
-                  >
-                    <Text className="text-slate-200" variant="small">
-                      {formatMeasurementDisplay(dm)}
-                    </Text>
-                    <Button
-                      isIconOnly
-                      color="danger"
-                      size="sm"
-                      type="button"
-                      variant="flat"
-                      onPress={() => handleRemoveMeasurement(dm.id)}
-                    >
-                      <FaTrash className="w-4 h-4" />
-                    </Button>
+              <DndContext
+                collisionDetection={closestCenter}
+                sensors={sensors}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={selectedDashboardMeasurements.map((dm) => dm.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="mb-4 space-y-2 overflow-x-hidden">
+                    {selectedDashboardMeasurements.map((dm) => (
+                      <SortableMeasurementItem
+                        key={dm.id}
+                        measurement={dm}
+                        displayText={formatMeasurementDisplay(dm)}
+                        onRemove={handleRemoveMeasurement}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             <Select
@@ -460,7 +612,11 @@ export const EditDashboardGroupModal: React.FC<
           </div>
 
           <div className="mb-6">
-            <CollapsibleSection title="Configuración de Gráfica en Tiempo Real">
+            <CollapsibleSection
+              title="Configuración de Gráfica en Tiempo Real"
+              defaultExpanded={hasChartConfig}
+              forceExpanded={hasChartConfig}
+            >
               <div className="space-y-4">
                 <div>
                   <Text className="mb-2 text-sm text-slate-300" variant="small">
@@ -714,6 +870,20 @@ export const EditDashboardGroupModal: React.FC<
                     )}
                   </div>
                 </div>
+                {hasChartConfig && (
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      className="px-6 py-2 font-semibold"
+                      color="danger"
+                      size="md"
+                      type="button"
+                      variant="solid"
+                      onPress={handleClearChartConfig}
+                    >
+                      Limpiar configuración
+                    </Button>
+                  </div>
+                )}
               </div>
             </CollapsibleSection>
           </div>

@@ -60,8 +60,14 @@ export class DashboardMeasurementService {
   > {
     let dashboards: DashboardMeasurement[];
     if (groupId) {
-      dashboards =
-        await this.dashboardMeasurementRepository.findByGroupId(groupId);
+      const groupWithMeasurements =
+        await this.groupRepository.findByIdWithMeasurements(groupId);
+      if (groupWithMeasurements?.dashboardMeasurements?.length) {
+        dashboards = groupWithMeasurements.dashboardMeasurements;
+      } else {
+        dashboards =
+          await this.dashboardMeasurementRepository.findByGroupId(groupId);
+      }
     } else {
       dashboards =
         await this.dashboardMeasurementRepository.findAllWithMeasurements();
