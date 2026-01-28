@@ -10,6 +10,8 @@ import {
 export enum MeasurementType {
   TEMPERATURE = 'temperature',
   HUMIDITY = 'humidity',
+  DEW_POINT = 'dew_point',
+  PPM = 'ppm',
   PRESSURE = 'pressure',
   LEVEL = 'level',
   FLOW = 'flow',
