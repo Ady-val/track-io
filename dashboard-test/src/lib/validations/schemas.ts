@@ -117,6 +117,8 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 const measurementTypeEnum = z.enum([
   "temperature",
   "humidity",
+  "dew_point",
+  "ppm",
   "pressure",
   "level",
   "flow",

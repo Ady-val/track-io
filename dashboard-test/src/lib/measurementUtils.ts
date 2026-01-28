@@ -38,6 +38,22 @@ export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
     color: "#3b82f6",
     bgColor: "rgba(59, 130, 246, 0.1)",
   },
+  dew_point: {
+    icon: FaTemperatureHalf,
+    unit: "°C",
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(1)}°C` : "N/A",
+    color: "#3b82f6",
+    bgColor: "rgba(59, 130, 246, 0.1)",
+  },
+  ppm: {
+    icon: FaDroplet,
+    unit: "PPM",
+    formatValue: (value: number | boolean) =>
+      typeof value === "number" ? `${value.toFixed(1)} PPM` : "N/A",
+    color: "#3b82f6",
+    bgColor: "rgba(59, 130, 246, 0.1)",
+  },
   pressure: {
     icon: FaGaugeHigh,
     unit: "Pa",

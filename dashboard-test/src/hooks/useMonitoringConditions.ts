@@ -86,6 +86,18 @@ export const useMonitoringConditions = () => {
         color: "text-blue-400",
       },
       {
+        value: "dew_point",
+        label: "Dew Point",
+        icon: FaTemperatureHalf,
+        color: "text-blue-400",
+      },
+      {
+        value: "ppm",
+        label: "PPM",
+        icon: FaDroplet,
+        color: "text-blue-400",
+      },
+      {
         value: "pressure",
         label: "Presión",
         icon: FaWeightHanging,

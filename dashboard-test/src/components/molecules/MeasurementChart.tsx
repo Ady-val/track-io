@@ -2,6 +2,7 @@ import type React from "react";
 
 import type { MeasurementType } from "@/types/dashboard";
 
+import { DewPointDonutChart } from "./DewPointDonutChart";
 import { GaugeChart } from "./GaugeChart";
 import { LiquidFillGauge } from "./LiquidFillGauge";
 import { HorizontalBarChart } from "./HorizontalBarChart";
@@ -60,8 +61,24 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
       );
 
     case "humidity":
+    case "ppm":
       return (
         <LiquidFillGauge
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
+        />
+      );
+    case "dew_point":
+      return (
+        <DewPointDonutChart
           maxValue={maxValue}
           minValue={minValue}
           subtitle={subtitle}

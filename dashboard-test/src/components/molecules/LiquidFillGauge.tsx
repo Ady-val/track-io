@@ -34,6 +34,8 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
   const valueRef = useRef<number | undefined>(value);
   const minValueRef = useRef(minValue);
   const maxValueRef = useRef(maxValue);
+  const dotPatternRef = useRef<CanvasPattern | null>(null);
+  const dotPatternColorRef = useRef<string | null>(null);
   const config = getMeasurementConfig(type);
   const Icon = config.icon;
 
@@ -61,12 +63,29 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
+    const createDotPattern = (color: string) => {
+      const patternCanvas = document.createElement("canvas");
+      const size = 8;
+      patternCanvas.width = size;
+      patternCanvas.height = size;
+      const patternCtx = patternCanvas.getContext("2d");
+      if (!patternCtx) {
+        return null;
+      }
+      patternCtx.clearRect(0, 0, size, size);
+      patternCtx.fillStyle = color;
+      patternCtx.beginPath();
+      patternCtx.arc(size / 2, size / 2, 1.6, 0, Math.PI * 2);
+      patternCtx.fill();
+      return ctx.createPattern(patternCanvas, "repeat");
+    };
+
     const drawWave = (
       fillTopY: number,
       amplitude: number,
       frequency: number,
       phase: number,
-      fillColor: string,
+      fillColor: string | CanvasPattern,
       alpha: number,
       width: number,
       height: number,
@@ -93,6 +112,9 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
       ctx.restore();
     };
 
+    dotPatternRef.current = null;
+    dotPatternColorRef.current = null;
+
     const drawLiquid = () => {
       const rect = canvas.getBoundingClientRect();
       const width = rect.width;
@@ -105,7 +127,19 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
       ctx.clearRect(0, 0, width, height);
 
       const borderColor = config.color;
-      const fillColor = config.color;
+      const baseColor = config.color;
+      const isDottedFill = type === "ppm";
+      let fillStyle: string | CanvasPattern = baseColor;
+
+      if (isDottedFill) {
+        if (dotPatternColorRef.current !== baseColor || !dotPatternRef.current) {
+          dotPatternRef.current = createDotPattern(baseColor);
+          dotPatternColorRef.current = baseColor;
+        }
+        if (dotPatternRef.current) {
+          fillStyle = dotPatternRef.current;
+        }
+      }
 
       ctx.save();
       ctx.beginPath();
@@ -119,8 +153,8 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
       const liquidHeight = radius * 2 * (1 - fillLevel);
       const fillTopY = centerY - radius + liquidHeight;
 
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = fillColor;
+      ctx.globalAlpha = isDottedFill ? 0.8 : 0.45;
+      ctx.fillStyle = fillStyle;
       ctx.fillRect(centerX - radius, fillTopY, radius * 2, radius * 2);
 
       const waveLength = radius * 1.5;
@@ -133,7 +167,7 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
         amplitude,
         frequency,
         basePhase,
-        fillColor,
+        fillStyle,
         0.8,
         width,
         height,
@@ -146,7 +180,7 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
         amplitude * 0.6,
         frequency * 1.2,
         basePhase + Math.PI / 2,
-        fillColor,
+        fillStyle,
         0.6,
         width,
         height,
@@ -194,7 +228,7 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
         animationFrameRef.current = null;
       }
     };
-  }, [config.color]);
+  }, [config.color, type]);
 
   useEffect(() => {
     const min = parseFloat(minValue.toString());

@@ -47,6 +47,8 @@ export type DepartmentStatus = "ok" | "alert" | "warning" | "critical" | "NA";
 export type MeasurementType =
   | "temperature"
   | "humidity"
+  | "dew_point"
+  | "ppm"
   | "pressure"
   | "level"
   | "vibration"

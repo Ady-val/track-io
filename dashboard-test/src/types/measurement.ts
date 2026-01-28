@@ -1,6 +1,8 @@
 export type MeasurementType =
   | "temperature"
   | "humidity"
+  | "dew_point"
+  | "ppm"
   | "pressure"
   | "level"
   | "vibration"

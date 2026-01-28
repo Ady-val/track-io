@@ -41,6 +41,8 @@ const getMeasurementTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     temperature: "Temperatura",
     humidity: "Humedad",
+    dew_point: "Dew Point",
+    ppm: "PPM",
     pressure: "Presión",
     level: "Nivel",
     flow: "Flujo",
@@ -54,6 +56,8 @@ const getMeasurementTypeColor = (type: string): string => {
   const colors: Record<string, string> = {
     temperature: "danger",
     humidity: "primary",
+    dew_point: "primary",
+    ppm: "primary",
     pressure: "warning",
     level: "secondary",
     flow: "success",
