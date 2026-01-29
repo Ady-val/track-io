@@ -274,7 +274,7 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
   const formattedTimestamp = formatLocalDateTime(timestamp);
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 group relative">
+    <Card className="h-[25rem] w-[25rem] bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
         {showActions && (onEdit || onDelete) && (
           <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">

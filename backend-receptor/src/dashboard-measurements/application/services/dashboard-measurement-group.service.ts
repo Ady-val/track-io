@@ -71,19 +71,43 @@ export class DashboardMeasurementGroupService {
       (dm): dm is NonNullable<typeof dm> => dm !== null
     );
 
-    if (
+    const hasChart1Config =
       createDto.chartTimeRange ||
       createDto.chartMinValue !== undefined ||
       createDto.chartMaxValue !== undefined ||
-      createDto.chartMeasurementIds
-    ) {
+      createDto.chartMeasurementIds;
+    const hasChart2Config =
+      createDto.chart2TimeRange ||
+      createDto.chart2MinValue !== undefined ||
+      createDto.chart2MaxValue !== undefined ||
+      createDto.chart2MeasurementIds;
+
+    if (hasChart1Config || hasChart2Config) {
       const validTimeRanges = [1, 10, 30, 60, 120, 240, 480];
+      const groupMeasurementIds = validMeasurements.map(
+        dm => dm.measurementId
+      );
+      const statusMeasurementIds = validMeasurements
+        .filter(
+          dm => dm.measurement && dm.measurement.type === MeasurementType.STATUS
+        )
+        .map(dm => dm.measurementId);
+
       if (
         createDto.chartTimeRange &&
         !validTimeRanges.includes(createDto.chartTimeRange)
       ) {
         throw new BadRequestException(
           `chartTimeRange must be one of: ${validTimeRanges.join(', ')}`
+        );
+      }
+
+      if (
+        createDto.chart2TimeRange &&
+        !validTimeRanges.includes(createDto.chart2TimeRange)
+      ) {
+        throw new BadRequestException(
+          `chart2TimeRange must be one of: ${validTimeRanges.join(', ')}`
         );
       }
 
@@ -98,10 +122,18 @@ export class DashboardMeasurementGroupService {
         }
       }
 
+      if (
+        createDto.chart2MinValue !== undefined &&
+        createDto.chart2MaxValue !== undefined
+      ) {
+        if (createDto.chart2MinValue >= createDto.chart2MaxValue) {
+          throw new BadRequestException(
+            'chart2MinValue must be less than chart2MaxValue'
+          );
+        }
+      }
+
       if (createDto.chartMeasurementIds) {
-        const groupMeasurementIds = validMeasurements.map(
-          dm => dm.measurementId
-        );
         const invalidIds = createDto.chartMeasurementIds.filter(
           id => !groupMeasurementIds.includes(id)
         );
@@ -111,18 +143,32 @@ export class DashboardMeasurementGroupService {
           );
         }
 
-        const statusMeasurementIds = validMeasurements
-          .filter(
-            dm =>
-              dm.measurement && dm.measurement.type === MeasurementType.STATUS
-          )
-          .map(dm => dm.measurementId);
         const statusIdsInChart = createDto.chartMeasurementIds.filter(id =>
           statusMeasurementIds.includes(id)
         );
         if (statusIdsInChart.length > 0) {
           throw new BadRequestException(
             `chartMeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
+          );
+        }
+      }
+
+      if (createDto.chart2MeasurementIds) {
+        const invalidIds = createDto.chart2MeasurementIds.filter(
+          id => !groupMeasurementIds.includes(id)
+        );
+        if (invalidIds.length > 0) {
+          throw new BadRequestException(
+            `chart2MeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
+          );
+        }
+
+        const statusIdsInChart = createDto.chart2MeasurementIds.filter(id =>
+          statusMeasurementIds.includes(id)
+        );
+        if (statusIdsInChart.length > 0) {
+          throw new BadRequestException(
+            `chart2MeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
           );
         }
       }
@@ -146,6 +192,18 @@ export class DashboardMeasurementGroupService {
     }
     if (createDto.chartMeasurementIds !== undefined) {
       groupData.chartMeasurementIds = createDto.chartMeasurementIds;
+    }
+    if (createDto.chart2TimeRange !== undefined) {
+      groupData.chart2TimeRange = createDto.chart2TimeRange;
+    }
+    if (createDto.chart2MinValue !== undefined) {
+      groupData.chart2MinValue = createDto.chart2MinValue;
+    }
+    if (createDto.chart2MaxValue !== undefined) {
+      groupData.chart2MaxValue = createDto.chart2MaxValue;
+    }
+    if (createDto.chart2MeasurementIds !== undefined) {
+      groupData.chart2MeasurementIds = createDto.chart2MeasurementIds;
     }
 
     const group = this.groupRepository.create(groupData);
@@ -174,7 +232,11 @@ export class DashboardMeasurementGroupService {
       updateDto.chartTimeRange !== undefined ||
       updateDto.chartMinValue !== undefined ||
       updateDto.chartMaxValue !== undefined ||
-      updateDto.chartMeasurementIds !== undefined
+      updateDto.chartMeasurementIds !== undefined ||
+      updateDto.chart2TimeRange !== undefined ||
+      updateDto.chart2MinValue !== undefined ||
+      updateDto.chart2MaxValue !== undefined ||
+      updateDto.chart2MeasurementIds !== undefined
     ) {
       const validTimeRanges = [1, 10, 30, 60, 120, 240, 480];
       if (
@@ -184,6 +246,16 @@ export class DashboardMeasurementGroupService {
       ) {
         throw new BadRequestException(
           `chartTimeRange must be one of: ${validTimeRanges.join(', ')}`
+        );
+      }
+
+      if (
+        updateDto.chart2TimeRange !== undefined &&
+        updateDto.chart2TimeRange !== null &&
+        !validTimeRanges.includes(updateDto.chart2TimeRange)
+      ) {
+        throw new BadRequestException(
+          `chart2TimeRange must be one of: ${validTimeRanges.join(', ')}`
         );
       }
 
@@ -208,7 +280,31 @@ export class DashboardMeasurementGroupService {
         );
       }
 
-      if (updateDto.chartMeasurementIds !== undefined) {
+      const chart2MinValue =
+        updateDto.chart2MinValue !== undefined
+          ? updateDto.chart2MinValue
+          : group.chart2MinValue;
+      const chart2MaxValue =
+        updateDto.chart2MaxValue !== undefined
+          ? updateDto.chart2MaxValue
+          : group.chart2MaxValue;
+
+      if (
+        chart2MinValue !== undefined &&
+        chart2MinValue !== null &&
+        chart2MaxValue !== undefined &&
+        chart2MaxValue !== null &&
+        chart2MinValue >= chart2MaxValue
+      ) {
+        throw new BadRequestException(
+          'chart2MinValue must be less than chart2MaxValue'
+        );
+      }
+
+      if (
+        updateDto.chartMeasurementIds !== undefined ||
+        updateDto.chart2MeasurementIds !== undefined
+      ) {
         const targetDashboardMeasurementIds = updateDto.dashboardMeasurements
           ? updateDto.dashboardMeasurements.map(dm => dm.dashboardMeasurementId)
           : group.dashboardMeasurements.map(dm => dm.id);
@@ -241,28 +337,51 @@ export class DashboardMeasurementGroupService {
         );
 
         const allowedMeasurementIds = validTargets.map(dm => dm.measurementId);
-        const invalidIds = updateDto.chartMeasurementIds.filter(
-          measurementId => !allowedMeasurementIds.includes(measurementId)
-        );
-        if (invalidIds.length > 0) {
-          throw new BadRequestException(
-            `chartMeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
-          );
-        }
-
         const statusMeasurementIds = validTargets
           .filter(
             dm =>
               dm.measurement && dm.measurement.type === MeasurementType.STATUS
           )
           .map(dm => dm.measurementId);
-        const statusIdsInChart = updateDto.chartMeasurementIds.filter(id =>
-          statusMeasurementIds.includes(id)
-        );
-        if (statusIdsInChart.length > 0) {
-          throw new BadRequestException(
-            `chartMeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
+
+        if (updateDto.chartMeasurementIds !== undefined) {
+          const invalidIds = updateDto.chartMeasurementIds.filter(
+            measurementId => !allowedMeasurementIds.includes(measurementId)
           );
+          if (invalidIds.length > 0) {
+            throw new BadRequestException(
+              `chartMeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
+            );
+          }
+
+          const statusIdsInChart = updateDto.chartMeasurementIds.filter(id =>
+            statusMeasurementIds.includes(id)
+          );
+          if (statusIdsInChart.length > 0) {
+            throw new BadRequestException(
+              `chartMeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
+            );
+          }
+        }
+
+        if (updateDto.chart2MeasurementIds !== undefined) {
+          const invalidIds = updateDto.chart2MeasurementIds.filter(
+            measurementId => !allowedMeasurementIds.includes(measurementId)
+          );
+          if (invalidIds.length > 0) {
+            throw new BadRequestException(
+              `chart2MeasurementIds contains invalid measurement IDs: ${invalidIds.join(', ')}`
+            );
+          }
+
+          const statusIdsInChart = updateDto.chart2MeasurementIds.filter(id =>
+            statusMeasurementIds.includes(id)
+          );
+          if (statusIdsInChart.length > 0) {
+            throw new BadRequestException(
+              `chart2MeasurementIds cannot include status type measurements. Invalid IDs: ${statusIdsInChart.join(', ')}`
+            );
+          }
         }
       }
 
@@ -277,6 +396,18 @@ export class DashboardMeasurementGroupService {
       }
       if (updateDto.chartMeasurementIds !== undefined) {
         group.chartMeasurementIds = updateDto.chartMeasurementIds;
+      }
+      if (updateDto.chart2TimeRange !== undefined) {
+        group.chart2TimeRange = updateDto.chart2TimeRange;
+      }
+      if (updateDto.chart2MinValue !== undefined) {
+        group.chart2MinValue = updateDto.chart2MinValue;
+      }
+      if (updateDto.chart2MaxValue !== undefined) {
+        group.chart2MaxValue = updateDto.chart2MaxValue;
+      }
+      if (updateDto.chart2MeasurementIds !== undefined) {
+        group.chart2MeasurementIds = updateDto.chart2MeasurementIds;
       }
     }
 

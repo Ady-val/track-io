@@ -24,6 +24,10 @@ export interface DashboardMeasurementGroup {
   chartMinValue?: number | null;
   chartMaxValue?: number | null;
   chartMeasurementIds?: number[] | null;
+  chart2TimeRange?: number;
+  chart2MinValue?: number | null;
+  chart2MaxValue?: number | null;
+  chart2MeasurementIds?: number[] | null;
   dashboardMeasurementOrder?: number[];
 }
 
@@ -49,6 +53,10 @@ export interface CreateDashboardMeasurementGroupData {
   chartMinValue?: number | null;
   chartMaxValue?: number | null;
   chartMeasurementIds?: number[] | null;
+  chart2TimeRange?: number;
+  chart2MinValue?: number | null;
+  chart2MaxValue?: number | null;
+  chart2MeasurementIds?: number[] | null;
 }
 
 export interface UpdateDashboardMeasurementGroupData {
@@ -58,4 +66,8 @@ export interface UpdateDashboardMeasurementGroupData {
   chartMinValue?: number | null;
   chartMaxValue?: number | null;
   chartMeasurementIds?: number[] | null;
+  chart2TimeRange?: number | null;
+  chart2MinValue?: number | null;
+  chart2MaxValue?: number | null;
+  chart2MeasurementIds?: number[] | null;
 }

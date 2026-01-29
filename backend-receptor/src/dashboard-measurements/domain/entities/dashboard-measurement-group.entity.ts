@@ -96,6 +96,35 @@ export class DashboardMeasurementGroup {
   })
   chartMeasurementIds?: number[];
 
+  @Column({ name: 'chart2_time_range', type: 'int', nullable: true })
+  chart2TimeRange?: number;
+
+  @Column({
+    name: 'chart2_min_value',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  chart2MinValue?: number;
+
+  @Column({
+    name: 'chart2_max_value',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  chart2MaxValue?: number;
+
+  @Column({
+    name: 'chart2_measurement_ids',
+    type: 'nvarchar', length: 'max',
+    nullable: true,
+    transformer: chartMeasurementIdsTransformer,
+  })
+  chart2MeasurementIds?: number[];
+
   @Column({
     name: 'dashboard_measurement_order',
     type: 'nvarchar', length: 'max',

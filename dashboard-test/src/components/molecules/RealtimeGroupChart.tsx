@@ -57,6 +57,7 @@ export interface RealtimeGroupChartProps {
   measurementIds: number[];
   measurements: DashboardMeasurementItem[];
   initialPoints?: RealtimeChartPoint[];
+  reverseColors?: boolean;
 }
 
 const getTimeScaleConfig = (timeRangeMinutes: number) => {
@@ -106,6 +107,7 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
   measurementIds,
   measurements,
   initialPoints = [],
+  reverseColors = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
@@ -123,7 +125,7 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
   );
 
   const chartColors = useMemo(() => {
-    return [
+    const baseColors = [
       "rgb(59, 130, 246)",
       "rgb(16, 185, 129)",
       "rgb(245, 158, 11)",
@@ -135,7 +137,8 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
       "rgb(251, 191, 36)",
       "rgb(249, 115, 22)",
     ];
-  }, []);
+    return reverseColors ? [...baseColors].reverse() : baseColors;
+  }, [reverseColors]);
 
   const buildChartData = useCallback(() => {
     const rangeMs = timeRange * 60 * 1000;

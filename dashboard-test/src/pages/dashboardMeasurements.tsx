@@ -126,15 +126,23 @@ export default function DashboardMeasurementsPage() {
     });
   }, [dashboards, initializeValue, loading]);
 
-  const hasChartConfig =
+  const hasChart1Config =
     selectedGroup?.chartTimeRange &&
     selectedGroup.chartMinValue !== undefined &&
     selectedGroup.chartMaxValue !== undefined &&
     selectedGroup.chartMeasurementIds &&
     selectedGroup.chartMeasurementIds.length > 0;
+  const hasChart2Config =
+    selectedGroup?.chart2TimeRange &&
+    selectedGroup.chart2MinValue !== undefined &&
+    selectedGroup.chart2MaxValue !== undefined &&
+    selectedGroup.chart2MeasurementIds &&
+    selectedGroup.chart2MeasurementIds.length > 0;
+  const hasAnyChartConfig = hasChart1Config || hasChart2Config;
+  const hasBothCharts = hasChart1Config && hasChart2Config;
 
   const chartMeasurements =
-    hasChartConfig && selectedGroup
+    hasChart1Config && selectedGroup
       ? dashboards
           .filter((dashboard) =>
             selectedGroup.chartMeasurementIds?.includes(dashboard.measurementId)
@@ -149,10 +157,51 @@ export default function DashboardMeasurementsPage() {
       : [];
 
   const chartInitialPoints =
-    hasChartConfig && selectedGroup
+    hasChart1Config && selectedGroup
       ? dashboards
           .filter((dashboard) =>
             selectedGroup.chartMeasurementIds?.includes(dashboard.measurementId)
+          )
+          .map((dashboard) => {
+            const latestValue = dashboard.latestValue;
+            if (!latestValue?.value || !latestValue?.createdAt) {
+              return null;
+            }
+
+            const numericValue = parseFloat(String(latestValue.value));
+            if (!Number.isFinite(numericValue)) {
+              return null;
+            }
+
+            return {
+              measurementId: dashboard.measurementId,
+              value: numericValue,
+              createdAt: latestValue.createdAt,
+            };
+          })
+          .filter((point): point is { measurementId: number; value: number; createdAt: string } => point !== null)
+      : [];
+
+  const chart2Measurements =
+    hasChart2Config && selectedGroup
+      ? dashboards
+          .filter((dashboard) =>
+            selectedGroup.chart2MeasurementIds?.includes(dashboard.measurementId)
+          )
+          .map((dashboard) => ({
+            id: dashboard.id,
+            measurementId: dashboard.measurementId,
+            minValue: dashboard.minValue ?? 0,
+            maxValue: dashboard.maxValue ?? 100,
+            measurement: dashboard.measurement,
+          }))
+      : [];
+
+  const chart2InitialPoints =
+    hasChart2Config && selectedGroup
+      ? dashboards
+          .filter((dashboard) =>
+            selectedGroup.chart2MeasurementIds?.includes(dashboard.measurementId)
           )
           .map((dashboard) => {
             const latestValue = dashboard.latestValue;
@@ -322,58 +371,56 @@ export default function DashboardMeasurementsPage() {
                     ))}
                   </Select>
                 </div>
-                <>
-                  {selectedGroupId ? (
-                    <>
-                      {hasUpdatePermission && (
-                        <Button
-                          className="text-white"
-                          color="warning"
-                          size="md"
-                          variant="solid"
-                          onPress={() => setIsEditModalOpen(true)}
-                        >
-                          <FaEdit className="mr-2" />
-                          Editar Grupo
-                        </Button>
-                      )}
-                      {hasDeletePermission && (
-                        <Button
-                          className="text-white"
-                          color="danger"
-                          size="md"
-                          variant="solid"
-                          onPress={() => setIsDeleteModalOpen(true)}
-                        >
-                          <FaTrash className="mr-2" />
-                          Eliminar Grupo
-                        </Button>
-                      )}
-                    </>
-                  ) : hasCreatePermission ? (
-                    <Button
-                      color="primary"
-                      size="md"
-                      variant="solid"
-                      onPress={() => setIsCreateModalOpen(true)}
-                    >
-                      <FaLayerGroup className="mr-2" />
-                      Crear Grupo
-                    </Button>
-                  ) : null}
-                  {hasCreatePermission && (
-                    <Button
-                      className="text-white"
-                      color="success"
-                      size="md"
-                      variant="solid"
-                      onPress={() => setIsCreateMeasurementModalOpen(true)}
-                    >
-                      <FaPlus className="mr-2" />
-                      Crear Measurement
-                    </Button>
-                  )}
-                </>
+                {selectedGroupId ? (
+                  <>
+                    {hasUpdatePermission && (
+                      <Button
+                        className="text-white"
+                        color="warning"
+                        size="md"
+                        variant="solid"
+                        onPress={() => setIsEditModalOpen(true)}
+                      >
+                        <FaEdit className="mr-2" />
+                        Editar Grupo
+                      </Button>
+                    )}
+                    {hasDeletePermission && (
+                      <Button
+                        className="text-white"
+                        color="danger"
+                        size="md"
+                        variant="solid"
+                        onPress={() => setIsDeleteModalOpen(true)}
+                      >
+                        <FaTrash className="mr-2" />
+                        Eliminar Grupo
+                      </Button>
+                    )}
+                  </>
+                ) : hasCreatePermission ? (
+                  <Button
+                    color="primary"
+                    size="md"
+                    variant="solid"
+                    onPress={() => setIsCreateModalOpen(true)}
+                  >
+                    <FaLayerGroup className="mr-2" />
+                    Crear Grupo
+                  </Button>
+                ) : null}
+                {hasCreatePermission && (
+                  <Button
+                    className="text-white"
+                    color="success"
+                    size="md"
+                    variant="solid"
+                    onPress={() => setIsCreateMeasurementModalOpen(true)}
+                  >
+                    <FaPlus className="mr-2" />
+                    Crear Measurement
+                  </Button>
+                )}
               </div>
             </div>
           </CardBody>
@@ -392,11 +439,12 @@ export default function DashboardMeasurementsPage() {
         <div className="flex-1 flex flex-col min-h-0 gap-4">
           <div
             className={`flex flex-col min-h-0 ${
-              hasChartConfig ? "h-1/2" : "flex-1"
+              hasAnyChartConfig ? "h-1/2" : "flex-1"
             }`}
           >
             <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-4">
+              <div className="flex flex-wrap flex-between gap-6 pb-4">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-4"> */}
                 {dashboards.map((dashboard) => {
                   const parseValue = (
                     value: string | undefined
@@ -492,16 +540,37 @@ export default function DashboardMeasurementsPage() {
             </div>
           </div>
 
-          {hasChartConfig && selectedGroup && chartMeasurements.length > 0 && (
-            <div className="h-1/2 flex-shrink-0 flex flex-col overflow-x-hidden">
-              <RealtimeGroupChart
-                maxValue={selectedGroup.chartMaxValue ?? 100}
-                measurementIds={selectedGroup.chartMeasurementIds ?? []}
-                measurements={chartMeasurements}
-                minValue={selectedGroup.chartMinValue ?? 0}
-                initialPoints={chartInitialPoints}
-                timeRange={selectedGroup.chartTimeRange ?? 10}
-              />
+          {selectedGroup && hasAnyChartConfig && (
+            <div
+              className={`h-1/2 flex-shrink-0 overflow-x-hidden ${
+                hasBothCharts ? "flex gap-4" : "flex flex-col"
+              }`}
+            >
+              {hasChart1Config && chartMeasurements.length > 0 && (
+                <div className={hasBothCharts ? "w-1/2" : "flex-1"}>
+                  <RealtimeGroupChart
+                    maxValue={selectedGroup.chartMaxValue ?? 100}
+                    measurementIds={selectedGroup.chartMeasurementIds ?? []}
+                    measurements={chartMeasurements}
+                    minValue={selectedGroup.chartMinValue ?? 0}
+                    initialPoints={chartInitialPoints}
+                    timeRange={selectedGroup.chartTimeRange ?? 10}
+                  />
+                </div>
+              )}
+              {hasChart2Config && chart2Measurements.length > 0 && (
+                <div className={hasBothCharts ? "w-1/2" : "flex-1"}>
+                  <RealtimeGroupChart
+                    maxValue={selectedGroup.chart2MaxValue ?? 100}
+                    measurementIds={selectedGroup.chart2MeasurementIds ?? []}
+                    measurements={chart2Measurements}
+                    minValue={selectedGroup.chart2MinValue ?? 0}
+                    initialPoints={chart2InitialPoints}
+                    timeRange={selectedGroup.chart2TimeRange ?? 10}
+                    reverseColors
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

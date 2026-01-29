@@ -55,6 +55,10 @@ export const CreateDashboardGroupModal: React.FC<
       chartMinValue: undefined,
       chartMaxValue: undefined,
       chartMeasurementIds: [],
+      chart2TimeRange: undefined,
+      chart2MinValue: undefined,
+      chart2MaxValue: undefined,
+      chart2MeasurementIds: [],
     },
     showToastOnError: true,
     showToastOnSuccess: true,
@@ -71,6 +75,8 @@ export const CreateDashboardGroupModal: React.FC<
   // Estados locales para los inputs numéricos (mejor UX)
   const [minValueInput, setMinValueInput] = useState<string>("");
   const [maxValueInput, setMaxValueInput] = useState<string>("");
+  const [minValue2Input, setMinValue2Input] = useState<string>("");
+  const [maxValue2Input, setMaxValue2Input] = useState<string>("");
 
   // Resetear formulario cuando se abre el modal
   useEffect(() => {
@@ -82,10 +88,16 @@ export const CreateDashboardGroupModal: React.FC<
         chartMinValue: undefined,
         chartMaxValue: undefined,
         chartMeasurementIds: [],
+        chart2TimeRange: undefined,
+        chart2MinValue: undefined,
+        chart2MaxValue: undefined,
+        chart2MeasurementIds: [],
       });
       // Limpiar estados locales
       setMinValueInput("");
       setMaxValueInput("");
+      setMinValue2Input("");
+      setMaxValue2Input("");
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, resetForm]);
@@ -124,10 +136,15 @@ export const CreateDashboardGroupModal: React.FC<
 
     if (removedId) {
       const currentChartIds = form.getValues("chartMeasurementIds") ?? [];
+      const currentChart2Ids = form.getValues("chart2MeasurementIds") ?? [];
 
       form.setValue(
         "chartMeasurementIds",
         currentChartIds.filter((id) => id !== removedId)
+      );
+      form.setValue(
+        "chart2MeasurementIds",
+        currentChart2Ids.filter((id) => id !== removedId)
       );
     }
   };
@@ -145,22 +162,89 @@ export const CreateDashboardGroupModal: React.FC<
     }
   };
 
+  const handleChart2MeasurementToggle = (measurementId: number) => {
+    const currentIds = form.getValues("chart2MeasurementIds") ?? [];
+
+    if (currentIds.includes(measurementId)) {
+      form.setValue(
+        "chart2MeasurementIds",
+        currentIds.filter((id) => id !== measurementId)
+      );
+    } else {
+      form.setValue("chart2MeasurementIds", [...currentIds, measurementId]);
+    }
+  };
+
+  const chartTimeRangeValue = form.watch("chartTimeRange");
+  const chartMinValueValue = form.watch("chartMinValue");
+  const chartMaxValueValue = form.watch("chartMaxValue");
+  const chartMeasurementIdsValue = form.watch("chartMeasurementIds");
+  const chart2TimeRangeValue = form.watch("chart2TimeRange");
+  const chart2MinValueValue = form.watch("chart2MinValue");
+  const chart2MaxValueValue = form.watch("chart2MaxValue");
+  const chart2MeasurementIdsValue = form.watch("chart2MeasurementIds");
+
+  const hasChartConfig =
+    chartTimeRangeValue !== undefined ||
+    chartMinValueValue !== undefined ||
+    chartMaxValueValue !== undefined ||
+    (chartMeasurementIdsValue?.length ?? 0) > 0;
+  const hasChart2Config =
+    chart2TimeRangeValue !== undefined ||
+    chart2MinValueValue !== undefined ||
+    chart2MaxValueValue !== undefined ||
+    (chart2MeasurementIdsValue?.length ?? 0) > 0;
+
+  const handleClearChartConfig = () => {
+    form.setValue("chartTimeRange", undefined);
+    form.setValue("chartMinValue", undefined);
+    form.setValue("chartMaxValue", undefined);
+    form.setValue("chartMeasurementIds", []);
+    setMinValueInput("");
+    setMaxValueInput("");
+  };
+
+  const handleClearChart2Config = () => {
+    form.setValue("chart2TimeRange", undefined);
+    form.setValue("chart2MinValue", undefined);
+    form.setValue("chart2MaxValue", undefined);
+    form.setValue("chart2MeasurementIds", []);
+    setMinValue2Input("");
+    setMaxValue2Input("");
+  };
+
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
       clearAllErrors();
 
+      const hasChartConfig =
+        data.chartTimeRange !== undefined ||
+        data.chartMinValue !== undefined ||
+        data.chartMaxValue !== undefined ||
+        (data.chartMeasurementIds && data.chartMeasurementIds.length > 0);
+      const hasChart2Config =
+        data.chart2TimeRange !== undefined ||
+        data.chart2MinValue !== undefined ||
+        data.chart2MaxValue !== undefined ||
+        (data.chart2MeasurementIds && data.chart2MeasurementIds.length > 0);
+
       const submitData: CreateDashboardMeasurementGroupData = {
         name: data.name.trim(),
         dashboardMeasurements: data.dashboardMeasurements,
-        ...(data.chartTimeRange ||
-        data.chartMinValue ||
-        data.chartMaxValue ||
-        (data.chartMeasurementIds && data.chartMeasurementIds.length > 0)
+        ...(hasChartConfig
           ? {
               chartTimeRange: data.chartTimeRange,
               chartMinValue: data.chartMinValue,
               chartMaxValue: data.chartMaxValue,
               chartMeasurementIds: data.chartMeasurementIds,
+            }
+          : {}),
+        ...(hasChart2Config
+          ? {
+              chart2TimeRange: data.chart2TimeRange,
+              chart2MinValue: data.chart2MinValue,
+              chart2MaxValue: data.chart2MaxValue,
+              chart2MeasurementIds: data.chart2MeasurementIds,
             }
           : {}),
       };
@@ -181,6 +265,10 @@ export const CreateDashboardGroupModal: React.FC<
       chartMinValue: undefined,
       chartMaxValue: undefined,
       chartMeasurementIds: [],
+      chart2TimeRange: undefined,
+      chart2MinValue: undefined,
+      chart2MaxValue: undefined,
+      chart2MeasurementIds: [],
     });
     onClose();
   };
@@ -566,6 +654,279 @@ export const CreateDashboardGroupModal: React.FC<
                     )}
                   </div>
                 </div>
+                {hasChartConfig && (
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      className="px-6 py-2 font-semibold"
+                      color="danger"
+                      size="md"
+                      type="button"
+                      variant="solid"
+                      onPress={handleClearChartConfig}
+                    >
+                      Limpiar configuración
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CollapsibleSection>
+          </div>
+
+          <div className="mb-6">
+            <CollapsibleSection title="Configuración de Gráfica 2 en Tiempo Real">
+              <div className="space-y-4">
+                <div>
+                  <Text className="mb-2 text-sm text-slate-300" variant="small">
+                    Tiempo del Eje X (Rango de datos)
+                  </Text>
+                  <Controller
+                    control={form.control}
+                    name="chart2TimeRange"
+                    render={({ field, fieldState }) => (
+                      <>
+                        <Select
+                          fullWidth
+                          value={field.value ? String(field.value) : ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? Number(e.target.value)
+                                : undefined
+                            )
+                          }
+                        >
+                          <option value="">Seleccionar tiempo...</option>
+                          <option value="1">1 minuto</option>
+                          <option value="10">10 minutos</option>
+                          <option value="30">30 minutos</option>
+                          <option value="60">1 hora</option>
+                          <option value="120">2 horas</option>
+                          <option value="240">4 horas</option>
+                          <option value="480">8 horas</option>
+                        </Select>
+                        <FieldError
+                          error={fieldState.error?.message}
+                          fieldId="chart2TimeRange"
+                        />
+                      </>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Controller
+                      control={form.control}
+                      name="chart2MinValue"
+                      render={({ field, fieldState }) => (
+                        <>
+                          <Input
+                            fullWidth
+                            errorMessage={fieldState.error?.message}
+                            isDisabled={isLoading}
+                            isInvalid={!!fieldState.error}
+                            label="Valor Mínimo (Eje Y)"
+                            labelPlacement="outside"
+                            name={field.name}
+                            placeholder="0"
+                            size="md"
+                            type="number"
+                            value={minValue2Input}
+                            variant="bordered"
+                            onBlur={(e) => {
+                              field.onBlur();
+                              const value = e.target.value.trim();
+
+                              if (value === "" || value === "-") {
+                                setMinValue2Input("");
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+
+                                if (!isNaN(numValue) && isFinite(numValue)) {
+                                  setMinValue2Input(String(numValue));
+                                  field.onChange(numValue);
+                                } else {
+                                  setMinValue2Input(
+                                    field.value != null
+                                      ? String(field.value)
+                                      : ""
+                                  );
+                                }
+                              }
+                            }}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              setMinValue2Input(value);
+                              if (value === "" || value === "-") {
+                                field.onChange(undefined);
+                              } else {
+                                const trimmedValue = value.trim();
+
+                                if (
+                                  trimmedValue === "" ||
+                                  trimmedValue === "-"
+                                ) {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(trimmedValue);
+
+                                  if (
+                                    !isNaN(numValue) &&
+                                    isFinite(numValue) &&
+                                    trimmedValue !== ""
+                                  ) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }
+                            }}
+                          />
+                          <FieldError
+                            error={fieldState.error?.message}
+                            fieldId="chart2MinValue"
+                          />
+                        </>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <Controller
+                      control={form.control}
+                      name="chart2MaxValue"
+                      render={({ field, fieldState }) => (
+                        <>
+                          <Input
+                            fullWidth
+                            errorMessage={fieldState.error?.message}
+                            isDisabled={isLoading}
+                            isInvalid={!!fieldState.error}
+                            label="Valor Máximo (Eje Y)"
+                            labelPlacement="outside"
+                            name={field.name}
+                            placeholder="100"
+                            size="md"
+                            type="number"
+                            value={maxValue2Input}
+                            variant="bordered"
+                            onBlur={(e) => {
+                              field.onBlur();
+                              const value = e.target.value.trim();
+
+                              if (value === "" || value === "-") {
+                                setMaxValue2Input("");
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+
+                                if (!isNaN(numValue) && isFinite(numValue)) {
+                                  setMaxValue2Input(String(numValue));
+                                  field.onChange(numValue);
+                                } else {
+                                  setMaxValue2Input(
+                                    field.value != null
+                                      ? String(field.value)
+                                      : ""
+                                  );
+                                }
+                              }
+                            }}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              setMaxValue2Input(value);
+                              if (value === "" || value === "-") {
+                                field.onChange(undefined);
+                              } else {
+                                const trimmedValue = value.trim();
+
+                                if (
+                                  trimmedValue === "" ||
+                                  trimmedValue === "-"
+                                ) {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(trimmedValue);
+
+                                  if (
+                                    !isNaN(numValue) &&
+                                    isFinite(numValue) &&
+                                    trimmedValue !== ""
+                                  ) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }
+                            }}
+                          />
+                          <FieldError
+                            error={fieldState.error?.message}
+                            fieldId="chart2MaxValue"
+                          />
+                        </>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Text className="mb-2 text-sm text-slate-300" variant="small">
+                    Measurements para el Chart
+                  </Text>
+                  <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 max-h-48 overflow-y-auto">
+                    {selectedDashboardMeasurements
+                      .filter((dm) => dm.measurement.type !== "status")
+                      .map((dm) => {
+                        const measurementId = dm.measurementId;
+                        const chartIds =
+                          form.watch("chart2MeasurementIds") ?? [];
+
+                        return (
+                          <label
+                            key={dm.id}
+                            className="flex items-center gap-2 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
+                          >
+                            <input
+                              checked={chartIds.includes(measurementId)}
+                              className="w-4 h-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary focus:ring-2"
+                              type="checkbox"
+                              onChange={() =>
+                                handleChart2MeasurementToggle(measurementId)
+                              }
+                            />
+                            <Text variant="small">
+                              {dm.measurement.name} ({dm.measurement.externalId}
+                              )
+                            </Text>
+                          </label>
+                        );
+                      })}
+                    {selectedDashboardMeasurements.filter(
+                      (dm) => dm.measurement.type !== "status"
+                    ).length === 0 && (
+                      <Text color="muted" variant="small">
+                        {selectedDashboardMeasurements.length === 0
+                          ? "Agrega dashboard measurements al grupo primero"
+                          : "No hay measurements disponibles para el chart (los measurements tipo 'status' no pueden agregarse al chart)"}
+                      </Text>
+                    )}
+                  </div>
+                </div>
+                {hasChart2Config && (
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      className="px-6 py-2 font-semibold"
+                      color="danger"
+                      size="md"
+                      type="button"
+                      variant="solid"
+                      onPress={handleClearChart2Config}
+                    >
+                      Limpiar configuración
+                    </Button>
+                  </div>
+                )}
               </div>
             </CollapsibleSection>
           </div>

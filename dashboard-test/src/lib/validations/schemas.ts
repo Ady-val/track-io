@@ -551,6 +551,17 @@ export const createDashboardMeasurementGroupSchema = z.object({
   chartMinValue: z.number().optional(),
   chartMaxValue: z.number().optional(),
   chartMeasurementIds: z.array(z.number().int().positive()).optional(),
+  chart2TimeRange: z
+    .number()
+    .int()
+    .refine((val) => [1, 10, 30, 60, 120, 240, 480].includes(val), {
+      message:
+        "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
+    })
+    .optional(),
+  chart2MinValue: z.number().optional(),
+  chart2MaxValue: z.number().optional(),
+  chart2MeasurementIds: z.array(z.number().int().positive()).optional(),
 });
 
 export const updateDashboardMeasurementGroupSchema = z.object({
@@ -576,6 +587,25 @@ export const updateDashboardMeasurementGroupSchema = z.object({
   chartMinValue: z.union([z.number(), z.null()]).optional(),
   chartMaxValue: z.union([z.number(), z.null()]).optional(),
   chartMeasurementIds: z
+    .union([z.array(z.number().int().positive()), z.null()])
+    .optional(),
+  chart2TimeRange: z
+    .union([z.number().int(), z.null(), z.undefined()])
+    .refine(
+      (val) =>
+        val === undefined ||
+        val === null ||
+        [1, 10, 30, 60, 120, 240, 480].includes(val),
+      {
+        message:
+          "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
+      }
+    )
+    .transform((val) => (val === null ? undefined : val))
+    .optional(),
+  chart2MinValue: z.union([z.number(), z.null()]).optional(),
+  chart2MaxValue: z.union([z.number(), z.null()]).optional(),
+  chart2MeasurementIds: z
     .union([z.array(z.number().int().positive()), z.null()])
     .optional(),
 });

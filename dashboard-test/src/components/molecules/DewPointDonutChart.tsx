@@ -10,6 +10,7 @@ import {
   type ChartConfiguration,
 } from "chart.js";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaDroplet } from "react-icons/fa6";
 
 import { Card, CardBody, Text } from "@components/atoms";
 import { formatLocalDateTime } from "@/lib/dateTime";
@@ -81,7 +82,8 @@ export const DewPointDonutChart: React.FC<DewPointDonutChartProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS | null>(null);
   const config = getMeasurementConfig(type);
-  const Icon = config.icon;
+  const Icon = FaDroplet;
+  const iconColor = "#ffffff";
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -187,7 +189,7 @@ export const DewPointDonutChart: React.FC<DewPointDonutChartProps> = ({
   const formattedTimestamp = formatLocalDateTime(timestamp);
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 group relative">
+    <Card className="h-[25rem] w-[25rem] bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
         {showActions && (onEdit || onDelete) && (
           <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -220,7 +222,7 @@ export const DewPointDonutChart: React.FC<DewPointDonutChartProps> = ({
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0 min-w-0">
-              <div className="flex-shrink-0" style={{ color: config.color }}>
+              <div className="flex-shrink-0" style={{ color: iconColor }}>
                 <Icon className="w-4 h-4" />
               </div>
               <div ref={titleRef} className={titleClassName}>
