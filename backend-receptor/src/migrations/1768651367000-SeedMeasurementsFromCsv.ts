@@ -13,10 +13,10 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * The migration is idempotent: it skips existing measurements by external_id
  * and only creates dashboard_measurements if they don't already exist.
  */
-export class SeedMeasurementsFromCsv20260117120247
+export class SeedMeasurementsFromCsv1768651367000
   implements MigrationInterface
 {
-  name = 'SeedMeasurementsFromCsv20260117120247';
+  name = 'SeedMeasurementsFromCsv1768651367000';
 
   private isMSSQL(queryRunner: QueryRunner): boolean {
     return queryRunner.connection.options.type === 'mssql';

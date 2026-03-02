@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddPpmToMeasurementType20260123195000
+export class AddPpmToMeasurementType1769197800000
   implements MigrationInterface
 {
-  name = 'AddPpmToMeasurementType20260123195000';
+  name = 'AddPpmToMeasurementType1769197800000';
 
   private isMSSQL(queryRunner: QueryRunner): boolean {
     return queryRunner.connection.options.type === 'mssql';

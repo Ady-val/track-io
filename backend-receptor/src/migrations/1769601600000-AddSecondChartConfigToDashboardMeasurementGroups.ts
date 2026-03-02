@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddSecondChartConfigToDashboardMeasurementGroups20260128120000
+export class AddSecondChartConfigToDashboardMeasurementGroups1769601600000
   implements MigrationInterface
 {
-  name = 'AddSecondChartConfigToDashboardMeasurementGroups20260128120000';
+  name = 'AddSecondChartConfigToDashboardMeasurementGroups1769601600000';
 
   private isMSSQL(queryRunner: QueryRunner): boolean {
     return queryRunner.connection.options.type === 'mssql';

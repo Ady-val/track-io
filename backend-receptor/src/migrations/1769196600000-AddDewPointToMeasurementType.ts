@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddDewPointToMeasurementType20260123193000
+export class AddDewPointToMeasurementType1769196600000
   implements MigrationInterface
 {
-  name = 'AddDewPointToMeasurementType20260123193000';
+  name = 'AddDewPointToMeasurementType1769196600000';
 
   private isMSSQL(queryRunner: QueryRunner): boolean {
     return queryRunner.connection.options.type === 'mssql';

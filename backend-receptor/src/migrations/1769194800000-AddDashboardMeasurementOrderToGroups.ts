@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddDashboardMeasurementOrderToGroups20260123190000
+export class AddDashboardMeasurementOrderToGroups1769194800000
   implements MigrationInterface
 {
-  name = 'AddDashboardMeasurementOrderToGroups20260123190000';
+  name = 'AddDashboardMeasurementOrderToGroups1769194800000';
 
   private isMSSQL(queryRunner: QueryRunner): boolean {
     return queryRunner.connection.options.type === 'mssql';

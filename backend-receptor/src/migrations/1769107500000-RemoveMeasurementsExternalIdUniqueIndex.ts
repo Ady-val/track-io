@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
-export class RemoveMeasurementsExternalIdUniqueIndex20260122184500
+export class RemoveMeasurementsExternalIdUniqueIndex1769107500000
   implements MigrationInterface
 {
-  name = "RemoveMeasurementsExternalIdUniqueIndex20260122184500";
+  name = "RemoveMeasurementsExternalIdUniqueIndex1769107500000";
 
   private isMSSQL(queryRunner: QueryRunner): boolean {
     return queryRunner.connection.options.type === "mssql";
