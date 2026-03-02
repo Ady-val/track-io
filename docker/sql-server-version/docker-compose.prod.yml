@@ -88,9 +88,10 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "0.0.0.0:${BACKEND_PORT_PROD:-3000}:3000"  # Expuesto en todas las interfaces para acceso desde red
-    # Nota: depends_on removido para permitir uso de BD externa
-    # Si usas BD interna (--profile internal-db), asegúrate de que SQL Server esté listo antes del backend
-    # El backend maneja reconexiones automáticas con TypeORM
+    depends_on:
+      db_init_prod:
+        condition: service_completed_successfully
+        required: false  # No bloquea si el perfil internal-db no está activo (BD externa)
     networks:
       - track_iq_production_sql_server
     logging:
