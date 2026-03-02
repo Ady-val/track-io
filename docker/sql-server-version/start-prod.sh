@@ -118,7 +118,7 @@ echo "   CORS_ORIGIN configurado: $CORS_ORIGIN"
 
 echo ""
 echo "🐳 Deteniendo contenedores existentes..."
-docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod down
+docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod down
 
 echo ""
 if [ $REBUILD_NEEDED -eq 1 ]; then
@@ -134,7 +134,7 @@ if [ $REBUILD_NEEDED -eq 1 ]; then
     BUILD_SLEEP=${BUILD_SLEEP:-5}
     BUILD_OK=0
     for i in $(seq 1 "$BUILD_ATTEMPTS"); do
-        if docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod; then
+        if docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod; then
             BUILD_OK=1
             break
         fi
@@ -148,10 +148,10 @@ if [ $REBUILD_NEEDED -eq 1 ]; then
         echo "   Posible problema de DNS/red. Revisa la conectividad a registry.npmjs.org"
         exit 1
     fi
-    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d --build
+    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod up -d --build
 else
     echo "▶️  Iniciando servicios sin rebuild..."
-    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d
+    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod up -d
 fi
 
 if [ $? -ne 0 ]; then
