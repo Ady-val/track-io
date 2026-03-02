@@ -4,8 +4,21 @@
 
 set -e  # Salir si hay algún error
 
+# Parsear argumentos
+CLEAN_MODE=0
+for arg in "$@"; do
+    case "$arg" in
+        --clean)
+            CLEAN_MODE=1
+            ;;
+    esac
+done
+
 echo "========================================"
 echo "🚀 Track.IO - Inicio de Producción (SQL Server)"
+if [ $CLEAN_MODE -eq 1 ]; then
+    echo "   ⚠️  Modo limpio: se eliminará toda la data de BD"
+fi
 echo "========================================"
 echo ""
 
@@ -118,7 +131,13 @@ echo "   CORS_ORIGIN configurado: $CORS_ORIGIN"
 
 echo ""
 echo "🐳 Deteniendo contenedores existentes..."
-docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod down
+if [ $CLEAN_MODE -eq 1 ]; then
+    echo "   🗑️  Eliminando volúmenes de datos (--clean)..."
+    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod down --volumes
+    REBUILD_NEEDED=1
+else
+    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod down
+fi
 
 echo ""
 if [ $REBUILD_NEEDED -eq 1 ]; then
@@ -190,4 +209,5 @@ echo "📝 Comandos útiles:"
 echo "   Ver logs:          docker compose -f docker-compose.prod.yml logs -f"
 echo "   Ver estado:        docker compose -f docker-compose.prod.yml ps"
 echo "   Detener:           ./stop-prod.sh"
+echo "   Reinicio limpio:   ./start-prod.sh --clean  (elimina BD y recrea todo)"
 echo ""
