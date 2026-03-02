@@ -1,24 +1,11 @@
 #!/bin/bash
-# Track.IO - Iniciar entorno de Producción con SQL Server
-# Este script inicia todos los servicios en modo producción
+# Track.IO - Iniciar entorno de Producción (Backend + Nginx)
+# SQL Server debe estar corriendo por separado antes de ejecutar este script
 
 set -e  # Salir si hay algún error
 
-# Parsear argumentos
-CLEAN_MODE=0
-for arg in "$@"; do
-    case "$arg" in
-        --clean)
-            CLEAN_MODE=1
-            ;;
-    esac
-done
-
 echo "========================================"
-echo "🚀 Track.IO - Inicio de Producción (SQL Server)"
-if [ $CLEAN_MODE -eq 1 ]; then
-    echo "   ⚠️  Modo limpio: se eliminará toda la data de BD"
-fi
+echo "🚀 Track.IO - Inicio de Producción"
 echo "========================================"
 echo ""
 
@@ -44,13 +31,34 @@ if [ -z "$MSSQL_SA_PASSWORD_PROD" ]; then
     exit 1
 fi
 
+# Verificar que SQL Server esté corriendo
+echo "🔍 Verificando conexión a SQL Server..."
+SQL_CONTAINER="track-io-sqlserver-prod"
+if ! docker ps --format '{{.Names}}' | grep -q "^${SQL_CONTAINER}$"; then
+    echo "❌ Error: El contenedor '$SQL_CONTAINER' no está corriendo"
+    echo ""
+    echo "   Inicia SQL Server primero con:"
+    echo "   docker network create track_iq_production_sql_server 2>/dev/null; \\"
+    echo "   docker run -d --name track-io-sqlserver-prod \\"
+    echo "     --network track_iq_production_sql_server \\"
+    echo "     --restart unless-stopped \\"
+    echo "     -e 'ACCEPT_EULA=Y' \\"
+    echo "     -e 'SA_PASSWORD=${MSSQL_SA_PASSWORD_PROD}' \\"
+    echo "     -e 'MSSQL_PID=${MSSQL_PID:-Express}' \\"
+    echo "     -p 0.0.0.0:${MSSQL_PORT_PROD:-1433}:1433 \\"
+    echo "     -v sqlserver_prod_data:/var/opt/mssql \\"
+    echo "     mcr.microsoft.com/mssql/server:2022-latest"
+    echo ""
+    exit 1
+fi
+echo "   ✅ SQL Server está corriendo"
+
+echo ""
 echo "🔍 Detectando IP del equipo..."
 
 # Detectar la IP de la interfaz de red principal (activa, no virtual)
-# Usa la IP de la ruta por defecto, que es la interfaz de red principal activa
 HOST_IP=$(ip -4 route show default 2>/dev/null | grep -oP 'src \K[\d.]+' | head -n 1)
 
-# Si no se encuentra usando la ruta por defecto, intentar desde la interfaz de la ruta por defecto
 if [ -z "$HOST_IP" ]; then
     DEFAULT_IFACE=$(ip -4 route show default 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p' | head -n 1)
     if [ -n "$DEFAULT_IFACE" ]; then
@@ -58,12 +66,10 @@ if [ -z "$HOST_IP" ]; then
     fi
 fi
 
-# Si no se encuentra usando la ruta por defecto, intentar obtener de interfaces globales (excluyendo virtuales)
 if [ -z "$HOST_IP" ]; then
     HOST_IP=$(ip -4 addr show scope global 2>/dev/null | grep -vE 'scope global.*(docker|br-|veth|virbr|lo)' | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
 fi
 
-# Si aún no se encuentra, usar hostname -I pero filtrar IPs de localhost/link-local
 if [ -z "$HOST_IP" ]; then
     HOST_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -vE '^127\.|^169\.254\.' | head -n 1)
 fi
@@ -98,10 +104,8 @@ fi
 
 # Si hay CORS personalizado y no es "*", combinarlo con los orígenes locales
 if [ -n "$CUSTOM_CORS" ] && [ "$CUSTOM_CORS" != "*" ]; then
-    # Combinar localhost, IP local y orígenes personalizados
     CORS_ORIGIN="http://localhost:${NGINX_PORT_PROD:-80},http://$HOST_IP:${NGINX_PORT_PROD:-80},$CUSTOM_CORS"
 else
-    # Por defecto: incluir localhost e IP local para permitir acceso desde cualquier dispositivo en la red local
     CORS_ORIGIN="http://localhost:${NGINX_PORT_PROD:-80},http://$HOST_IP:${NGINX_PORT_PROD:-80}"
 fi
 
@@ -131,29 +135,21 @@ echo "   CORS_ORIGIN configurado: $CORS_ORIGIN"
 
 echo ""
 echo "🐳 Deteniendo contenedores existentes..."
-if [ $CLEAN_MODE -eq 1 ]; then
-    echo "   🗑️  Eliminando volúmenes de datos (--clean)..."
-    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod down --volumes
-    REBUILD_NEEDED=1
-else
-    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod down
-fi
+docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod down
 
 echo ""
 if [ $REBUILD_NEEDED -eq 1 ]; then
     echo "🔨 Reconstruyendo servicios con nueva IP..."
-    # Opcional: usar builder legacy si BuildKit causa problemas de red
     if [ "${FORCE_LEGACY_DOCKER_BUILD:-}" = "1" ]; then
         export DOCKER_BUILDKIT=0
         export COMPOSE_DOCKER_CLI_BUILD=0
     fi
 
-    # Reintentos para mitigar fallos DNS intermitentes (EAI_AGAIN)
     BUILD_ATTEMPTS=${BUILD_ATTEMPTS:-3}
     BUILD_SLEEP=${BUILD_SLEEP:-5}
     BUILD_OK=0
     for i in $(seq 1 "$BUILD_ATTEMPTS"); do
-        if docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod; then
+        if docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod build --no-cache nginx_prod; then
             BUILD_OK=1
             break
         fi
@@ -167,10 +163,10 @@ if [ $REBUILD_NEEDED -eq 1 ]; then
         echo "   Posible problema de DNS/red. Revisa la conectividad a registry.npmjs.org"
         exit 1
     fi
-    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod up -d --build
+    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d --build
 else
     echo "▶️  Iniciando servicios sin rebuild..."
-    docker compose -f docker-compose.prod.yml --profile internal-db --env-file .env.production --env-file .env.host.prod up -d
+    docker compose -f docker-compose.prod.yml --env-file .env.production --env-file .env.host.prod up -d
 fi
 
 if [ $? -ne 0 ]; then
@@ -182,7 +178,7 @@ fi
 
 echo ""
 echo "⏳ Esperando a que los servicios estén listos..."
-sleep 15
+sleep 10
 
 echo ""
 echo "========================================"
@@ -201,7 +197,7 @@ echo "     Backend API:     http://$HOST_IP:${BACKEND_PORT_PROD:-3000}"
 echo "     SQL Server:      $HOST_IP:${MSSQL_PORT_PROD:-1433}"
 echo ""
 echo "📊 Servicios:"
-echo "   - SQL Server 2022 (${MSSQL_PID:-Express})"
+echo "   - SQL Server 2022 (${MSSQL_PID:-Express}) [contenedor independiente]"
 echo "   - Backend NestJS (Node.js)"
 echo "   - Nginx (Reverse Proxy)"
 echo ""
@@ -209,5 +205,4 @@ echo "📝 Comandos útiles:"
 echo "   Ver logs:          docker compose -f docker-compose.prod.yml logs -f"
 echo "   Ver estado:        docker compose -f docker-compose.prod.yml ps"
 echo "   Detener:           ./stop-prod.sh"
-echo "   Reinicio limpio:   ./start-prod.sh --clean  (elimina BD y recrea todo)"
 echo ""

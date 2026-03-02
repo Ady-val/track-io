@@ -1,67 +1,7 @@
-# Track.IO - Docker Compose para Producción con SQL Server
-# Este compose crea el entorno de producción completo con Microsoft SQL Server 2022
-# Grupo de contenedores: track_iq_production_sql_server
-#
-# CONFIGURACIÓN DE BASE DE DATOS:
-# - Base de datos INTERNA: docker-compose --profile internal-db -f docker-compose.prod.yml up -d
-# - Base de datos EXTERNA: Configura DATABASE_HOST_PROD en .env.production y ejecuta sin --profile internal-db
-
-version: '3.8'
+# Track.IO - Docker Compose para Producción (Backend + Nginx)
+# SQL Server debe estar corriendo por separado en la red track_iq_production_sql_server
 
 services:
-  track_io_sql_server_prod:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: track-io-sqlserver-prod
-    restart: unless-stopped
-    profiles:
-      - internal-db  # Solo se levanta si se usa --profile internal-db
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: ${MSSQL_SA_PASSWORD_PROD}
-      MSSQL_PID: ${MSSQL_PID:-Express}  # Express, Developer, Standard, Enterprise, EnterpriseCore
-    ports:
-      - "0.0.0.0:${MSSQL_PORT_PROD:-1433}:1433"  # Puerto configurable para producción, expuesto en todas las interfaces
-    volumes:
-      - sqlserver_prod_data:/var/opt/mssql
-      - ./backups:/var/opt/mssql/backup  # Montar directorio de backups
-    networks:
-      - track_iq_production_sql_server
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q \"SELECT 1\" -C || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  db_init_prod:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: track-io-db-init-prod
-    restart: "no"
-    profiles:
-      - internal-db  # Solo se levanta si se usa --profile internal-db
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: ${MSSQL_SA_PASSWORD_PROD}
-    networks:
-      - track_iq_production_sql_server
-    depends_on:
-      track_io_sql_server_prod:
-        condition: service_healthy
-    command: >
-      /bin/bash -c
-      "sleep 5 &&
-      /opt/mssql-tools18/bin/sqlcmd
-      -S track_io_sql_server_prod
-      -U sa
-      -P '${MSSQL_SA_PASSWORD_PROD}'
-      -C
-      -Q \"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '${MSSQL_DB_PROD:-track_io_prod}') CREATE DATABASE [${MSSQL_DB_PROD:-track_io_prod}]\""
-
   backend:
     build:
       context: ../../backend-receptor
@@ -72,26 +12,21 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_TYPE: mssql
-      DATABASE_HOST: ${DATABASE_HOST_PROD:-track_io_sql_server_prod}
+      DATABASE_HOST: ${DATABASE_HOST_PROD:-track-io-sqlserver-prod}
       DATABASE_PORT: 1433
       DATABASE_USERNAME: ${MSSQL_USER_PROD:-sa}
       DATABASE_PASSWORD: ${MSSQL_SA_PASSWORD_PROD}
       DATABASE_NAME: ${MSSQL_DB_PROD:-track_io_prod}
-      DATABASE_URL: mssql://${MSSQL_USER_PROD:-sa}:${MSSQL_SA_PASSWORD_PROD}@${DATABASE_HOST_PROD:-track_io_sql_server_prod}:1433/${MSSQL_DB_PROD:-track_io_prod}
+      DATABASE_URL: mssql://${MSSQL_USER_PROD:-sa}:${MSSQL_SA_PASSWORD_PROD}@${DATABASE_HOST_PROD:-track-io-sqlserver-prod}:1433/${MSSQL_DB_PROD:-track_io_prod}
       CORS_ORIGIN: ${CORS_ORIGIN_PROD:-*}
       MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
       MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
       MSSQL_ENCRYPT: ${MSSQL_ENCRYPT_PROD:-true}
       MSSQL_TRUST_SERVER_CERTIFICATE: ${MSSQL_TRUST_SERVER_CERTIFICATE_PROD:-false}
-      TYPEORM_SYNCHRONIZE: "false"  # Siempre false en producción
-      # Configuración de logging
+      TYPEORM_SYNCHRONIZE: "false"
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
-      - "0.0.0.0:${BACKEND_PORT_PROD:-3000}:3000"  # Expuesto en todas las interfaces para acceso desde red
-    depends_on:
-      db_init_prod:
-        condition: service_completed_successfully
-        required: false  # No bloquea si el perfil internal-db no está activo (BD externa)
+      - "0.0.0.0:${BACKEND_PORT_PROD:-3000}:3000"
     networks:
       - track_iq_production_sql_server
     logging:
@@ -117,10 +52,10 @@ services:
     container_name: track_io_nginx_prod
     restart: unless-stopped
     ports:
-      - "0.0.0.0:${NGINX_PORT_PROD:-80}:80"  # Expuesto en todas las interfaces para acceso desde red
-      - "0.0.0.0:${NGINX_SSL_PORT_PROD:-443}:443"  # Puerto para HTTPS, expuesto en todas las interfaces
+      - "0.0.0.0:${NGINX_PORT_PROD:-80}:80"
+      - "0.0.0.0:${NGINX_SSL_PORT_PROD:-443}:443"
     volumes:
-      - ./nginx/ssl:/etc/nginx/ssl:ro  # Certificados SSL (opcional, solo si tienes certificados)
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
     networks:
@@ -136,12 +71,6 @@ services:
           cpus: '1'
           memory: 512M
 
-volumes:
-  sqlserver_prod_data:
-    name: track_iq_production_sqlserver_data
-    driver: local
-
 networks:
   track_iq_production_sql_server:
-    name: track_iq_production_sql_server
-    driver: bridge
+    external: true
