@@ -39,5 +39,5 @@ RUN pnpm run build
 EXPOSE 3000
 
 # Start the application with migrations
-# Run migrations before starting (skip if TYPEORM_SYNCHRONIZE is true for test environments)
-CMD sh -c "if [ \"$TYPEORM_SYNCHRONIZE\" != \"true\" ]; then echo '🔄 Running database migrations...' && pnpm run migration:run || exit 1; fi && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"
+# Ensure MSSQL database exists, then run migrations (skip if TYPEORM_SYNCHRONIZE is true for test)
+CMD sh -c "if [ \"$TYPEORM_SYNCHRONIZE\" != \"true\" ]; then node scripts/ensure-mssql-database.js && echo '🔄 Running database migrations...' && pnpm run migration:run || exit 1; fi && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"

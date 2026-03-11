@@ -1,13 +1,17 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 
-// Load environment variables
+// Load environment variables (from .env file if present; Docker injects via env)
 require('dotenv').config();
 
 const configService = new ConfigService();
 
+// Helper: ConfigService may not read process.env when used outside NestJS context
+const getEnv = (key: string, fallback?: string) =>
+  configService.get<string>(key) ?? process.env[key] ?? fallback;
+
 // Determine database type from environment variable (default: postgres)
-const databaseType = (configService.get<string>('DATABASE_TYPE') ?? 'postgres').toLowerCase();
+const databaseType = (getEnv('DATABASE_TYPE') ?? 'postgres').toLowerCase();
 
 // Determine if we're in production (compiled) or development
 // In Docker/production, NODE_ENV is set to 'production' and we use compiled migrations from dist/
@@ -25,7 +29,7 @@ const baseConfig = {
   entities: entitiesPath,
   migrations: migrationsPath,
   synchronize: false, // Always false for migrations
-  logging: configService.get<string>('NODE_ENV') === 'development' || configService.get<string>('NODE_ENV') === undefined,
+  logging: getEnv('NODE_ENV') === 'development' || getEnv('NODE_ENV') === undefined,
 };
 
 // Database-specific configuration
@@ -33,14 +37,14 @@ let dataSource: DataSource;
 
 if (databaseType === 'mssql' || databaseType === 'sqlserver') {
   // SQL Server configuration
-  const port = configService.get<string>('DATABASE_PORT');
+  const port = getEnv('DATABASE_PORT');
   dataSource = new DataSource({
     type: 'mssql',
-    host: configService.get<string>('DATABASE_HOST') ?? 'localhost',
+    host: getEnv('DATABASE_HOST', 'localhost') ?? 'localhost',
     port: port ? parseInt(port, 10) : 1433,
-    username: configService.get<string>('DATABASE_USERNAME') ?? 'sa',
-    password: configService.get<string>('DATABASE_PASSWORD') ?? '',
-    database: configService.get<string>('DATABASE_NAME') ?? 'track_io',
+    username: getEnv('DATABASE_USERNAME', 'sa') ?? 'sa',
+    password: getEnv('DATABASE_PASSWORD', '') ?? '',
+    database: getEnv('DATABASE_NAME', 'track_io') ?? 'track_io',
     options: {
       encrypt: false, // Use true for production with SSL
       trustServerCertificate: true, // For development, set to false in production
@@ -50,14 +54,14 @@ if (databaseType === 'mssql' || databaseType === 'sqlserver') {
   });
 } else {
   // PostgreSQL configuration (default)
-  const port = configService.get<string>('DATABASE_PORT');
+  const port = getEnv('DATABASE_PORT');
   dataSource = new DataSource({
     type: 'postgres',
-    host: configService.get<string>('DATABASE_HOST') ?? 'localhost',
+    host: getEnv('DATABASE_HOST', 'localhost') ?? 'localhost',
     port: port ? parseInt(port, 10) : 5432,
-    username: configService.get<string>('DATABASE_USERNAME') ?? 'postgres',
-    password: configService.get<string>('DATABASE_PASSWORD') ?? 'postgres',
-    database: configService.get<string>('DATABASE_NAME') ?? 'track_io',
+    username: getEnv('DATABASE_USERNAME', 'postgres') ?? 'postgres',
+    password: getEnv('DATABASE_PASSWORD', 'postgres') ?? 'postgres',
+    database: getEnv('DATABASE_NAME', 'track_io') ?? 'track_io',
     ...baseConfig,
   });
 }
