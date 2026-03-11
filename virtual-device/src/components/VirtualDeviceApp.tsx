@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 
 import { useVirtualDevices } from "../hooks/useVirtualDevices";
 import { useSignalSender } from "../hooks/useSignalSender";
-import { ENV_CONFIG } from "../config/environment";
+import { apiService, type EventItem } from "../services/api";
 
 import { DeviceSelector } from "./molecules/DeviceSelector";
 import { DeviceInfo } from "./molecules/DeviceInfo";
@@ -21,7 +21,7 @@ export const VirtualDeviceApp: React.FC = () => {
   const [selectedSignal, setSelectedSignal] = useState<DeviceSignal | null>(
     null,
   );
-  const [events, setEvents] = useState<Map<number, any>>(new Map());
+  const [events, setEvents] = useState<Map<number, EventItem>>(new Map());
 
   const selectedDevice = devices.find(
     (device) => device.id === selectedDeviceId,
@@ -38,15 +38,13 @@ export const VirtualDeviceApp: React.FC = () => {
 
     for (const signal of selectedDevice.deviceSignals || []) {
       try {
-        const url = `${ENV_CONFIG.API_URL}/events?deviceId=${selectedDevice.id}&deviceSignalId=${signal.id}&status=open,in-progress`;
+        const activeEvent = await apiService.getActiveEvent(
+          selectedDevice.id,
+          signal.id,
+        );
 
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const eventsArray = Array.isArray(data) ? data : data.data || [];
-
-        if (eventsArray && eventsArray.length > 0) {
-          newEvents.set(signal.id, eventsArray[0]);
+        if (activeEvent) {
+          newEvents.set(signal.id, activeEvent);
         }
       } catch {}
     }

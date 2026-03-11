@@ -41,7 +41,7 @@ run.bat dev            # Windows
 ./run.sh dev           # Linux/Mac
 ```
 
-URLs: Dashboard http://localhost:80 | Backend http://localhost:3000 | SQL Server localhost:1434
+URLs: Dashboard http://localhost:80 | Virtual Device http://localhost/virtual-device/ | Backend http://localhost:3000 | SQL Server localhost:1434
 
 ### Producción
 
@@ -70,7 +70,7 @@ run.bat prod           # Windows
 | `run.bat` / `run.sh` | Script unificado |
 | `docker-compose.yml` | Desarrollo (SQL Server + Backend + Nginx) |
 | `docker-compose.test.yml` | Testing (Cypress) |
-| `docker-compose.prod.yml` | Producción (Backend + Nginx, SQL Server externo) |
+| `docker-compose.prod.yml` | Producción (Backend + Nginx con Dashboard y Virtual Device, SQL Server externo) |
 | `env.example` | Plantilla para `.env` (desarrollo) |
 | `env.production.template` | Plantilla para `.env.production` |
 | `.env.host` / `.env.host.prod` | Generados automáticamente (IP, VITE_API_URL, CORS) |
@@ -82,6 +82,8 @@ run.bat prod           # Windows
 - `MSSQL_SA_PASSWORD`: Contraseña SA (evitar `@` y `#` en URLs)
 - `MSSQL_DB`: Nombre de la base de datos
 - `MSSQL_PORT`: Puerto host (default 1434)
+- `VIRTUAL_DEVICE_PORT`: (obsoleto) Virtual Device ahora en http://localhost/virtual-device/
+- `VITE_AUTH_TOKEN`: JWT opcional para endpoints protegidos en virtual-device
 
 ### Producción (`.env.production`)
 
@@ -92,6 +94,7 @@ run.bat prod           # Windows
 - `DATABASE_HOST_PROD`: Host del SQL Server (default: track-io-sqlserver-prod)
 - `BACKEND_PORT_PROD`, `NGINX_PORT_PROD`, `NGINX_SSL_PORT_PROD`
 - `CORS_ORIGIN_PROD`: Orígenes CORS adicionales (opcional)
+- `VITE_AUTH_TOKEN_PROD`: JWT opcional para endpoints protegidos en virtual-device
 
 Ver `env.production.template` para la lista completa.
 

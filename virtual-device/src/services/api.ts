@@ -5,6 +5,11 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface EventItem {
+  id: number;
+  status: "open" | "in-progress" | "closed";
+}
+
 export interface Device {
   id: number;
   name: string;
@@ -51,6 +56,9 @@ class ApiService {
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
+        ...(API_CONFIG.AUTH_TOKEN
+          ? { Authorization: `Bearer ${API_CONFIG.AUTH_TOKEN}` }
+          : {}),
         ...options.headers,
       },
       ...options,
@@ -89,7 +97,14 @@ class ApiService {
   }
 
   async getVirtualDevices(): Promise<ApiResponse<Device[]>> {
-    return this.request<ApiResponse<Device[]>>("/devices?isVirtualDevice=true");
+    const response = await this.request<ApiResponse<Device[]>>(
+      "/devices?limit=1000",
+    );
+
+    return {
+      ...response,
+      data: (response.data || []).filter((device) => device.isVirtualDevice),
+    };
   }
 
   async getDevice(id: number): Promise<ApiResponse<Device>> {
@@ -133,6 +148,19 @@ class ApiService {
 
   async getDepartments(): Promise<ApiResponse<any[]>> {
     return this.request<ApiResponse<any[]>>("/departments");
+  }
+
+  async getActiveEvent(
+    deviceId: number,
+    deviceSignalId: number,
+  ): Promise<EventItem | null> {
+    const response = await this.request<EventItem[] | ApiResponse<EventItem[]>>(
+      `/events?deviceId=${deviceId}&deviceSignalId=${deviceSignalId}&status=open,in-progress`,
+    );
+
+    const eventsArray = Array.isArray(response) ? response : (response.data ?? []);
+
+    return eventsArray.length > 0 ? eventsArray[0] : null;
   }
 }
 

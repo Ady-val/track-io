@@ -49,6 +49,7 @@ services:
       dockerfile: docker/Dockerfile.unified
       args:
         VITE_API_URL: ${VITE_API_URL_PROD:-http://localhost:3000}
+        VITE_AUTH_TOKEN: ${VITE_AUTH_TOKEN_PROD:-}
     container_name: track_io_nginx_prod
     restart: unless-stopped
     ports:

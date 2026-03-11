@@ -151,7 +151,7 @@ if %REBUILD_NEEDED%==1 (
 )
 if %ERRORLEVEL% neq 0 exit /b 1
 echo.
-echo Desarrollo iniciado. Dashboard: http://localhost:80  Backend: http://localhost:3000
+echo Desarrollo iniciado. Dashboard: http://localhost:80  Virtual Device: http://localhost/virtual-device/  Backend: http://localhost:3000  Virtual Device: http://localhost:81/virtual-device/
 exit /b 0
 
 REM ========== test ==========
@@ -223,7 +223,7 @@ if %REBUILD_NEEDED%==1 (
 if %ERRORLEVEL% neq 0 exit /b 1
 timeout /t 15 /nobreak >nul
 echo.
-echo Produccion iniciada. Dashboard: http://localhost:80  Backend: http://localhost:3000
+echo Produccion iniciada. Dashboard: http://localhost:80  Virtual Device: http://localhost/virtual-device/  Backend: http://localhost:3000
 exit /b 0
 
 REM ========== down ==========

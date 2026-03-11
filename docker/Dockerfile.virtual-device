@@ -1,0 +1,38 @@
+# Stage 1: Build virtual-device
+FROM node:18-alpine AS virtual-device-builder
+
+ARG VITE_API_URL=http://localhost:3000
+ARG VITE_AUTH_TOKEN=
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY virtual-device/package*.json ./
+COPY virtual-device/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY virtual-device/src ./src
+COPY virtual-device/scripts ./scripts
+COPY virtual-device/index.html ./
+COPY virtual-device/tsconfig.json ./
+COPY virtual-device/tsconfig.node.json ./
+COPY virtual-device/tailwind.config.js ./
+COPY virtual-device/postcss.config.js ./
+COPY virtual-device/vite.config.ts ./
+COPY virtual-device/eslint.config.mjs ./
+
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_AUTH_TOKEN=${VITE_AUTH_TOKEN}
+
+RUN npx vite build
+
+# Stage 2: Nginx static hosting
+FROM nginx:alpine
+
+COPY docker/nginx.virtual-device.conf /etc/nginx/nginx.conf
+COPY --from=virtual-device-builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

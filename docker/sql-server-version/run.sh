@@ -148,7 +148,7 @@ EOF
         docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d
     fi
     echo ""
-    echo "Desarrollo iniciado. Dashboard: http://localhost:80  Backend: http://localhost:3000"
+    echo "Desarrollo iniciado. Dashboard: http://localhost:80  Virtual Device: http://localhost/virtual-device/  Backend: http://localhost:3000"
 }
 
 do_test() {
@@ -215,7 +215,7 @@ EOF
     fi
     sleep 15
     echo ""
-    echo "Produccion iniciada. Dashboard: http://localhost:80  Backend: http://localhost:3000"
+    echo "Produccion iniciada. Dashboard: http://localhost:80  Virtual Device: http://localhost/virtual-device/  Backend: http://localhost:3000"
 }
 
 do_down() {

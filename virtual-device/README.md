@@ -42,6 +42,8 @@ Crea un archivo `.env` en la raíz del proyecto:
 ```env
 # API Configuration
 VITE_API_URL=http://localhost:3000
+# Opcional: JWT para endpoints protegidos (catalogo de dispositivos)
+# VITE_AUTH_TOKEN=eyJ...
 
 # App Configuration
 VITE_APP_NAME=Virtual Device Simulator
@@ -52,16 +54,17 @@ VITE_APP_VERSION=1.0.0
 
 La aplicación requiere que el backend Track.IO esté ejecutándose con:
 
-1. **Endpoint de Devices**: `GET /devices?isVirtualDevice=true`
+1. **Endpoint de Devices**: `GET /devices` (filtrado de `isVirtualDevice` del lado cliente)
 2. **Endpoint de Signals**: `POST /signals`
 3. **Campo isVirtualDevice**: Agregado a la entidad Device
+4. **Auth (si aplica)**: si `/devices` está protegido, define `VITE_AUTH_TOKEN`
 
 ## 📡 API Endpoints
 
 ### Obtener Dispositivos Virtuales
 
 ```http
-GET /devices?isVirtualDevice=true
+GET /devices?limit=1000
 ```
 
 **Respuesta:**

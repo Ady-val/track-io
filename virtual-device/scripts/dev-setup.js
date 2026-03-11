@@ -5,6 +5,8 @@ const path = require('path');
 
 const ENV_TEMPLATE = `# API Configuration
 VITE_API_URL=http://localhost:3000
+# Optional: token JWT para consultar catalogos protegidos (/devices)
+# VITE_AUTH_TOKEN=
 
 # App Configuration
 VITE_APP_NAME=Virtual Device Simulator
@@ -25,7 +27,7 @@ function checkBackendConnection() {
   const options = {
     hostname: 'localhost',
     port: 3000,
-    path: '/devices',
+    path: '/signals/count',
     method: 'GET',
     timeout: 5000
   };
