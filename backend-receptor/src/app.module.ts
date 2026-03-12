@@ -30,6 +30,7 @@ import { User } from './users/domain/entities/user.entity';
 import systemModulesConfig from './config/system-modules.config';
 import { APP_GUARD } from '@nestjs/core';
 import { SystemModuleGuard } from './common/guards/system-module.guard';
+import { VirtualDeviceModule } from './virtual-device/virtual-device.module';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { SystemModuleGuard } from './common/guards/system-module.guard';
     AreaDowntimeModule,
     AlertEscalationModule,
     EventsModule,
+    VirtualDeviceModule,
   ],
   controllers: [AppController],
   providers: [

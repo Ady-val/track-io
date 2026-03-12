@@ -102,13 +102,17 @@ export class AreaDowntimeService {
     triggeringEvent: Event,
     existingActiveEvents: Event[] = []
   ): Promise<AreaDowntime> {
+    const allEvents = [triggeringEvent, ...existingActiveEvents];
+    const oldestCreatedAt = allEvents.reduce(
+      (min, e) => (e.createdAt < min ? e.createdAt : min),
+      triggeringEvent.createdAt
+    );
+
     const areaDowntime = await this.areaDowntimeRepository.create({
       areaId: triggeringEvent.areaId,
-      startAt: new Date(),
+      startAt: oldestCreatedAt,
       isActive: true,
     });
-
-    const allEvents = [triggeringEvent, ...existingActiveEvents];
 
     for (const event of allEvents) {
       await this.areaDowntimeEventRepository.create({

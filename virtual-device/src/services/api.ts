@@ -1,4 +1,5 @@
 import { API_CONFIG } from "../config/api";
+import { VD_TOKEN_KEY } from "../lib/api";
 
 export interface ApiResponse<T> {
   message: string;
@@ -8,6 +9,7 @@ export interface ApiResponse<T> {
 export interface EventItem {
   id: number;
   status: "open" | "in-progress" | "closed";
+  createdAt?: string;
 }
 
 export interface Device {
@@ -40,10 +42,41 @@ export interface VirtualDeviceSignalData {
   comment?: string;
 }
 
+export interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+export interface LoginResult {
+  access_token: string;
+  user: {
+    id: number;
+    name: string;
+    username: string;
+  };
+}
+
+export interface MeResult {
+  message: string;
+  data: {
+    user: {
+      id: number;
+      name: string;
+      username: string;
+    };
+    permissions: Array<{
+      id: number;
+      module: string;
+      action: string;
+      description?: string;
+    }>;
+  };
+}
+
 class ApiService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = "/api") {
+  constructor(baseUrl: string = API_CONFIG.BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
@@ -56,8 +89,8 @@ class ApiService {
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
-        ...(API_CONFIG.AUTH_TOKEN
-          ? { Authorization: `Bearer ${API_CONFIG.AUTH_TOKEN}` }
+        ...(localStorage.getItem(VD_TOKEN_KEY)
+          ? { Authorization: `Bearer ${localStorage.getItem(VD_TOKEN_KEY)}` }
           : {}),
         ...options.headers,
       },
@@ -97,18 +130,28 @@ class ApiService {
   }
 
   async getVirtualDevices(): Promise<ApiResponse<Device[]>> {
-    const response = await this.request<ApiResponse<Device[]>>(
-      "/devices?limit=1000",
-    );
+    return this.request<ApiResponse<Device[]>>("/virtual-device/devices?limit=1000");
+  }
 
-    return {
-      ...response,
-      data: (response.data || []).filter((device) => device.isVirtualDevice),
-    };
+  async login(payload: LoginPayload): Promise<LoginResult> {
+    return this.request<LoginResult>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getMe(): Promise<MeResult> {
+    return this.request<MeResult>("/auth/me");
+  }
+
+  async logout(): Promise<{ message: string }> {
+    return this.request<{ message: string }>("/auth/logout", {
+      method: "POST",
+    });
   }
 
   async getDevice(id: number): Promise<ApiResponse<Device>> {
-    return this.request<ApiResponse<Device>>(`/devices/${id}`);
+    return this.request<ApiResponse<Device>>(`/virtual-device/devices/${id}`);
   }
 
   async sendSignal(
@@ -121,7 +164,7 @@ class ApiService {
       value: deviceSignal.externalValueId,
     };
 
-    return this.request<ApiResponse<any>>("/signals", {
+    return this.request<ApiResponse<any>>("/virtual-device/signals", {
       method: "POST",
       body: JSON.stringify(signalData),
     });
@@ -140,14 +183,14 @@ class ApiService {
       ...(comment && { comment }),
     };
 
-    return this.request<ApiResponse<any>>("/signals/virtual-device", {
+    return this.request<ApiResponse<any>>("/virtual-device/signals", {
       method: "POST",
       body: JSON.stringify(signalData),
     });
   }
 
   async getDepartments(): Promise<ApiResponse<any[]>> {
-    return this.request<ApiResponse<any[]>>("/departments");
+    return this.request<ApiResponse<any[]>>("/virtual-device/departments");
   }
 
   async getActiveEvent(
@@ -155,12 +198,20 @@ class ApiService {
     deviceSignalId: number,
   ): Promise<EventItem | null> {
     const response = await this.request<EventItem[] | ApiResponse<EventItem[]>>(
-      `/events?deviceId=${deviceId}&deviceSignalId=${deviceSignalId}&status=open,in-progress`,
+      `/virtual-device/events?deviceId=${deviceId}&deviceSignalId=${deviceSignalId}&status=open,in-progress`,
     );
 
     const eventsArray = Array.isArray(response) ? response : (response.data ?? []);
 
     return eventsArray.length > 0 ? eventsArray[0] : null;
+  }
+
+  async getLineStopForArea(
+    areaId: number,
+  ): Promise<ApiResponse<{ startAt: string | null }>> {
+    return this.request<ApiResponse<{ startAt: string | null }>>(
+      `/virtual-device/line-stop/${areaId}`,
+    );
   }
 }
 

@@ -16,15 +16,15 @@ export const DeviceInfo: React.FC<DeviceInfoProps> = ({ device }) => {
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 rounded-lg flex items-center justify-center">
             <Text className="text-white" color="primary" variant="h3">
-              {device.name.charAt(0).toUpperCase()}
+              {(device.name ?? "?").charAt(0).toUpperCase()}
             </Text>
           </div>
           <div>
             <Text className="text-blue-900 font-semibold" variant="h3">
-              {device.name}
+              {device.name ?? "Sin nombre"}
             </Text>
             <Text color="muted" variant="caption">
-              ID: {device.externalId}
+              ID: {device.externalId ?? "—"}
             </Text>
           </div>
         </div>
@@ -35,7 +35,7 @@ export const DeviceInfo: React.FC<DeviceInfoProps> = ({ device }) => {
               Área
             </Text>
             <Text className="text-blue-900 font-medium" variant="body">
-              {device.areaName}
+              {device.areaName ?? "—"}
             </Text>
           </div>
           <div>

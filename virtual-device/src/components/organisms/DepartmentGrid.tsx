@@ -12,6 +12,7 @@ interface DepartmentGridProps {
   isSending: (signalId: number) => boolean;
   getError: (signalId: number) => string | undefined;
   getEventStatus: (signalId: number) => EventStatus | null;
+  getElapsedSeconds: (signalId: number) => number;
   isLoading?: boolean;
 }
 
@@ -21,6 +22,7 @@ export const DepartmentGrid: React.FC<DepartmentGridProps> = ({
   isSending,
   getError,
   getEventStatus,
+  getElapsedSeconds,
   isLoading = false,
 }) => {
   if (isLoading) {
@@ -45,29 +47,18 @@ export const DepartmentGrid: React.FC<DepartmentGridProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Text className="text-slate-100" variant="h3">
-          Departamentos
-        </Text>
-        <Text color="muted" variant="body">
-          {deviceSignals.length} departamento
-          {deviceSignals.length !== 1 ? "s" : ""}
-        </Text>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {deviceSignals.map((deviceSignal) => (
-          <DepartmentCard
-            key={deviceSignal.id}
-            deviceSignal={deviceSignal}
-            error={getError(deviceSignal.id)}
-            eventStatus={getEventStatus(deviceSignal.id)}
-            isSending={isSending(deviceSignal.id)}
-            onSendData={onSendData}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      {deviceSignals.map((deviceSignal) => (
+        <DepartmentCard
+          key={deviceSignal.id}
+          deviceSignal={deviceSignal}
+          error={getError(deviceSignal.id)}
+          eventStatus={getEventStatus(deviceSignal.id)}
+          elapsedSeconds={getElapsedSeconds(deviceSignal.id)}
+          isSending={isSending(deviceSignal.id)}
+          onSendData={onSendData}
+        />
+      ))}
     </div>
   );
 };
