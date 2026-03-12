@@ -112,7 +112,7 @@ HOST_IP=$HOST_IP
 VITE_API_URL=http://$HOST_IP:3000
 EOF
 
-    docker compose -f docker-compose.yml down 2>/dev/null || true
+    docker compose -f docker-compose.yml --env-file .env down -v 2>/dev/null || true
     if [ "$REBUILD_NEEDED" -eq 1 ]; then
         docker compose -f docker-compose.yml --env-file .env --env-file .env.host build --no-cache nginx
         docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d --build
