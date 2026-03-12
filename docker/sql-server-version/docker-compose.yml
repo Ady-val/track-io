@@ -34,8 +34,8 @@ services:
       DATABASE_PORT: 1433
       DATABASE_USERNAME: sa
       DATABASE_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrongPassword123!}
-      DATABASE_NAME: ${MSSQL_DB:-track_io_test}
-      DATABASE_URL: mssql://sa:${MSSQL_SA_PASSWORD:-YourStrongPassword123!}@track_io_sql_server:1433/${MSSQL_DB:-track_io_test}
+      DATABASE_NAME: ${MSSQL_DB:-track_io}
+      DATABASE_URL: mssql://sa:${MSSQL_SA_PASSWORD:-YourStrongPassword123!}@track_io_sql_server:1433/${MSSQL_DB:-track_io}
       CORS_ORIGIN: '*'
       MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
       MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
