@@ -1,14 +1,12 @@
 import { DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 
-// Load environment variables (from .env file if present; Docker injects via env)
+// In Docker: env vars are injected by Docker Compose (process.env already has them)
+// Locally: dotenv loads .env into process.env
+// Either way, process.env is the single source of truth
 require('dotenv').config();
 
-const configService = new ConfigService();
-
-// Helper: ConfigService may not read process.env when used outside NestJS context
-const getEnv = (key: string, fallback?: string) =>
-  configService.get<string>(key) ?? process.env[key] ?? fallback;
+const getEnv = (key: string, fallback?: string): string =>
+  process.env[key] ?? fallback ?? '';
 
 // Determine database type from environment variable (default: postgres)
 const databaseType = (getEnv('DATABASE_TYPE') ?? 'postgres').toLowerCase();

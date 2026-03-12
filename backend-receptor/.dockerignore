@@ -1,0 +1,27 @@
+# Environment files - credentials never in image, Docker Compose injects them at runtime
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build artifacts
+dist/
+
+# Node modules
+node_modules/
+
+# Test and dev files
+test/
+**/*.spec.ts
+**/*.e2e-spec.ts
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
