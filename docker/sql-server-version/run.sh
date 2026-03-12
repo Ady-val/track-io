@@ -6,34 +6,6 @@ set -e
 
 cd "$(dirname "$0")"
 
-CMD="${1:-}"
-case "$CMD" in
-    ""|help)
-        show_help
-        exit 0
-        ;;
-    db-init)
-        do_db_init
-        ;;
-    dev)
-        do_dev
-        ;;
-    test)
-        do_test
-        ;;
-    prod)
-        do_prod
-        ;;
-    down)
-        do_down "${2:-dev}"
-        ;;
-    *)
-        echo "Comando desconocido: $CMD"
-        show_help
-        exit 1
-        ;;
-esac
-
 show_help() {
     echo "========================================"
     echo "Track.IO - Comandos disponibles"
@@ -241,3 +213,32 @@ do_down() {
     esac
     echo "Listo."
 }
+
+# --- Main ---
+CMD="${1:-}"
+case "$CMD" in
+    ""|help)
+        show_help
+        exit 0
+        ;;
+    db-init)
+        do_db_init
+        ;;
+    dev)
+        do_dev
+        ;;
+    test)
+        do_test
+        ;;
+    prod)
+        do_prod
+        ;;
+    down)
+        do_down "${2:-dev}"
+        ;;
+    *)
+        echo "Comando desconocido: $CMD"
+        show_help
+        exit 1
+        ;;
+esac
