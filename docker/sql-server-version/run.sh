@@ -77,6 +77,11 @@ do_db_init() {
 }
 
 detect_host_ip() {
+    # Permitir override: HOST_IP=192.168.1.88 ./run.sh dev
+    if [ -n "$HOST_IP" ]; then
+        echo "IP usada (override): $HOST_IP"
+        return
+    fi
     HOST_IP=$(ip -4 route show default 2>/dev/null | grep -oP 'src \K[\d.]+' | head -n 1)
     if [ -z "$HOST_IP" ]; then
         DEFAULT_IFACE=$(ip -4 route show default 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p' | head -n 1)
