@@ -26,6 +26,8 @@ services:
       dockerfile: ../docker/Dockerfile.backend
     container_name: track_io_backend_sqlserver
     restart: always
+    command: >
+      sh -c "node scripts/ensure-mssql-database.js && echo '🔄 Running database migrations...' && node scripts/run-migrations-docker.js && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
