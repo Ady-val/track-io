@@ -1353,7 +1353,7 @@ describe('SignalService', () => {
     });
   });
 
-  describe('handleEventLogicForVirtualDevice', () => {
+  describe('handleEventLogic (virtual device context)', () => {
     const externalId = 'DEV001';
     const value = 'VAL001';
     const reason = 'Test reason';
@@ -1364,12 +1364,11 @@ describe('SignalService', () => {
       deviceRepository.findByExternalId.mockResolvedValue(null);
 
       // Act
-      await service['handleEventLogicForVirtualDevice'](
-        externalId,
-        value,
+      await service['handleEventLogic'](externalId, value, {
+        virtualDevice: true,
         reason,
-        comment
-      );
+        comment,
+      });
 
       // Assert
       expect(eventRepository.findOpenByDeviceAndSignal).not.toHaveBeenCalled();
@@ -1400,12 +1399,11 @@ describe('SignalService', () => {
       eventRepository.create.mockResolvedValue(mockEvent);
 
       // Act
-      await service['handleEventLogicForVirtualDevice'](
-        externalId,
-        value,
+      await service['handleEventLogic'](externalId, value, {
+        virtualDevice: true,
         reason,
-        comment
-      );
+        comment,
+      });
 
       // Assert
       expect(eventRepository.create).toHaveBeenCalledWith(
@@ -1418,7 +1416,7 @@ describe('SignalService', () => {
     });
   });
 
-  describe('createNewVirtualDeviceEvent', () => {
+  describe('createNewEvent (virtual device context)', () => {
     it('should create event with virtualDevice flag', async () => {
       // Arrange
       const mockDevice = createMockDevice();
@@ -1435,12 +1433,11 @@ describe('SignalService', () => {
       eventRepository.create.mockResolvedValue(mockEvent);
 
       // Act
-      await service['createNewVirtualDeviceEvent'](
-        mockDevice,
-        mockDeviceSignal,
+      await service['createNewEvent'](mockDevice, mockDeviceSignal, {
+        virtualDevice: true,
         reason,
-        comment
-      );
+        comment,
+      });
 
       // Assert
       expect(eventRepository.create).toHaveBeenCalledWith(
@@ -1461,10 +1458,9 @@ describe('SignalService', () => {
       eventRepository.create.mockResolvedValue(mockEvent);
 
       // Act
-      await service['createNewVirtualDeviceEvent'](
-        mockDevice,
-        mockDeviceSignal
-      );
+      await service['createNewEvent'](mockDevice, mockDeviceSignal, {
+        virtualDevice: true,
+      });
 
       // Assert
       expect(
@@ -1481,10 +1477,9 @@ describe('SignalService', () => {
       eventRepository.create.mockResolvedValue(mockEvent);
 
       // Act
-      await service['createNewVirtualDeviceEvent'](
-        mockDevice,
-        mockDeviceSignal
-      );
+      await service['createNewEvent'](mockDevice, mockDeviceSignal, {
+        virtualDevice: true,
+      });
 
       // Assert
       expect(webSocketEmitterService.emitToAll).toHaveBeenCalledWith(

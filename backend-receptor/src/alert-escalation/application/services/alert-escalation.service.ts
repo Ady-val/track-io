@@ -5,6 +5,7 @@ import { AlertEscalationConfigRepository } from '../../domain/repositories/alert
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
 import { EventAlertLogRepository } from '../../domain/repositories/event-alert-log.repository';
 import type { CreateEventAlertLogDto } from '../../domain/repositories/event-alert-log.repository';
+import { toEventAlertLogMessageSnapshot } from '../../domain/repositories/event-alert-log.repository';
 import {
   AlertEscalationMessage,
   AlertLevel,
@@ -261,12 +262,14 @@ export class AlertEscalationService {
       eventId,
       level,
       sentAt: new Date(),
-      messagesSent: messages.map(msg => ({
-        targetId: msg.targetId,
-        message: msg.message,
-        color: msg.color,
-        messageType: msg.messageType,
-      })),
+      messagesSent: messages.map(msg =>
+        toEventAlertLogMessageSnapshot({
+          targetId: msg.targetId,
+          message: msg.message,
+          ...(msg.color !== undefined ? { color: msg.color } : {}),
+          messageType: msg.messageType,
+        })
+      ),
       success,
       endpointUrl,
     };

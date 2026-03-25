@@ -104,6 +104,9 @@ export class AreaTorretaSignalService {
         );
 
       if (configs.length === 0) {
+        this.logger.warn(
+          `No active area torreta config for areaId=${event.areaId} (event ${event.id}). Skipping POST to events endpoint — configure torretas for this area to receive outbound signals.`
+        );
         return;
       }
 

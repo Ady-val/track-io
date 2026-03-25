@@ -28,8 +28,14 @@ export class EventAlertLog {
   @Column({ name: 'sent_at' })
   sentAt!: Date;
 
-  @Column({ name: 'messages_sent', type: 'nvarchar', length: 'max' })
-  messagesSent!: unknown[];
+  /** Stored as NVARCHAR(JSON) on SQL Server; use simple-json so the driver binds a string, not a raw array. */
+  @Column({ name: 'messages_sent', type: 'simple-json' })
+  messagesSent!: Array<{
+    targetId: string;
+    message: string;
+    color?: string;
+    messageType: string;
+  }>;
 
   @Column({ name: 'success' })
   success!: boolean;

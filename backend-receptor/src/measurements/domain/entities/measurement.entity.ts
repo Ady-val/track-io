@@ -34,6 +34,8 @@ export class Measurement {
 
   @Column({
     enum: MeasurementType,
+    // Default required so SQL Server can add NOT NULL column to existing rows (synchronize / migrations)
+    default: MeasurementType.TEMPERATURE,
   })
   type!: MeasurementType;
 
