@@ -14,6 +14,7 @@ import {
 import { AlertEscalationConfig } from '../../domain/entities/alert-escalation-config.entity';
 import { Event } from '../../../events/domain/entities/event.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+import { NODE_RED_EVENTS_URL } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -37,7 +38,7 @@ type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertEscalationService {
-  private readonly endpointUrl = 'http://localhost:1880/events';
+  private readonly endpointUrl = NODE_RED_EVENTS_URL;
   private readonly logger = new Logger(AlertEscalationService.name);
 
   constructor(
@@ -233,21 +234,8 @@ export class AlertEscalationService {
     });
   }
 
-  private resolveEndpointUrl(endpointUrl: string): string {
-    try {
-      if (process.env['NODE_ENV'] === 'development') return endpointUrl;
-      const url = new URL(endpointUrl);
-      if (
-        url.hostname === 'localhost' ||
-        url.hostname === '127.0.0.1' ||
-        url.hostname === '::1'
-      ) {
-        url.hostname = 'host.docker.internal';
-      }
-      return url.toString();
-    } catch {
-      return endpointUrl;
-    }
+  private resolveEndpointUrl(_endpointUrl: string): string {
+    return NODE_RED_EVENTS_URL;
   }
 
   async logAlertSent(

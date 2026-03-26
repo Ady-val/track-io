@@ -358,36 +358,16 @@ describe('AreaTorretaSignalService', () => {
   });
 
   describe('resolveEndpointUrl', () => {
-    it('should return original URL in development', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-
-      const url = (
-        service as unknown as { resolveEndpointUrl: (url: string) => string }
-      ).resolveEndpointUrl('http://localhost:1880/events');
-
-      expect(url).toBe('http://localhost:1880/events');
-      process.env.NODE_ENV = originalEnv;
-    });
-
-    it('should resolve localhost to host.docker.internal in production', () => {
+    it('should always use localhost Node-RED URL regardless of input or NODE_ENV', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
       const url = (
         service as unknown as { resolveEndpointUrl: (url: string) => string }
-      ).resolveEndpointUrl('http://localhost:1880/events');
+      ).resolveEndpointUrl('http://host.docker.internal:1880/events');
 
-      expect(url).toContain('host.docker.internal');
+      expect(url).toBe('http://localhost:1880/events');
       process.env.NODE_ENV = originalEnv;
-    });
-
-    it('should handle invalid URLs gracefully', () => {
-      const url = (
-        service as unknown as { resolveEndpointUrl: (url: string) => string }
-      ).resolveEndpointUrl('invalid-url');
-
-      expect(url).toBe('invalid-url');
     });
   });
 });

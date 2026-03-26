@@ -28,7 +28,7 @@ export class AlertEscalationConfig {
     name: 'endpoint_url',
     type: 'varchar',
     length: 500,
-    default: 'http://host.docker.internal:1880/events',
+    default: 'http://localhost:1880/events',
   })
   endpointUrl!: string;
 

@@ -286,7 +286,7 @@ describe('AlertMessageSenderService', () => {
       process.env.NODE_ENV = originalEnv;
     });
 
-    it('should resolve endpoint URL correctly in production (localhost -> host.docker.internal)', async () => {
+    it('should always POST to localhost Node-RED URL in production', async () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
@@ -302,10 +302,10 @@ describe('AlertMessageSenderService', () => {
       const mockResponse = { status: 200, data: {} };
       httpService.post.mockReturnValue(of(mockResponse) as any);
 
-      await service.sendMessages(messages, 'http://localhost:1880/events');
+      await service.sendMessages(messages, 'http://host.docker.internal:1880/events');
 
       const [url] = httpService.post.mock.calls[0];
-      expect(url).toBe('http://host.docker.internal:1880/events');
+      expect(url).toBe('http://localhost:1880/events');
 
       process.env.NODE_ENV = originalEnv;
     });
@@ -326,7 +326,7 @@ describe('AlertMessageSenderService', () => {
       // Invalid URL format
       const result = await service.sendMessages(messages, 'invalid-url');
 
-      expect(result).toBe(true); // resolveEndpointUrl handles invalid URLs gracefully
+      expect(result).toBe(true); // invalid configured URL is ignored; POST uses localhost
     });
 
     it('should handle empty messages array', async () => {

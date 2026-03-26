@@ -2365,7 +2365,7 @@ export class InitialSchema1000000000000 implements MigrationInterface {
             type: 'varchar',
             length: '500',
             isNullable: false,
-            default: "'http://host.docker.internal:1880/events'",
+            default: "'http://localhost:1880/events'",
           },
           {
             name: 'warning_delay_minutes',

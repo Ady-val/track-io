@@ -427,7 +427,7 @@ export const createMockAlertEscalationConfig = (
   config.deviceId = overrides?.deviceId ?? 1;
   config.deviceSignalId = overrides?.deviceSignalId ?? 1;
   config.endpointUrl =
-    overrides?.endpointUrl ?? 'http://host.docker.internal:1880/events';
+    overrides?.endpointUrl ?? 'http://localhost:1880/events';
   config.warningDelayMinutes = overrides?.warningDelayMinutes ?? 20;
   config.escalation1DelayMinutes = overrides?.escalation1DelayMinutes ?? 40;
   config.escalation2DelayMinutes = overrides?.escalation2DelayMinutes ?? 60;
@@ -477,7 +477,7 @@ export const createMockEventAlertLog = (
   log.messagesSent = overrides?.messagesSent ?? [];
   log.success = overrides?.success ?? true;
   log.endpointUrl =
-    overrides?.endpointUrl ?? 'http://host.docker.internal:1880/events';
+    overrides?.endpointUrl ?? 'http://localhost:1880/events';
   if (overrides?.errorMessage) log.errorMessage = overrides.errorMessage;
   if (overrides?.event) log.event = overrides.event;
   return Object.assign(log, overrides);
