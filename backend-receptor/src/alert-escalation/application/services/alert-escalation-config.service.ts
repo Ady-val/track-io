@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NODE_RED_EVENTS_URL } from '../../../config/node-red-events-url';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 import { AlertEscalationConfigRepository } from '../../domain/repositories/alert-escalation-config.repository';
 import { CreateAlertEscalationConfigDto } from '../dtos/create-alert-escalation-config.dto';
 import { UpdateAlertEscalationConfigDto } from '../dtos/update-alert-escalation-config.dto';
@@ -100,7 +100,7 @@ export class AlertEscalationConfigService {
       const updateData: Partial<UpdateAlertEscalationConfigDto> & {
         endpointUrl: string;
       } = {
-        endpointUrl: NODE_RED_EVENTS_URL,
+        endpointUrl: resolveNodeRedEventsUrl(),
       };
       if (dto.warningDelayMinutes !== undefined)
         updateData.warningDelayMinutes = dto.warningDelayMinutes;
@@ -124,7 +124,7 @@ export class AlertEscalationConfigService {
       } = {
         deviceId: dto.deviceId,
         deviceSignalId: dto.deviceSignalId,
-        endpointUrl: NODE_RED_EVENTS_URL,
+        endpointUrl: resolveNodeRedEventsUrl(),
       };
       if (dto.warningDelayMinutes !== undefined)
         createData.warningDelayMinutes = dto.warningDelayMinutes;

@@ -358,16 +358,29 @@ describe('AreaTorretaSignalService', () => {
   });
 
   describe('resolveEndpointUrl', () => {
-    it('should always use localhost Node-RED URL regardless of input or NODE_ENV', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+    it('should use localhost when NODE_RED_EVENTS_URL is unset', () => {
+      const original = process.env['NODE_RED_EVENTS_URL'];
+      delete process.env['NODE_RED_EVENTS_URL'];
 
       const url = (
-        service as unknown as { resolveEndpointUrl: (url: string) => string }
-      ).resolveEndpointUrl('http://host.docker.internal:1880/events');
+        service as unknown as { resolveEndpointUrl: () => string }
+      ).resolveEndpointUrl();
 
       expect(url).toBe('http://localhost:1880/events');
-      process.env.NODE_ENV = originalEnv;
+      if (original !== undefined) process.env['NODE_RED_EVENTS_URL'] = original;
+    });
+
+    it('should use NODE_RED_EVENTS_URL when set', () => {
+      const original = process.env['NODE_RED_EVENTS_URL'];
+      process.env['NODE_RED_EVENTS_URL'] = 'http://192.168.1.88:1880/events';
+
+      const url = (
+        service as unknown as { resolveEndpointUrl: () => string }
+      ).resolveEndpointUrl();
+
+      expect(url).toBe('http://192.168.1.88:1880/events');
+      if (original !== undefined) process.env['NODE_RED_EVENTS_URL'] = original;
+      else delete process.env['NODE_RED_EVENTS_URL'];
     });
   });
 });

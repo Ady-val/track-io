@@ -28,8 +28,12 @@ services:
     restart: always
     command: >
       sh -c "node scripts/ensure-mssql-database.js && echo '🔄 Running database migrations...' && node scripts/run-migrations-docker.js && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
+      # Node-RED on the Docker host: use LAN IP if host.docker.internal fails (Linux).
+      NODE_RED_EVENTS_URL: ${NODE_RED_EVENTS_URL:-http://host.docker.internal:1880/events}
       PORT: 3000
       DATABASE_TYPE: mssql
       DATABASE_HOST: track_io_sql_server

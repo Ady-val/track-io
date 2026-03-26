@@ -9,7 +9,7 @@ import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { TypeOrmEventRepository } from '../../../events/domain/repositories/typeorm-event.repository';
 import { DepartmentRepository } from '../../../departments/domain/repositories/department.repository';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
-import { NODE_RED_EVENTS_URL } from '../../../config/node-red-events-url';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -20,8 +20,6 @@ type TorretaPayload = {
 @Injectable()
 export class AreaTorretaSignalService {
   private readonly logger = new Logger(AreaTorretaSignalService.name);
-  private readonly endpointUrl = NODE_RED_EVENTS_URL;
-
   private eventRepository?: TypeOrmEventRepository;
   private areaTorretaConfigRepository?: TypeOrmAreaTorretaConfigRepository;
   private departmentRepository?: DepartmentRepository;
@@ -217,7 +215,7 @@ export class AreaTorretaSignalService {
     deviceColorId: string
   ): Promise<void> {
     try {
-      const resolvedUrl = this.resolveEndpointUrl(this.endpointUrl);
+      const resolvedUrl = this.resolveEndpointUrl();
       const payload: { data: TorretaPayload[] } = {
         data: [
           {
@@ -252,7 +250,7 @@ export class AreaTorretaSignalService {
     }
   }
 
-  private resolveEndpointUrl(_endpointUrl: string): string {
-    return NODE_RED_EVENTS_URL;
+  private resolveEndpointUrl(): string {
+    return resolveNodeRedEventsUrl();
   }
 }

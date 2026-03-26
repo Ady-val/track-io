@@ -14,7 +14,7 @@ import {
 import { AlertEscalationConfig } from '../../domain/entities/alert-escalation-config.entity';
 import { Event } from '../../../events/domain/entities/event.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
-import { NODE_RED_EVENTS_URL } from '../../../config/node-red-events-url';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -38,7 +38,6 @@ type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertEscalationService {
-  private readonly endpointUrl = NODE_RED_EVENTS_URL;
   private readonly logger = new Logger(AlertEscalationService.name);
 
   constructor(
@@ -234,8 +233,8 @@ export class AlertEscalationService {
     });
   }
 
-  private resolveEndpointUrl(_endpointUrl: string): string {
-    return NODE_RED_EVENTS_URL;
+  private resolveEndpointUrl(configuredUrl: string): string {
+    return resolveNodeRedEventsUrl(configuredUrl);
   }
 
   async logAlertSent(
@@ -303,9 +302,10 @@ export class AlertEscalationService {
         return;
       }
 
+      const resolvedUrl = this.resolveEndpointUrl(config.endpointUrl);
       const success = await this.sendMessagesToEndpoint(
         messages,
-        this.endpointUrl
+        config.endpointUrl
       );
 
       await this.logAlertSent(
@@ -313,7 +313,7 @@ export class AlertEscalationService {
         level,
         messages,
         success,
-        this.endpointUrl,
+        resolvedUrl,
         success ? undefined : 'HTTP request failed'
       );
 
@@ -362,9 +362,10 @@ export class AlertEscalationService {
         return;
       }
 
+      const resolvedUrl = this.resolveEndpointUrl(config.endpointUrl);
       const success = await this.sendMessagesToEndpoint(
         messages,
-        this.endpointUrl
+        config.endpointUrl
       );
 
       await this.logAlertSent(
@@ -372,7 +373,7 @@ export class AlertEscalationService {
         AlertLevel.CLOSE,
         messages,
         success,
-        this.endpointUrl,
+        resolvedUrl,
         success ? undefined : 'HTTP request failed'
       );
 

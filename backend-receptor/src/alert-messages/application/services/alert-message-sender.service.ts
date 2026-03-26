@@ -6,7 +6,7 @@ import {
   MessageType,
 } from '../../domain/entities/alert-message.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
-import { NODE_RED_EVENTS_URL } from '../../../config/node-red-events-url';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -30,7 +30,6 @@ type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertMessageSenderService {
-  private readonly endpointUrl = NODE_RED_EVENTS_URL;
   private readonly logger = new Logger(AlertMessageSenderService.name);
 
   constructor(
@@ -43,9 +42,7 @@ export class AlertMessageSenderService {
     endpointUrl?: string
   ): Promise<boolean> {
     try {
-      const resolvedUrl = this.resolveEndpointUrl(
-        endpointUrl ?? this.endpointUrl
-      );
+      const resolvedUrl = this.resolveEndpointUrl(endpointUrl);
       const payloadData = await this.transformMessagesToPayload(messages);
       const payload = { data: payloadData };
 
@@ -200,7 +197,7 @@ export class AlertMessageSenderService {
     });
   }
 
-  private resolveEndpointUrl(_endpointUrl: string): string {
-    return NODE_RED_EVENTS_URL;
+  private resolveEndpointUrl(configuredUrl?: string): string {
+    return resolveNodeRedEventsUrl(configuredUrl);
   }
 }
