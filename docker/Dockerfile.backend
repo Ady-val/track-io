@@ -4,8 +4,10 @@
 # Use Node.js 18 Alpine as base image
 FROM node:18-alpine
 
-# Install system dependencies for PostgreSQL client and wget for healthchecks
-RUN apk add --no-cache postgresql-client wget
+# No instalamos postgresql-client/wget: el arranque usa solo Node (mssql + TypeORM).
+# Si en el futuro necesitas psql o wget en la imagen, usa:
+#   RUN apk update && apk add --no-cache postgresql-client wget
+# (apk a veces falla con exit 2 por red/mirrors o por cambios de paquetes en Alpine.)
 
 # Set working directory
 WORKDIR /app
