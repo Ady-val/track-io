@@ -119,13 +119,13 @@ EOF
 
     docker compose -f docker-compose.yml --env-file .env down -v 2>/dev/null || true
     if [ "$REBUILD_NEEDED" -eq 1 ]; then
-        docker compose -f docker-compose.yml --env-file .env --env-file .env.host build --no-cache nginx
+        docker compose -f docker-compose.yml --env-file .env --env-file .env.host build --no-cache
         docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d --build
     else
         docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d
     fi
     echo ""
-    echo "Desarrollo iniciado. Dashboard: http://localhost:80  Virtual Device: http://localhost/virtual-device/  Backend: http://localhost:3000"
+    echo "Desarrollo iniciado. Dashboard: http://localhost:80  Backend: http://localhost:3000"
 }
 
 do_test() {

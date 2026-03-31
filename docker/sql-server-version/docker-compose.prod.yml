@@ -7,11 +7,6 @@ services:
       context: ../../backend-receptor
       dockerfile: ../docker/Dockerfile.backend
       network: host
-      args:
-        HTTP_PROXY: ${HTTP_PROXY:-}
-        HTTPS_PROXY: ${HTTPS_PROXY:-}
-        NO_PROXY: ${NO_PROXY:-}
-        NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}
     container_name: track_io_backend_prod
     restart: unless-stopped
     extra_hosts:
@@ -56,6 +51,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/Dockerfile.unified
+      network: host
       args:
         VITE_API_URL: ${VITE_API_URL_PROD:-http://localhost:3000}
         VITE_AUTH_TOKEN: ${VITE_AUTH_TOKEN_PROD:-}

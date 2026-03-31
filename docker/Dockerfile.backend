@@ -9,40 +9,19 @@ FROM node:18-alpine
 #   RUN apk update && apk add --no-cache postgresql-client wget
 # (apk a veces falla con exit 2 por red/mirrors o por cambios de paquetes en Alpine.)
 
-# Preferir IPv4 si el entorno tiene IPv6 roto (evita fallos intermitentes en getaddrinfo)
-ENV NODE_OPTIONS=--dns-result-order=ipv4first
-
 # Set working directory
 WORKDIR /app
-
-# Opcional: proxy / registry alterno (compose: variables de entorno o --build-arg)
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
-ENV HTTP_PROXY=$HTTP_PROXY HTTPS_PROXY=$HTTPS_PROXY NO_PROXY=$NO_PROXY
-ENV NPM_CONFIG_REGISTRY=$NPM_CONFIG_REGISTRY
 
 # Copy package files first for better layer caching
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
-# Un solo RUN de red:
-# - Sustituir /etc/resolv.conf (en build, Docker a veces deja un resolver que no resuelve bien con network: host / systemd-resolved).
-# - Sin Corepack: no descarga pnpm desde registry con el cliente de Corepack (mismo host, pero resolv.conf ya aplicado antes de npm).
-# - npm install -g pnpm y pnpm install comparten ese resolv.conf en la misma capa.
-RUN rm -f /etc/resolv.conf \
-  && printf 'nameserver 8.8.8.8\nnameserver 1.1.1.1\n' > /etc/resolv.conf \
-  && npm config set registry "$NPM_CONFIG_REGISTRY" \
-  && npm install -g pnpm@9.15.4 \
-  && pnpm config set registry "$NPM_CONFIG_REGISTRY" \
-  && set -e; \
-  for i in 1 2 3 4; do \
-    pnpm install --frozen-lockfile && exit 0; \
-    echo "pnpm install falló (intento $i/4), esperando 20s..."; \
-    sleep 20; \
-  done; \
-  exit 1
+# Activar pnpm via corepack (incluido en Node 18+, sin descargar del registry)
+RUN corepack enable
+
+# Install project dependencies
+# Using --frozen-lockfile ensures exact versions from lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy source code explicitly (avoiding node_modules from host)
 COPY src/ ./src/

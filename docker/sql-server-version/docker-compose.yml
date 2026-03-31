@@ -24,13 +24,7 @@ services:
     build:
       context: ../../backend-receptor
       dockerfile: ../docker/Dockerfile.backend
-      # Linux: build con red del host (DNS/registry igual que el servidor). Suele corregir EAI_AGAIN si daemon.json no alcanza.
       network: host
-      args:
-        HTTP_PROXY: ${HTTP_PROXY:-}
-        HTTPS_PROXY: ${HTTPS_PROXY:-}
-        NO_PROXY: ${NO_PROXY:-}
-        NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}
     container_name: track_io_backend_sqlserver
     restart: always
     command: >
@@ -65,6 +59,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/Dockerfile.unified
+      network: host
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
         VITE_AUTH_TOKEN: ${VITE_AUTH_TOKEN:-}

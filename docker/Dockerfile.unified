@@ -5,7 +5,7 @@ ARG VITE_API_URL=http://localhost:3000
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+RUN corepack enable
 
 COPY dashboard-test/package*.json ./
 COPY dashboard-test/pnpm-lock.yaml ./
