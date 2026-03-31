@@ -24,6 +24,12 @@ services:
     build:
       context: ../../backend-receptor
       dockerfile: ../docker/Dockerfile.backend
+      # Linux: build con red del host (DNS/registry igual que el servidor). Suele corregir EAI_AGAIN si daemon.json no alcanza.
+      network: host
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
     container_name: track_io_backend_sqlserver
     restart: always
     command: >

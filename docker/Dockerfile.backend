@@ -12,12 +12,18 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
+# Opcional: salida a npm/registry vía proxy (compose: args → build.args o docker build --build-arg HTTPS_PROXY=http://host:port)
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ENV HTTP_PROXY=$HTTP_PROXY HTTPS_PROXY=$HTTPS_PROXY NO_PROXY=$NO_PROXY
+
 # Copy package files first for better layer caching (packageManager en package.json activa pnpm vía Corepack)
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
 # Corepack viene con Node 18+; evita `npm install -g pnpm` (mismo registry, pero flujo estándar).
-# EAI_AGAIN / getaddrinfo = DNS dentro del build: revisa Docker Desktop (DNS 8.8.8.8), VPN o proxy.
+# EAI_AGAIN / getaddrinfo = DNS dentro del build (Linux: daemon.json → dns, systemd-resolved, proxy corporativo).
 RUN corepack enable
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
