@@ -9,26 +9,34 @@ FROM node:18-alpine
 #   RUN apk update && apk add --no-cache postgresql-client wget
 # (apk a veces falla con exit 2 por red/mirrors o por cambios de paquetes en Alpine.)
 
+# Preferir IPv4 si el entorno tiene IPv6 roto (evita fallos intermitentes en getaddrinfo)
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+
 # Set working directory
 WORKDIR /app
 
-# Opcional: salida a npm/registry vía proxy (compose: args → build.args o docker build --build-arg HTTPS_PROXY=http://host:port)
+# Opcional: proxy / registry alterno (compose: variables de entorno o --build-arg)
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
+ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
 ENV HTTP_PROXY=$HTTP_PROXY HTTPS_PROXY=$HTTPS_PROXY NO_PROXY=$NO_PROXY
+ENV NPM_CONFIG_REGISTRY=$NPM_CONFIG_REGISTRY
 
-# Copy package files first for better layer caching (packageManager en package.json activa pnpm vía Corepack)
+# Copy package files first for better layer caching
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
-# Corepack viene con Node 18+; evita `npm install -g pnpm` (mismo registry, pero flujo estándar).
-# EAI_AGAIN / getaddrinfo = DNS dentro del build (Linux: daemon.json → dns, systemd-resolved, proxy corporativo).
-RUN corepack enable
-ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-
-# Reintentos ante DNS intermitente durante el build
-RUN set -e; \
+# Un solo RUN de red:
+# - Sustituir /etc/resolv.conf (en build, Docker a veces deja un resolver que no resuelve bien con network: host / systemd-resolved).
+# - Sin Corepack: no descarga pnpm desde registry con el cliente de Corepack (mismo host, pero resolv.conf ya aplicado antes de npm).
+# - npm install -g pnpm y pnpm install comparten ese resolv.conf en la misma capa.
+RUN rm -f /etc/resolv.conf \
+  && printf 'nameserver 8.8.8.8\nnameserver 1.1.1.1\n' > /etc/resolv.conf \
+  && npm config set registry "$NPM_CONFIG_REGISTRY" \
+  && npm install -g pnpm@9.15.4 \
+  && pnpm config set registry "$NPM_CONFIG_REGISTRY" \
+  && set -e; \
   for i in 1 2 3 4; do \
     pnpm install --frozen-lockfile && exit 0; \
     echo "pnpm install falló (intento $i/4), esperando 20s..."; \
