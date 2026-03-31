@@ -1,0 +1,22 @@
+ID,PFC,Tipo_Señal,Descripción,Nota_Auditoria
+SEC1_TFD,PFC200_1,Digital Input,Entrada Digital M1 Canal 1,No está en SeedMeasurementsFromCsv; en migración existe solo PFC1_M1_DI1 comentado
+PFC2_M1_DI1,PFC200_2,Digital Input,Entrada Digital M1 Canal 1,En migración actual: PFC2_M2_DI1 (mismo rol; verificar convención M1 vs M2)
+PFC2_M1_DI2,PFC200_2,Digital Input,Entrada Digital M1 Canal 2,En migración actual: PFC2_M2_DI2 (mismo rol; verificar convención M1 vs M2)
+SEC1_TFD,,DEW POINT,DEW POINT SECADOR 1,CONFLICTO: mismo external_id que la primera fila; no puede coexistir en BD hasta resolver ID único
+SEC1_TDFATM,,DEW POINT,DEW POINT ADMOSFERICO SECADOR 1,Nueva; no está en migración
+SEC1_H20,,PPM,PPM SECADOR 1,Nueva; no está en migración
+SEC2_TFD,,DEW POINT,DEW POINT SECADOR 2,Nueva; no está en migración
+SEC2_TDFATM,,DEW POINT,DEW POINT ADMOSFERICO SECADOR 2,Nueva; no está en migración
+SEC2_H20,,PPM,PPM SECADOR 2,Nueva; no está en migración
+SEC3_TFD,,DEW POINT,DEW POINT SECADOR 3,Nueva; no está en migración
+SEC3_TDFATM,,DEW POINT,DEW POINT ADMOSFERICO SECADOR 3,Nueva; no está en migración
+SEC3_H20,,PPM,PPM SECADOR 3,Nueva; no está en migración
+SEC4_TFD,,DEW POINT,DEW POINT SECADOR 4,Nueva; no está en migración
+SEC4_TDFATM,,DEW POINT,DEW POINT ADMOSFERICO SECADOR 4,Nueva; no está en migración
+SEC4_H20,,PPM,PPM SECADOR 4,Nueva; no está en migración
+SEC5_TFD,,DEW POINT,DEW POINT SECADOR 5,Nueva; no está en migración
+SEC5_TDFATM,,DEW POINT,DEW POINT ADMOSFERICO SECADOR 5,Nueva; no está en migración
+SEC5_H20,,PPM,PPM SECADOR 5,Nueva; no está en migración
+SEC6_TFD,,DEW POINT,DEW POINT SECADOR 6,Nueva; no está en migración
+SEC6_TDFATM,,DEW POINT,DEW POINT ADMOSFERICO SECADOR 6,Nueva; no está en migración
+SEC6_H20,,PPM,PPM SECADOR 6,Nueva; no está en migración
