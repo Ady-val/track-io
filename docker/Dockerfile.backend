@@ -12,16 +12,23 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files first for better layer caching
+# Copy package files first for better layer caching (packageManager en package.json activa pnpm vía Corepack)
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
-# Install pnpm package manager globally
-RUN npm install -g pnpm
+# Corepack viene con Node 18+; evita `npm install -g pnpm` (mismo registry, pero flujo estándar).
+# EAI_AGAIN / getaddrinfo = DNS dentro del build: revisa Docker Desktop (DNS 8.8.8.8), VPN o proxy.
+RUN corepack enable
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-# Install project dependencies
-# Using --frozen-lockfile ensures exact versions from lockfile
-RUN pnpm install --frozen-lockfile
+# Reintentos ante DNS intermitente durante el build
+RUN set -e; \
+  for i in 1 2 3 4; do \
+    pnpm install --frozen-lockfile && exit 0; \
+    echo "pnpm install falló (intento $i/4), esperando 20s..."; \
+    sleep 20; \
+  done; \
+  exit 1
 
 # Copy source code explicitly (avoiding node_modules from host)
 COPY src/ ./src/
