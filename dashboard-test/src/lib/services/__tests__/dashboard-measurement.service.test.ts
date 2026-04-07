@@ -31,7 +31,7 @@ const createMockDashboardMeasurement = (
   name: "Test Measurement",
   type: "temperature",
   value: 50,
-  unit: "°C",
+  unit: "°F",
   timestamp: new Date().toISOString(),
   status: "active",
   minValue: 0,

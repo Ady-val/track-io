@@ -24,9 +24,9 @@ export interface MeasurementConfig {
 export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
   temperature: {
     icon: FaTemperatureHalf,
-    unit: "°C",
+    unit: "°F",
     formatValue: (value: number | boolean) =>
-      typeof value === "number" ? `${value.toFixed(1)}°C` : "N/A",
+      typeof value === "number" ? `${value.toFixed(1)}°F` : "N/A",
     color: "#ef4444",
     bgColor: "rgba(239, 68, 68, 0.1)",
   },
@@ -40,9 +40,9 @@ export const MEASUREMENT_CONFIGS: Record<MeasurementType, MeasurementConfig> = {
   },
   dew_point: {
     icon: FaTemperatureHalf,
-    unit: "°C",
+    unit: "°F",
     formatValue: (value: number | boolean) =>
-      typeof value === "number" ? `${value.toFixed(1)}°C` : "N/A",
+      typeof value === "number" ? `${value.toFixed(1)}°F` : "N/A",
     color: "#3b82f6",
     bgColor: "rgba(59, 130, 246, 0.1)",
   },
