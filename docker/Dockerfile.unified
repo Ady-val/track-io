@@ -1,69 +1,11 @@
-# Stage 1: Build dashboard
-FROM node:18-alpine as dashboard-builder
+# Track.IO Nginx - Offline Dockerfile
+# Requiere que dashboard-test/dist/ ya exista (pnpm install && pnpm build en el host)
 
-ARG VITE_API_URL=http://localhost:3000
-
-WORKDIR /app
-
-RUN corepack enable
-
-COPY dashboard-test/package*.json ./
-COPY dashboard-test/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
-COPY dashboard-test/src ./src
-COPY dashboard-test/public ./public
-COPY dashboard-test/index.html ./
-COPY dashboard-test/tsconfig.json ./
-COPY dashboard-test/tsconfig.node.json ./
-COPY dashboard-test/tailwind.config.js ./
-COPY dashboard-test/postcss.config.js ./
-COPY dashboard-test/vite.config.ts ./
-COPY dashboard-test/eslint.config.mjs ./
-
-ENV VITE_API_URL=${VITE_API_URL}
-
-RUN npx vite build
-
-# =============================================================================
-# TEMPORAL (deploy): build de virtual-device deshabilitado.
-# Descomentar Stage 2 y restaurar el COPY --from=virtual-device-builder en Stage 3.
-# =============================================================================
-# # Stage 2: Build virtual-device
-# FROM node:18-alpine AS virtual-device-builder
-#
-# ARG VITE_API_URL=http://localhost:3000
-# ARG VITE_AUTH_TOKEN=
-#
-# WORKDIR /app
-#
-# RUN npm install -g pnpm
-#
-# COPY virtual-device/package*.json ./
-# COPY virtual-device/pnpm-lock.yaml ./
-# RUN pnpm install --frozen-lockfile
-#
-# COPY virtual-device/src ./src
-# COPY virtual-device/scripts ./scripts
-# COPY virtual-device/index.html ./
-# COPY virtual-device/tsconfig.json ./
-# COPY virtual-device/tsconfig.node.json ./
-# COPY virtual-device/tailwind.config.js ./
-# COPY virtual-device/postcss.config.js ./
-# COPY virtual-device/vite.config.ts ./
-# COPY virtual-device/eslint.config.mjs ./
-#
-# ENV VITE_API_URL=${VITE_API_URL}
-# ENV VITE_AUTH_TOKEN=${VITE_AUTH_TOKEN}
-#
-# RUN npx vite build
-
-# Stage 3: Nginx
 FROM nginx:alpine
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY --from=dashboard-builder /app/dist /usr/share/nginx/html/dashboard
-# COPY --from=virtual-device-builder /app/dist /usr/share/nginx/html/virtual-device
+COPY dashboard-test/dist/ /usr/share/nginx/html/dashboard/
+
 RUN mkdir -p /usr/share/nginx/html/virtual-device && printf '%s\n' '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Virtual Device</title></head><body><p>Virtual device no está desplegado en este entorno.</p></body></html>' > /usr/share/nginx/html/virtual-device/index.html
 
 EXPOSE 80

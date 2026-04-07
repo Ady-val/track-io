@@ -87,7 +87,7 @@ export const LiquidFillGauge: React.FC<GaugeChartProps> = ({
       phase: number,
       fillColor: string | CanvasPattern,
       alpha: number,
-      width: number,
+      _width: number,
       height: number,
       centerX: number,
       radius: number

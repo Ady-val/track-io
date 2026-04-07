@@ -7,7 +7,6 @@ import {
   Button,
   Input,
   Select,
-  Text,
   ErrorMessage,
   ValidationErrorList,
   Label,

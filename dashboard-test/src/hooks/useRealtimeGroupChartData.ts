@@ -61,7 +61,7 @@ export const useRealtimeGroupChartData = (
         return [newPoint];
       }
 
-      const lastPoint = points[points.length - 1];
+      const lastPoint = points[points.length - 1]!;
       if (newPoint.timestamp.getTime() >= lastPoint.timestamp.getTime()) {
         return [...points, newPoint];
       }
@@ -71,7 +71,7 @@ export const useRealtimeGroupChartData = (
 
       while (left <= right) {
         const mid = Math.floor((left + right) / 2);
-        const midTime = points[mid].timestamp.getTime();
+        const midTime = points[mid]!.timestamp.getTime();
         const newTime = newPoint.timestamp.getTime();
 
         if (midTime === newTime) {
@@ -116,11 +116,11 @@ export const useRealtimeGroupChartData = (
     });
 
     for (const measurementId of Object.keys(seeded)) {
-      const limited =
-        seeded[Number(measurementId)].length > MAX_POINTS_PER_MEASUREMENT
-          ? seeded[Number(measurementId)].slice(-MAX_POINTS_PER_MEASUREMENT)
-          : seeded[Number(measurementId)];
-      seeded[Number(measurementId)] = limited;
+      const points = seeded[Number(measurementId)] ?? [];
+      seeded[Number(measurementId)] =
+        points.length > MAX_POINTS_PER_MEASUREMENT
+          ? points.slice(-MAX_POINTS_PER_MEASUREMENT)
+          : points;
     }
 
     setData((prev) => {

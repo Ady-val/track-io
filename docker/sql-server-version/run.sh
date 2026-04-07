@@ -1,6 +1,6 @@
 #!/bin/bash
 # Track.IO - Script unificado para gestionar entornos Docker (SQL Server)
-# Uso: ./run.sh [db-init|dev|test|prod|down]
+# Uso: ./run.sh [db-init|dev [--skip-install]|test|prod|down]
 
 set -e
 
@@ -12,13 +12,15 @@ show_help() {
     echo "========================================"
     echo ""
     echo "  ./run.sh db-init              Crea red y contenedor SQL Server (requerido antes de prod)"
-    echo "  ./run.sh dev                  Levanta entorno de desarrollo"
+    echo "  ./run.sh dev [--skip-install]  Levanta desarrollo (pnpm + Docker; --skip-install sin red)"
     echo "  ./run.sh test                 Levanta entorno de testing"
     echo "  ./run.sh prod                 Levanta produccion (requiere db-init previo)"
     echo "  ./run.sh down [dev|test|prod] Detiene el entorno indicado"
     echo ""
     echo "Ejemplos:"
     echo "  ./run.sh db-init"
+    echo "  ./run.sh dev"
+    echo "  ./run.sh dev --skip-install"
     echo "  ./run.sh prod"
     echo "  ./run.sh down prod"
     echo ""
@@ -98,34 +100,67 @@ detect_host_ip() {
 }
 
 do_dev() {
+    local skip_install=0
+    [ "${1:-}" = "--skip-install" ] && skip_install=1
+
     echo ""
     echo "[dev] Iniciando entorno de desarrollo..."
     echo ""
 
     [ ! -f .env ] && [ -f env.example ] && cp env.example .env
 
-    detect_host_ip
-
-    REBUILD_NEEDED=1
-    if [ -f .env.host ]; then
-        OLD_IP=$(grep "^HOST_IP=" .env.host | cut -d'=' -f2 | tr -d '\n\r')
-        [ "$OLD_IP" = "$HOST_IP" ] && REBUILD_NEEDED=0
+    # HOST_IP en .env actúa como override antes de detect_host_ip
+    set +e
+    # shellcheck disable=SC1091
+    source .env 2>/dev/null
+    set -e
+    if [ -n "${HOST_IP:-}" ]; then
+        HOST_IP=$(printf '%s' "$HOST_IP" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        [ -z "$HOST_IP" ] && unset HOST_IP
     fi
+
+    detect_host_ip
 
     cat > .env.host << EOF
 HOST_IP=$HOST_IP
 VITE_API_URL=http://$HOST_IP:3000
 EOF
 
-    docker compose -f docker-compose.yml --env-file .env down -v 2>/dev/null || true
-    if [ "$REBUILD_NEEDED" -eq 1 ]; then
-        docker compose -f docker-compose.yml --env-file .env --env-file .env.host build --no-cache
-        docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d --build
-    else
-        docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d
+    REPO_ROOT="$(cd ../.. && pwd)"
+
+    if ! command -v pnpm >/dev/null 2>&1; then
+        echo "Error: pnpm no esta instalado. Instala con: npm install -g pnpm"
+        exit 1
     fi
+
+    if [ "$skip_install" -eq 0 ]; then
+        echo ""
+        echo "[dev] pnpm install (backend-receptor)..."
+        (cd "$REPO_ROOT/backend-receptor" && pnpm install --frozen-lockfile)
+        echo ""
+        echo "[dev] pnpm install (dashboard-test)..."
+        (cd "$REPO_ROOT/dashboard-test" && pnpm install --frozen-lockfile)
+    else
+        echo ""
+        echo "[dev] Omitiendo pnpm install (--skip-install)"
+    fi
+
     echo ""
-    echo "Desarrollo iniciado. Dashboard: http://localhost:80  Backend: http://localhost:3000"
+    echo "[dev] pnpm build (backend-receptor)..."
+    (cd "$REPO_ROOT/backend-receptor" && pnpm build)
+
+    echo ""
+    echo "[dev] pnpm build (dashboard-test, VITE_API_URL=http://$HOST_IP:3000)..."
+    (cd "$REPO_ROOT/dashboard-test" && VITE_API_URL="http://$HOST_IP:3000" pnpm build)
+
+    docker compose -f docker-compose.yml --env-file .env down -v 2>/dev/null || true
+    docker compose -f docker-compose.yml --env-file .env --env-file .env.host build
+    docker compose -f docker-compose.yml --env-file .env --env-file .env.host up -d
+
+    echo ""
+    echo "Desarrollo iniciado."
+    echo "  Dashboard : http://$HOST_IP:80  (o http://localhost:80 en esta maquina)"
+    echo "  Backend   : http://$HOST_IP:3000"
 }
 
 do_test() {
@@ -230,7 +265,7 @@ case "$CMD" in
         do_db_init
         ;;
     dev)
-        do_dev
+        do_dev "${2:-}"
         ;;
     test)
         do_test

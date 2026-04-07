@@ -60,9 +60,6 @@ services:
       context: ../..
       dockerfile: docker/Dockerfile.unified
       network: host
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
-        VITE_AUTH_TOKEN: ${VITE_AUTH_TOKEN:-}
     container_name: track_io_nginx_sqlserver
     restart: always
     ports:

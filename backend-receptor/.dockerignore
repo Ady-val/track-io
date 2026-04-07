@@ -5,12 +5,6 @@
 .env.test.local
 .env.production.local
 
-# Build artifacts
-dist/
-
-# Node modules
-node_modules/
-
 # Test and dev files
 test/
 **/*.spec.ts

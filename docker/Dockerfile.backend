@@ -1,47 +1,15 @@
-# Track.IO Backend - NestJS Dockerfile
-# Multi-stage build for optimized production image
+# Track.IO Backend - Offline Dockerfile
+# Requiere que dist/ y node_modules/ ya existan (pnpm install && pnpm build en el host)
 
-# Use Node.js 18 Alpine as base image
 FROM node:18-alpine
 
-# No instalamos postgresql-client/wget: el arranque usa solo Node (mssql + TypeORM).
-# Si en el futuro necesitas psql o wget en la imagen, usa:
-#   RUN apk update && apk add --no-cache postgresql-client wget
-# (apk a veces falla con exit 2 por red/mirrors o por cambios de paquetes en Alpine.)
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files first for better layer caching
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Activar pnpm via corepack (incluido en Node 18+, sin descargar del registry)
-RUN corepack enable
-
-# Install project dependencies
-# Using --frozen-lockfile ensures exact versions from lockfile
-RUN pnpm install --frozen-lockfile
-
-# Copy source code explicitly (avoiding node_modules from host)
-COPY src/ ./src/
 COPY package.json ./
-COPY pnpm-lock.yaml ./
-COPY tsconfig.json ./
-COPY tsconfig.build.json ./
-COPY nest-cli.json ./
-COPY ormconfig.ts ./
-COPY eslint.config.mjs ./
-
-# Build the NestJS application (scripts/ no se compilan con Nest; se copian después)
-RUN pnpm run build
-
-# Después del build: asegura que los .js de arranque/migraciones existan en la imagen final
+COPY node_modules/ ./node_modules/
+COPY dist/ ./dist/
 COPY scripts/ ./scripts/
 
-# Expose the application port
 EXPOSE 3000
 
-# Start the application with migrations
-# Ensure MSSQL database exists, then run migrations (skip if TYPEORM_SYNCHRONIZE is true for test)
 CMD sh -c "if [ \"$TYPEORM_SYNCHRONIZE\" != \"true\" ]; then node scripts/ensure-mssql-database.js && echo '🔄 Running database migrations...' && node scripts/run-migrations-docker.js || exit 1; fi && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"

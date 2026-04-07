@@ -70,25 +70,21 @@ export const getGaugeColor = (
   let segmentNormalized: number;
 
   if (normalized <= 0.25) {
-    // 0-25%: azul → amarillo
-    startColor = colors[0];
-    endColor = colors[1];
-    segmentNormalized = normalized / 0.25; // Normalizar dentro del segmento (0-1)
+    startColor = colors[0]!;
+    endColor = colors[1]!;
+    segmentNormalized = normalized / 0.25;
   } else if (normalized <= 0.5) {
-    // 25-50%: amarillo → naranja
-    startColor = colors[1];
-    endColor = colors[2];
-    segmentNormalized = (normalized - 0.25) / 0.25; // Normalizar dentro del segmento (0-1)
+    startColor = colors[1]!;
+    endColor = colors[2]!;
+    segmentNormalized = (normalized - 0.25) / 0.25;
   } else if (normalized <= 0.75) {
-    // 50-75%: naranja → rojo
-    startColor = colors[2];
-    endColor = colors[3];
-    segmentNormalized = (normalized - 0.5) / 0.25; // Normalizar dentro del segmento (0-1)
+    startColor = colors[2]!;
+    endColor = colors[3]!;
+    segmentNormalized = (normalized - 0.5) / 0.25;
   } else {
-    // 75-100%: rojo → rojo más intenso
-    startColor = colors[3];
-    endColor = colors[4];
-    segmentNormalized = (normalized - 0.75) / 0.25; // Normalizar dentro del segmento (0-1)
+    startColor = colors[3]!;
+    endColor = colors[4]!;
+    segmentNormalized = (normalized - 0.75) / 0.25;
   }
 
   // Interpolación lineal dentro del segmento

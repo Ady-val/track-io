@@ -133,12 +133,10 @@ export const createDashboardMeasurementWithMeasurementSchema = z
     type: measurementTypeEnum,
     groupId: z.number().int().positive().nullable().optional(),
     minValue: z.number({
-      required_error: "El valor mínimo es requerido",
-      invalid_type_error: "El valor mínimo debe ser un número",
+      error: "El valor mínimo es requerido y debe ser un número",
     }),
     maxValue: z.number({
-      required_error: "El valor máximo es requerido",
-      invalid_type_error: "El valor máximo debe ser un número",
+      error: "El valor máximo es requerido y debe ser un número",
     }),
   })
   .refine((data) => data.minValue < data.maxValue, {
@@ -154,14 +152,12 @@ export const updateDashboardMeasurementWithMeasurementSchema = z
     groupId: z.number().int().positive().nullable().optional(),
     minValue: z
       .number({
-        required_error: "El valor mínimo es requerido",
-        invalid_type_error: "El valor mínimo debe ser un número",
+        error: "El valor mínimo es requerido y debe ser un número",
       })
       .optional(),
     maxValue: z
       .number({
-        required_error: "El valor máximo es requerido",
-        invalid_type_error: "El valor máximo debe ser un número",
+        error: "El valor máximo es requerido y debe ser un número",
       })
       .optional(),
   })

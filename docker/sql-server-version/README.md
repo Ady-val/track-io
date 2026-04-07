@@ -27,6 +27,8 @@ Sistema Track.IO con Microsoft SQL Server 2022 en Docker. Un solo script gestion
 
 ### Desarrollo
 
+En **Linux**, la guía detallada está en **[RUN_DEV.md](./RUN_DEV.md)** (variables en `.env` y `./run.sh dev`).
+
 ```bash
 cd docker/sql-server-version
 
@@ -34,11 +36,11 @@ cd docker/sql-server-version
 copy env.example .env   # Windows
 cp env.example .env    # Linux/Mac
 
-# Editar .env con MSSQL_SA_PASSWORD (evitar @ y # en la contraseña)
+# Editar .env: MSSQL_SA_PASSWORD, HOST_IP y alinear DATABASE_* (evitar @ y # en la contraseña)
 
 # Iniciar
 run.bat dev            # Windows
-./run.sh dev           # Linux/Mac
+./run.sh dev           # Linux/Mac (pnpm install + build + Docker)
 ```
 
 URLs: Dashboard http://localhost:80 | Virtual Device http://localhost/virtual-device/ | Backend http://localhost:3000 | SQL Server localhost:1434
@@ -68,6 +70,7 @@ run.bat prod           # Windows
 | Archivo | Propósito |
 |---------|-----------|
 | `run.bat` / `run.sh` | Script unificado |
+| `RUN_DEV.md` | Guía paso a paso desarrollo (Linux) |
 | `docker-compose.yml` | Desarrollo (SQL Server + Backend + Nginx) |
 | `docker-compose.test.yml` | Testing (Cypress) |
 | `docker-compose.prod.yml` | Producción (Backend + Nginx con Dashboard y Virtual Device, SQL Server externo) |
@@ -80,6 +83,7 @@ run.bat prod           # Windows
 ### Desarrollo (`.env`)
 
 - `MSSQL_SA_PASSWORD`: Contraseña SA (evitar `@` y `#` en URLs)
+- `HOST_IP`: IP LAN del servidor (recomendado); si está vacío, `run.sh` intenta detectarla
 - `MSSQL_DB`: Nombre de la base de datos
 - `MSSQL_PORT`: Puerto host (default 1434)
 - `VIRTUAL_DEVICE_PORT`: (obsoleto) Virtual Device ahora en http://localhost/virtual-device/

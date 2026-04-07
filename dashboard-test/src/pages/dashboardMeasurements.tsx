@@ -515,7 +515,7 @@ export default function DashboardMeasurementsPage() {
                       value={displayValue}
                       onStartTime={displayOnStartTime}
                       offStartTime={displayOffStartTime}
-                      statusDurationSeconds={displayStatusDurationSeconds}
+                      statusDurationSeconds={displayStatusDurationSeconds ?? undefined}
                       showActions={hasUpdatePermission || hasDeletePermission}
                       onEdit={
                         hasUpdatePermission
