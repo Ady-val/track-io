@@ -1,6 +1,8 @@
 services:
   track_io_sql_server:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    # No volver a descargar si la imagen ya está en la máquina (útil sin internet).
+    pull_policy: if_not_present
     container_name: track-io-sqlserver
     restart: always
     environment:
@@ -25,6 +27,8 @@ services:
       context: ../../backend-receptor
       dockerfile: ../docker/Dockerfile.backend
       network: host
+      # Usar node:18-alpine local; no comprobar/descargar desde Docker Hub en cada build.
+      pull: false
     container_name: track_io_backend_sqlserver
     restart: always
     command: >
@@ -60,6 +64,7 @@ services:
       context: ../..
       dockerfile: docker/Dockerfile.unified
       network: host
+      pull: false
     container_name: track_io_nginx_sqlserver
     restart: always
     ports:

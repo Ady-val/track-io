@@ -86,6 +86,38 @@ Sustituye `<tu HOST_IP>` por el valor que pusiste en `.env` (o el que mostró el
 
 ---
 
+## Imágenes Docker sin internet (caché local)
+
+El `docker-compose.yml` de desarrollo está configurado para:
+
+- **No forzar pull** de las bases `node:18-alpine` y `nginx:alpine` al hacer build del backend y de nginx (`pull: false`).
+- **No volver a descargar** SQL Server si la imagen ya existe en el servidor (`pull_policy: if_not_present`).
+
+Así, si ya ejecutaste un build o un `docker pull` con internet, las siguientes veces deberían usar lo que hay en caché.
+
+**Comprobar que están locales:**
+
+```bash
+docker images | grep -E 'node|nginx|mssql'
+```
+
+**Traer las imágenes a otra máquina sin red** (en un PC con internet, guardar y copiar el `.tar`):
+
+```bash
+docker pull node:18-alpine
+docker pull nginx:alpine
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+docker save node:18-alpine nginx:alpine mcr.microsoft.com/mssql/server:2022-latest -o track-io-docker-bases.tar
+```
+
+En el servidor sin internet:
+
+```bash
+docker load -i track-io-docker-bases.tar
+```
+
+---
+
 ## Si algo falla
 
 - **“pnpm no esta instalado”:** instala pnpm (`npm install -g pnpm`) y vuelve a ejecutar el paso 2.
