@@ -1,9 +1,9 @@
-import { useEffect, useRef, useMemo, useState, useCallback } from "react";
+import { useEffect, useRef, useMemo, useCallback } from "react";
 import type React from "react";
 
 import {
   Chart as ChartJS,
-  CategoryScale,
+  TimeScale,
   LinearScale,
   PointElement,
   LineElement,
@@ -14,14 +14,19 @@ import {
   type ChartConfiguration,
 } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
+import "chartjs-adapter-dayjs-4";
 
 import { Card, CardBody, Text } from "@components/atoms";
 
-import { useRealtimeGroupChartData } from "@/hooks/useRealtimeGroupChartData";
+import {
+  type RealtimeChartPoint,
+  useRealtimeGroupChartData,
+} from "@/hooks/useRealtimeGroupChartData";
+import { getServerNow } from "@/lib/timeSync";
 import type { DashboardMeasurementItem } from "@/types/dashboard-measurement-group";
 
 ChartJS.register(
-  CategoryScale,
+  TimeScale,
   LinearScale,
   PointElement,
   LineElement,
@@ -34,7 +39,7 @@ ChartJS.register(
 
 interface ChartDatasetConfig {
   label: string;
-  data: Array<number | null>;
+  data: Array<{ x: number; y: number }>;
   borderColor: string;
   backgroundColor: string;
   borderWidth: number;
@@ -51,7 +56,49 @@ export interface RealtimeGroupChartProps {
   maxValue: number;
   measurementIds: number[];
   measurements: DashboardMeasurementItem[];
+  initialPoints?: RealtimeChartPoint[];
+  reverseColors?: boolean;
 }
+
+const getTimeScaleConfig = (timeRangeMinutes: number) => {
+  if (timeRangeMinutes <= 10) {
+    return {
+      unit: "second" as const,
+      stepSize: 1,
+      displayFormats: { second: "HH:mm:ss" },
+    };
+  }
+  if (timeRangeMinutes <= 60) {
+    return {
+      unit: "minute" as const,
+      stepSize: 1,
+      displayFormats: { minute: "HH:mm" },
+    };
+  }
+  if (timeRangeMinutes <= 240) {
+    return {
+      unit: "minute" as const,
+      stepSize: 5,
+      displayFormats: { minute: "HH:mm" },
+    };
+  }
+
+  return {
+    unit: "hour" as const,
+    stepSize: 1,
+    displayFormats: { hour: "HH:mm" },
+  };
+};
+
+const getTimeScaleStepMs = (config: ReturnType<typeof getTimeScaleConfig>) => {
+  const unitToMs = {
+    second: 1000,
+    minute: 60_000,
+    hour: 3_600_000,
+  } as const;
+
+  return unitToMs[config.unit] * config.stepSize;
+};
 
 export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
   timeRange,
@@ -59,50 +106,25 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
   maxValue,
   measurementIds,
   measurements,
+  initialPoints = [],
+  reverseColors = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
 
-  const { getValueAtTimestamp, getDataForMeasurement } =
-    useRealtimeGroupChartData(measurementIds, timeRange);
+  const { getDataForMeasurement } = useRealtimeGroupChartData(
+    measurementIds,
+    timeRange,
+    initialPoints
+  );
 
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const allTimestamps = useMemo(() => {
-    const now = currentTime;
-    const startTime = new Date(now.getTime() - timeRange * 60 * 1000);
-    const timestamps: Date[] = [];
-
-    for (let time = startTime.getTime(); time <= now.getTime(); time += 1000) {
-      timestamps.push(new Date(time));
-    }
-
-    return timestamps;
-  }, [currentTime, timeRange]);
-
-  const formatTimestamp = useCallback((timestamp: Date): string => {
-    const hours = timestamp.getHours().toString().padStart(2, "0");
-    const minutes = timestamp.getMinutes().toString().padStart(2, "0");
-    const seconds = timestamp.getSeconds().toString().padStart(2, "0");
-
-    return `${hours}:${minutes}:${seconds}`;
-  }, []);
-
-  const labels = useMemo(
-    () => allTimestamps.map(formatTimestamp),
-    [allTimestamps, formatTimestamp]
+  const timeScaleConfig = useMemo(
+    () => getTimeScaleConfig(timeRange),
+    [timeRange]
   );
 
   const chartColors = useMemo(() => {
-    return [
+    const baseColors = [
       "rgb(59, 130, 246)",
       "rgb(16, 185, 129)",
       "rgb(245, 158, 11)",
@@ -114,10 +136,29 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
       "rgb(251, 191, 36)",
       "rgb(249, 115, 22)",
     ];
-  }, []);
+    return reverseColors ? [...baseColors].reverse() : baseColors;
+  }, [reverseColors]);
 
-  const datasets = useMemo(() => {
-    return measurementIds
+  const buildChartData = useCallback(() => {
+    const rangeMs = timeRange * 60 * 1000;
+    let latestTimeMs = 0;
+
+    measurementIds.forEach((measurementId) => {
+      const points = getDataForMeasurement(measurementId);
+      const lastPoint = points[points.length - 1];
+
+      if (lastPoint) {
+        latestTimeMs = Math.max(latestTimeMs, lastPoint.timestamp.getTime());
+      }
+    });
+
+    const nowMs = getServerNow();
+    const rawEndTimeMs = Math.max(nowMs, latestTimeMs + 1000);
+    const snapMs = Math.max(1000, getTimeScaleStepMs(timeScaleConfig));
+    const endTimeMs = Math.floor(rawEndTimeMs / snapMs) * snapMs;
+    const startTimeMs = endTimeMs - rangeMs;
+
+    const datasets = measurementIds
       .map((measurementId, index) => {
         const measurement = measurements.find(
           (m) => m.measurementId === measurementId
@@ -125,24 +166,70 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
 
         if (!measurement) return null;
 
-        const measurementData = getDataForMeasurement(measurementId);
-        const dataMap = new Map<number, number>();
+        // Get all data points and filter within range (with buffer for timing differences)
+        const allData = getDataForMeasurement(measurementId);
 
-        measurementData.forEach((point) => {
-          dataMap.set(point.timestamp.getTime(), point.value);
-        });
+        const filteredData = allData
+          .filter((point) => {
+            const pointTime = point.timestamp.getTime();
 
-        const dataPoints = allTimestamps.map((timestamp) => {
-          const timestampMs = timestamp.getTime();
-          const exactValue = dataMap.get(timestampMs);
+            return pointTime >= startTimeMs && pointTime <= endTimeMs;
+          })
+          .map((point) => ({ x: point.timestamp.getTime(), y: point.value }));
 
-          if (exactValue !== undefined) {
-            return exactValue;
+        const maxGapMs = 5000;
+        const withGapBreaks: Array<{ x: number; y: number | null }> = [];
+
+        for (const current of filteredData) {
+          const previous = withGapBreaks[withGapBreaks.length - 1];
+
+          if (
+            previous &&
+            previous.y !== null &&
+            current.x - previous.x > maxGapMs
+          ) {
+            withGapBreaks.push({ x: previous.x + 1, y: null });
           }
-          const closestValue = getValueAtTimestamp(measurementId, timestamp);
 
-          return closestValue ?? null;
-        });
+          withGapBreaks.push(current);
+        }
+
+        const maxHoldMs = 5000;
+        const lastBeforeRange = (() => {
+          for (let i = allData.length - 1; i >= 0; i -= 1) {
+            const point = allData[i];
+
+            if (point && point.timestamp.getTime() <= startTimeMs) {
+              return point;
+            }
+          }
+
+          return null;
+        })();
+
+        if (
+          lastBeforeRange &&
+          startTimeMs - lastBeforeRange.timestamp.getTime() <= maxHoldMs &&
+          (withGapBreaks.length === 0 || withGapBreaks[0]?.x !== startTimeMs)
+        ) {
+          withGapBreaks.unshift({
+            x: startTimeMs,
+            y: lastBeforeRange.value,
+          });
+        }
+
+        const lastPoint = withGapBreaks[withGapBreaks.length - 1];
+
+        if (
+          lastPoint &&
+          lastPoint.x < endTimeMs &&
+          endTimeMs - lastPoint.x <= maxHoldMs
+        ) {
+          withGapBreaks.push({
+            x: endTimeMs,
+            y: lastPoint.y,
+          });
+        }
 
         const colorIndex = index % chartColors.length;
         const color = chartColors[colorIndex] ?? "rgb(59, 130, 246)";
@@ -150,7 +237,7 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
 
         return {
           label: measurement.measurement.name,
-          data: dataPoints,
+          data: withGapBreaks,
           borderColor: color,
           backgroundColor: alphaColor,
           borderWidth: 2,
@@ -162,13 +249,15 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
         };
       })
       .filter((ds): ds is ChartDatasetConfig => ds !== null);
+
+    return { datasets, startTimeMs, endTimeMs };
   }, [
     measurementIds,
     measurements,
-    allTimestamps,
-    getValueAtTimestamp,
-    chartColors,
     getDataForMeasurement,
+    chartColors,
+    timeRange,
+    timeScaleConfig,
   ]);
 
   useEffect(() => {
@@ -190,11 +279,14 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
       existingChart.destroy();
     }
 
-    const chartConfig: ChartConfiguration<"line"> = {
+    const { datasets, startTimeMs, endTimeMs } = buildChartData();
+    const chartConfig: ChartConfiguration<
+      "line",
+      Array<{ x: number; y: number }>
+    > = {
       type: "line",
       data: {
-        labels: labels,
-        datasets: datasets,
+        datasets,
       },
       options: {
         responsive: true,
@@ -258,7 +350,11 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
         },
         scales: {
           x: {
+            type: "time",
             display: true,
+            min: startTimeMs,
+            max: endTimeMs,
+            time: timeScaleConfig,
             grid: {
               color: "rgba(255, 255, 255, 0.1)",
               drawOnChartArea: true,
@@ -316,104 +412,37 @@ export const RealtimeGroupChart: React.FC<RealtimeGroupChartProps> = ({
         chartRef.current = null;
       }
     };
-  }, [minValue, maxValue, timeRange, labels, datasets]);
+  }, [minValue, maxValue, timeRange, buildChartData, timeScaleConfig]);
 
+  // Update chart time range and datasets every second for smooth scrolling
   useEffect(() => {
     if (!chartRef.current) {
       return;
     }
 
-    chartRef.current.data.labels = labels;
-    chartRef.current.data.datasets = datasets;
-    chartRef.current.update("none");
-  }, [datasets, labels]);
+    const updateChart = () => {
+      const { datasets, startTimeMs, endTimeMs } = buildChartData();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
       if (!chartRef.current) {
         return;
       }
 
-      const now = new Date();
-      const startTime = new Date(now.getTime() - timeRange * 60 * 1000);
-      const newTimestamps: Date[] = [];
-
-      for (
-        let time = startTime.getTime();
-        time <= now.getTime();
-        time += 1000
-      ) {
-        newTimestamps.push(new Date(time));
+      chartRef.current.data.datasets = datasets;
+      if (chartRef.current.options.scales?.x) {
+        chartRef.current.options.scales.x.min = startTimeMs;
+        chartRef.current.options.scales.x.max = endTimeMs;
       }
 
-      const newLabels = newTimestamps.map(formatTimestamp);
-
-      chartRef.current.data.labels = newLabels;
-
-      const newDatasets = measurementIds
-        .map((measurementId, index) => {
-          const measurement = measurements.find(
-            (m) => m.measurementId === measurementId
-          );
-
-          if (!measurement) return null;
-
-          const measurementData = getDataForMeasurement(measurementId);
-          const dataMap = new Map<number, number>();
-
-          measurementData.forEach((point) => {
-            if (point.timestamp >= startTime && point.timestamp <= now) {
-              dataMap.set(point.timestamp.getTime(), point.value);
-            }
-          });
-
-          const dataPoints = newTimestamps.map((timestamp) => {
-            const timestampMs = timestamp.getTime();
-            const exactValue = dataMap.get(timestampMs);
-
-            if (exactValue !== undefined) {
-              return exactValue;
-            }
-            const closestValue = getValueAtTimestamp(measurementId, timestamp);
-
-            return closestValue ?? null;
-          });
-
-          const colorIndex = index % chartColors.length;
-          const color = chartColors[colorIndex] ?? "rgb(59, 130, 246)";
-          const alphaColor = color
-            .replace("rgb", "rgba")
-            .replace(")", ", 0.2)");
-
-          return {
-            label: measurement.measurement.name,
-            data: dataPoints,
-            borderColor: color,
-            backgroundColor: alphaColor,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            tension: 0,
-            fill: false,
-            spanGaps: false,
-          };
-        })
-        .filter((ds): ds is ChartDatasetConfig => ds !== null);
-
-      chartRef.current.data.datasets = newDatasets;
       chartRef.current.update("none");
-    }, 1000);
+    };
 
-    return () => clearInterval(interval);
-  }, [
-    measurementIds,
-    measurements,
-    timeRange,
-    getDataForMeasurement,
-    getValueAtTimestamp,
-    chartColors,
-    formatTimestamp,
-  ]);
+    updateChart();
+    const interval = setInterval(updateChart, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [buildChartData]);
 
   return (
     <Card className="bg-slate-700/50 border-slate-600 h-full flex flex-col">

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 import { useWebSocket } from "@/contexts/WebSocketContext";
+import { updateServerTimeOffset } from "@/lib/timeSync";
+import { normalizeTimestampString } from "@/lib/dateTime";
 
 function parseBooleanValue(value: string | number): boolean | null {
   if (typeof value === "boolean") return value;
@@ -42,14 +44,25 @@ export const useRealtimeMeasurementValues = () => {
   const [values, setValues] = useState<MeasurementValues>({});
   const [history, setHistory] = useState<Record<number, number[]>>({});
   const [onStartTimes, setOnStartTimes] = useState<Record<number, string>>({});
+  const [offStartTimes, setOffStartTimes] = useState<Record<number, string>>({});
+  const [statusDurations, setStatusDurations] = useState<Record<number, number>>({});
 
   const initializeValue = useCallback(
     (
       measurementId: number,
       value: string,
       createdAt: string,
-      onStartTime?: string
+      onStartTime?: string,
+      offStartTime?: string,
+      statusDurationSeconds?: number
     ) => {
+      const normalizedCreatedAt =
+        normalizeTimestampString(createdAt) ?? createdAt;
+      const normalizedOnStartTime = normalizeTimestampString(onStartTime);
+      const normalizedOffStartTime = normalizeTimestampString(offStartTime);
+
+      updateServerTimeOffset(normalizedCreatedAt);
+
       const booleanValue = parseBooleanValue(value);
 
       let parsedValue: number | boolean;
@@ -66,28 +79,58 @@ export const useRealtimeMeasurementValues = () => {
       }
 
       setValues((prev) => {
-        if (prev[measurementId]) {
-          return prev;
-        }
-
+        // Always update value from backend initialization
         return {
           ...prev,
           [measurementId]: {
             value: parsedValue,
-            timestamp: createdAt,
+            timestamp: normalizedCreatedAt,
           },
         };
       });
 
-      if (onStartTime && booleanValue === true) {
-        setOnStartTimes((prev) => {
+      // Initialize onStartTime if provided from backend (always prioritize backend)
+      if (onStartTime !== undefined) {
+        setOnStartTimes((prev) => ({
+          ...prev,
+          [measurementId]: normalizedOnStartTime ?? onStartTime,
+        }));
+      }
+
+      // Initialize offStartTime if provided from backend (always prioritize backend)
+      if (offStartTime !== undefined) {
+        setOffStartTimes((prev) => ({
+          ...prev,
+          [measurementId]: normalizedOffStartTime ?? offStartTime,
+        }));
+      } else if (booleanValue === false) {
+        // If no offStartTime from backend but value is false, use createdAt only if not set
+        setOffStartTimes((prev) => {
           if (prev[measurementId]) {
             return prev;
           }
 
           return {
             ...prev,
-            [measurementId]: onStartTime,
+            [measurementId]: normalizedCreatedAt,
+          };
+        });
+      }
+
+      if (statusDurationSeconds !== undefined) {
+        setStatusDurations((prev) => ({
+          ...prev,
+          [measurementId]: statusDurationSeconds,
+        }));
+      } else if (booleanValue !== null) {
+        setStatusDurations((prev) => {
+          if (prev[measurementId] !== undefined) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            [measurementId]: 0,
           };
         });
       }
@@ -121,6 +164,11 @@ export const useRealtimeMeasurementValues = () => {
       return;
     }
 
+    const normalizedCreatedAt =
+      normalizeTimestampString(createdAt) ?? createdAt;
+
+    updateServerTimeOffset(normalizedCreatedAt);
+
     const booleanValue = parseBooleanValue(value);
 
     let newValue: number | boolean;
@@ -149,13 +197,13 @@ export const useRealtimeMeasurementValues = () => {
             if (previousBoolean === false) {
               return {
                 ...prevTimes,
-                [measurementId]: createdAt,
+                [measurementId]: normalizedCreatedAt,
               };
             }
             if (previousBoolean === null && !hasOnStartTime) {
               return {
                 ...prevTimes,
-                [measurementId]: createdAt,
+                [measurementId]: normalizedCreatedAt,
               };
             }
 
@@ -171,11 +219,59 @@ export const useRealtimeMeasurementValues = () => {
           return prevTimes;
         });
 
+        setOffStartTimes((prevTimes) => {
+          const hasOffStartTime = prevTimes[measurementId] !== undefined;
+
+          if (booleanValue === false) {
+            if (previousBoolean === true) {
+              return {
+                ...prevTimes,
+                [measurementId]: normalizedCreatedAt,
+              };
+            }
+            if (previousBoolean === null && !hasOffStartTime) {
+              return {
+                ...prevTimes,
+                [measurementId]: normalizedCreatedAt,
+              };
+            }
+
+            return prevTimes;
+          } else if (booleanValue === true && previousBoolean === false) {
+            const newTimes = { ...prevTimes };
+
+            delete newTimes[measurementId];
+
+            return newTimes;
+          }
+
+          return prevTimes;
+        });
+
+        setStatusDurations((prevDurations) => {
+          const existing = prevDurations[measurementId];
+          if (existing === undefined) {
+            return {
+              ...prevDurations,
+              [measurementId]: 0,
+            };
+          }
+
+          if (previousBoolean !== null && previousBoolean !== booleanValue) {
+            return {
+              ...prevDurations,
+              [measurementId]: 0,
+            };
+          }
+
+          return prevDurations;
+        });
+
         return {
           ...prev,
           [measurementId]: {
             value: newValue,
-            timestamp: createdAt,
+            timestamp: normalizedCreatedAt,
           },
         };
       });
@@ -184,7 +280,7 @@ export const useRealtimeMeasurementValues = () => {
         ...prev,
         [measurementId]: {
           value: newValue,
-          timestamp: createdAt,
+          timestamp: normalizedCreatedAt,
         },
       }));
     }
@@ -221,6 +317,9 @@ export const useRealtimeMeasurementValues = () => {
     getTimestamp: (measurementId: number) => values[measurementId]?.timestamp,
     getHistory: (measurementId: number) => history[measurementId] ?? [],
     getOnStartTime: (measurementId: number) => onStartTimes[measurementId],
+    getOffStartTime: (measurementId: number) => offStartTimes[measurementId],
+    getStatusDurationSeconds: (measurementId: number) =>
+      statusDurations[measurementId],
     initializeValue,
   };
 };

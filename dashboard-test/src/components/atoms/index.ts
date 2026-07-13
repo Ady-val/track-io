@@ -1,5 +1,5 @@
 export { Button } from "./Button";
-export type { ButtonProps } from "./Button";
+export type { ButtonProps } from "@heroui/button";
 
 export { Input } from "./Input";
 export type { InputProps } from "./Input";

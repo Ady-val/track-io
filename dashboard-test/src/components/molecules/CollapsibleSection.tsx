@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { FaChevronLeft } from "react-icons/fa";
 
@@ -10,6 +10,8 @@ export interface CollapsibleSectionProps {
   isLoading?: boolean;
   onToggle?: (isExpanded: boolean) => void;
   className?: string;
+  defaultExpanded?: boolean;
+  forceExpanded?: boolean;
 }
 
 export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -18,10 +20,24 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   isLoading = false,
   onToggle,
   className = "",
+  defaultExpanded = false,
+  forceExpanded = false,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  useEffect(() => {
+    if (forceExpanded) {
+      setIsExpanded(true);
+      return;
+    }
+    setIsExpanded(defaultExpanded);
+  }, [defaultExpanded, forceExpanded]);
 
   const handleToggle = () => {
+    if (forceExpanded) {
+      return;
+    }
+
     const newExpanded = !isExpanded;
 
     setIsExpanded(newExpanded);

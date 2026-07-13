@@ -37,6 +37,42 @@ ahora llama `measurementValueRepository.getDatabaseNow()`, `findStatusOffStartTi
 Cambio solo de test (sin lógica de producto). Resultado: 39/39 verde.
 **Recomendación:** aceptar; es el mock mínimo correcto que la rama omitió.
 
+### D4 — 4 suites de tests unitarios de `dashboard-test` que la rama dejó rotas
+La rama `sql-server-version-2` **nunca actualizó** estos 4 test files (diff vacío contra
+main) pese a reescribir los componentes/hooks que prueban. Quedan 11 tests rojos que
+asertan el comportamiento VIEJO, deliberadamente cambiado por el port:
+
+- `components/molecules/__tests__/MeasurementChart.test.tsx` (1)
+  - "should render GaugeChart for humidity type" → ahora `humidity` rutea a **LiquidFillGauge**
+    (§4.3), no GaugeChart. El test no mockea LiquidFillGauge/DewPointDonutChart.
+- `components/molecules/__tests__/StatusIndicatorCard.test.tsx` (1)
+  - "should display duration when status is ON and onStartTime is provided" → la tarjeta
+    ahora usa `useDurationTicker`+`statusDurationSeconds` (§4.7), no `onStartTime`.
+- `hooks/__tests__/useRealtimeMeasurementValues.test.ts` (7)
+  - `initializeValue` cambió de firma (ahora acepta offStartTime/statusDurationSeconds y
+    **siempre prioriza backend**, §4.7); los tests asertan el contrato viejo
+    (ej. "should not overwrite existing value" ya no aplica).
+- `hooks/__tests__/useStatusDuration.test.ts` (2)
+  - "onStartTime in the future" y "invalid date string": la reescritura usa `getServerNow()`
+    y confía en el flag activo aunque el startTime sea futuro (§4.4).
+
+**Estado del build:** `tsc --noEmit` de dashboard-test pasa limpio; el resto de la suite
+(380 tests) pasa. Solo estos 11 fallan.
+
+**Fuera de scope:** §7 limita el testing frontend portado a Cypress; estos unit tests no
+estaban en la spec y la rama los shipeó rotos. No los reescribí para no "improvisar"
+expectativas (instrucción #8), especialmente en la lógica de tiempo servidor.
+
+**⚠️ Posible bug latente detectado (revisar):** el `useStatusDuration` reescrito devuelve
+`"NaN:NaN:NaN"` ante un `startTime` con fecha inválida (antes devolvía `"00:00:00"`),
+porque `parseUTCTimestamp` propaga `NaN` sin sanitizar. Impacto bajo (la tarjeta ya usa
+`useDurationTicker`, no este hook), pero conviene añadir un guard `Number.isNaN` en
+`useStatusDuration.ts` si el hook sigue en uso en algún punto.
+
+**Recomendación:** actualizar los 4 test files al nuevo contrato (fix mecánico y acotado
+para MeasurementChart/StatusIndicatorCard; los hooks requieren revisar la lógica de tiempo)
+y evaluar el guard NaN. No bloquea build ni deploy.
+
 ### D3 — `raw-measurement.service.spec.ts`: aserción del método viejo
 La rama tampoco actualizó este spec al cambiar el service a
 `getActiveMeasurementByExternalId` (§2.1). El test asertaba/mockeaba

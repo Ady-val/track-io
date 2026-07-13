@@ -1,15 +1,3 @@
-import type { ButtonProps as HeroUIButtonProps } from "@heroui/button";
-
-import type React from "react";
-
-import { Button as HeroUIButton } from "@heroui/button";
-
-export interface ButtonProps extends HeroUIButtonProps {
-  children: React.ReactNode;
-}
-
-export const Button: React.FC<ButtonProps> = ({ children, ...props }) => {
-  return <HeroUIButton {...props}>{children}</HeroUIButton>;
-};
-
-Button.displayName = "Button";
+// Re-exportar directamente el Button de HeroUI para evitar problemas con refs y mantener simplicidad
+export { Button } from "@heroui/button";
+export type { ButtonProps } from "@heroui/button";

@@ -117,6 +117,8 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 const measurementTypeEnum = z.enum([
   "temperature",
   "humidity",
+  "dew_point",
+  "ppm",
   "pressure",
   "level",
   "flow",
@@ -131,12 +133,10 @@ export const createDashboardMeasurementWithMeasurementSchema = z
     type: measurementTypeEnum,
     groupId: z.number().int().positive().nullable().optional(),
     minValue: z.number({
-      required_error: "El valor mínimo es requerido",
-      invalid_type_error: "El valor mínimo debe ser un número",
+      error: "El valor mínimo es requerido y debe ser un número",
     }),
     maxValue: z.number({
-      required_error: "El valor máximo es requerido",
-      invalid_type_error: "El valor máximo debe ser un número",
+      error: "El valor máximo es requerido y debe ser un número",
     }),
   })
   .refine((data) => data.minValue < data.maxValue, {
@@ -152,14 +152,12 @@ export const updateDashboardMeasurementWithMeasurementSchema = z
     groupId: z.number().int().positive().nullable().optional(),
     minValue: z
       .number({
-        required_error: "El valor mínimo es requerido",
-        invalid_type_error: "El valor mínimo debe ser un número",
+        error: "El valor mínimo es requerido y debe ser un número",
       })
       .optional(),
     maxValue: z
       .number({
-        required_error: "El valor máximo es requerido",
-        invalid_type_error: "El valor máximo debe ser un número",
+        error: "El valor máximo es requerido y debe ser un número",
       })
       .optional(),
   })
@@ -549,6 +547,17 @@ export const createDashboardMeasurementGroupSchema = z.object({
   chartMinValue: z.number().optional(),
   chartMaxValue: z.number().optional(),
   chartMeasurementIds: z.array(z.number().int().positive()).optional(),
+  chart2TimeRange: z
+    .number()
+    .int()
+    .refine((val) => [1, 10, 30, 60, 120, 240, 480].includes(val), {
+      message:
+        "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
+    })
+    .optional(),
+  chart2MinValue: z.number().optional(),
+  chart2MaxValue: z.number().optional(),
+  chart2MeasurementIds: z.array(z.number().int().positive()).optional(),
 });
 
 export const updateDashboardMeasurementGroupSchema = z.object({
@@ -558,16 +567,43 @@ export const updateDashboardMeasurementGroupSchema = z.object({
     .min(1, "Debes seleccionar al menos un dashboard measurement")
     .optional(),
   chartTimeRange: z
-    .number()
-    .int()
-    .refine((val) => [1, 10, 30, 60, 120, 240, 480].includes(val), {
-      message:
-        "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
-    })
+    .union([z.number().int(), z.null(), z.undefined()])
+    .refine(
+      (val) =>
+        val === undefined ||
+        val === null ||
+        [1, 10, 30, 60, 120, 240, 480].includes(val),
+      {
+        message:
+          "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
+      }
+    )
+    .transform((val) => (val === null ? undefined : val))
     .optional(),
-  chartMinValue: z.number().optional(),
-  chartMaxValue: z.number().optional(),
-  chartMeasurementIds: z.array(z.number().int().positive()).optional(),
+  chartMinValue: z.union([z.number(), z.null()]).optional(),
+  chartMaxValue: z.union([z.number(), z.null()]).optional(),
+  chartMeasurementIds: z
+    .union([z.array(z.number().int().positive()), z.null()])
+    .optional(),
+  chart2TimeRange: z
+    .union([z.number().int(), z.null(), z.undefined()])
+    .refine(
+      (val) =>
+        val === undefined ||
+        val === null ||
+        [1, 10, 30, 60, 120, 240, 480].includes(val),
+      {
+        message:
+          "El tiempo del eje X debe ser uno de: 1, 10, 30, 60, 120, 240, 480 minutos",
+      }
+    )
+    .transform((val) => (val === null ? undefined : val))
+    .optional(),
+  chart2MinValue: z.union([z.number(), z.null()]).optional(),
+  chart2MaxValue: z.union([z.number(), z.null()]).optional(),
+  chart2MeasurementIds: z
+    .union([z.array(z.number().int().positive()), z.null()])
+    .optional(),
 });
 
 export type CreateDashboardMeasurementGroupInput = z.infer<
