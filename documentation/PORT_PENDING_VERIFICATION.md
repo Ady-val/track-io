@@ -124,4 +124,23 @@ YA existían en `main` antes de la migración, el build (`tsconfig.build.json`) 
 
 ## Resultado del checklist §12
 
-_(se completa al final)_
+| # | Ítem | Resultado |
+|---|------|-----------|
+| 1 | `nest build` + `jest` backend | ✅ build limpio; **957/957** tests, 68/68 suites |
+| 2 | `migration:run` desde cero (BD PG) | ⏳ PENDIENTE (sin BD); migraciones compilan (typecheck) |
+| 3 | build dashboard-test y virtual-device | ✅ ambos `tsc --noEmit` limpio + `vite build` OK |
+| 4 | Cypress e2e | ⏳ PENDIENTE (requiere app+backend+BD); archivos portados, tsc limpio |
+| 5 | E2E manual (2 charts, dew_point/ppm, status F5, soft-delete, virtual-device, Node-RED) | ⏳ PENDIENTE (requiere entorno) |
+| 6 | Seguridad: guards `/users` activos; `/virtual-device/*` exige permiso | ✅ verificado (user.controller línea 35 activo; controller VD con UseGuards+RequirePermission) |
+| 7 | `git grep nvarchar\|simple-json\|isMSSQL` fuera de migraciones | ✅ SIN RESULTADOS |
+
+### Tests unitarios frontend (fuera del checklist estricto)
+- dashboard-test jest: 380 pasan; **11 fallan** en 4 suites que la rama dejó rotas (ver D4).
+  No bloquean build ni deploy. Requieren actualización al nuevo contrato.
+
+### Resumen de pendientes que requieren entorno (BD/Docker/navegador)
+- §3.4 `migration:run` contra PostgreSQL.
+- §7 Cypress e2e.
+- §12.5 flujo e2e manual.
+- D5 `docker compose build`/`up` completo del unified con virtual-device.
+- D4 actualización de 4 suites de tests unitarios frontend + revisar guard NaN de useStatusDuration.
