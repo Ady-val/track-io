@@ -95,8 +95,14 @@ describe("AlertsPage - Tests E2E", () => {
         .clear()
         .type(setpointValue);
 
-      // Enviar formulario
-      cy.contains("Crear").click({ force: true });
+      cy.wait(500);
+
+      // Enviar formulario - mejorar estrategia de click
+      cy.contains("Crear")
+        .should("be.visible")
+        .scrollIntoView()
+        .should("not.be.disabled")
+        .click({ force: true });
 
       // Esperar un momento para que se procese
       cy.wait(2000);
@@ -169,8 +175,14 @@ describe("AlertsPage - Tests E2E", () => {
         .clear()
         .type(maxValue);
 
-      // Enviar formulario
-      cy.contains("Crear").click({ force: true });
+      cy.wait(500);
+
+      // Enviar formulario - mejorar estrategia de click
+      cy.contains("Crear")
+        .should("be.visible")
+        .scrollIntoView()
+        .should("not.be.disabled")
+        .click({ force: true });
 
       // Esperar un momento para que se procese
       cy.wait(2000);
@@ -198,11 +210,18 @@ describe("AlertsPage - Tests E2E", () => {
         "be.visible"
       );
 
-      // Intentar crear sin nombre
-      cy.contains("Crear").click();
+      // Esperar a que el modal esté completamente renderizado
+      cy.wait(500);
 
-      // Verificar mensaje de error
-      cy.contains("Por favor ingresa un nombre", { timeout: 5000 }).should(
+      // Intentar crear sin nombre - usar scrollIntoView y esperar visibilidad
+      cy.contains("Crear")
+        .should("be.visible")
+        .scrollIntoView()
+        .should("not.be.disabled")
+        .click({ force: true });
+
+      // Verificar mensaje de error - el mensaje completo es "Por favor ingresa un nombre para la condición"
+      cy.contains("Por favor ingresa un nombre para la condición", { timeout: 5000 }).should(
         "be.visible"
       );
     });
@@ -221,18 +240,38 @@ describe("AlertsPage - Tests E2E", () => {
           cy.contains("Nueva Condición de Monitoreo", { timeout: 5000 }).should(
             "be.visible"
           );
+          cy.wait(500);
+          
           cy.get('input[placeholder*="Temperatura Alta"]')
+            .should("be.visible")
             .clear()
             .type(ruleName);
+          
           cy.get('select').first().then(($select) => {
             if ($select.find("option").length > 1) {
               cy.get('select').first().select(1);
             }
           });
-          cy.contains("Crear").click();
+          
+          cy.wait(500);
+          
+          // Mejorar click en botón Crear
+          cy.contains("Crear")
+            .should("be.visible")
+            .scrollIntoView()
+            .should("not.be.disabled")
+            .click({ force: true });
+          
+          // Esperar a que se procese la creación
+          cy.wait(2000);
+          
+          // Verificar que el modal se cerró
           cy.contains("Nueva Condición de Monitoreo", { timeout: 20000 }).should(
             "not.exist"
           );
+          
+          // Esperar a que la alerta aparezca en la lista
+          cy.wait(1000);
           cy.contains(ruleName, { timeout: 10000 }).should("be.visible");
         } else {
           // Obtener el nombre de la primera alerta existente
@@ -244,11 +283,21 @@ describe("AlertsPage - Tests E2E", () => {
           });
         }
 
-        // Hacer click en la tarjeta usando el texto del nombre
-        cy.contains(ruleName || "Alerta").parent().parent().click({ force: true });
+        // Asegurar que ruleName no es undefined antes de hacer click
+        if (ruleName) {
+          // Hacer click en la tarjeta usando el texto del nombre
+          cy.contains(ruleName)
+            .should("be.visible")
+            .parent()
+            .parent()
+            .click({ force: true });
 
-        // Verificar que se abre el modal de detalle (buscar por el nombre de la regla en el modal)
-        cy.contains(ruleName || "Alerta", { timeout: 5000 }).should("be.visible");
+          // Esperar a que el modal se abra
+          cy.wait(1000);
+
+          // Verificar que se abre el modal de detalle (buscar por el nombre de la regla en el modal)
+          cy.contains(ruleName, { timeout: 5000 }).should("be.visible");
+        }
       });
     });
 
@@ -257,7 +306,7 @@ describe("AlertsPage - Tests E2E", () => {
       cy.get("body").then(($body) => {
         if (!$body.text().includes("Aún no existen condiciones")) {
           // Obtener el nombre de la primera alerta
-          let ruleName: string;
+          let ruleName: string | undefined;
           cy.get('[class*="grid"]').first().within(() => {
             cy.get('div').first().then(($card) => {
               const text = $card.text();
@@ -265,32 +314,39 @@ describe("AlertsPage - Tests E2E", () => {
             });
           });
 
-          // Buscar la primera tarjeta y hacer click
-          cy.contains(ruleName || "Alerta").parent().parent().click({ force: true });
+          // Solo continuar si ruleName existe
+          if (ruleName) {
+            // Buscar la primera tarjeta y hacer click
+            cy.contains(ruleName)
+              .should("be.visible")
+              .parent()
+              .parent()
+              .click({ force: true });
 
-          // Esperar a que el modal se abra
-          cy.wait(2000);
+            // Esperar a que el modal se abra
+            cy.wait(2000);
 
-          // Verificar que el modal se abrió (buscar el nombre de la regla en el título del modal)
-          cy.contains(ruleName || "Alerta", { timeout: 5000 }).should("be.visible");
+            // Verificar que el modal se abrió (buscar el nombre de la regla en el título del modal)
+            cy.contains(ruleName, { timeout: 5000 }).should("be.visible");
           
-          // Verificar que se muestra información básica
-          // El modal puede estar en modo visualización o edición
-          cy.get("body").then(($body) => {
-            const bodyText = $body.text();
-            // Si está en modo edición, buscar el input
-            if (bodyText.includes("Nombre de la Condición")) {
-              cy.contains("Nombre de la Condición", { timeout: 5000 }).should(
-                "be.visible"
-              );
-            } else {
-              // En modo visualización, verificar que hay información de la regla
-              // El botón "Editar" puede no estar visible si no hay permisos
-              // Solo verificar que el modal se abrió correctamente mostrando el nombre de la regla
-              cy.contains(ruleName || "Alerta", { timeout: 5000 }).should("be.visible");
-              // No verificar "Editar" porque puede no estar visible por permisos
-            }
-          });
+            // Verificar que se muestra información básica
+            // El modal puede estar en modo visualización o edición
+            cy.get("body").then(($body) => {
+              const bodyText = $body.text();
+              // Si está en modo edición, buscar el input
+              if (bodyText.includes("Nombre de la Condición")) {
+                cy.contains("Nombre de la Condición", { timeout: 5000 }).should(
+                  "be.visible"
+                );
+              } else {
+                // En modo visualización, verificar que hay información de la regla
+                // El botón "Editar" puede no estar visible si no hay permisos
+                // Solo verificar que el modal se abrió correctamente mostrando el nombre de la regla
+                cy.contains(ruleName, { timeout: 5000 }).should("be.visible");
+                // No verificar "Editar" porque puede no estar visible por permisos
+              }
+            });
+          }
         }
       });
     });
@@ -309,18 +365,37 @@ describe("AlertsPage - Tests E2E", () => {
           cy.contains("Nueva Condición de Monitoreo", { timeout: 5000 }).should(
             "be.visible"
           );
+          cy.wait(500);
+          
           cy.get('input[placeholder*="Temperatura Alta"]')
+            .should("be.visible")
             .clear()
             .type(ruleName);
+          
           cy.get('select').first().then(($select) => {
             if ($select.find("option").length > 1) {
               cy.get('select').first().select(1);
             }
           });
-          cy.contains("Crear").click();
+          
+          cy.wait(500);
+          
+          // Mejorar click en botón Crear
+          cy.contains("Crear")
+            .should("be.visible")
+            .scrollIntoView()
+            .should("not.be.disabled")
+            .click({ force: true });
+          
+          // Esperar a que se procese la creación
+          cy.wait(2000);
+          
           cy.contains("Nueva Condición de Monitoreo", { timeout: 20000 }).should(
             "not.exist"
           );
+          
+          // Esperar a que la alerta aparezca en la lista
+          cy.wait(1000);
           cy.contains(ruleName, { timeout: 10000 }).should("be.visible");
         } else {
           // Obtener el nombre de la primera alerta
@@ -332,60 +407,68 @@ describe("AlertsPage - Tests E2E", () => {
           });
         }
 
-        // Abrir modal de detalle
-        cy.contains(ruleName || "Alerta").parent().parent().click({ force: true });
-        cy.wait(2000);
+        // Asegurar que ruleName existe antes de continuar
+        if (ruleName) {
+          // Abrir modal de detalle
+          cy.contains(ruleName)
+            .should("be.visible")
+            .parent()
+            .parent()
+            .click({ force: true });
+          cy.wait(2000);
 
-        // Verificar que el modal se abrió
-        cy.contains(ruleName || "Alerta", { timeout: 5000 }).should("be.visible");
-        cy.wait(1000);
+          // Verificar que el modal se abrió
+          cy.contains(ruleName, { timeout: 5000 }).should("be.visible");
+          cy.wait(1000);
 
-        // Hacer click en Editar si existe
-        cy.get("body").then(($body) => {
-          if ($body.text().includes("Editar")) {
-            cy.contains("Editar", { timeout: 5000 }).click({ force: true });
-            cy.wait(1500);
+          // Hacer click en Editar si existe
+          cy.get("body").then(($body) => {
+            if ($body.text().includes("Editar")) {
+              cy.contains("Editar", { timeout: 5000 })
+                .should("be.visible")
+                .scrollIntoView()
+                .click({ force: true });
+              cy.wait(1500);
 
-            // Esperar a que el modo edición se active
-            cy.wait(1000);
-            
-            // Verificar que los campos son editables (solo si se hizo click en Editar)
-            cy.get("body").then(($body) => {
-              if ($body.find('input[placeholder*="Temperatura"]').length > 0) {
-                // Los campos son editables, proceder con la edición
-                cy.get('input[placeholder*="Temperatura"]', { timeout: 5000 }).should(
-                  "be.visible"
-                );
-              } else {
-                cy.log("Input de edición no apareció después de hacer click en Editar");
-              }
-            });
-          } else {
-            // Si no hay botón Editar, puede ser que no haya permisos
-            // El test pasa pero no puede editar
-            cy.log("Botón Editar no disponible - puede ser un problema de permisos");
-            return; // Salir del test si no hay botón Editar
-          }
-        });
+              // Esperar a que el modo edición se active
+              cy.wait(1000);
+              
+              // Verificar que los campos son editables (solo si se hizo click en Editar)
+              cy.get("body").then(($body) => {
+                if ($body.find('input[placeholder*="Temperatura"]').length > 0) {
+                  // Los campos son editables, proceder con la edición
+                  cy.get('input[placeholder*="Temperatura"]', { timeout: 5000 }).should(
+                    "be.visible"
+                  );
+                  
+                  // Cambiar el nombre
+                  const newName = `Alerta Editada ${Date.now()}`;
+                  cy.get('input[placeholder*="Temperatura"]')
+                    .clear()
+                    .type(newName);
 
-        // Cambiar el nombre (solo si estamos en modo edición y el input existe)
-        cy.get("body").then(($body) => {
-          if ($body.find('input[placeholder*="Temperatura"]').length > 0) {
-            const newName = `Alerta Editada ${Date.now()}`;
-            cy.get('input[placeholder*="Temperatura"]')
-              .clear()
-              .type(newName);
+                  // Guardar cambios
+                  cy.contains("Aceptar")
+                    .should("be.visible")
+                    .scrollIntoView()
+                    .click({ force: true });
 
-            // Guardar cambios
-            cy.contains("Aceptar").click({ force: true });
+                  // Esperar a que el modal se cierre
+                  cy.wait(2000);
 
-            // Esperar a que el modal se cierre
-            cy.wait(2000);
-
-            // Verificar que el nombre cambió
-            cy.contains(newName, { timeout: 10000 }).should("be.visible");
-          }
-        });
+                  // Verificar que el nombre cambió
+                  cy.contains(newName, { timeout: 10000 }).should("be.visible");
+                } else {
+                  cy.log("Input de edición no apareció después de hacer click en Editar");
+                }
+              });
+            } else {
+              // Si no hay botón Editar, puede ser que no haya permisos
+              // El test pasa pero no puede editar
+              cy.log("Botón Editar no disponible - puede ser un problema de permisos");
+            }
+          });
+        }
       });
     });
 
@@ -435,14 +518,25 @@ describe("AlertsPage - Tests E2E", () => {
         "be.visible"
       );
       cy.get('input[placeholder*="Temperatura Alta"]')
+        .should("be.visible")
         .clear()
         .type(ruleName);
+      
       cy.get('select').first().then(($select) => {
         if ($select.find("option").length > 1) {
           cy.get('select').first().select(1);
         }
       });
-      cy.contains("Crear").click({ force: true });
+      
+      cy.wait(500);
+      
+      // Mejorar click en botón Crear
+      cy.contains("Crear")
+        .should("be.visible")
+        .scrollIntoView()
+        .should("not.be.disabled")
+        .click({ force: true });
+      
       cy.wait(2000);
       
       // Verificar si el modal se cerró
@@ -523,7 +617,7 @@ describe("AlertsPage - Tests E2E", () => {
       cy.get("body").then(($body) => {
         if (!$body.text().includes("Aún no existen condiciones")) {
           // Obtener el nombre de la primera alerta
-          let ruleName: string;
+          let ruleName: string | undefined;
           cy.get('[class*="grid"]').first().within(() => {
             cy.get('div').first().then(($card) => {
               const text = $card.text();
@@ -531,29 +625,38 @@ describe("AlertsPage - Tests E2E", () => {
             });
           });
 
-          // Buscar la primera tarjeta y hacer click
-          cy.contains(ruleName || "Alerta").parent().parent().click({ force: true });
-          cy.wait(3000);
+          // Solo continuar si ruleName existe
+          if (ruleName) {
+            // Buscar la primera tarjeta y hacer click
+            cy.contains(ruleName)
+              .should("be.visible")
+              .parent()
+              .parent()
+              .click({ force: true });
+            cy.wait(3000);
 
-          // Verificar que el modal se abrió
-          cy.contains(ruleName || "Alerta", { timeout: 5000 }).should("be.visible");
+            // Verificar que el modal se abrió
+            cy.contains(ruleName, { timeout: 5000 }).should("be.visible");
 
-          // Verificar que hay sección de mensajes (el texto es "Mensajes" no "Mensajes Configurados")
-          // La sección puede estar colapsada, así que buscamos el texto "Mensajes" en el modal
-          cy.get("body").then(($body) => {
-            // Buscar dentro del modal abierto
-            if ($body.text().includes("Mensajes")) {
-              cy.contains("Mensajes", { timeout: 5000 }).should("exist");
-            } else if ($body.text().includes("No hay mensajes")) {
-              // No hay mensajes pero la sección existe
-              cy.contains("No hay mensajes", { timeout: 5000 }).should("exist");
-            } else {
-              // Si no está visible, puede estar colapsada o el modal no se abrió correctamente
-              cy.log("Sección de mensajes no encontrada - puede estar colapsada o el modal no se abrió correctamente");
-              // Verificar que el modal tiene el nombre de la regla como mínimo
-              cy.contains(ruleName || "Alerta", { timeout: 5000 }).should("be.visible");
-            }
-          });
+            // Verificar que hay sección de mensajes (el texto es "Mensajes" no "Mensajes Configurados")
+            // La sección puede estar colapsada, así que buscamos el texto "Mensajes" en el modal
+            cy.get("body").then(($body) => {
+              // Buscar dentro del modal abierto
+              if ($body.text().includes("Mensajes")) {
+                cy.contains("Mensajes", { timeout: 5000 }).should("exist");
+              } else if ($body.text().includes("No hay mensajes")) {
+                // No hay mensajes pero la sección existe
+                cy.contains("No hay mensajes", { timeout: 5000 }).should("exist");
+              } else {
+                // Si no está visible, puede estar colapsada o el modal no se abrió correctamente
+                cy.log("Sección de mensajes no encontrada - puede estar colapsada o el modal no se abrió correctamente");
+                // Verificar que el modal tiene el nombre de la regla como mínimo
+                cy.contains(ruleName, { timeout: 5000 }).should("be.visible");
+              }
+            });
+          } else {
+            cy.log("No se pudo obtener el nombre de la alerta - el test no puede continuar");
+          }
         }
       });
     });
@@ -650,9 +753,20 @@ describe("AlertsPage - Tests E2E", () => {
                 .clear()
                 .type("50");
 
-              cy.contains("Crear").click({ force: true });
-              cy.contains("Nueva Condición de Monitoreo", { timeout: 20000 }).should("not.exist");
+              cy.wait(500);
+
+              // Mejorar click en botón Crear
+              cy.contains("Crear")
+                .should("be.visible")
+                .scrollIntoView()
+                .should("not.be.disabled")
+                .click({ force: true });
+              
+              // Esperar a que se procese la creación
               cy.wait(2000);
+              
+              cy.contains("Nueva Condición de Monitoreo", { timeout: 20000 }).should("not.exist");
+              cy.wait(1000);
               
               // Abrir modal y agregar mensaje (código duplicado)
               cy.contains(ruleName, { timeout: 10000 })

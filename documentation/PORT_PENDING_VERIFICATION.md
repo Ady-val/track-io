@@ -16,6 +16,11 @@
 
 ## Criterios pendientes de verificación manual
 
+### §7 Cypress e2e (requiere app + backend + BD corriendo)
+- `MeasurementsPage.cy.ts` (nuevo), `AlertsPage.cy.ts`, `commands.ts`, `cypress.config.ts`
+  portados verbatim. `tsc --noEmit` del dashboard-test pasa limpio.
+- Ejecución (`pnpm cypress run`) pendiente: necesita entorno levantado con PostgreSQL.
+
 ### §3.3 / §3.4 Migraciones (requiere BD PostgreSQL viva)
 - `pnpm migration:run` desde cero termina sin error y crea columnas
   `chart2_*`, `dashboard_measurement_order (jsonb)` y valores de enum `dew_point`/`ppm`.
