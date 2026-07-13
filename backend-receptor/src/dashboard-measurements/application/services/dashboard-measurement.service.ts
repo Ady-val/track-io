@@ -32,18 +32,42 @@ export class DashboardMeasurementService {
     private readonly measurementValueRepository: MeasurementValueRepository
   ) {}
 
+  private parseBooleanValue(value?: string | number | boolean): boolean | null {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+
+    if (value === undefined || value === null) return null;
+
+    const str = String(value).toLowerCase().trim();
+    if (str === 'true' || str === '1' || str === 'on') return true;
+    if (str === 'false' || str === '0' || str === 'off') return false;
+
+    return null;
+  }
+
   async getAllDashboardMeasurements(groupId?: number): Promise<
     Array<
       DashboardMeasurement & {
         onStartTime?: string;
+        offStartTime?: string;
         latestValue?: { value: string; createdAt: string };
+        statusState?: 'on' | 'off' | 'unknown';
+        statusStartTime?: string;
+        statusDurationSeconds?: number;
+        serverTime?: string;
       }
     >
   > {
     let dashboards: DashboardMeasurement[];
     if (groupId) {
-      dashboards =
-        await this.dashboardMeasurementRepository.findByGroupId(groupId);
+      const groupWithMeasurements =
+        await this.groupRepository.findByIdWithMeasurements(groupId);
+      if (groupWithMeasurements?.dashboardMeasurements?.length) {
+        dashboards = groupWithMeasurements.dashboardMeasurements;
+      } else {
+        dashboards =
+          await this.dashboardMeasurementRepository.findByGroupId(groupId);
+      }
     } else {
       dashboards =
         await this.dashboardMeasurementRepository.findAllWithMeasurements();
@@ -85,6 +109,7 @@ export class DashboardMeasurementService {
     );
 
     if (statusMeasurements.length > 0) {
+      const serverNow = await this.measurementValueRepository.getDatabaseNow();
       const onStartTimePromises = statusMeasurements.map(async dm => {
         try {
           const onStartTime =
@@ -95,10 +120,30 @@ export class DashboardMeasurementService {
             dashboard: dm,
             onStartTime: onStartTime ? onStartTime.toISOString() : undefined,
           };
-        } catch (_error) {
+        } catch (error) {
+          console.error(`[DashboardMeasurementService] Error getting onStartTime for measurement ${dm.measurementId}:`, error);
           return {
             dashboard: dm,
             onStartTime: undefined,
+          };
+        }
+      });
+
+      const offStartTimePromises = statusMeasurements.map(async dm => {
+        try {
+          const offStartTime =
+            await this.measurementValueRepository.findStatusOffStartTime(
+              dm.measurementId
+            );
+          return {
+            dashboard: dm,
+            offStartTime: offStartTime ? offStartTime.toISOString() : undefined,
+          };
+        } catch (error) {
+          console.error(`[DashboardMeasurementService] Error getting offStartTime for measurement ${dm.measurementId}:`, error);
+          return {
+            dashboard: dm,
+            offStartTime: undefined,
           };
         }
       });
@@ -111,13 +156,27 @@ export class DashboardMeasurementService {
         ])
       );
 
+      const offStartTimeResults = await Promise.all(offStartTimePromises);
+      const offStartTimeMap = new Map(
+        offStartTimeResults.map(result => [
+          result.dashboard.id,
+          result.offStartTime,
+        ])
+      );
+
       return dashboards.map(dm => {
         const latestValue = latestValueMap.get(dm.id);
         const onStartTime = onStartTimeMap.get(dm.id);
+        const offStartTime = offStartTimeMap.get(dm.id);
 
         const result: DashboardMeasurement & {
           onStartTime?: string;
+          offStartTime?: string;
           latestValue?: { value: string; createdAt: string };
+          statusState?: 'on' | 'off' | 'unknown';
+          statusStartTime?: string;
+          statusDurationSeconds?: number;
+          serverTime?: string;
         } = {
           ...dm,
         };
@@ -126,12 +185,46 @@ export class DashboardMeasurementService {
           result.onStartTime = onStartTime;
         }
 
+        if (offStartTime !== undefined) {
+          result.offStartTime = offStartTime;
+        }
+
         if (latestValue) {
           result.latestValue = {
             value: latestValue.value,
             createdAt: latestValue.createdAt.toISOString(),
           };
         }
+
+        const latestBoolean = this.parseBooleanValue(latestValue?.value);
+        let statusState: 'on' | 'off' | 'unknown' = 'unknown';
+        if (latestBoolean === true) statusState = 'on';
+        if (latestBoolean === false) statusState = 'off';
+
+        const statusStartTime =
+          statusState === 'on'
+            ? onStartTime
+            : statusState === 'off'
+              ? offStartTime
+              : undefined;
+
+        let statusDurationSeconds: number | undefined = undefined;
+        if (statusStartTime) {
+          const startTimestamp = new Date(statusStartTime).getTime();
+          if (!Number.isNaN(startTimestamp)) {
+            const diffMs = serverNow.getTime() - startTimestamp;
+            statusDurationSeconds = Math.max(0, Math.floor(diffMs / 1000));
+          }
+        }
+
+        result.statusState = statusState;
+        if (statusStartTime) {
+          result.statusStartTime = statusStartTime;
+        }
+        if (statusDurationSeconds !== undefined) {
+          result.statusDurationSeconds = statusDurationSeconds;
+        }
+        result.serverTime = serverNow.toISOString();
 
         return result;
       });
