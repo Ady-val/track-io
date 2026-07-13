@@ -17,6 +17,7 @@ import {
 import annotationPlugin from "chartjs-plugin-annotation";
 
 import { Card, CardBody, Text } from "@components/atoms";
+import { formatLocalDateTime } from "@/lib/dateTime";
 
 import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
 import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
@@ -269,8 +270,10 @@ export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
     baseSize: "lg",
   });
 
+  const formattedTimestamp = formatLocalDateTime(timestamp);
+
   return (
-    <Card className="bg-slate-800/50 border-slate-700 group relative">
+    <Card className="h-[25rem] w-[25rem] bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
         {showActions && (onEdit || onDelete) && (
           <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -352,8 +355,8 @@ export const VibrationLineChart: React.FC<VibrationLineChartProps> = ({
 
         <div className="mt-1 text-center">
           <Text className="text-xs text-slate-500" variant="caption">
-            {hasValue && timestamp
-              ? `Actualizado: ${new Date(timestamp).toLocaleDateString()} ${new Date(timestamp).toLocaleTimeString()}`
+            {hasValue && formattedTimestamp
+              ? `Actualizado: ${formattedTimestamp}`
               : "Esperando señal"}
           </Text>
         </div>

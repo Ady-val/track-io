@@ -30,7 +30,12 @@ export class EventAlertLog {
   sentAt!: Date;
 
   @Column({ name: 'messages_sent', type: 'jsonb' })
-  messagesSent!: unknown[];
+  messagesSent!: Array<{
+    targetId: string;
+    message: string;
+    color?: string;
+    messageType: string;
+  }>;
 
   @Column({ name: 'success', type: 'boolean' })
   success!: boolean;

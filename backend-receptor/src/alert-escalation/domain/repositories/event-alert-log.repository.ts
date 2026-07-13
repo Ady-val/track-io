@@ -2,13 +2,41 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, type DeepPartial } from 'typeorm';
 import { EventAlertLog } from '../entities/event-alert-log.entity';
-import { AlertLevel } from '../entities/alert-escalation-message.entity';
+import {
+  AlertLevel,
+  MessageType,
+} from '../entities/alert-escalation-message.entity';
+
+export type EventAlertLogMessageSnapshot = {
+  targetId: string;
+  message: string;
+  color?: string;
+  messageType: MessageType;
+};
+
+export type EventAlertLogMessageInput = {
+  targetId: string;
+  message: string;
+  color?: string | undefined;
+  messageType: MessageType;
+};
+
+export function toEventAlertLogMessageSnapshot(
+  input: EventAlertLogMessageInput
+): EventAlertLogMessageSnapshot {
+  return {
+    targetId: input.targetId,
+    message: input.message,
+    ...(input.color !== undefined ? { color: input.color } : {}),
+    messageType: input.messageType,
+  };
+}
 
 export interface CreateEventAlertLogDto {
   eventId: number;
   level: AlertLevel;
   sentAt: Date;
-  messagesSent: unknown[];
+  messagesSent: EventAlertLogMessageSnapshot[];
   success: boolean;
   errorMessage?: string;
   endpointUrl: string;

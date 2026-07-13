@@ -47,6 +47,8 @@ export type DepartmentStatus = "ok" | "alert" | "warning" | "critical" | "NA";
 export type MeasurementType =
   | "temperature"
   | "humidity"
+  | "dew_point"
+  | "ppm"
   | "pressure"
   | "level"
   | "vibration"
@@ -69,6 +71,11 @@ export interface DashboardMeasurement {
   maxValue?: number;
   minValue?: number;
   onStartTime?: string;
+  offStartTime?: string;
+  statusState?: "on" | "off" | "unknown";
+  statusStartTime?: string;
+  statusDurationSeconds?: number;
+  serverTime?: string;
   latestValue?: {
     value: string;
     createdAt: string;

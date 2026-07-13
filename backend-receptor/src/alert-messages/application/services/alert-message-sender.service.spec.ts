@@ -286,9 +286,9 @@ describe('AlertMessageSenderService', () => {
       process.env.NODE_ENV = originalEnv;
     });
 
-    it('should resolve endpoint URL correctly in production (localhost -> host.docker.internal)', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+    it('should prefer NODE_RED_EVENTS_URL over configured URL', async () => {
+      const originalNodeRed = process.env['NODE_RED_EVENTS_URL'];
+      process.env['NODE_RED_EVENTS_URL'] = 'http://192.168.1.88:1880/events';
 
       const messages: AlertMessage[] = [
         createMockAlertMessage({
@@ -302,12 +302,39 @@ describe('AlertMessageSenderService', () => {
       const mockResponse = { status: 200, data: {} };
       httpService.post.mockReturnValue(of(mockResponse) as any);
 
-      await service.sendMessages(messages, 'http://localhost:1880/events');
+      await service.sendMessages(messages, 'http://host.docker.internal:1880/events');
+
+      const [url] = httpService.post.mock.calls[0];
+      expect(url).toBe('http://192.168.1.88:1880/events');
+
+      if (originalNodeRed !== undefined)
+        process.env['NODE_RED_EVENTS_URL'] = originalNodeRed;
+      else delete process.env['NODE_RED_EVENTS_URL'];
+    });
+
+    it('should use configured URL when NODE_RED_EVENTS_URL is unset', async () => {
+      const originalNodeRed = process.env['NODE_RED_EVENTS_URL'];
+      delete process.env['NODE_RED_EVENTS_URL'];
+
+      const messages: AlertMessage[] = [
+        createMockAlertMessage({
+          id: 1,
+          messageType: MessageType.EMAIL,
+          targetId: 'user@example.com',
+          message: 'Test',
+        }),
+      ];
+
+      const mockResponse = { status: 200, data: {} };
+      httpService.post.mockReturnValue(of(mockResponse) as any);
+
+      await service.sendMessages(messages, 'http://host.docker.internal:1880/events');
 
       const [url] = httpService.post.mock.calls[0];
       expect(url).toBe('http://host.docker.internal:1880/events');
 
-      process.env.NODE_ENV = originalEnv;
+      if (originalNodeRed !== undefined)
+        process.env['NODE_RED_EVENTS_URL'] = originalNodeRed;
     });
 
     it('should return false when endpoint URL is invalid', async () => {
@@ -326,7 +353,7 @@ describe('AlertMessageSenderService', () => {
       // Invalid URL format
       const result = await service.sendMessages(messages, 'invalid-url');
 
-      expect(result).toBe(true); // resolveEndpointUrl handles invalid URLs gracefully
+      expect(result).toBe(true); // mock succeeds; resolved URL is the configured string
     });
 
     it('should handle empty messages array', async () => {

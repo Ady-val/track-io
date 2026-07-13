@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 import { useWebSocket } from "@/contexts/WebSocketContext";
+import { normalizeChartTimestamp } from "@/lib/dateTime";
+import { updateServerTimeOffset } from "@/lib/timeSync";
 
 interface DataPoint {
   value: number;
@@ -37,24 +39,121 @@ export interface ChartDataset {
   backgroundColor: string;
 }
 
+export interface RealtimeChartPoint {
+  measurementId: number;
+  value: number;
+  createdAt: string;
+}
+
 export const useRealtimeGroupChartData = (
   measurementIds: number[],
-  timeRangeMinutes: number
+  _timeRangeMinutes: number,
+  initialPoints: RealtimeChartPoint[] = []
 ) => {
   const { socket } = useWebSocket();
   const [data, setData] = useState<MeasurementData>({});
+  const MAX_POINTS_PER_MEASUREMENT = 10000;
+
+  const insertSorted = useCallback(
+    (points: DataPoint[], newPoint: DataPoint) => {
+      if (points.length === 0) {
+        return [newPoint];
+      }
+
+      const lastPoint = points[points.length - 1]!;
+      if (newPoint.timestamp.getTime() >= lastPoint.timestamp.getTime()) {
+        return [...points, newPoint];
+      }
+
+      let left = 0;
+      let right = points.length - 1;
+
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const midTime = points[mid]!.timestamp.getTime();
+        const newTime = newPoint.timestamp.getTime();
+
+        if (midTime === newTime) {
+          const updated = points.slice();
+          updated[mid] = newPoint;
+          return updated;
+        }
+
+        if (midTime < newTime) {
+          left = mid + 1;
+        } else {
+          right = mid - 1;
+        }
+      }
+
+      const updated = points.slice();
+      updated.splice(left, 0, newPoint);
+      return updated;
+    },
+    []
+  );
+
+  const seedInitialData = useCallback(() => {
+    const seeded: MeasurementData = {};
+
+    initialPoints.forEach((point) => {
+      if (!measurementIds.includes(point.measurementId)) {
+        return;
+      }
+
+      const timestamp = normalizeChartTimestamp(point.createdAt);
+      if (!timestamp) {
+        return;
+      }
+      updateServerTimeOffset(point.createdAt);
+
+      const existing = seeded[point.measurementId] ?? [];
+      seeded[point.measurementId] = insertSorted(existing, {
+        value: point.value,
+        timestamp,
+      });
+    });
+
+    for (const measurementId of Object.keys(seeded)) {
+      const points = seeded[Number(measurementId)] ?? [];
+      seeded[Number(measurementId)] =
+        points.length > MAX_POINTS_PER_MEASUREMENT
+          ? points.slice(-MAX_POINTS_PER_MEASUREMENT)
+          : points;
+    }
+
+    setData((prev) => {
+      if (Object.keys(prev).length > 0) {
+        return prev;
+      }
+
+      return seeded;
+    });
+  }, [initialPoints, measurementIds, insertSorted]);
+
+  useEffect(() => {
+    seedInitialData();
+  }, [seedInitialData]);
 
   const handleMeasurementValue = useCallback(
     (message: WebSocketMessage) => {
-      const payload = message.data?.data ?? message.data;
+      const payload = message.data?.data ?? message.data ?? message;
 
       if (!payload?.measurementId) {
         return;
       }
 
       const { measurementId, value, createdAt } = payload;
+      const normalizedMeasurementId = Number(measurementId);
 
-      if (!value || !createdAt || !measurementIds.includes(measurementId)) {
+      if (
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        !createdAt ||
+        !Number.isFinite(normalizedMeasurementId) ||
+        !measurementIds.includes(normalizedMeasurementId)
+      ) {
         return;
       }
 
@@ -66,26 +165,28 @@ export const useRealtimeGroupChartData = (
         return;
       }
 
-      const timestamp = new Date(createdAt);
+      const timestamp = normalizeChartTimestamp(createdAt);
+      if (!timestamp) {
+        return;
+      }
+      updateServerTimeOffset(createdAt);
 
       setData((prev) => {
-        const currentData = prev[measurementId] ?? [];
+        const currentData = prev[normalizedMeasurementId] ?? [];
         const newDataPoint: DataPoint = { value: newValue, timestamp };
-        const now = new Date();
-        const cutoffTime = new Date(
-          now.getTime() - timeRangeMinutes * 60 * 1000
-        );
-        const filteredData = currentData.filter(
-          (point) => point.timestamp >= cutoffTime
-        );
+        const withNewPoint = insertSorted(currentData, newDataPoint);
+        const limited =
+          withNewPoint.length > MAX_POINTS_PER_MEASUREMENT
+            ? withNewPoint.slice(-MAX_POINTS_PER_MEASUREMENT)
+            : withNewPoint;
 
         return {
           ...prev,
-          [measurementId]: [...filteredData, newDataPoint],
+          [normalizedMeasurementId]: limited,
         };
       });
     },
-    [measurementIds, timeRangeMinutes]
+    [measurementIds]
   );
 
   useEffect(() => {
@@ -101,30 +202,9 @@ export const useRealtimeGroupChartData = (
   }, [socket, handleMeasurementValue]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setData((prev) => {
-        const now = new Date();
-        const cutoffTime = new Date(
-          now.getTime() - timeRangeMinutes * 60 * 1000
-        );
-        const cleaned: MeasurementData = {};
-
-        for (const [measurementId, points] of Object.entries(prev)) {
-          const filtered = points.filter(
-            (point) => point.timestamp >= cutoffTime
-          );
-
-          if (filtered.length > 0) {
-            cleaned[Number(measurementId)] = filtered;
-          }
-        }
-
-        return cleaned;
-      });
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [timeRangeMinutes]);
+    // No periodic cleanup; chart handles filtering for visualization
+    return;
+  }, []);
 
   const getAllTimestamps = useCallback((): Date[] => {
     const timestamps = new Set<number>();

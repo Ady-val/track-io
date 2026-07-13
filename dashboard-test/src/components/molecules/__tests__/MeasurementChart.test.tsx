@@ -126,6 +126,66 @@ jest.mock("../StatusIndicatorCard", () => ({
   ),
 }));
 
+jest.mock("../LiquidFillGauge", () => ({
+  LiquidFillGauge: ({
+    title,
+    type,
+    onEdit,
+    onDelete,
+    showActions,
+  }: {
+    title: string;
+    type: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    showActions?: boolean;
+  }) => (
+    <div data-testid="liquid-fill-gauge">
+      {title} - {type}
+      {showActions && onEdit && (
+        <button data-testid="liquid-edit-button" onClick={onEdit}>
+          Edit
+        </button>
+      )}
+      {showActions && onDelete && (
+        <button data-testid="liquid-delete-button" onClick={onDelete}>
+          Delete
+        </button>
+      )}
+    </div>
+  ),
+}));
+
+jest.mock("../DewPointDonutChart", () => ({
+  DewPointDonutChart: ({
+    title,
+    type,
+    onEdit,
+    onDelete,
+    showActions,
+  }: {
+    title: string;
+    type: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    showActions?: boolean;
+  }) => (
+    <div data-testid="dew-point-donut-chart">
+      {title} - {type}
+      {showActions && onEdit && (
+        <button data-testid="dew-point-edit-button" onClick={onEdit}>
+          Edit
+        </button>
+      )}
+      {showActions && onDelete && (
+        <button data-testid="dew-point-delete-button" onClick={onDelete}>
+          Delete
+        </button>
+      )}
+    </div>
+  ),
+}));
+
 describe("MeasurementChart", () => {
   const defaultProps = {
     title: "Test Chart",
@@ -147,14 +207,36 @@ describe("MeasurementChart", () => {
     );
   });
 
-  it("should render GaugeChart for humidity type", () => {
+  it("should render LiquidFillGauge for humidity type", () => {
     const { getByTestId } = render(
       <MeasurementChart {...defaultProps} type="humidity" />
     );
 
-    expect(getByTestId("gauge-chart")).toBeInTheDocument();
-    expect(getByTestId("gauge-chart")).toHaveTextContent(
+    expect(getByTestId("liquid-fill-gauge")).toBeInTheDocument();
+    expect(getByTestId("liquid-fill-gauge")).toHaveTextContent(
       "Test Chart - humidity"
+    );
+  });
+
+  it("should render LiquidFillGauge for ppm type", () => {
+    const { getByTestId } = render(
+      <MeasurementChart {...defaultProps} type="ppm" />
+    );
+
+    expect(getByTestId("liquid-fill-gauge")).toBeInTheDocument();
+    expect(getByTestId("liquid-fill-gauge")).toHaveTextContent(
+      "Test Chart - ppm"
+    );
+  });
+
+  it("should render DewPointDonutChart for dew_point type", () => {
+    const { getByTestId } = render(
+      <MeasurementChart {...defaultProps} type="dew_point" />
+    );
+
+    expect(getByTestId("dew-point-donut-chart")).toBeInTheDocument();
+    expect(getByTestId("dew-point-donut-chart")).toHaveTextContent(
+      "Test Chart - dew_point"
     );
   });
 

@@ -1,89 +1,136 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { getServerNow } from "@/lib/timeSync";
 
-function formatDuration(startTime: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - startTime.getTime();
+/**
+ * Parses an ISO date string to UTC timestamp (milliseconds since epoch)
+ * All dates from server are in UTC, so we parse them as UTC timestamps
+ */
+function parseUTCTimestamp(isoString: string): number | null {
+  try {
+    const date = new Date(isoString);
+    const timestamp = date.getTime();
+    // new Date(invalid) does not throw; it yields an Invalid Date whose
+    // getTime() is NaN. Return null so callers' `=== null` guards catch it.
+    if (Number.isNaN(timestamp)) {
+      return null;
+    }
+    // getTime() always returns UTC timestamp regardless of timezone
+    return timestamp;
+  } catch {
+    return null;
+  }
+}
 
-  if (diff < 0) {
+/**
+ * Formats duration from milliseconds to HH:MM:SS
+ */
+function formatDurationFromMilliseconds(milliseconds: number): string {
+  if (milliseconds < 0) {
     return "00:00:00";
   }
 
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+  const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
 
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
-function isValidDate(date: Date): boolean {
-  return date instanceof Date && !isNaN(date.getTime());
+function calculateElapsedMs(
+  startTime: string | undefined,
+  isActiveCondition: boolean
+): number | null {
+  if (!startTime || !isActiveCondition) {
+    return null;
+  }
+
+  const startTimestamp = parseUTCTimestamp(startTime);
+  if (startTimestamp === null) {
+    return null;
+  }
+
+  return getServerNow() - startTimestamp;
 }
 
 export const useStatusDuration = (
-  onStartTime: string | undefined,
-  isOn: boolean | null | undefined
+  startTime: string | undefined,
+  isActiveCondition: boolean
 ) => {
-  const [duration, setDuration] = useState<string>("00:00:00");
+
+  const initialDuration = useMemo(() => {
+    const elapsed = calculateElapsedMs(startTime, isActiveCondition);
+    if (elapsed === null) {
+      return "00:00:00";
+    }
+
+    return formatDurationFromMilliseconds(elapsed);
+  }, [startTime, isActiveCondition]);
+
+  const [duration, setDuration] = useState<string>(initialDuration);
 
   const isActive = useMemo(() => {
-    if (isOn !== true || !onStartTime || onStartTime.trim() === "") {
+    if (!isActiveCondition || !startTime || !startTime.trim()) {
       return false;
     }
 
-    try {
-      const startTime = new Date(onStartTime);
-
-      if (!isValidDate(startTime)) {
-        return false;
-      }
-      const now = new Date();
-
-      return startTime.getTime() <= now.getTime();
-    } catch {
+    const startTimestamp = parseUTCTimestamp(startTime);
+    if (startTimestamp === null) {
       return false;
     }
-  }, [isOn, onStartTime]);
+
+    const now = getServerNow();
+    return isActiveCondition === true ? true : startTimestamp <= now;
+  }, [isActiveCondition, startTime]);
 
   const updateDuration = useCallback(() => {
-    if (!onStartTime || !isOn) {
+    if (!startTime || !isActiveCondition) {
       setDuration("00:00:00");
-
       return;
     }
 
-    try {
-      const startTime = new Date(onStartTime);
-
-      if (!isValidDate(startTime)) {
-        setDuration("00:00:00");
-
-        return;
-      }
-
-      const formatted = formatDuration(startTime);
-
-      setDuration(formatted);
-    } catch (error) {
-      console.error("Error calculating duration:", error);
+    const startTimestamp = parseUTCTimestamp(startTime);
+    if (startTimestamp === null) {
       setDuration("00:00:00");
+      return;
     }
-  }, [onStartTime, isOn]);
+
+    // Calculate elapsed time in milliseconds (both timestamps are UTC)
+    const now = getServerNow();
+    let elapsed = now - startTimestamp;
+    
+    // VERSION 2.0: If backend says it's active, trust it even if startTime is in future
+    // The formatDurationFromMilliseconds function already handles negative values (returns "00:00:00")
+    // So we don't need to clamp to 0 - let it show 00:00:00 until client time catches up
+    // Only clamp if NOT active and future (shouldn't happen, but safety check)
+    if (elapsed < 0 && !isActiveCondition) {
+      // If not active and future, definitely 0
+      elapsed = 0;
+    }
+    // If elapsed < 0 && isActiveCondition === true, we let it be negative
+    // formatDurationFromMilliseconds will return "00:00:00" for negative values
+    // This allows the counter to start when client time catches up
+    
+    const formatted = formatDurationFromMilliseconds(elapsed);
+    setDuration(formatted);
+  }, [startTime, isActiveCondition]);
 
   useEffect(() => {
     if (!isActive) {
       setDuration("00:00:00");
-
       return;
     }
 
     updateDuration();
-
     const interval = setInterval(updateDuration, 1000);
 
     return () => {
       clearInterval(interval);
     };
-  }, [isActive, updateDuration]);
+  }, [isActive, updateDuration, startTime, isActiveCondition]);
+
+  useEffect(() => {
+    setDuration(initialDuration);
+  }, [initialDuration]);
 
   return {
     duration,

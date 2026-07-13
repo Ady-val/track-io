@@ -7,7 +7,6 @@ import {
   Button,
   Input,
   Select,
-  Text,
   ErrorMessage,
   ValidationErrorList,
   Label,
@@ -26,9 +25,13 @@ import type { DashboardMeasurement } from "@/types/dashboard";
 import type { MeasurementType } from "@/types/dashboard";
 import { useDashboardMeasurementGroups } from "@/hooks/useDashboardMeasurementGroups";
 
+type FormMeasurementType = "temperature" | "humidity" | "dew_point" | "ppm" | "pressure" | "level" | "flow" | "vibration" | "status";
+
 const measurementTypeOptions = [
   { value: "temperature", label: "Temperatura" },
   { value: "humidity", label: "Humedad" },
+  { value: "dew_point", label: "Dew Point" },
+  { value: "ppm", label: "PPM" },
   { value: "pressure", label: "Presión" },
   { value: "level", label: "Nivel" },
   { value: "flow", label: "Flujo" },
@@ -66,8 +69,8 @@ export const EditDashboardMeasurementModal: React.FC<
     defaultValues: {
       externalId: dashboard?.measurement?.externalId ?? "",
       name: dashboard?.measurement?.name ?? "",
-      type: dashboard?.measurement?.type ?? "status",
-      groupId: dashboard?.groupId ?? null,
+      type: (dashboard?.measurement?.type ?? "status") as FormMeasurementType,
+      groupId: (dashboard as DashboardMeasurement & { groupId?: number | null })?.groupId ?? null,
       minValue: dashboard?.minValue ?? undefined,
       maxValue: dashboard?.maxValue ?? undefined,
     },
@@ -99,8 +102,8 @@ export const EditDashboardMeasurementModal: React.FC<
       resetForm({
         externalId: dashboard.measurement.externalId,
         name: dashboard.measurement.name,
-        type: dashboard.measurement.type,
-        groupId: dashboard.groupId ?? null,
+        type: dashboard.measurement.type as FormMeasurementType,
+        groupId: (dashboard as DashboardMeasurement & { groupId?: number | null }).groupId ?? null,
         minValue: dashboard.minValue,
         maxValue: dashboard.maxValue,
       });

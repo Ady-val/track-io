@@ -9,6 +9,7 @@ import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { TypeOrmEventRepository } from '../../../events/domain/repositories/typeorm-event.repository';
 import { DepartmentRepository } from '../../../departments/domain/repositories/department.repository';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -19,8 +20,6 @@ type TorretaPayload = {
 @Injectable()
 export class AreaTorretaSignalService {
   private readonly logger = new Logger(AreaTorretaSignalService.name);
-  private readonly endpointUrl = 'http://localhost:1880/events';
-
   private eventRepository?: TypeOrmEventRepository;
   private areaTorretaConfigRepository?: TypeOrmAreaTorretaConfigRepository;
   private departmentRepository?: DepartmentRepository;
@@ -104,6 +103,9 @@ export class AreaTorretaSignalService {
         );
 
       if (configs.length === 0) {
+        this.logger.warn(
+          `No active area torreta config for areaId=${event.areaId} (event ${event.id}). Skipping POST to events endpoint — configure torretas for this area to receive outbound signals.`
+        );
         return;
       }
 
@@ -213,7 +215,7 @@ export class AreaTorretaSignalService {
     deviceColorId: string
   ): Promise<void> {
     try {
-      const resolvedUrl = this.resolveEndpointUrl(this.endpointUrl);
+      const resolvedUrl = this.resolveEndpointUrl();
       const payload: { data: TorretaPayload[] } = {
         data: [
           {
@@ -248,20 +250,7 @@ export class AreaTorretaSignalService {
     }
   }
 
-  private resolveEndpointUrl(endpointUrl: string): string {
-    try {
-      if (process.env['NODE_ENV'] === 'development') return endpointUrl;
-      const url = new URL(endpointUrl);
-      if (
-        url.hostname === 'localhost' ||
-        url.hostname === '127.0.0.1' ||
-        url.hostname === '::1'
-      ) {
-        url.hostname = 'host.docker.internal';
-      }
-      return url.toString();
-    } catch {
-      return endpointUrl;
-    }
+  private resolveEndpointUrl(): string {
+    return resolveNodeRedEventsUrl();
   }
 }

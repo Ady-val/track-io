@@ -6,6 +6,7 @@ import {
   MessageType,
 } from '../../domain/entities/alert-message.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -29,7 +30,6 @@ type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertMessageSenderService {
-  private readonly endpointUrl = 'http://localhost:1880/events';
   private readonly logger = new Logger(AlertMessageSenderService.name);
 
   constructor(
@@ -42,9 +42,7 @@ export class AlertMessageSenderService {
     endpointUrl?: string
   ): Promise<boolean> {
     try {
-      const resolvedUrl = this.resolveEndpointUrl(
-        endpointUrl || this.endpointUrl
-      );
+      const resolvedUrl = this.resolveEndpointUrl(endpointUrl);
       const payloadData = await this.transformMessagesToPayload(messages);
       const payload = { data: payloadData };
 
@@ -199,20 +197,7 @@ export class AlertMessageSenderService {
     });
   }
 
-  private resolveEndpointUrl(endpointUrl: string): string {
-    try {
-      if (process.env['NODE_ENV'] === 'development') return endpointUrl;
-      const url = new URL(endpointUrl);
-      if (
-        url.hostname === 'localhost' ||
-        url.hostname === '127.0.0.1' ||
-        url.hostname === '::1'
-      ) {
-        url.hostname = 'host.docker.internal';
-      }
-      return url.toString();
-    } catch {
-      return endpointUrl;
-    }
+  private resolveEndpointUrl(configuredUrl?: string): string {
+    return resolveNodeRedEventsUrl(configuredUrl);
   }
 }

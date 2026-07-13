@@ -44,6 +44,30 @@ export class CreateDashboardMeasurementGroupDto {
   @IsArray()
   @IsInt({ each: true })
   chartMeasurementIds?: number[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsIn([1, 10, 30, 60, 120, 240, 480])
+  chart2TimeRange?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chart2MinValue?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chart2MaxValue?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  chart2MeasurementIds?: number[];
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  dashboardMeasurementOrder?: number[];
 }
 
 export class UpdateDashboardMeasurementGroupDto {
@@ -76,4 +100,28 @@ export class UpdateDashboardMeasurementGroupDto {
   @IsArray()
   @IsInt({ each: true })
   chartMeasurementIds?: number[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsIn([1, 10, 30, 60, 120, 240, 480])
+  chart2TimeRange?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chart2MinValue?: number;
+
+  @IsOptional()
+  @IsNumber()
+  chart2MaxValue?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  chart2MeasurementIds?: number[];
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  dashboardMeasurementOrder?: number[];
 }

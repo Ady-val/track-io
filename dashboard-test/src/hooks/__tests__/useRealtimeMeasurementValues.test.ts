@@ -79,7 +79,7 @@ describe("useRealtimeMeasurementValues", () => {
     });
 
     expect(result.current.getValue(1)).toBe(25.5);
-    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00Z");
+    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00.000Z");
     expect(result.current.getHistory(1)).toEqual([25.5]);
   });
 
@@ -99,7 +99,7 @@ describe("useRealtimeMeasurementValues", () => {
     });
 
     expect(result.current.getValue(1)).toBe(true);
-    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00Z");
+    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00.000Z");
     expect(result.current.getHistory(1)).toEqual([]); // Boolean values don't go to history
   });
 
@@ -119,7 +119,7 @@ describe("useRealtimeMeasurementValues", () => {
     });
 
     expect(result.current.getValue(1)).toBe(false);
-    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00Z");
+    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00.000Z");
   });
 
   it("should handle numeric 1 as true", () => {
@@ -187,7 +187,7 @@ describe("useRealtimeMeasurementValues", () => {
       });
     });
 
-    expect(result.current.getOnStartTime(1)).toBe("2024-01-01T10:05:00Z");
+    expect(result.current.getOnStartTime(1)).toBe("2024-01-01T10:05:00.000Z");
   });
 
   it("should clear onStartTime when status changes from ON to OFF", () => {
@@ -288,7 +288,7 @@ describe("useRealtimeMeasurementValues", () => {
     });
 
     expect(result.current.getValue(1)).toBe(25.5);
-    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00Z");
+    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00.000Z");
     expect(result.current.getHistory(1)).toEqual([25.5]);
   });
 
@@ -305,10 +305,12 @@ describe("useRealtimeMeasurementValues", () => {
     });
 
     expect(result.current.getValue(1)).toBe(true);
-    expect(result.current.getOnStartTime(1)).toBe("2024-01-01T09:00:00Z");
+    expect(result.current.getOnStartTime(1)).toBe("2024-01-01T09:00:00.000Z");
   });
 
-  it("should not overwrite existing value when initializing", () => {
+  it("should overwrite value with backend value when initializing", () => {
+    // VERSION 2.0 (§4.7): initializeValue siempre prioriza el valor del backend,
+    // incluso si ya había un valor recibido por WebSocket.
     const { result } = renderHook(() => useRealtimeMeasurementValues());
 
     const handler = mockSocket.on.mock.calls[0][1];
@@ -324,7 +326,7 @@ describe("useRealtimeMeasurementValues", () => {
       });
     });
 
-    // Try to initialize with older value
+    // Initialize from backend
     act(() => {
       result.current.initializeValue(
         1,
@@ -334,9 +336,9 @@ describe("useRealtimeMeasurementValues", () => {
       );
     });
 
-    // Should keep the WebSocket value
-    expect(result.current.getValue(1)).toBe(30.0);
-    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:05:00Z");
+    // Backend value wins
+    expect(result.current.getValue(1)).toBe(25.5);
+    expect(result.current.getTimestamp(1)).toBe("2024-01-01T10:00:00.000Z");
   });
 
   it("should maintain history for numeric values", () => {

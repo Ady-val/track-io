@@ -3,20 +3,12 @@ import { render, screen } from "@/test-utils/custom-render";
 
 import { StatusIndicatorCard } from "../StatusIndicatorCard";
 
-// Mock del hook useStatusDuration
-jest.mock("@/hooks/useStatusDuration", () => ({
-  useStatusDuration: jest.fn((onStartTime, isOn) => {
-    if (isOn === true && onStartTime) {
-      return {
-        duration: "02:30:45",
-        isActive: true,
-      };
-    }
-    return {
-      duration: "00:00:00",
-      isActive: false,
-    };
-  }),
+// Mock del hook useDurationTicker (la tarjeta calcula la duración con
+// statusDurationSeconds del backend, no con onStartTime).
+jest.mock("@/hooks/useDurationTicker", () => ({
+  useDurationTicker: jest.fn((base, isActive) =>
+    isActive && typeof base === "number" && base > 0 ? "02:30:45" : "00:00:00"
+  ),
 }));
 
 // Mock de getMeasurementConfig - retornar un componente React válido
@@ -90,19 +82,19 @@ describe("StatusIndicatorCard", () => {
     expect(screen.getByText("N/A")).toBeInTheDocument();
   });
 
-  it("should display duration when status is ON and onStartTime is provided", () => {
+  it("should display duration when status is ON and statusDurationSeconds is provided", () => {
     render(
       <StatusIndicatorCard
         {...defaultProps}
         isOn={true}
-        onStartTime="2024-01-01T10:00:00Z"
+        statusDurationSeconds={9045}
       />
     );
 
     expect(screen.getByText("02:30:45")).toBeInTheDocument();
   });
 
-  it("should not display duration when status is OFF", () => {
+  it("should not display the active duration when status is OFF without a base", () => {
     render(
       <StatusIndicatorCard
         {...defaultProps}
@@ -111,7 +103,7 @@ describe("StatusIndicatorCard", () => {
       />
     );
 
-    // Should show placeholder but not the actual duration
+    // Sin statusDurationSeconds, el ticker devuelve 00:00:00 (no la duración activa).
     expect(screen.queryByText("02:30:45")).not.toBeInTheDocument();
   });
 

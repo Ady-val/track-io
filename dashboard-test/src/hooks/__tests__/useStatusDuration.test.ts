@@ -110,12 +110,15 @@ describe("useStatusDuration", () => {
     expect(result.current.isActive).toBe(true);
   });
 
-  it("should return 00:00:00 when onStartTime is in the future", () => {
+  it("should show 00:00:00 but stay active when onStartTime is in the future", () => {
+    // VERSION 2.0: si el backend dice que está activo, se confía aunque el
+    // startTime sea futuro; la duración se muestra 00:00:00 hasta que el reloj
+    // del cliente alcance el startTime.
     const futureTime = "2024-01-01T13:00:00Z"; // 1 hour in the future
     const { result } = renderHook(() => useStatusDuration(futureTime, true));
 
     expect(result.current.duration).toBe("00:00:00");
-    expect(result.current.isActive).toBe(false);
+    expect(result.current.isActive).toBe(true);
   });
 
   it("should return 00:00:00 when onStartTime is invalid date string", () => {

@@ -21,6 +21,8 @@ export interface CreateMeasurementFormProps {
 const measurementTypeOptions: MeasurementTypeOption[] = [
   { value: "temperature", label: "Temperatura" },
   { value: "humidity", label: "Humedad" },
+  { value: "dew_point", label: "Dew Point" },
+  { value: "ppm", label: "PPM" },
   { value: "pressure", label: "Presión" },
   { value: "level", label: "Nivel" },
   { value: "flow", label: "Flujo" },

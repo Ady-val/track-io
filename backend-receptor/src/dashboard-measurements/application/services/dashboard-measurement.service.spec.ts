@@ -57,6 +57,7 @@ describe('DashboardMeasurementService', () => {
           provide: DashboardMeasurementGroupRepository,
           useValue: {
             findOneOrFail: jest.fn(),
+            findByIdWithMeasurements: jest.fn().mockResolvedValue(null),
           },
         },
         {
@@ -64,6 +65,8 @@ describe('DashboardMeasurementService', () => {
           useValue: {
             findLatestValueByMeasurementId: jest.fn(),
             findStatusOnStartTime: jest.fn(),
+            findStatusOffStartTime: jest.fn().mockResolvedValue(null),
+            getDatabaseNow: jest.fn().mockResolvedValue(new Date()),
           },
         },
       ],

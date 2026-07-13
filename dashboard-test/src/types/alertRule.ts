@@ -50,6 +50,8 @@ export type Message = AlertMessage;
 export type SensorTypeValue =
   | "temperature"
   | "humidity"
+  | "dew_point"
+  | "ppm"
   | "pressure"
   | "level"
   | "vibration"

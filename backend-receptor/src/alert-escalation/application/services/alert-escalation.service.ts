@@ -5,6 +5,7 @@ import { AlertEscalationConfigRepository } from '../../domain/repositories/alert
 import { AlertEscalationMessageRepository } from '../../domain/repositories/alert-escalation-message.repository';
 import { EventAlertLogRepository } from '../../domain/repositories/event-alert-log.repository';
 import type { CreateEventAlertLogDto } from '../../domain/repositories/event-alert-log.repository';
+import { toEventAlertLogMessageSnapshot } from '../../domain/repositories/event-alert-log.repository';
 import {
   AlertEscalationMessage,
   AlertLevel,
@@ -13,6 +14,7 @@ import {
 import { AlertEscalationConfig } from '../../domain/entities/alert-escalation-config.entity';
 import { Event } from '../../../events/domain/entities/event.entity';
 import { TorretaColorService } from '../../../torreta-colors/application/services/torreta-color.service';
+import { resolveNodeRedEventsUrl } from '../../../config/node-red-events-url';
 
 type TorretaPayload = {
   type: 'torreta';
@@ -36,7 +38,6 @@ type EscalationPayload = EmailPayload | ReceptorPayload | TorretaPayload;
 
 @Injectable()
 export class AlertEscalationService {
-  private readonly endpointUrl = 'http://localhost:1880/events';
   private readonly logger = new Logger(AlertEscalationService.name);
 
   constructor(
@@ -232,21 +233,8 @@ export class AlertEscalationService {
     });
   }
 
-  private resolveEndpointUrl(endpointUrl: string): string {
-    try {
-      if (process.env['NODE_ENV'] === 'development') return endpointUrl;
-      const url = new URL(endpointUrl);
-      if (
-        url.hostname === 'localhost' ||
-        url.hostname === '127.0.0.1' ||
-        url.hostname === '::1'
-      ) {
-        url.hostname = 'host.docker.internal';
-      }
-      return url.toString();
-    } catch {
-      return endpointUrl;
-    }
+  private resolveEndpointUrl(configuredUrl: string): string {
+    return resolveNodeRedEventsUrl(configuredUrl);
   }
 
   async logAlertSent(
@@ -261,12 +249,14 @@ export class AlertEscalationService {
       eventId,
       level,
       sentAt: new Date(),
-      messagesSent: messages.map(msg => ({
-        targetId: msg.targetId,
-        message: msg.message,
-        color: msg.color,
-        messageType: msg.messageType,
-      })),
+      messagesSent: messages.map(msg =>
+        toEventAlertLogMessageSnapshot({
+          targetId: msg.targetId,
+          message: msg.message,
+          ...(msg.color !== undefined ? { color: msg.color } : {}),
+          messageType: msg.messageType,
+        })
+      ),
       success,
       endpointUrl,
     };
@@ -312,9 +302,10 @@ export class AlertEscalationService {
         return;
       }
 
+      const resolvedUrl = this.resolveEndpointUrl(config.endpointUrl);
       const success = await this.sendMessagesToEndpoint(
         messages,
-        this.endpointUrl
+        config.endpointUrl
       );
 
       await this.logAlertSent(
@@ -322,7 +313,7 @@ export class AlertEscalationService {
         level,
         messages,
         success,
-        this.endpointUrl,
+        resolvedUrl,
         success ? undefined : 'HTTP request failed'
       );
 
@@ -371,9 +362,10 @@ export class AlertEscalationService {
         return;
       }
 
+      const resolvedUrl = this.resolveEndpointUrl(config.endpointUrl);
       const success = await this.sendMessagesToEndpoint(
         messages,
-        this.endpointUrl
+        config.endpointUrl
       );
 
       await this.logAlertSent(
@@ -381,7 +373,7 @@ export class AlertEscalationService {
         AlertLevel.CLOSE,
         messages,
         success,
-        this.endpointUrl,
+        resolvedUrl,
         success ? undefined : 'HTTP request failed'
       );
 

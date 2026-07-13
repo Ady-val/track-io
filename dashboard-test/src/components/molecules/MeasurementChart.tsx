@@ -2,7 +2,9 @@ import type React from "react";
 
 import type { MeasurementType } from "@/types/dashboard";
 
+import { DewPointDonutChart } from "./DewPointDonutChart";
 import { GaugeChart } from "./GaugeChart";
+import { LiquidFillGauge } from "./LiquidFillGauge";
 import { HorizontalBarChart } from "./HorizontalBarChart";
 import { StatusIndicatorCard } from "./StatusIndicatorCard";
 import { VibrationLineChart } from "./VibrationLineChart";
@@ -17,6 +19,8 @@ export interface MeasurementChartProps {
   timestamp?: string;
   history?: number[];
   onStartTime?: string;
+  offStartTime?: string;
+  statusDurationSeconds?: number;
   onEdit?: () => void;
   onDelete?: () => void;
   showActions?: boolean;
@@ -32,16 +36,49 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   timestamp,
   history,
   onStartTime,
+  offStartTime,
+  statusDurationSeconds,
   onEdit,
   onDelete,
   showActions = false,
 }) => {
   switch (type) {
     case "temperature":
-    case "humidity":
       return (
         <GaugeChart
           degrees={270}
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
+        />
+      );
+
+    case "humidity":
+    case "ppm":
+      return (
+        <LiquidFillGauge
+          maxValue={maxValue}
+          minValue={minValue}
+          subtitle={subtitle}
+          timestamp={timestamp}
+          title={title}
+          type={type}
+          value={typeof value === "number" ? value : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
+        />
+      );
+    case "dew_point":
+      return (
+        <DewPointDonutChart
           maxValue={maxValue}
           minValue={minValue}
           subtitle={subtitle}
@@ -122,6 +159,8 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           title={title}
           type={type}
           onStartTime={onStartTime}
+          offStartTime={offStartTime}
+          statusDurationSeconds={statusDurationSeconds}
           onEdit={onEdit}
           onDelete={onDelete}
           showActions={showActions}

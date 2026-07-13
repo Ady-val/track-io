@@ -12,12 +12,94 @@ import {
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 import { Card, CardBody, Text } from "@components/atoms";
+import { formatLocalDateTime } from "@/lib/dateTime";
 
 import { useAdaptiveTitleSize } from "@/hooks/useAdaptiveTitleSize";
-import { getMeasurementConfig, getDynamicColor } from "@/lib/measurementUtils";
+import { getMeasurementConfig } from "@/lib/measurementUtils";
 import type { MeasurementType } from "@/types/dashboard";
 
 ChartJS.register(DoughnutController, ArcElement, Tooltip, Legend);
+
+/**
+ * Calcula un color interpolado para el gauge chart basado en el valor actual.
+ * Usa interpolación segmentada con múltiples colores:
+ * - 0-25%: azul → amarillo
+ * - 25-50%: amarillo → naranja
+ * - 50-75%: naranja → rojo
+ * - 75-100%: rojo → rojo más intenso
+ *
+ * @param value - Valor actual a representar
+ * @param min - Valor mínimo del rango
+ * @param max - Valor máximo del rango
+ * @returns Color en formato rgb() interpolado entre múltiples colores
+ */
+export const getGaugeColor = (
+  value: number | undefined,
+  min: number,
+  max: number
+): string => {
+  // Si no hay valor, retornar un color gris neutro
+  if (value === undefined || value === null) {
+    return "rgb(148, 163, 184)"; // slate-400
+  }
+
+  const minValue = parseFloat(min.toString());
+  const maxValue = parseFloat(max.toString());
+  const range = maxValue - minValue;
+
+  // Si el rango es inválido, retornar color por defecto
+  if (range <= 0) {
+    return "rgb(148, 163, 184)";
+  }
+
+  // Normalizar el valor entre 0 y 1, con clamp
+  const normalized = Math.max(0, Math.min(1, (value - minValue) / range));
+
+  // Definir los colores neon en cada punto de control
+  const colors = [
+    { r: 0, g: 255, b: 255 }, // Azul/Cyan neon (0%)
+    { r: 255, g: 255, b: 0 }, // Amarillo neon (25%)
+    { r: 255, g: 140, b: 0 }, // Naranja neon (50%)
+    { r: 255, g: 0, b: 100 }, // Rojo/Rosa neon (75%)
+    { r: 255, g: 0, b: 0 }, // Rojo intenso (100%)
+  ];
+
+  // Determinar en qué segmento estamos y calcular la interpolación
+  let startColor: { r: number; g: number; b: number };
+  let endColor: { r: number; g: number; b: number };
+  let segmentNormalized: number;
+
+  if (normalized <= 0.25) {
+    startColor = colors[0]!;
+    endColor = colors[1]!;
+    segmentNormalized = normalized / 0.25;
+  } else if (normalized <= 0.5) {
+    startColor = colors[1]!;
+    endColor = colors[2]!;
+    segmentNormalized = (normalized - 0.25) / 0.25;
+  } else if (normalized <= 0.75) {
+    startColor = colors[2]!;
+    endColor = colors[3]!;
+    segmentNormalized = (normalized - 0.5) / 0.25;
+  } else {
+    startColor = colors[3]!;
+    endColor = colors[4]!;
+    segmentNormalized = (normalized - 0.75) / 0.25;
+  }
+
+  // Interpolación lineal dentro del segmento
+  const r = Math.round(
+    startColor.r + (endColor.r - startColor.r) * segmentNormalized
+  );
+  const g = Math.round(
+    startColor.g + (endColor.g - startColor.g) * segmentNormalized
+  );
+  const b = Math.round(
+    startColor.b + (endColor.b - startColor.b) * segmentNormalized
+  );
+
+  return `rgb(${r}, ${g}, ${b})`;
+};
 
 export interface GaugeChartProps {
   title: string;
@@ -48,6 +130,7 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS | null>(null);
+  const previousPercentageRef = useRef<number>(0);
   const config = getMeasurementConfig(type);
   const Icon = config.icon;
 
@@ -60,13 +143,33 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
 
     if (chartRef.current) return;
 
+    const min = parseFloat(minValue.toString());
+    const max = parseFloat(maxValue.toString());
+    // Usar color interpolado inicial si hay un valor, sino usar color por defecto
+    const initialColor =
+      value !== undefined
+        ? getGaugeColor(value, min, max)
+        : "rgb(148, 163, 184)";
+
+    // Calcular porcentaje inicial
+    const clampedValue =
+      value !== undefined ? Math.max(min, Math.min(max, value)) : 0;
+    const range = max - min;
+    const initialPercentage =
+      range > 0 && value !== undefined
+        ? ((clampedValue - min) / range) * 100
+        : 0;
+
+    // Guardar el porcentaje inicial
+    previousPercentageRef.current = initialPercentage;
+
     const chartConfig: ChartConfiguration<"doughnut"> = {
       type: "doughnut",
       data: {
         datasets: [
           {
-            data: [0, 100],
-            backgroundColor: [config.color, "rgba(100, 116, 139, 0.1)"],
+            data: [initialPercentage, 100 - initialPercentage],
+            backgroundColor: [initialColor, "rgba(100, 116, 139, 0.1)"],
             borderWidth: 0,
             circumference: degrees,
             rotation: degrees === 270 ? 225 : 270,
@@ -105,7 +208,7 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
         chartRef.current = null;
       }
     };
-  }, [config.color, degrees]);
+  }, [degrees, minValue, maxValue]);
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -120,18 +223,19 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
         ? ((clampedValue - min) / range) * 100
         : 0;
 
-    const dynamicColor = getDynamicColor(value ?? 0, min, max, config.color);
+    // Usar interpolación de color dinámica basada en el valor
+    const gaugeColor = getGaugeColor(value, min, max);
 
     if (chartRef.current.data.datasets[0]) {
       chartRef.current.data.datasets[0].data = [percentage, 100 - percentage];
       chartRef.current.data.datasets[0].backgroundColor = [
-        dynamicColor,
+        gaugeColor,
         "rgba(100, 116, 139, 0.1)",
       ];
     }
 
     chartRef.current.update();
-  }, [value, minValue, maxValue, config.color]);
+  }, [value, minValue, maxValue]);
 
   const getValueColor = () => {
     if (value === undefined) {
@@ -153,8 +257,10 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
     baseSize: "lg",
   });
 
+  const formattedTimestamp = formatLocalDateTime(timestamp);
+
   return (
-    <Card className="bg-slate-800/50 border-slate-700 group relative">
+    <Card className="h-[25rem] w-[25rem] bg-slate-800/50 border-slate-700 group relative">
       <CardBody className="p-6">
         {showActions && (onEdit || onDelete) && (
           <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -236,8 +342,8 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
         </div>
         <div className="mt-1 text-center">
           <Text className="text-xs text-slate-500" variant="caption">
-            {hasValue && timestamp
-              ? `Actualizado: ${new Date(timestamp).toLocaleDateString()} ${new Date(timestamp).toLocaleTimeString()}`
+            {hasValue && formattedTimestamp
+              ? `Actualizado: ${formattedTimestamp}`
               : "Esperando señal"}
           </Text>
         </div>

@@ -64,7 +64,10 @@ export const SignalModal: React.FC<SignalModalProps> = ({
         {deviceSignal && requireReason && (
           <div>
             <Text className="text-gray-700" variant="body">
-              Departamento: <strong>{deviceSignal.departmentName}</strong>
+              Departamento:{" "}
+              <strong>
+                {deviceSignal.departmentName ?? deviceSignal.name ?? "—"}
+              </strong>
             </Text>
           </div>
         )}
