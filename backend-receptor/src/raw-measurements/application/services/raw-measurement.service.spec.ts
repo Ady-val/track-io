@@ -43,7 +43,7 @@ describe('RawMeasurementService', () => {
         {
           provide: MeasurementService,
           useValue: {
-            getMeasurementByExternalId: jest.fn(),
+            getActiveMeasurementByExternalId: jest.fn(),
           },
         },
         {
@@ -88,7 +88,7 @@ describe('RawMeasurementService', () => {
       });
 
       repository.create.mockResolvedValue(mockMeasurement);
-      measurementService.getMeasurementByExternalId.mockResolvedValue(
+      measurementService.getActiveMeasurementByExternalId.mockResolvedValue(
         mockMeasurementEntity
       );
       measurementValueRepository.create.mockResolvedValue(
@@ -104,7 +104,7 @@ describe('RawMeasurementService', () => {
         value,
       });
       expect(
-        measurementService.getMeasurementByExternalId
+        measurementService.getActiveMeasurementByExternalId
       ).toHaveBeenCalledWith(id);
       expect(measurementValueRepository.create).toHaveBeenCalled();
       expect(webSocketEmitterService.emitNewRawMeasurement).toHaveBeenCalled();
@@ -123,7 +123,7 @@ describe('RawMeasurementService', () => {
       });
 
       repository.create.mockResolvedValue(mockMeasurement);
-      measurementService.getMeasurementByExternalId.mockResolvedValue(null);
+      measurementService.getActiveMeasurementByExternalId.mockResolvedValue(null);
       alertEvaluationService.evaluateMeasurement.mockResolvedValue(undefined);
 
       const result = await service.processMeasurement(id, value);
@@ -142,7 +142,7 @@ describe('RawMeasurementService', () => {
       });
 
       repository.create.mockResolvedValue(mockMeasurement);
-      measurementService.getMeasurementByExternalId.mockResolvedValue(null);
+      measurementService.getActiveMeasurementByExternalId.mockResolvedValue(null);
       webSocketEmitterService.emitNewRawMeasurement.mockImplementation(() => {
         throw new Error('WebSocket error');
       });
@@ -163,7 +163,7 @@ describe('RawMeasurementService', () => {
       });
 
       repository.create.mockResolvedValue(mockMeasurement);
-      measurementService.getMeasurementByExternalId.mockResolvedValue(null);
+      measurementService.getActiveMeasurementByExternalId.mockResolvedValue(null);
       alertEvaluationService.evaluateMeasurement.mockRejectedValue(
         new Error('Alert evaluation error')
       );

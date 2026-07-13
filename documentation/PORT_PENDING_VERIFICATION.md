@@ -37,6 +37,13 @@ ahora llama `measurementValueRepository.getDatabaseNow()`, `findStatusOffStartTi
 Cambio solo de test (sin lógica de producto). Resultado: 39/39 verde.
 **Recomendación:** aceptar; es el mock mínimo correcto que la rama omitió.
 
+### D3 — `raw-measurement.service.spec.ts`: aserción del método viejo
+La rama tampoco actualizó este spec al cambiar el service a
+`getActiveMeasurementByExternalId` (§2.1). El test asertaba/mockeaba
+`getMeasurementByExternalId` y fallaba. Renombré las 6 ocurrencias al método nuevo
+(mock + aserciones). Cambio solo de test. Resultado: 11/11 verde.
+**Recomendación:** aceptar.
+
 ### D2 — `tsc --noEmit` sobre `*.spec.ts` reporta errores pre-existentes
 `exactOptionalPropertyTypes: true` hace que `tsc --noEmit` sobre el proyecto completo
 marque errores en varios `*.spec.ts` (mocks que pasan `null`/parciales). Estos errores

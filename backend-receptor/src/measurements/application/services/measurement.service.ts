@@ -88,6 +88,20 @@ export class MeasurementService {
     }
   }
 
+  async getActiveMeasurementByExternalId(
+    externalId: string
+  ): Promise<Measurement | null> {
+    try {
+      return await this.measurementRepository.findActiveByExternalId(externalId);
+    } catch (error) {
+      this.logger.error(
+        `Error retrieving active measurement by external ID ${externalId}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      throw error;
+    }
+  }
+
   async updateMeasurement(
     id: number,
     updateMeasurementDto: UpdateMeasurementDto
