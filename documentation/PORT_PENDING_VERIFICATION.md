@@ -78,6 +78,35 @@ porque `parseUTCTimestamp` propaga `NaN` sin sanitizar. Impacto bajo (la tarjeta
 para MeasurementChart/StatusIndicatorCard; los hooks requieren revisar la lógica de tiempo)
 y evaluar el guard NaN. No bloquea build ni deploy.
 
+### D5 — §8 Docker: los artefactos de virtual-device de la rama estaban DESHABILITADOS
+Al portar §8 descubrí que la spec no coincide con la realidad de la rama:
+- `docker/Dockerfile.virtual-device` de la rama tiene **todo el Stage 1 (build) comentado**
+  y solo genera un placeholder ("Virtual device no está desplegado en este entorno").
+- `docker/Dockerfile.unified` de la rama también sirve el virtual-device como **placeholder**
+  (era el deploy de Leoni, que lo comentó — commit 3672cf6).
+- `nginx.virtual-device.conf` es para un contenedor standalone que el compose no define.
+
+Copiarlos "verbatim" (como decía §8 literal) habría dado a main un virtual-device
+**no funcional**, contradiciendo la decisión §0.2 (activo por defecto).
+
+**Qué hice en su lugar** (para honrar §0.2 con el patrón probado de main, sin improvisar
+diseño nuevo):
+- Extendí el `Dockerfile.unified` **limpio de main** con una etapa real
+  `virtual-device-builder` que replica exactamente la etapa del dashboard (pnpm install +
+  vite build) y copia el dist a `/usr/share/nginx/html/virtual-device`.
+- Agregué `location /virtual-device/` a `docker/nginx.conf` (mantengo `proxy_pass` a
+  `track_io_backend`, que resuelve igual que `backend`).
+- Agregué `extra_hosts` + `NODE_RED_EVENTS_URL` al backend en `docker-compose.yml`.
+- **NO copié** el `Dockerfile.virtual-device` ni el `nginx.virtual-device.conf` de la rama
+  (placeholders deshabilitados / archivos huérfanos no referenciados por el compose).
+
+**Verificado:** `docker compose config` válido; `vite build` del virtual-device produce
+`dist` con base `/virtual-device/` correcta (assets prefijados).
+**Pendiente (requiere Docker daemon + red):** `docker compose build` y `up` completos para
+confirmar que la imagen unified sirve dashboard + virtual-device y hace login contra el
+backend. `vite.config.ts` del virtual-device ya trae `base: "/virtual-device/"`.
+**Recomendación:** aceptar el enfoque unified; validar con un build/up real antes de release.
+
 ### D3 — `raw-measurement.service.spec.ts`: aserción del método viejo
 La rama tampoco actualizó este spec al cambiar el service a
 `getActiveMeasurementByExternalId` (§2.1). El test asertaba/mockeaba
