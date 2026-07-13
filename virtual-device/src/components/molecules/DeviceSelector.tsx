@@ -35,7 +35,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         </option>
         {devices.map((device) => (
           <option key={device.id} value={device.id}>
-            {device.name} - {device.areaName}
+            {device.name ?? "Sin nombre"} - {device.areaName ?? "—"}
           </option>
         ))}
       </Select>
