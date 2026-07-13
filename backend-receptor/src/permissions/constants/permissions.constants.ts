@@ -19,6 +19,7 @@ export enum Module {
   DASHBOARD = 'dashboard',
   ROLES_AND_PERMISSIONS = 'roles-and-permissions',
   CATALOGS = 'catalogs',
+  VIRTUAL_DEVICE = 'virtual-device',
 }
 
 export enum Action {
