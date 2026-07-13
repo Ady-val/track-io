@@ -8,8 +8,14 @@ import { getServerNow } from "@/lib/timeSync";
 function parseUTCTimestamp(isoString: string): number | null {
   try {
     const date = new Date(isoString);
+    const timestamp = date.getTime();
+    // new Date(invalid) does not throw; it yields an Invalid Date whose
+    // getTime() is NaN. Return null so callers' `=== null` guards catch it.
+    if (Number.isNaN(timestamp)) {
+      return null;
+    }
     // getTime() always returns UTC timestamp regardless of timezone
-    return date.getTime();
+    return timestamp;
   } catch {
     return null;
   }

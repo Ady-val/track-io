@@ -42,7 +42,24 @@ ahora llama `measurementValueRepository.getDatabaseNow()`, `findStatusOffStartTi
 Cambio solo de test (sin lógica de producto). Resultado: 39/39 verde.
 **Recomendación:** aceptar; es el mock mínimo correcto que la rama omitió.
 
-### D4 — 4 suites de tests unitarios de `dashboard-test` que la rama dejó rotas
+### D4 — RESUELTO ✅ (4 suites de tests unitarios de `dashboard-test`)
+**Actualización:** las 4 suites fueron actualizadas al nuevo contrato y el bug latente
+corregido. `dashboard-test` jest: **393/393 verde**, tsc limpio. Detalle de lo hecho:
+- `useStatusDuration.ts`: guard `Number.isNaN` en `parseUTCTimestamp` → fechas inválidas
+  devuelven `00:00:00` (antes `NaN:NaN:NaN`). **Bug latente corregido.**
+- `useStatusDuration.test.ts`: el test de fecha futura ahora asume el contrato v2
+  (`isActive=true`, duración `00:00:00` hasta que el reloj alcance); el de fecha inválida
+  pasa con el guard.
+- `useRealtimeMeasurementValues.test.ts`: timestamps normalizados a `...000Z` (§4.6) y el
+  test "not overwrite" reescrito a "overwrite con valor del backend" (§4.7).
+- `MeasurementChart.test.tsx`: mocks de LiquidFillGauge/DewPointDonutChart; humidity→
+  LiquidFillGauge; +cobertura ppm y dew_point.
+- `StatusIndicatorCard.test.tsx`: mock de `useDurationTicker` + `statusDurationSeconds`.
+
+Descripción original (para contexto histórico):
+La rama `sql-server-version-2` **nunca actualizó** estos 4 test files (diff vacío contra
+main) pese a reescribir los componentes/hooks que prueban. Quedaban 11 tests rojos que
+asertaban el comportamiento VIEJO, deliberadamente cambiado por el port.
 La rama `sql-server-version-2` **nunca actualizó** estos 4 test files (diff vacío contra
 main) pese a reescribir los componentes/hooks que prueban. Quedan 11 tests rojos que
 asertan el comportamiento VIEJO, deliberadamente cambiado por el port:
@@ -134,13 +151,11 @@ YA existían en `main` antes de la migración, el build (`tsconfig.build.json`) 
 | 6 | Seguridad: guards `/users` activos; `/virtual-device/*` exige permiso | ✅ verificado (user.controller línea 35 activo; controller VD con UseGuards+RequirePermission) |
 | 7 | `git grep nvarchar\|simple-json\|isMSSQL` fuera de migraciones | ✅ SIN RESULTADOS |
 
-### Tests unitarios frontend (fuera del checklist estricto)
-- dashboard-test jest: 380 pasan; **11 fallan** en 4 suites que la rama dejó rotas (ver D4).
-  No bloquean build ni deploy. Requieren actualización al nuevo contrato.
+### Tests unitarios frontend
+- dashboard-test jest: **393/393 verde**, 38/38 suites (D4 resuelto). tsc limpio.
 
 ### Resumen de pendientes que requieren entorno (BD/Docker/navegador)
 - §3.4 `migration:run` contra PostgreSQL.
 - §7 Cypress e2e.
 - §12.5 flujo e2e manual.
 - D5 `docker compose build`/`up` completo del unified con virtual-device.
-- D4 actualización de 4 suites de tests unitarios frontend + revisar guard NaN de useStatusDuration.
