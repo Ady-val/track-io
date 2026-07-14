@@ -4,6 +4,32 @@ Guía de instalación y uso del sistema Track.IO con Docker.
 
 ---
 
+## 🏗️ Arquitectura (3 servicios, un solo comando)
+
+```
+                       ┌──────── gateway (nginx :80) ────────┐
+  navegador ─80─▶      │  /                 → dashboard       │
+                       │  /virtual-device/  → virtual-device  │
+                       │  /api/  /socket.io/ → backend        │
+                       └──────────────────────────────────────┘
+                                        │
+  otros servicios ─:3000─▶   backend (NestJS :3000, publicado) ─▶ db (postgres, volumen)
+```
+
+- **db**: PostgreSQL con healthcheck y volumen persistente.
+- **backend**: NestJS. Corre las **migraciones al arrancar** (data-source compilado) y
+  crea el schema completo desde cero. Su puerto **3000 se publica** para que otros
+  servicios del mismo server lo llamen por endpoints (`http://<host>:3000/...`).
+- **gateway**: nginx. Único punto de entrada web (:80). Compila y sirve ambos frontends
+  como estáticos y hace de reverse proxy de `/api` y `/socket.io` hacia el backend.
+
+**Todo con un solo comando:** `docker compose up -d --build`. El frontend es
+**origin-relative** (detecta el origen desde el navegador), así que el mismo build funciona
+en cualquier IP/dominio **sin reconstruir**. Orden garantizado por healthchecks:
+db-healthy → backend-healthy → gateway.
+
+---
+
 ## 📋 Requisitos Previos
 
 - **Docker Desktop** (Windows/Mac) o **Docker Engine + Docker Compose** (Linux)

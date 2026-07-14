@@ -40,11 +40,26 @@ services:
       CORS_ORIGIN: '*'
       MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
       MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
+      # Usuario admin inicial (lo siembra la migración CreateAdminUser). Cambiar en prod.
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-ADMIN}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
     ports:
-      - "0.0.0.0:3000:3000"  # Exponer en todas las interfaces de red para acceso remoto
+      # Publicado para que otros servicios del mismo server llamen al backend por endpoints.
+      - "0.0.0.0:3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      # Sin curl/wget en la imagen: usamos node para consultar /health.
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://127.0.0.1:3000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
     networks:
       - track_io_network
     # Migrations should be run manually if needed, or use synchronize in development
@@ -60,9 +75,10 @@ services:
     container_name: track_io_nginx
     restart: always
     ports:
-      - "0.0.0.0:80:80"  # Exponer en todas las interfaces de red para acceso remoto
+      - "0.0.0.0:80:80"  # Único punto de entrada del frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - track_io_network
 
