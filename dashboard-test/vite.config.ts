@@ -5,9 +5,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Determinar la URL de la API basada en el modo y variables de entorno
-  // En modo test o cuando VITE_API_URL apunta al puerto 3001, usar backend de testing
-  const apiUrl =
+  // Destino del backend SOLO para el proxy del dev server. El cliente usa rutas
+  // relativas ("/api", "/socket.io") y en runtime resuelve el origen desde el
+  // navegador; aquí únicamente decimos a dónde reenvía Vite en desarrollo.
+  const apiTarget =
     process.env.VITE_API_URL ||
     (mode === "test" ? "http://localhost:3001" : "http://localhost:3000");
 
@@ -16,9 +17,23 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: true,
+      proxy: {
+        // Peticiones HTTP: /api/* -> backend (se elimina el prefijo /api,
+        // igual que hace nginx en producción).
+        "/api": {
+          target: apiTarget,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+        },
+        // WebSocket (socket.io) al mismo origen.
+        "/socket.io": {
+          target: apiTarget,
+          changeOrigin: true,
+          ws: true,
+        },
+      },
     },
     // Las variables de entorno que empiezan con VITE_ se exponen automáticamente
-    // Pero aseguramos que esté disponible
     envPrefix: ["VITE_"],
   };
 });

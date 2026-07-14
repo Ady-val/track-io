@@ -54,7 +54,9 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.unified
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}  # URL del backend para los frontends
+        # Vacío por defecto: los frontends usan rutas relativas al mismo origen
+        # (nginx proxea /api y /socket.io al backend). No requiere IP fija.
+        VITE_API_URL: ${VITE_API_URL:-}
     container_name: track_io_nginx
     restart: always
     ports:

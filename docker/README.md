@@ -388,7 +388,16 @@ POSTGRES_PASSWORD=postgres
 
 # Backend
 NODE_ENV=production
-VITE_API_URL=http://localhost:3000
+
+# NODE_RED_EVENTS_URL: destino de los POST salientes (torretas / mensajes de alerta)
+# Por defecto usa host.docker.internal. Solo cambiar si Node-RED vive en otra dirección.
+NODE_RED_EVENTS_URL=http://host.docker.internal:1880/events
+
+# VITE_API_URL (OPCIONAL): por defecto VACÍA. Los frontends usan rutas relativas
+# al mismo origen (nginx proxea /api y /socket.io al backend), así que el mismo
+# build funciona en cualquier IP/dominio SIN reconstruir. Definir solo si el
+# backend vive en un host distinto al que sirve el frontend.
+# VITE_API_URL=http://mi-backend-externo:3000
 ```
 
 ---
@@ -397,7 +406,9 @@ VITE_API_URL=http://localhost:3000
 
 - **Primera ejecución**: Puede tardar 5-10 minutos mientras descarga imágenes y compila
 - **Reinicio del equipo**: Los contenedores se iniciarán automáticamente gracias a `restart: always`
-- **Cambio de red**: Si cambias de WiFi a Ethernet, ejecuta `start.bat` o `start.sh` de nuevo
+- **Cambio de red / IP**: ya **no** requiere reconstruir. El frontend detecta el origen
+  desde el navegador y nginx enruta al backend; el mismo build sirve para cualquier IP o
+  dominio. Basta con acceder por la nueva IP (`http://<nueva-ip>`).
 - **Migraciones**: Se ejecutan automáticamente al iniciar, no necesitas ejecutarlas manualmente
 - **Módulos del sistema**: Puedes habilitar/deshabilitar módulos mediante variables de entorno sin modificar código
 

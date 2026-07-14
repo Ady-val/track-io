@@ -1,8 +1,11 @@
 # Stage 1: Build dashboard
 FROM node:18-alpine as dashboard-builder
 
-# Recibir la URL del backend como argumento de build
-ARG VITE_API_URL=http://localhost:3000
+# URL del backend para los frontends. Por defecto VACÍA: los frontends usan
+# rutas relativas ("/api", "/socket.io") al mismo origen que sirve nginx, así
+# el mismo build funciona en cualquier IP/dominio sin reconstruir. Definir solo
+# si el backend vive en otro host.
+ARG VITE_API_URL=
 
 WORKDIR /app
 
@@ -30,8 +33,11 @@ RUN npx vite build
 # Stage 2: Build virtual-device
 FROM node:18-alpine as virtual-device-builder
 
-# Recibir la URL del backend como argumento de build
-ARG VITE_API_URL=http://localhost:3000
+# URL del backend para los frontends. Por defecto VACÍA: los frontends usan
+# rutas relativas ("/api", "/socket.io") al mismo origen que sirve nginx, así
+# el mismo build funciona en cualquier IP/dominio sin reconstruir. Definir solo
+# si el backend vive en otro host.
+ARG VITE_API_URL=
 
 WORKDIR /app
 
