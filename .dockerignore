@@ -1,0 +1,30 @@
+# Contexto de build de la RAÍZ (usado por docker/Dockerfile.unified — el gateway).
+# Mantiene el contexto liviano y evita copiar artefactos del host.
+**/node_modules
+**/dist
+**/build
+.git
+**/.git
+**/*.log
+**/coverage
+**/.vite
+**/.pnpm-store
+**/.turbo
+
+# Entornos: no meter secretos al contexto (sí conservar los ejemplos)
+**/.env
+**/.env.*
+!**/.env.example
+!**/env.example
+
+# Artefactos de test que no se necesitan para build
+**/cypress/videos
+**/cypress/screenshots
+
+# Deploy específico de SQL Server (no aplica a este entorno PostgreSQL)
+docker/sql-server-version
+
+# Editor / SO
+**/.vscode
+**/.idea
+**/.DS_Store
