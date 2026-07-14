@@ -1,43 +1,40 @@
-# Track.IO Backend - NestJS Dockerfile
-# Multi-stage build for optimized production image
+# Track.IO Backend (NestJS) — imagen multi-stage optimizada.
+# Contexto de build: ../backend-receptor (ver docker-compose.yml).
 
-# Use Node.js 18 Alpine as base image
-FROM node:18-alpine
+ARG NODE_IMAGE=node:20-alpine
 
-# Install system dependencies for PostgreSQL client and wget for healthchecks
-RUN apk add --no-cache postgresql-client wget
-
-# Set working directory
+# ---------- Stage 1: builder (deps completas + compilación) ----------
+FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 
-# Copy package files first for better layer caching
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
+# corepack respeta "packageManager": pnpm@x del package.json
+RUN corepack enable
 
-# Install pnpm package manager globally
-RUN npm install -g pnpm
-
-# Install project dependencies
-# Using --frozen-lockfile ensures exact versions from lockfile
+# Capa de dependencias cacheable: solo cambia si cambia el lock
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy source code explicitly (avoiding node_modules from host)
-COPY src/ ./src/
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-COPY tsconfig.json ./
-COPY tsconfig.build.json ./
-COPY nest-cli.json ./
-COPY ormconfig.ts ./
-COPY eslint.config.mjs ./
-COPY scripts/ ./scripts/
-
-# Build the NestJS application
+# Código y config de build
+COPY tsconfig.json tsconfig.build.json nest-cli.json ./
+COPY src ./src
 RUN pnpm run build
 
-# Expose the application port
+# ---------- Stage 2: runtime (solo deps de producción + dist) ----------
+FROM ${NODE_IMAGE} AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+
+RUN corepack enable
+
+# Solo dependencias de producción (typeorm, pg, dotenv, bcrypt… son prod)
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+
+# Artefacto compilado
+COPY --from=builder /app/dist ./dist
+
 EXPOSE 3000
 
-# Start the application with migrations
-# Run migrations before starting (skip if TYPEORM_SYNCHRONIZE is true for test environments)
-CMD sh -c "if [ \"$TYPEORM_SYNCHRONIZE\" != \"true\" ]; then echo '🔄 Running database migrations...' && pnpm run migration:run || exit 1; fi && echo '🚀 Starting application...' && node --experimental-global-webcrypto dist/main.js"
+# Arranque: corre migraciones con el data-source COMPILADO (sin ts-node) y luego
+# levanta la app. Idempotente. Con TYPEORM_SYNCHRONIZE=true se omiten (entornos de test).
+CMD ["sh", "-c", "if [ \"$TYPEORM_SYNCHRONIZE\" != \"true\" ]; then echo '🔄 Ejecutando migraciones...'; node node_modules/typeorm/cli.js -d dist/data-source.js migration:run || exit 1; fi; echo '🚀 Iniciando aplicación...'; node dist/main.js"]
