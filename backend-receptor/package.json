@@ -4,6 +4,10 @@
   "description": "",
   "author": "",
   "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@10.32.1",
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
@@ -26,7 +30,7 @@
     "test:unit:cov": "jest --testPathPatterns=spec.ts$ --coverage",
     "pre-commit": "npm run lint:check && npm run format:check && npm run test",
     "prepare": "husky install || true",
-    "typeorm": "typeorm-ts-node-commonjs -d ormconfig.ts",
+    "typeorm": "typeorm-ts-node-commonjs -d src/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:create": "npm run typeorm -- migration:create",
     "migration:run": "npm run typeorm -- migration:run",

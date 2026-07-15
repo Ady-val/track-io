@@ -27,7 +27,7 @@ export class CreateVirtualDeviceRole1773271257507
        INSERT INTO permissions (module, action, description, created_at, updated_at)
        VALUES (@0, @1, @2, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET())`,
       `INSERT INTO permissions (module, action, description, created_at, updated_at)
-       SELECT $1, $2, $3, NOW(), NOW()
+       SELECT $1::varchar, $2::varchar, $3::varchar, NOW(), NOW()
        WHERE NOT EXISTS (
          SELECT 1 FROM permissions WHERE module = $1 AND action = $2
        )`,
@@ -43,7 +43,7 @@ export class CreateVirtualDeviceRole1773271257507
        INSERT INTO roles (name, description, created_at, updated_at, deleted_at)
        VALUES (@0, @1, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET(), NULL)`,
       `INSERT INTO roles (name, description, created_at, updated_at, deleted_at)
-       SELECT $1, $2, NOW(), NOW(), NULL
+       SELECT $1::varchar, $2::varchar, NOW(), NOW(), NULL
        WHERE NOT EXISTS (
          SELECT 1 FROM roles WHERE name = $1 AND deleted_at IS NULL
        )`,

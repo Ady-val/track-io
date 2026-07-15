@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const apiBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// Por defecto usamos una ruta relativa ("/api") para que el navegador haga las
+// peticiones al MISMO origen desde el que se sirvió el frontend (nginx proxea
+// "/api" al backend). Así el mismo build funciona en cualquier IP/dominio sin
+// hornear la URL del backend. VITE_API_URL solo se usa como override explícito
+// (p. ej. despliegues donde el backend vive en otro host).
+const apiBaseURL = import.meta.env.VITE_API_URL || "/api";
 
 export const apiClient = axios.create({
   baseURL: apiBaseURL,

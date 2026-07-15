@@ -1,0 +1,18 @@
+# Contexto de build del virtual-device (si se construye con contexto propio).
+node_modules
+dist
+.git
+*.log
+coverage
+.vite
+.pnpm-store
+
+# Entornos: no meter secretos (conservar el ejemplo)
+.env
+.env.*
+!.env.example
+
+# Editor / SO
+.vscode
+.idea
+.DS_Store

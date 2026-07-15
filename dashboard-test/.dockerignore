@@ -1,0 +1,20 @@
+# Contexto de build del dashboard (si se construye con contexto propio).
+node_modules
+dist
+.git
+*.log
+coverage
+.vite
+.pnpm-store
+cypress/videos
+cypress/screenshots
+
+# Entornos: no meter secretos (conservar el ejemplo)
+.env
+.env.*
+!.env.example
+
+# Editor / SO
+.vscode
+.idea
+.DS_Store

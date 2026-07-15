@@ -23,7 +23,7 @@ dist-ssr
 *.sw?
 
 
-pnpm-lock.yaml
+# pnpm-lock.yaml se versiona para builds reproducibles (Docker --frozen-lockfile)
 yarn.lock
 package-lock.json
 bun.lockb

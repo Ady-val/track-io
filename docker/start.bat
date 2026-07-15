@@ -1,60 +1,28 @@
 @echo off
 echo 🚀 Track.IO - Iniciando servicios...
 
-echo.
-echo 🔍 Detectando IP del equipo...
+REM NOTA: ya NO se hornea la IP en el frontend. Los frontends usan rutas
+REM relativas al mismo origen (nginx proxea /api y /socket.io al backend), asi
+REM que el mismo build funciona en cualquier IP/dominio sin reconstruir. La IP
+REM de abajo se detecta SOLO para mostrar las URLs de acceso.
 
-REM Detectar la IP del adaptador de red activo
+echo.
+echo 🔍 Detectando IP del equipo (solo informativo)...
+
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /R /C:"IPv4.*192\.168\." /C:"IPv4.*10\." /C:"IPv4.*172\."') do (
     set HOST_IP=%%a
     goto :ip_found
 )
 
 :ip_found
-REM Limpiar espacios en blanco
 set HOST_IP=%HOST_IP: =%
-
-if "%HOST_IP%"=="" (
-    echo ❌ No se pudo detectar la IP del equipo
-    echo    Usando localhost como fallback
-    set HOST_IP=localhost
-)
-
+if "%HOST_IP%"=="" set HOST_IP=localhost
 echo    IP detectada: %HOST_IP%
-
-REM Verificar si ya existe .env.host y si la IP cambió
-set REBUILD_NEEDED=1
-set OLD_IP=
-if exist .env.host (
-    for /f "tokens=2 delims==" %%a in ('findstr /C:"HOST_IP=" .env.host') do set OLD_IP=%%a
-    if "%OLD_IP%"=="%HOST_IP%" (
-        echo    IP no ha cambiado (%HOST_IP%), omitiendo rebuild...
-        set REBUILD_NEEDED=0
-    ) else (
-        echo    IP cambió de %OLD_IP% a %HOST_IP%, rebuild necesario...
-    )
-) else (
-    echo    Primera ejecución, generando configuración...
-)
-
-echo.
-echo 📝 Configurando variables de entorno...
-echo HOST_IP=%HOST_IP% > .env.host
-echo VITE_API_URL=http://%HOST_IP%:3000 >> .env.host
 
 echo.
 echo 🐳 Iniciando Docker Compose...
 docker compose down
-
-if %REBUILD_NEEDED%==1 (
-    echo    Reconstruyendo servicios con nueva IP...
-    REM Forzar rebuild del servicio nginx sin caché para asegurar que use la nueva IP
-    docker compose --env-file .env.host build --no-cache nginx
-    docker compose --env-file .env.host up -d --build
-) else (
-    echo    Iniciando servicios sin rebuild...
-    docker compose --env-file .env.host up -d
-)
+docker compose up -d --build
 
 if %ERRORLEVEL% neq 0 (
     echo ❌ Error al iniciar
@@ -66,14 +34,11 @@ echo.
 echo ✅ Servicios iniciados correctamente!
 echo.
 echo 🌐 URLs de acceso:
-echo    [Acceso Local]
-echo      Dashboard:       http://localhost
-echo      Backend API:     http://localhost:3000
-echo.
-echo    [Acceso en Red Local]
-echo      Dashboard:       http://%HOST_IP%
-echo      Backend API:     http://%HOST_IP%:3000
+echo    [Acceso Local]        http://localhost
+echo    [Acceso en Red Local] http://%HOST_IP%
 echo.
 echo 💡 Otros equipos en la red pueden acceder usando la IP: %HOST_IP%
+echo    (el frontend detecta el origen automaticamente; no hay que reconstruir
+echo     si cambia la IP).
 echo.
 pause
