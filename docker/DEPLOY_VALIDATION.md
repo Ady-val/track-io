@@ -28,11 +28,25 @@ healthchecks (db-healthy → backend-healthy → gateway).
 - **Backend**: `nest build` OK, **957/957 tests**. Ambos frontends `tsc` + `vite build` OK.
 - `docker compose config` válido.
 
-## Pendiente ⏳ (requiere red sin interceptación TLS)
-- `docker compose up -d --build` **completo** (construir las imágenes propias): en este
-  entorno el proxy de Docker Desktop intercepta TLS y `apk`/`pnpm`/`npm` no pueden bajar
-  paquetes. Toda la lógica/config está validada con componentes reales; solo falta ejecutar
-  el build de imágenes en una red sana.
+## `docker compose up -d --build` completo ✅ (validado end-to-end)
+Tras desactivar el escaneo HTTPS de Avast (hacía MITM de TLS y los contenedores rechazaban
+el certificado), el build y el arranque completos funcionan:
+- Imágenes construidas: `docker-backend` (269MB, multi-stage) y `docker-nginx`/gateway (65MB).
+- 3 servicios **healthy** (postgres → backend → gateway) con el orden por healthchecks.
+- Vía gateway (:80): dashboard `/`, `/virtual-device/`, `/api/health`, `/socket.io/`
+  handshake, y `POST /api/auth/login` con el admin sembrado → **JWT + user**.
+- Backend directo en el puerto publicado → `/health` 200 (acceso para servicios externos).
 
-## Nota
-- `docker/.env` (versionado) trae credenciales por defecto de desarrollo; cambiar en prod.
+## Notas operativas (importantes)
+1. **Interceptación TLS (Avast):** si el build falla con "certificate verify failed" al bajar
+   paquetes, desactivar el análisis HTTPS de Avast (o excluir `registry.npmjs.org`,
+   `dl-cdn.alpinelinux.org`, `github.com`) y reintentar.
+2. **Volumen de datos viejo:** si existe un volumen `*_postgres_data` de un despliegue
+   ANTERIOR a la consolidación del baseline, las migraciones fallarán con `42P07`
+   (relación ya existe), porque la tabla `migrations` tiene los nombres antiguos. Para una
+   instalación **nueva** usar un volumen limpio (`docker compose down -v`, ⚠️ borra datos).
+   Para migrar un despliegue **existente** hay que reconciliar la tabla `migrations`
+   (marcar el baseline como aplicado) — no basta `migration:run`.
+3. **Puerto 3000:** el backend publica `3000` para servicios externos. Si el host ya usa
+   3000, liberar ese puerto o remapear el publish en el compose.
+4. `docker/.env` (versionado) trae credenciales por defecto de desarrollo; cambiar en prod.
