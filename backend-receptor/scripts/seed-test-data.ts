@@ -10,17 +10,35 @@ import { DeviceSignal } from '../src/device-signals/domain/entities/device-signa
 import { RawSignal } from '../src/signals/domain/entities/raw-signal.entity';
 import { ProcessedSignal } from '../src/signals/domain/entities/processed-signal.entity';
 import { Event, EventStatus } from '../src/events/domain/entities/event.entity';
+import { AreaDowntime } from '../src/area-downtime/domain/entities/area-downtime.entity';
+import { AreaDowntimeEvent } from '../src/area-downtime/domain/entities/area-downtime-event.entity';
 
 dotenv.config({ path: join(__dirname, '../.env') });
 
 /**
  * Datos de prueba para el pipeline de señales: RawSignal -> ProcessedSignal
- * -> DeviceSignal (catálogo) -> Event (paro registrado por área/departamento).
+ * -> DeviceSignal (catálogo) -> Event (paro registrado por área/departamento)
+ * -> AreaDowntime (tiempo real de línea detenida).
  *
- * Todo el contenido es estático salvo las fechas, que se calculan en tiempo
- * de ejecución a partir de "hoy" hacia atrás (ventana de 2 meses / 60 días),
- * tal como pide el negocio para poder probar reportes y dashboards con datos
- * recientes sin tener que regenerar el script cada vez.
+ * El patrón de generación (frecuencia diaria, solapes, duraciones) es
+ * estático y determinista; sólo las fechas se calculan en tiempo de
+ * ejecución a partir de "hoy" hacia atrás (ventana de 2 meses / 60 días),
+ * así que el script produce siempre el mismo resultado relativo sin
+ * necesidad de tocarlo cada vez que se corre.
+ *
+ * Volumen objetivo: hasta 3 eventos por día, la mayoría de días con 1-2,
+ * pocos días sin eventos.
+ *
+ * Escenario de solape (2-3 veces por semana): dos eventos de la misma área
+ * pero distinto departamento se traslapan en el tiempo (el segundo empieza
+ * antes de que cierre el primero). El motor de AreaDowntime del backend
+ * (ver area-downtime.service.ts) fusiona ambos en un único AreaDowntime
+ * cuyo `startAt` es el inicio del primer evento y `endsAt` es el cierre del
+ * último evento en cerrarse -- no la suma de los dos paros por separado.
+ * Como este script inserta el histórico directamente en la base de datos
+ * (sin pasar por el handler en vivo), calcula y siembra ese mismo resultado
+ * en `area_downtimes` / `area_downtime_events` para que el escenario quede
+ * demostrado también en esas tablas.
  */
 
 const AREA_NAMES = ['Linea 1', 'Linea 2', 'Linea 3', 'Linea 4', 'Linea 5'];
@@ -51,53 +69,183 @@ const REASONS: Record<string, { reason: string; comment: string }> = {
   },
 };
 
-// daysAgo: antigüedad del evento respecto a "hoy" (0-60 -> ventana de 2 meses).
-// areaIndex / deptIndex: posición dentro de AREA_NAMES / DEPARTMENTS.
-// status: estado final del evento de prueba.
-// durationMinutes: sólo aplica a eventos "closed".
-const EVENT_SCENARIOS: Array<{
-  daysAgo: number;
-  hour: number;
-  areaIndex: number;
-  deptIndex: number;
-  status: EventStatus;
-  durationMinutes?: number;
-}> = [
-  { daysAgo: 60, hour: 8, areaIndex: 0, deptIndex: 0, status: EventStatus.CLOSED, durationMinutes: 45 },
-  { daysAgo: 57, hour: 14, areaIndex: 1, deptIndex: 2, status: EventStatus.CLOSED, durationMinutes: 20 },
-  { daysAgo: 54, hour: 9, areaIndex: 2, deptIndex: 1, status: EventStatus.CLOSED, durationMinutes: 90 },
-  { daysAgo: 51, hour: 22, areaIndex: 3, deptIndex: 3, status: EventStatus.CLOSED, durationMinutes: 15 },
-  { daysAgo: 48, hour: 11, areaIndex: 4, deptIndex: 0, status: EventStatus.CLOSED, durationMinutes: 60 },
-  { daysAgo: 45, hour: 6, areaIndex: 0, deptIndex: 2, status: EventStatus.CLOSED, durationMinutes: 30 },
-  { daysAgo: 42, hour: 16, areaIndex: 1, deptIndex: 1, status: EventStatus.CLOSED, durationMinutes: 25 },
-  { daysAgo: 39, hour: 10, areaIndex: 2, deptIndex: 3, status: EventStatus.CLOSED, durationMinutes: 50 },
-  { daysAgo: 36, hour: 13, areaIndex: 3, deptIndex: 0, status: EventStatus.CLOSED, durationMinutes: 120 },
-  { daysAgo: 33, hour: 7, areaIndex: 4, deptIndex: 2, status: EventStatus.CLOSED, durationMinutes: 18 },
-  { daysAgo: 30, hour: 15, areaIndex: 0, deptIndex: 1, status: EventStatus.CLOSED, durationMinutes: 40 },
-  { daysAgo: 27, hour: 19, areaIndex: 1, deptIndex: 3, status: EventStatus.CLOSED, durationMinutes: 22 },
-  { daysAgo: 24, hour: 8, areaIndex: 2, deptIndex: 0, status: EventStatus.CLOSED, durationMinutes: 75 },
-  { daysAgo: 21, hour: 12, areaIndex: 3, deptIndex: 2, status: EventStatus.CLOSED, durationMinutes: 33 },
-  { daysAgo: 18, hour: 17, areaIndex: 4, deptIndex: 1, status: EventStatus.CLOSED, durationMinutes: 55 },
-  { daysAgo: 15, hour: 9, areaIndex: 0, deptIndex: 3, status: EventStatus.CLOSED, durationMinutes: 10 },
-  { daysAgo: 12, hour: 20, areaIndex: 1, deptIndex: 0, status: EventStatus.CLOSED, durationMinutes: 65 },
-  { daysAgo: 9, hour: 14, areaIndex: 2, deptIndex: 2, status: EventStatus.CLOSED, durationMinutes: 28 },
-  { daysAgo: 7, hour: 8, areaIndex: 3, deptIndex: 1, status: EventStatus.CLOSED, durationMinutes: 42 },
-  { daysAgo: 5, hour: 11, areaIndex: 4, deptIndex: 3, status: EventStatus.CLOSED, durationMinutes: 19 },
-  { daysAgo: 4, hour: 16, areaIndex: 0, deptIndex: 0, status: EventStatus.CLOSED, durationMinutes: 37 },
-  { daysAgo: 3, hour: 10, areaIndex: 1, deptIndex: 2, status: EventStatus.CLOSED, durationMinutes: 24 },
-  { daysAgo: 2, hour: 13, areaIndex: 2, deptIndex: 1, status: EventStatus.IN_PROGRESS },
-  { daysAgo: 1, hour: 9, areaIndex: 3, deptIndex: 3, status: EventStatus.IN_PROGRESS },
-  { daysAgo: 0, hour: 7, areaIndex: 4, deptIndex: 0, status: EventStatus.OPEN },
-  { daysAgo: 0, hour: 12, areaIndex: 0, deptIndex: 2, status: EventStatus.OPEN },
-];
-
 const SEED_MARKER = '[SEED-TEST-DATA]';
+const TOTAL_DAYS = 60;
 
-function daysAgoAt(daysAgo: number, hour: number): Date {
+function dateAt(daysAgo: number, hour: number, minute: number): Date {
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
-  date.setHours(hour, 0, 0, 0);
+  date.setHours(hour, minute, 0, 0);
   return date;
+}
+
+function addMinutes(date: Date, minutes: number): Date {
+  return new Date(date.getTime() + minutes * 60 * 1000);
+}
+
+// Un "slot" es un evento individual, potencialmente parte de un grupo que
+// se solapa en el tiempo dentro de la misma área (mismo `groupId`).
+interface EventSlot {
+  groupId: number;
+  daysAgo: number;
+  areaIndex: number;
+  deptIndex: number;
+  createdAt: Date;
+  status: EventStatus;
+  inProgressAt?: Date;
+  closedAt?: Date;
+}
+
+/**
+ * Construye el calendario completo de eventos de prueba:
+ *  - Incidentes de solape: cada ~3-4 días (2-3 veces por semana) una misma
+ *    área recibe dos eventos que se traslapan, siguiendo el patrón descrito
+ *    por negocio (el segundo entra antes de que cierre el primero).
+ *  - El incidente más reciente (hoy) se deja activo (sin cerrar) para
+ *    demostrar también el caso de un AreaDowntime en curso con 2 eventos.
+ *  - Días "triples": un puñado de días sin solape con 3 eventos
+ *    independientes en áreas distintas.
+ *  - Relleno regular: patrón cíclico de 0-2 eventos independientes por día
+ *    para el resto de la ventana de 60 días.
+ */
+function buildEventSlots(): EventSlot[] {
+  const slots: EventSlot[] = [];
+  let nextGroupId = 1;
+  const usedDays = new Set<number>();
+
+  // --- 1. Incidentes de solape (2 eventos de la misma área entrelazados) ---
+  const incidentStepPattern = [3, 4, 3, 4]; // ~3.5 días de separación => 2-3/semana
+  const incidentDays: number[] = [];
+  for (let d = 2, i = 0; d <= TOTAL_DAYS - 1; d += incidentStepPattern[i % incidentStepPattern.length]!, i++) {
+    incidentDays.push(d);
+  }
+  incidentDays.push(0); // el incidente más reciente queda activo (hoy)
+
+  incidentDays.forEach((daysAgo, i) => {
+    usedDays.add(daysAgo);
+    const groupId = nextGroupId++;
+    const areaIndex = i % AREA_NAMES.length;
+    const deptA = i % DEPARTMENTS.length;
+    const deptB = (deptA + 2) % DEPARTMENTS.length; // siempre distinto (4 deptos)
+
+    const baseHour = 7 + ((i * 2) % 10); // 7..16
+    const baseMinute = (i % 4) * 15; // 0,15,30,45
+    const aStart = dateAt(daysAgo, baseHour, baseMinute);
+
+    if (daysAgo === 0) {
+      // Incidente en curso: el primer evento ya está siendo atendido, el
+      // segundo acaba de entrar. Ninguno tiene cierre todavía.
+      const bStart = addMinutes(aStart, 20);
+      slots.push({
+        groupId,
+        daysAgo,
+        areaIndex,
+        deptIndex: deptA,
+        createdAt: aStart,
+        status: EventStatus.IN_PROGRESS,
+        inProgressAt: addMinutes(aStart, 10),
+      });
+      slots.push({
+        groupId,
+        daysAgo,
+        areaIndex,
+        deptIndex: deptB,
+        createdAt: bStart,
+        status: EventStatus.OPEN,
+      });
+      return;
+    }
+
+    // Dos perfiles de tiempos alternados: en uno cierra último el segundo
+    // evento (como en el ejemplo de negocio), en el otro cierra último el
+    // primero -- así se comprueba que el fin del paro es el MÁXIMO de los
+    // cierres, no simplemente "el último evento creado".
+    const delayMinutes = i % 2 === 0 ? 45 : 30;
+    const bStart = addMinutes(aStart, delayMinutes);
+    const aDurationMinutes = i % 2 === 0 ? 60 : 90;
+    const bDurationMinutes = i % 2 === 0 ? 45 : 20;
+    const aClose = addMinutes(aStart, aDurationMinutes);
+    const bClose = addMinutes(bStart, bDurationMinutes);
+
+    slots.push({
+      groupId,
+      daysAgo,
+      areaIndex,
+      deptIndex: deptA,
+      createdAt: aStart,
+      status: EventStatus.CLOSED,
+      inProgressAt: addMinutes(aStart, 5),
+      closedAt: aClose,
+    });
+    slots.push({
+      groupId,
+      daysAgo,
+      areaIndex,
+      deptIndex: deptB,
+      createdAt: bStart,
+      status: EventStatus.CLOSED,
+      inProgressAt: addMinutes(bStart, 5),
+      closedAt: bClose,
+    });
+  });
+
+  // --- 2. Días "triples": 3 eventos independientes (áreas distintas) ---
+  const tripleDays = [8, 17, 26, 35, 44, 53].filter(d => !usedDays.has(d));
+  tripleDays.forEach((daysAgo, i) => {
+    usedDays.add(daysAgo);
+    for (let slot = 0; slot < 3; slot++) {
+      const groupId = nextGroupId++;
+      const areaIndex = (i + slot) % AREA_NAMES.length;
+      const deptIndex = (i + slot * 2) % DEPARTMENTS.length;
+      const hour = 7 + slot * 5;
+      const minute = (slot * 20) % 60;
+      const createdAt = dateAt(daysAgo, hour, minute);
+      const durationMinutes = 20 + ((i + slot) % 5) * 15;
+
+      slots.push({
+        groupId,
+        daysAgo,
+        areaIndex,
+        deptIndex,
+        createdAt,
+        status: EventStatus.CLOSED,
+        inProgressAt: addMinutes(createdAt, 5),
+        closedAt: addMinutes(createdAt, durationMinutes),
+      });
+    }
+  });
+
+  // --- 3. Relleno regular para el resto de días (0-2 eventos, patrón cíclico) ---
+  const fillerPattern = [1, 0, 1, 2, 1, 0, 1];
+  let fillerIndex = 0;
+  for (let daysAgo = TOTAL_DAYS - 1; daysAgo >= 0; daysAgo--) {
+    if (usedDays.has(daysAgo)) continue;
+
+    const count = fillerPattern[daysAgo % fillerPattern.length]!;
+    for (let slot = 0; slot < count; slot++) {
+      const groupId = nextGroupId++;
+      const areaIndex = (fillerIndex + slot) % AREA_NAMES.length;
+      const deptIndex = (fillerIndex + slot * 3) % DEPARTMENTS.length;
+      const hour = 6 + ((fillerIndex + slot * 4) % 15); // 6..20
+      const minute = (slot * 25) % 60;
+      const createdAt = dateAt(daysAgo, hour, minute);
+      const durationMinutes = 15 + ((fillerIndex + slot) % 6) * 15;
+
+      slots.push({
+        groupId,
+        daysAgo,
+        areaIndex,
+        deptIndex,
+        createdAt,
+        status: EventStatus.CLOSED,
+        inProgressAt: addMinutes(createdAt, 5),
+        closedAt: addMinutes(createdAt, durationMinutes),
+      });
+    }
+    fillerIndex++;
+  }
+
+  return slots;
 }
 
 async function findOrCreateArea(dataSource: DataSource, name: string): Promise<Area> {
@@ -204,12 +352,30 @@ async function seed(): Promise<void> {
       }
     }
 
-    // 4. Limpieza de datos de prueba previos (idempotencia) antes de re-sembrar
-    //    el histórico de señales/eventos, sin tocar los catálogos anteriores.
+    // 4. Limpieza de datos de prueba previos (idempotencia) antes de
+    //    re-sembrar el histórico, sin tocar los catálogos.
     const eventRepo = dataSource.getRepository(Event);
     const rawSignalRepo = dataSource.getRepository(RawSignal);
     const processedSignalRepo = dataSource.getRepository(ProcessedSignal);
+    const areaDowntimeRepo = dataSource.getRepository(AreaDowntime);
+    const areaDowntimeEventRepo = dataSource.getRepository(AreaDowntimeEvent);
 
+    const seededAreaIds = areas.map(a => a.id);
+    if (seededAreaIds.length > 0) {
+      await areaDowntimeEventRepo
+        .createQueryBuilder()
+        .delete()
+        .where(
+          'area_downtime_id IN (SELECT id FROM area_downtimes WHERE area_id IN (:...areaIds))',
+          { areaIds: seededAreaIds }
+        )
+        .execute();
+      await areaDowntimeRepo
+        .createQueryBuilder()
+        .delete()
+        .where('area_id IN (:...areaIds)', { areaIds: seededAreaIds })
+        .execute();
+    }
     await eventRepo
       .createQueryBuilder()
       .delete()
@@ -226,29 +392,29 @@ async function seed(): Promise<void> {
       .where('device_signal_name LIKE :marker', { marker: `%${SEED_MARKER}` })
       .execute();
 
-    // 5. Pipeline de señales + eventos para cada escenario estático, con
-    //    fechas calculadas dinámicamente sobre los últimos 2 meses.
-    let created = 0;
-    for (const scenario of EVENT_SCENARIOS) {
-      const area = areas[scenario.areaIndex]!;
-      const department = departments[scenario.deptIndex]!;
-      const device = devices[scenario.areaIndex]!;
-      const deptCode = DEPARTMENTS[scenario.deptIndex]!.code;
-      const signal = signalsByAreaDept.get(`${scenario.areaIndex}-${scenario.deptIndex}`)!;
-      const texts = REASONS[deptCode]!;
+    // 5. Pipeline de señales + eventos para cada slot generado, agrupado por
+    //    groupId para poder calcular el AreaDowntime resultante.
+    const slots = buildEventSlots();
+    const eventIdsByGroup = new Map<number, number[]>();
+    const slotsByGroup = new Map<number, EventSlot[]>();
 
-      const createdAt = daysAgoAt(scenario.daysAgo, scenario.hour);
+    for (const slot of slots) {
+      const area = areas[slot.areaIndex]!;
+      const department = departments[slot.deptIndex]!;
+      const device = devices[slot.areaIndex]!;
+      const deptCode = DEPARTMENTS[slot.deptIndex]!.code;
+      const signal = signalsByAreaDept.get(`${slot.areaIndex}-${slot.deptIndex}`)!;
+      const texts = REASONS[deptCode]!;
+      const createdAt = slot.createdAt;
 
       // Señal cruda ingerida por el receptor.
       const rawSignal = await rawSignalRepo.save(
         rawSignalRepo.create({
-          externalId: `SEED-${signal.externalValueId}-${scenario.daysAgo}-${scenario.hour}`,
+          externalId: `SEED-${signal.externalValueId}-${slot.groupId}`,
           value: '1',
           createdAt,
         })
       );
-      // createdAt/updatedAt son columnas auto-gestionadas; se fuerza el valor
-      // histórico deseado con un UPDATE directo tras el insert.
       await rawSignalRepo
         .createQueryBuilder()
         .update()
@@ -283,26 +449,21 @@ async function seed(): Promise<void> {
         deviceName: device.name,
         deviceSignalId: signal.id,
         deviceSignalName: signal.name,
-        status: scenario.status,
+        status: slot.status,
         virtualDevice: false,
         reason: texts.reason,
         comment: `${SEED_MARKER} ${texts.comment}`,
         createdAt,
       };
-
-      if (scenario.status === EventStatus.IN_PROGRESS) {
-        eventData.inProgressAt = new Date(createdAt.getTime() + 10 * 60 * 1000);
+      if (slot.inProgressAt) eventData.inProgressAt = slot.inProgressAt;
+      if (slot.closedAt) {
+        eventData.closedAt = slot.closedAt;
+        eventData.durationSeconds = Math.round(
+          (slot.closedAt.getTime() - createdAt.getTime()) / 1000
+        );
       }
 
-      if (scenario.status === EventStatus.CLOSED) {
-        const durationMs = (scenario.durationMinutes ?? 30) * 60 * 1000;
-        eventData.inProgressAt = new Date(createdAt.getTime() + 5 * 60 * 1000);
-        eventData.closedAt = new Date(createdAt.getTime() + durationMs);
-        eventData.durationSeconds = Math.round(durationMs / 1000);
-      }
-
-      const event = eventRepo.create(eventData);
-      await eventRepo.save(event);
+      const event = await eventRepo.save(eventRepo.create(eventData));
       // createdAt es @CreateDateColumn (se sobreescribe al guardar); se fuerza
       // el valor histórico deseado con un UPDATE directo tras el insert.
       await eventRepo
@@ -312,14 +473,65 @@ async function seed(): Promise<void> {
         .where('id = :id', { id: event.id })
         .execute();
 
-      created++;
+      const groupEventIds = eventIdsByGroup.get(slot.groupId) ?? [];
+      groupEventIds.push(event.id);
+      eventIdsByGroup.set(slot.groupId, groupEventIds);
+
+      const groupSlots = slotsByGroup.get(slot.groupId) ?? [];
+      groupSlots.push(slot);
+      slotsByGroup.set(slot.groupId, groupSlots);
     }
+
+    // 6. AreaDowntime por grupo: replica la lógica de negocio
+    //    (area-downtime.service.ts) sin pasar por el handler en vivo --
+    //    startAt = inicio del primer evento del grupo, endsAt = cierre del
+    //    último evento del grupo en cerrarse, isActive si alguno sigue abierto.
+    let downtimesCreated = 0;
+    for (const [groupId, groupSlots] of slotsByGroup.entries()) {
+      const eventIds = eventIdsByGroup.get(groupId)!;
+      const areaId = areas[groupSlots[0]!.areaIndex]!.id;
+
+      const startAt = groupSlots.reduce(
+        (min, s) => (s.createdAt < min ? s.createdAt : min),
+        groupSlots[0]!.createdAt
+      );
+      const stillActive = groupSlots.some(s => !s.closedAt);
+      const endsAt = stillActive
+        ? undefined
+        : groupSlots.reduce(
+            (max, s) => (s.closedAt! > max ? s.closedAt! : max),
+            groupSlots[0]!.closedAt!
+          );
+
+      const areaDowntime = await areaDowntimeRepo.save(
+        areaDowntimeRepo.create({
+          areaId,
+          startAt,
+          isActive: stillActive,
+          ...(endsAt ? { endsAt } : {}),
+        })
+      );
+
+      for (const eventId of eventIds) {
+        await areaDowntimeEventRepo.save(
+          areaDowntimeEventRepo.create({
+            areaDowntimeId: areaDowntime.id,
+            eventId,
+          })
+        );
+      }
+      downtimesCreated++;
+    }
+
+    const overlapGroups = [...slotsByGroup.values()].filter(g => g.length > 1).length;
 
     console.log(`Áreas: ${areas.length}`);
     console.log(`Departamentos: ${departments.length}`);
     console.log(`Dispositivos: ${devices.length}`);
     console.log(`Señales de dispositivo: ${signalsByAreaDept.size}`);
-    console.log(`Escenarios de señal/evento creados: ${created}`);
+    console.log(`Eventos creados: ${slots.length}`);
+    console.log(`AreaDowntimes creados: ${downtimesCreated}`);
+    console.log(`  de los cuales con eventos entrelazados (2+ eventos): ${overlapGroups}`);
     console.log('Seed de datos de prueba completado.');
   } finally {
     await dataSource.destroy();
