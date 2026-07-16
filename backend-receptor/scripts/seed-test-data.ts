@@ -273,8 +273,23 @@ async function findOrCreateDevice(
   areaId: number
 ): Promise<Device> {
   const repo = dataSource.getRepository(Device);
-  const existing = await repo.findOneBy({ externalId });
-  if (existing) return existing;
+
+  // Una sola botonera por área en este seed: si ya existe una para el área
+  // (p. ej. sembrada por una corrida previa con el nombre/external_id
+  // antiguo "Torreta"), se corrige en lugar de duplicarla.
+  const existingByArea = await repo.findOneBy({ areaId });
+  if (existingByArea) {
+    if (existingByArea.name !== name || existingByArea.externalId !== externalId) {
+      existingByArea.name = name;
+      existingByArea.externalId = externalId;
+      await repo.save(existingByArea);
+    }
+    return existingByArea;
+  }
+
+  const existingByExternalId = await repo.findOneBy({ externalId });
+  if (existingByExternalId) return existingByExternalId;
+
   return repo.save(repo.create({ name, externalId, areaId, isVirtualDevice: false }));
 }
 
@@ -286,8 +301,20 @@ async function findOrCreateDeviceSignal(
   externalValueId: string
 ): Promise<DeviceSignal> {
   const repo = dataSource.getRepository(DeviceSignal);
-  const existing = await repo.findOneBy({ deviceId, externalValueId });
-  if (existing) return existing;
+
+  // Se busca por (deviceId, name) para sobrevivir a un cambio de
+  // externalId del dispositivo (p. ej. el prefijo TORRETA- -> BOTONERA-);
+  // si cambió, se actualiza en lugar de crear una señal duplicada.
+  const existing = await repo.findOneBy({ deviceId, name });
+  if (existing) {
+    if (existing.externalValueId !== externalValueId || existing.departmentId !== departmentId) {
+      existing.externalValueId = externalValueId;
+      existing.departmentId = departmentId;
+      await repo.save(existing);
+    }
+    return existing;
+  }
+
   return repo.save(repo.create({ name, deviceId, departmentId, externalValueId }));
 }
 
@@ -319,21 +346,24 @@ async function seed(): Promise<void> {
       departments.push(await findOrCreateDepartment(dataSource, dept.name, dept.htmlColor));
     }
 
-    // 2. Dispositivos: una torreta por área.
+    // 2. Dispositivos: una botonera por área (dispositivo físico con
+    //    botones que el operario configura para hacer las llamadas de
+    //    paro). Las torretas son un catálogo aparte, dado de alta en el
+    //    panel de catálogos, y no se siembran aquí.
     const devices: Device[] = [];
     for (let i = 0; i < areas.length; i++) {
       const area = areas[i]!;
-      const externalId = `TORRETA-L${i + 1}`;
+      const externalId = `BOTONERA-L${i + 1}`;
       const device = await findOrCreateDevice(
         dataSource,
-        `Torreta ${area.name}`,
+        `Botonera ${area.name}`,
         externalId,
         area.id
       );
       devices.push(device);
     }
 
-    // 3. Señales de dispositivo: una por departamento en cada torreta.
+    // 3. Señales de dispositivo: una por departamento en cada botonera.
     const signalsByAreaDept = new Map<string, DeviceSignal>();
     for (let a = 0; a < devices.length; a++) {
       const device = devices[a]!;
