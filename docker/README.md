@@ -255,6 +255,18 @@ docker compose exec backend sh
 docker compose exec backend npm run migration:run
 ```
 
+### Cargar datos de prueba (demo)
+
+Siembra áreas (Línea 1-5), departamentos, botoneras, señales y ~2 meses de
+eventos/paros (incluye eventos entrelazados que fusionan el downtime de un
+área). El seed va compilado dentro de la imagen; se corre con `node`:
+
+```bash
+docker compose exec backend node dist/seed/seed-test-data.js
+```
+
+Es idempotente: puede ejecutarse varias veces sin duplicar datos.
+
 ---
 
 ## 🔄 Actualizar el Sistema

@@ -3,17 +3,20 @@ import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 
-import { Area } from '../src/areas/domain/entities/area.entity';
-import { Department } from '../src/departments/domain/entities/department.entity';
-import { Device } from '../src/devices/domain/entities/device.entity';
-import { DeviceSignal } from '../src/device-signals/domain/entities/device-signal.entity';
-import { RawSignal } from '../src/signals/domain/entities/raw-signal.entity';
-import { ProcessedSignal } from '../src/signals/domain/entities/processed-signal.entity';
-import { Event, EventStatus } from '../src/events/domain/entities/event.entity';
-import { AreaDowntime } from '../src/area-downtime/domain/entities/area-downtime.entity';
-import { AreaDowntimeEvent } from '../src/area-downtime/domain/entities/area-downtime-event.entity';
+import { Area } from '../areas/domain/entities/area.entity';
+import { Department } from '../departments/domain/entities/department.entity';
+import { Device } from '../devices/domain/entities/device.entity';
+import { DeviceSignal } from '../device-signals/domain/entities/device-signal.entity';
+import { RawSignal } from '../signals/domain/entities/raw-signal.entity';
+import { ProcessedSignal } from '../signals/domain/entities/processed-signal.entity';
+import { Event, EventStatus } from '../events/domain/entities/event.entity';
+import { AreaDowntime } from '../area-downtime/domain/entities/area-downtime.entity';
+import { AreaDowntimeEvent } from '../area-downtime/domain/entities/area-downtime-event.entity';
 
-dotenv.config({ path: join(__dirname, '../.env') });
+// Carga .env sólo en desarrollo local (dos niveles arriba: src/seed -> raíz del
+// paquete). En el contenedor de producción no existe ese archivo y las
+// variables llegan del entorno; dotenv simplemente no hace nada si falta.
+dotenv.config({ path: join(__dirname, '..', '..', '.env') });
 
 /**
  * Datos de prueba para el pipeline de señales: RawSignal -> ProcessedSignal
@@ -326,7 +329,10 @@ async function seed(): Promise<void> {
     username: process.env['DATABASE_USERNAME'] ?? 'postgres',
     password: process.env['DATABASE_PASSWORD'] ?? 'postgres',
     database: process.env['DATABASE_NAME'] ?? 'track_io',
-    entities: [join(__dirname, '../src/**/*.entity{.ts,.js}')],
+    // Un nivel arriba de src/seed cubre todo el árbol de entidades, tanto en
+    // desarrollo (ts-node -> src/**/*.entity.ts) como compilado en el
+    // contenedor (node -> dist/**/*.entity.js).
+    entities: [join(__dirname, '..', '**', '*.entity{.ts,.js}')],
     synchronize: false,
     logging: false,
   });
