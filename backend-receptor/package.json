@@ -40,6 +40,7 @@
     "schema:sync": "npm run typeorm -- schema:sync",
     "schema:drop": "npm run typeorm -- schema:drop",
     "generate:initial-migration": "ts-node scripts/generate-initial-migration.ts",
+    "seed:test-data": "ts-node scripts/seed-test-data.ts",
     "db:start": "cd ../docker && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres",
     "db:stop": "cd ../docker && docker-compose -f docker-compose.yml -f docker-compose.dev.yml down",
     "db:restart": "pnpm run db:stop && pnpm run db:start"
