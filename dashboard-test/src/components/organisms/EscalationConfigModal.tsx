@@ -469,6 +469,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                             <div className="flex items-center space-x-2">
                               <Input
                                 className="w-20 bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                                classNames={{ input: "!text-black" }}
                                 type="text"
                                 value={editingDelay.value.toString()}
                                 onChange={(e) =>
@@ -748,7 +749,7 @@ export const EscalationConfigModal: React.FC<EscalationConfigModalProps> = ({
                                   className="flex-1 min-w-0"
                                   classNames={{
                                     input:
-                                      "!text-slate-100 placeholder:!text-slate-400",
+                                      "!text-black placeholder:!text-slate-400",
                                     inputWrapper:
                                       "bg-slate-700 border-slate-600 hover:border-slate-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500",
                                   }}
