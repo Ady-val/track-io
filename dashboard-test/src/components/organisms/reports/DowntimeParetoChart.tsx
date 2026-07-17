@@ -31,7 +31,6 @@ ChartJS.register(
 export interface DowntimeParetoChartProps {
   data: Array<{ label: string; seconds: number }>;
   loading?: boolean;
-  showUnplanned?: boolean;
 }
 
 /**
@@ -41,7 +40,6 @@ export interface DowntimeParetoChartProps {
 export function DowntimeParetoChart({
   data,
   loading,
-  showUnplanned = true,
 }: DowntimeParetoChartProps) {
   if (loading) {
     return <ChartPlaceholder text="Cargando…" />;
@@ -62,7 +60,6 @@ export function DowntimeParetoChart({
               data: data.map((d) => d.seconds),
               backgroundColor: REPORT_COLORS.unplanned,
               yAxisID: "y",
-              hidden: !showUnplanned,
             },
           ],
         }}

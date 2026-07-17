@@ -31,7 +31,7 @@ export interface DowntimeTrendChartProps {
   }>;
   groupBy: GroupBy;
   loading?: boolean;
-  showUnplanned?: boolean;
+  showScheduled?: boolean;
 }
 
 /**
@@ -42,7 +42,7 @@ export function DowntimeTrendChart({
   data,
   groupBy,
   loading,
-  showUnplanned = true,
+  showScheduled = true,
 }: DowntimeTrendChartProps) {
   if (loading) {
     return <Placeholder text="Cargando…" />;
@@ -64,12 +64,12 @@ export function DowntimeTrendChart({
               label: "Paro programado",
               data: data.map((d) => d.scheduledSeconds),
               backgroundColor: REPORT_COLORS.scheduled,
+              hidden: !showScheduled,
             },
             {
               label: "Paro no programado",
               data: data.map((d) => d.unplannedSeconds),
               backgroundColor: REPORT_COLORS.unplanned,
-              hidden: !showUnplanned,
             },
           ],
         }}

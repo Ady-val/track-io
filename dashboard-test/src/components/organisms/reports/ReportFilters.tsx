@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAreas, type Area } from "@/hooks/useCatalogs";
 import type { GroupBy } from "@/types/report";
 
-import { Button, Select, Input } from "../../atoms";
+import { Button, Select, Input, Checkbox } from "../../atoms";
 
 export interface ReportFilterValue {
   areaId?: number;
@@ -71,10 +71,14 @@ export function ReportFilters({
   onChange,
   onExport,
   exporting,
+  showScheduled,
+  onShowScheduledChange,
 }: {
   onChange: (value: ReportFilterValue) => void;
   onExport: () => void;
   exporting: boolean;
+  showScheduled: boolean;
+  onShowScheduledChange: (value: boolean) => void;
 }) {
   const { data: areasData } = useAreas();
   const areas: Area[] = areasData?.data ?? [];
@@ -128,6 +132,14 @@ export function ReportFilters({
           ))}
         </Select>
       </div>
+
+      <Checkbox
+        isSelected={showScheduled}
+        size="sm"
+        onValueChange={onShowScheduledChange}
+      >
+        <span className="text-slate-300 text-sm">Mostrar paro programado</span>
+      </Checkbox>
 
       <div>
         <p className="text-xs text-slate-400 mb-1">Rango</p>
@@ -201,7 +213,7 @@ export function ReportFilters({
       </div>
 
       <Button
-        className="text-white"
+        className="text-white ml-auto"
         color="success"
         isLoading={exporting}
         variant="solid"
