@@ -13,8 +13,10 @@ import { REPORT_COLORS } from "./reportColors";
  */
 export function TimeAccountingBar({
   summary,
+  showScheduled = true,
 }: {
   summary: DowntimeReportSummary;
+  showScheduled?: boolean;
 }) {
   const {
     calendarSeconds,
@@ -34,11 +36,13 @@ export function TimeAccountingBar({
       </h3>
 
       <div className="flex w-full h-10 rounded overflow-hidden mb-4">
-        <Segment
-          color={REPORT_COLORS.scheduled}
-          label="Programado"
-          widthPercent={pct(scheduledDowntimeSeconds)}
-        />
+        {showScheduled && (
+          <Segment
+            color={REPORT_COLORS.scheduled}
+            label="Programado"
+            widthPercent={pct(scheduledDowntimeSeconds)}
+          />
+        )}
         <Segment
           color={REPORT_COLORS.unplanned}
           label="No programado"

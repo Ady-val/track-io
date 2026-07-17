@@ -87,7 +87,10 @@ export function ReportsPage() {
 
           <ReportKpiCards summary={report.summary} />
 
-          <TimeAccountingBar summary={report.summary} />
+          <TimeAccountingBar
+            showScheduled={showScheduled}
+            summary={report.summary}
+          />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
