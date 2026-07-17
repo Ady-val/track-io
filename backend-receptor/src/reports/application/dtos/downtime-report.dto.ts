@@ -138,6 +138,9 @@ export interface EventReportRow {
   virtualDevice: boolean;
   reason: string | null;
   comment: string | null;
+  virtualUserName: string | null;
+  progressComment: string | null;
+  closeComment: string | null;
   scheduledDowntimeSlices: EventReportSlice[];
 }
 

@@ -26,6 +26,10 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../../permissions/guards/permission.guard';
 import { RequirePermission } from '../../permissions/decorators/require-permission.decorator';
 import { Action, Module } from '../../permissions/constants/permissions.constants';
+import {
+  CurrentUser,
+  CurrentUser as CurrentUserType,
+} from '../../auth/decorators/current-user.decorator';
 
 @Controller('virtual-device')
 @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -180,13 +184,15 @@ export class VirtualDeviceController {
   @Post('signals')
   @HttpCode(HttpStatus.CREATED)
   async createVirtualDeviceSignal(
-    @Body() signalDto: VirtualDeviceSignalDto
+    @Body() signalDto: VirtualDeviceSignalDto,
+    @CurrentUser() user: CurrentUserType
   ): Promise<{ message: string; data: unknown }> {
     const savedSignal = await this.signalService.processVirtualDeviceSignal(
       signalDto.id,
       signalDto.value,
       signalDto.reason,
-      signalDto.comment
+      signalDto.comment,
+      user.username
     );
 
     return {

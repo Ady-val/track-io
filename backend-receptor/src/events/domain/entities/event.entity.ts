@@ -135,6 +135,23 @@ export class Event {
   @Column({ type: 'text', nullable: true })
   comment?: string;
 
+  /** Usuario logueado en la botonera virtual que abrió el evento (botón 1). */
+  @Column({
+    name: 'virtual_user_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  virtualUserName?: string;
+
+  /** Comentario capturado al pasar a "atendido" (botón 2 de la botonera virtual). */
+  @Column({ name: 'progress_comment', type: 'text', nullable: true })
+  progressComment?: string;
+
+  /** Comentario capturado al cerrar el evento (botón 3 de la botonera virtual). */
+  @Column({ name: 'close_comment', type: 'text', nullable: true })
+  closeComment?: string;
+
   @ManyToOne(() => Area)
   @JoinColumn({ name: 'area_id' })
   area?: Area;

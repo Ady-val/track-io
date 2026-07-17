@@ -140,28 +140,29 @@ export class DowntimeReportExcelService {
     eventsSheet.addRow([
       'Área',
       'Departamento',
-      'Inicio',
-      'Atendido',
-      'Cierre',
+      'Fecha de inicio',
+      'Fecha de atención',
+      'Fecha de cierre',
       'Duración (min)',
-      'Paro programado en el evento (min)',
-      'Duración efectiva (min)',
-      'Atención (min)',
-      'Atención efectiva (min)',
-      'Solución (min)',
-      'Solución efectiva (min)',
-      'Origen',
+      'Paro programado (min)',
+      'Duración total (min)',
+      'Usuario virtual',
       'Motivo',
       'Comentario',
+      'Comentario de progreso',
+      'Comentario de cierre',
     ]).font = { bold: true };
 
     for (const col of [3, 4, 5]) {
       eventsSheet.getColumn(col).numFmt = DATE_FMT;
       eventsSheet.getColumn(col).width = 20;
     }
-    for (const col of [6, 7, 8, 9, 10, 11, 12]) {
+    for (const col of [6, 7, 8]) {
       eventsSheet.getColumn(col).numFmt = MINUTES_FMT;
       eventsSheet.getColumn(col).width = 16;
+    }
+    for (const col of [9, 10, 11, 12, 13]) {
+      eventsSheet.getColumn(col).width = 24;
     }
 
     const slicesSheet = workbook.addWorksheet('Paros programados aplicados');
@@ -207,13 +208,11 @@ export class DowntimeReportExcelService {
           this.toMinutes(event.durationSeconds),
           this.toMinutes(event.scheduledDowntimeDiscountSeconds),
           this.toMinutes(event.effectiveDurationSeconds),
-          this.toMinutes(event.responseSeconds),
-          this.toMinutes(event.effectiveResponseSeconds),
-          this.toMinutes(event.resolutionSeconds),
-          this.toMinutes(event.effectiveResolutionSeconds),
-          event.virtualDevice ? 'Virtual' : 'Físico',
+          event.virtualUserName ?? '',
           event.reason ?? '',
           event.comment ?? '',
+          event.progressComment ?? '',
+          event.closeComment ?? '',
         ]);
 
         for (const slice of event.scheduledDowntimeSlices) {

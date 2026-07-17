@@ -44,6 +44,7 @@ type EventSignalContext = {
   virtualDevice?: boolean;
   reason?: string;
   comment?: string;
+  userName?: string;
 };
 
 @Injectable()
@@ -133,10 +134,11 @@ export class SignalService {
     id: string,
     value: string,
     reason?: string,
-    comment?: string
+    comment?: string,
+    userName?: string
   ): Promise<RawSignal> {
     this.logger.log(
-      `Received virtual device signal data: ${JSON.stringify({ id, value, reason, comment })}`
+      `Received virtual device signal data: ${JSON.stringify({ id, value, reason, comment, userName })}`
     );
 
     try {
@@ -158,6 +160,7 @@ export class SignalService {
         virtualDevice: true,
         ...(reason !== undefined ? { reason } : {}),
         ...(comment !== undefined ? { comment } : {}),
+        ...(userName !== undefined ? { userName } : {}),
       });
 
       try {
@@ -399,9 +402,9 @@ export class SignalService {
         );
 
       if (existingInProgressEvent) {
-        await this.closeEvent(existingInProgressEvent);
+        await this.closeEvent(existingInProgressEvent, context);
       } else if (existingOpenEvent) {
-        await this.setEventInProgress(existingOpenEvent);
+        await this.setEventInProgress(existingOpenEvent, context);
       } else {
         await this.createNewEvent(device, deviceSignal, context);
       }
@@ -431,6 +434,7 @@ export class SignalService {
         ...(context?.virtualDevice && { virtualDevice: true }),
         ...(context?.reason && { reason: context.reason }),
         ...(context?.comment && { comment: context.comment }),
+        ...(context?.userName && { virtualUserName: context.userName }),
       });
 
       this.logger.log(`Created new event with ID: ${event.id}`);
@@ -474,12 +478,21 @@ export class SignalService {
     }
   }
 
-  private async setEventInProgress(event: Event): Promise<void> {
+  private async setEventInProgress(
+    event: Event,
+    context?: EventSignalContext
+  ): Promise<void> {
     try {
-      const updatedEvent = await this.eventRepository.updateStatus(
-        event.id,
-        EventStatus.IN_PROGRESS
-      );
+      const updatedEvent = context?.comment
+        ? await this.eventRepository.updateStatus(
+            event.id,
+            EventStatus.IN_PROGRESS,
+            { progressComment: context.comment }
+          )
+        : await this.eventRepository.updateStatus(
+            event.id,
+            EventStatus.IN_PROGRESS
+          );
 
       this.logger.log(`Event ${event.id} set to in-progress`);
 
@@ -569,7 +582,10 @@ export class SignalService {
     }));
   }
 
-  private async closeEvent(event: Event): Promise<void> {
+  private async closeEvent(
+    event: Event,
+    context?: EventSignalContext
+  ): Promise<void> {
     try {
       const closedAt = new Date();
       // ⌊cierre⌋ − ⌊inicio⌋ (no ⌊cierre − inicio⌋): misma retícula de segundo
@@ -640,6 +656,9 @@ export class SignalService {
       };
       if (responseDiscountSeconds !== null) {
         updateData.responseDiscountSeconds = responseDiscountSeconds;
+      }
+      if (context?.comment) {
+        updateData.closeComment = context.comment;
       }
 
       await this.dataSource.transaction(async manager => {

@@ -29,17 +29,19 @@ ChartJS.register(
 );
 
 export interface DowntimeParetoChartProps {
-  data: Array<{ label: string; seconds: number; cumulativePercent: number }>;
+  data: Array<{ label: string; seconds: number }>;
   loading?: boolean;
+  showUnplanned?: boolean;
 }
 
 /**
- * Pareto por departamento: barras (paro no programado, desc) + línea de
- * acumulado. Componente TONTO: solo pinta las props que recibe (§8.3).
+ * Pareto por departamento: barras (paro no programado, desc). Componente
+ * TONTO: solo pinta las props que recibe (§8.3).
  */
 export function DowntimeParetoChart({
   data,
   loading,
+  showUnplanned = true,
 }: DowntimeParetoChartProps) {
   if (loading) {
     return <ChartPlaceholder text="Cargando…" />;
@@ -60,17 +62,7 @@ export function DowntimeParetoChart({
               data: data.map((d) => d.seconds),
               backgroundColor: REPORT_COLORS.unplanned,
               yAxisID: "y",
-              order: 2,
-            },
-            {
-              type: "line" as const,
-              label: "Acumulado %",
-              data: data.map((d) => d.cumulativePercent),
-              borderColor: REPORT_COLORS.cumulative,
-              backgroundColor: REPORT_COLORS.cumulative,
-              yAxisID: "y1",
-              tension: 0.2,
-              order: 1,
+              hidden: !showUnplanned,
             },
           ],
         }}
@@ -81,10 +73,7 @@ export function DowntimeParetoChart({
             legend: { labels: { color: "#cbd5e1" } },
             tooltip: {
               callbacks: {
-                label: (ctx) =>
-                  ctx.dataset.type === "line"
-                    ? `Acumulado: ${Number(ctx.raw).toFixed(1)}%`
-                    : `Paro: ${formatDuration(Number(ctx.raw))}`,
+                label: (ctx) => `Paro: ${formatDuration(Number(ctx.raw))}`,
               },
             },
           },
@@ -97,13 +86,6 @@ export function DowntimeParetoChart({
                 callback: (v) => formatDuration(Number(v)),
               },
               grid: { color: "#334155" },
-            },
-            y1: {
-              position: "right",
-              min: 0,
-              max: 100,
-              ticks: { color: "#94a3b8", callback: (v) => `${v}%` },
-              grid: { drawOnChartArea: false },
             },
           },
         }}

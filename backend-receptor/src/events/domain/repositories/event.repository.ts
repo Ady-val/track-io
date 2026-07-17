@@ -12,6 +12,7 @@ export interface CreateEventDto {
   virtualDevice?: boolean;
   reason?: string;
   comment?: string;
+  virtualUserName?: string;
 }
 
 export interface EventFilters {

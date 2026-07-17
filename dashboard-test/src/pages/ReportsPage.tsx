@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import { Checkbox } from "@/components/atoms";
 import { DowntimeParetoChart } from "@/components/organisms/reports/DowntimeParetoChart";
 import { DowntimeTrendChart } from "@/components/organisms/reports/DowntimeTrendChart";
 import { EventTraceTable } from "@/components/organisms/reports/EventTraceTable";
@@ -19,6 +20,7 @@ import { useToast } from "@/hooks/useToast";
 export function ReportsPage() {
   const [filters, setFilters] = useState<ReportFilterValue | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [showUnplanned, setShowUnplanned] = useState(true);
   const toast = useToast();
 
   const handleFilterChange = useCallback((value: ReportFilterValue) => {
@@ -86,6 +88,18 @@ export function ReportsPage() {
 
           <TimeAccountingBar summary={report.summary} />
 
+          <div className="flex justify-end">
+            <Checkbox
+              isSelected={showUnplanned}
+              size="sm"
+              onValueChange={setShowUnplanned}
+            >
+              <span className="text-slate-300 text-sm">
+                Mostrar paro no programado
+              </span>
+            </Checkbox>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-white mb-2">
@@ -95,8 +109,8 @@ export function ReportsPage() {
                 data={report.byDepartment.map((d) => ({
                   label: d.departmentName,
                   seconds: d.unplannedDowntimeSeconds,
-                  cumulativePercent: d.cumulativePercent,
                 }))}
+                showUnplanned={showUnplanned}
               />
               <p className="text-xs text-slate-500 mt-2">
                 La suma por departamento puede superar el paro total de la
@@ -129,6 +143,7 @@ export function ReportsPage() {
                 unplannedSeconds: t.unplannedDowntimeSeconds,
               }))}
               groupBy={report.range.groupBy}
+              showUnplanned={showUnplanned}
             />
           </div>
 

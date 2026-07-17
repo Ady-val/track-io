@@ -576,6 +576,9 @@ export class DowntimeReportService {
       virtualDevice: event.virtualDevice,
       reason: event.reason ?? null,
       comment: event.comment ?? null,
+      virtualUserName: event.virtualUserName ?? null,
+      progressComment: event.progressComment ?? null,
+      closeComment: event.closeComment ?? null,
       scheduledDowntimeSlices: sliceRows,
     };
   }
