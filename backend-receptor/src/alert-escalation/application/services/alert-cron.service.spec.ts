@@ -9,6 +9,7 @@ import {
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import { AlertLevel } from '../../domain/entities/alert-escalation-message.entity';
 import type { Event } from '../../../events/domain/entities/event.entity';
+import { ScheduledDowntimeCalculatorService } from '../../../scheduled-downtimes/application/services/scheduled-downtime-calculator.service';
 
 describe('AlertCronService', () => {
   let service: AlertCronService;
@@ -19,6 +20,20 @@ describe('AlertCronService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AlertCronService,
+        {
+          // Por defecto, sin paros programados: los minutos productivos son
+          // iguales a los de reloj, preservando el comportamiento previo.
+          provide: ScheduledDowntimeCalculatorService,
+          useValue: {
+            getEffectiveSeconds: jest
+              .fn()
+              .mockImplementation((_areaId: number, start: Date, end: Date) =>
+                Promise.resolve(
+                  Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000))
+                )
+              ),
+          },
+        },
         {
           provide: TypeOrmEventRepository,
           useValue: {

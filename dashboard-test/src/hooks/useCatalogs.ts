@@ -58,6 +58,20 @@ export interface Email {
   deletedAt?: string;
 }
 
+export interface ScheduledDowntime {
+  id: number;
+  name: string;
+  areaId: number;
+  area?: { id: number; name: string };
+  startTime: string;
+  endTime: string;
+  daysOfWeek: number[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 const catalogApi = {
   getAreas: async (params?: {
     limit?: number;
@@ -192,6 +206,49 @@ const catalogApi = {
   },
   deleteReceptor: async (id: number) => {
     const response = await apiClient.delete(`/receptors/${id}`);
+
+    return response.data;
+  },
+
+  getScheduledDowntimes: async (params?: {
+    areaId?: number;
+    isActive?: boolean;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get("/scheduled-downtimes", { params });
+
+    return response.data;
+  },
+  createScheduledDowntime: async (data: {
+    name: string;
+    areaId: number;
+    startTime: string;
+    endTime: string;
+    daysOfWeek: number[];
+    isActive?: boolean;
+  }) => {
+    const response = await apiClient.post("/scheduled-downtimes", data);
+
+    return response.data;
+  },
+  updateScheduledDowntime: async (
+    id: number,
+    data: {
+      name?: string;
+      areaId?: number;
+      startTime?: string;
+      endTime?: string;
+      daysOfWeek?: number[];
+      isActive?: boolean;
+    }
+  ) => {
+    const response = await apiClient.patch(`/scheduled-downtimes/${id}`, data);
+
+    return response.data;
+  },
+  deleteScheduledDowntime: async (id: number) => {
+    const response = await apiClient.delete(`/scheduled-downtimes/${id}`);
 
     return response.data;
   },
@@ -456,6 +513,64 @@ export function useDeleteReceptor() {
     mutationFn: catalogApi.deleteReceptor,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["receptors"] });
+    },
+  });
+}
+
+export function useScheduledDowntimes(params?: {
+  areaId?: number;
+  isActive?: boolean;
+  limit?: number;
+  offset?: number;
+}) {
+  return useQuery({
+    queryKey: ["scheduled-downtimes", params],
+    queryFn: () => catalogApi.getScheduledDowntimes(params),
+  });
+}
+
+export function useCreateScheduledDowntime() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: catalogApi.createScheduledDowntime,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-downtimes"] });
+    },
+  });
+}
+
+export function useUpdateScheduledDowntime() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: {
+        name?: string;
+        areaId?: number;
+        startTime?: string;
+        endTime?: string;
+        daysOfWeek?: number[];
+        isActive?: boolean;
+      };
+    }) => catalogApi.updateScheduledDowntime(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-downtimes"] });
+    },
+  });
+}
+
+export function useDeleteScheduledDowntime() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: catalogApi.deleteScheduledDowntime,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-downtimes"] });
     },
   });
 }

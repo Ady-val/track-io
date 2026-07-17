@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ModuleRef } from '@nestjs/core';
+import { getDataSourceToken } from '@nestjs/typeorm';
 import { SignalService } from './signal.service';
 import { RawSignalRepository } from '../../domain/repositories/raw-signal.repository';
 import { ProcessedSignalRepository } from '../../domain/repositories/processed-signal.repository';
@@ -9,6 +10,8 @@ import { TypeOrmEventRepository } from '../../../events/domain/repositories/type
 import { WebSocketEmitterService } from '../../../websocket/services/websocket-emitter.service';
 import { AreaDowntimeService } from '../../../area-downtime/application/services/area-downtime.service';
 import { AlertCronService } from '../../../alert-escalation/application/services/alert-cron.service';
+import { ScheduledDowntimeCalculatorService } from '../../../scheduled-downtimes/application/services/scheduled-downtime-calculator.service';
+import { EventScheduledDowntimeSliceRepository } from '../../../events/domain/repositories/event-scheduled-downtime-slice.repository';
 import type { AreaTorretaSignalService } from '../../../area-torreta-config/application/services/area-torreta-signal.service';
 import {
   createMockRawSignal,
@@ -17,11 +20,12 @@ import {
   createMockDeviceSignal,
   createMockEvent,
 } from '../../../test-helpers';
-import { EventStatus } from '../../../events/domain/entities/event.entity';
-import type { Event } from '../../../events/domain/entities/event.entity';
+import { Event, EventStatus } from '../../../events/domain/entities/event.entity';
 
 describe('SignalService', () => {
   let service: SignalService;
+  let mockManager: { update: jest.Mock };
+  let eventSliceRepository: { createMany: jest.Mock };
   let rawSignalRepository: jest.Mocked<RawSignalRepository>;
   let processedSignalRepository: jest.Mocked<ProcessedSignalRepository>;
   let deviceRepository: jest.Mocked<DeviceRepository>;
@@ -33,6 +37,8 @@ describe('SignalService', () => {
   let areaTorretaSignalService: jest.Mocked<AreaTorretaSignalService>;
 
   beforeEach(async () => {
+    mockManager = { update: jest.fn().mockResolvedValue({ affected: 1 }) };
+
     const mockAreaTorretaSignalService = {
       processEventForAreaTorretas: jest.fn(),
     };
@@ -43,6 +49,18 @@ describe('SignalService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          // Por defecto sin descuento: aísla estos tests de la lógica de paros
+          // programados (cubierta en su propio spec).
+          provide: ScheduledDowntimeCalculatorService,
+          useValue: {
+            getDiscount: jest.fn().mockResolvedValue({
+              timezone: 'America/Chihuahua',
+              totalDiscountedSeconds: 0,
+              slices: [],
+            }),
+          },
+        },
         SignalService,
         {
           provide: RawSignalRepository,
@@ -81,9 +99,28 @@ describe('SignalService', () => {
           provide: TypeOrmEventRepository,
           useValue: {
             create: jest.fn(),
+            findById: jest.fn(),
             findOpenByDeviceAndSignal: jest.fn(),
             findInProgressByDeviceAndSignal: jest.fn(),
             updateStatus: jest.fn(),
+          },
+        },
+        {
+          provide: EventScheduledDowntimeSliceRepository,
+          useValue: {
+            createMany: jest.fn().mockResolvedValue(undefined),
+            deleteByEventIds: jest.fn(),
+            findByEventIds: jest.fn(),
+          },
+        },
+        {
+          // DataSource.transaction ejecuta el callback con un EntityManager de
+          // prueba cuyo update() se puede inspeccionar (cierre transaccional).
+          provide: getDataSourceToken(),
+          useValue: {
+            transaction: jest.fn(
+              async (cb: (m: unknown) => Promise<unknown>) => cb(mockManager)
+            ),
           },
         },
         {
@@ -118,6 +155,7 @@ describe('SignalService', () => {
     deviceRepository = module.get(DeviceRepository);
     deviceSignalRepository = module.get(DeviceSignalRepository);
     eventRepository = module.get(TypeOrmEventRepository);
+    eventSliceRepository = module.get(EventScheduledDowntimeSliceRepository);
     webSocketEmitterService = module.get(WebSocketEmitterService);
     areaDowntimeService = module.get(AreaDowntimeService);
     alertCronService = module.get(AlertCronService);
@@ -867,7 +905,7 @@ describe('SignalService', () => {
       eventRepository.findInProgressByDeviceAndSignal.mockResolvedValue(
         mockInProgressEvent
       );
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['handleEventLogic'](externalId, value);
@@ -876,13 +914,14 @@ describe('SignalService', () => {
       expect(
         eventRepository.findInProgressByDeviceAndSignal
       ).toHaveBeenCalledWith(mockDevice.id, mockDeviceSignal.id);
-      const expectedData: Partial<Event> = {
-        durationSeconds: expect.any(Number) as unknown as number,
-      };
-      expect(eventRepository.updateStatus).toHaveBeenCalledWith(
+      // El cierre ahora es transaccional: evento + rebanadas en la misma tx.
+      expect(mockManager.update).toHaveBeenCalledWith(
+        Event,
         mockInProgressEvent.id,
-        EventStatus.CLOSED,
-        expect.objectContaining(expectedData)
+        expect.objectContaining({
+          status: EventStatus.CLOSED,
+          durationSeconds: expect.any(Number) as unknown as number,
+        })
       );
     });
 
@@ -1223,24 +1262,29 @@ describe('SignalService', () => {
         durationSeconds: 100,
       });
 
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['closeEvent'](mockEvent);
 
       // Assert
-      const expectedData: Partial<Event> = {
-        durationSeconds: expect.any(Number) as unknown as number,
-      };
-      expect(eventRepository.updateStatus).toHaveBeenCalledWith(
+      expect(mockManager.update).toHaveBeenCalledWith(
+        Event,
         mockEvent.id,
-        EventStatus.CLOSED,
-        expect.objectContaining(expectedData)
+        expect.objectContaining({
+          status: EventStatus.CLOSED,
+          durationSeconds: expect.any(Number) as unknown as number,
+        })
       );
-      // Verify durationSeconds is a positive number
-      const callArgs = eventRepository.updateStatus.mock.calls[0];
-      const durationSeconds = callArgs[2]?.durationSeconds;
-      expect(durationSeconds).toBeGreaterThanOrEqual(0);
+      // Verify durationSeconds is a non-negative number
+      const callArgs = mockManager.update.mock.calls[0] as [
+        unknown,
+        number,
+        Partial<Event>,
+      ];
+      expect(callArgs[2].durationSeconds).toBeGreaterThanOrEqual(0);
+      // Evento y rebanadas se escriben juntos.
+      expect(eventSliceRepository.createMany).toHaveBeenCalled();
     });
 
     it('should update event status to CLOSED with durationSeconds', async () => {
@@ -1252,19 +1296,19 @@ describe('SignalService', () => {
         durationSeconds: 100,
       });
 
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['closeEvent'](mockEvent);
 
       // Assert
-      const expectedData: Partial<Event> = {
-        durationSeconds: expect.any(Number) as unknown as number,
-      };
-      expect(eventRepository.updateStatus).toHaveBeenCalledWith(
+      expect(mockManager.update).toHaveBeenCalledWith(
+        Event,
         mockEvent.id,
-        EventStatus.CLOSED,
-        expect.objectContaining(expectedData)
+        expect.objectContaining({
+          status: EventStatus.CLOSED,
+          durationSeconds: expect.any(Number) as unknown as number,
+        })
       );
     });
 
@@ -1276,7 +1320,7 @@ describe('SignalService', () => {
         status: EventStatus.CLOSED,
       });
 
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['closeEvent'](mockEvent);
@@ -1296,7 +1340,7 @@ describe('SignalService', () => {
         durationSeconds: 100,
       });
 
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['closeEvent'](mockEvent);
@@ -1322,7 +1366,7 @@ describe('SignalService', () => {
         status: EventStatus.CLOSED,
       });
 
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['closeEvent'](mockEvent);
@@ -1341,7 +1385,7 @@ describe('SignalService', () => {
         status: EventStatus.CLOSED,
       });
 
-      eventRepository.updateStatus.mockResolvedValue(mockClosedEvent);
+      eventRepository.findById.mockResolvedValue(mockClosedEvent);
 
       // Act
       await service['closeEvent'](mockEvent);

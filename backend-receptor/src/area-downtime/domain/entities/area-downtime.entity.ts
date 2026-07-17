@@ -43,6 +43,34 @@ export class AreaDowntime {
   })
   endsAt?: Date;
 
+  /** Crudo: ends_at − start_at (segundos). NULL mientras está activo. */
+  @Column({ name: 'duration_seconds', type: 'integer', nullable: true })
+  durationSeconds?: number;
+
+  /** Descuento por paros programados aplicado al cerrar (segundos). */
+  @Column({
+    name: 'scheduled_downtime_discount_seconds',
+    type: 'integer',
+    nullable: true,
+  })
+  scheduledDowntimeDiscountSeconds?: number;
+
+  /** duration_seconds − scheduled_downtime_discount_seconds. Nunca negativo. */
+  @Column({
+    name: 'effective_duration_seconds',
+    type: 'integer',
+    nullable: true,
+  })
+  effectiveDurationSeconds?: number;
+
+  /** Traza congelada del descuento. */
+  @Column({
+    name: 'scheduled_downtime_snapshot',
+    type: 'jsonb',
+    nullable: true,
+  })
+  scheduledDowntimeSnapshot?: object | null;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp with time zone',

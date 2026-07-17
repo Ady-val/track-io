@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduledDowntimesModule } from '../scheduled-downtimes/scheduled-downtimes.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AreaDowntime } from './domain/entities/area-downtime.entity';
 import { AreaDowntimeEvent } from './domain/entities/area-downtime-event.entity';
@@ -10,7 +11,10 @@ import { AreaDowntimeController } from './controllers/area-downtime.controller';
 import { Event } from '../events/domain/entities/event.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AreaDowntime, AreaDowntimeEvent, Event])],
+  imports: [
+    ScheduledDowntimesModule,
+    TypeOrmModule.forFeature([AreaDowntime, AreaDowntimeEvent, Event]),
+  ],
   controllers: [AreaDowntimeController],
   providers: [
     AreaDowntimeService,

@@ -40,6 +40,10 @@ services:
       CORS_ORIGIN: '*'
       MODULE_MEASUREMENTS_ENABLED: ${MODULE_MEASUREMENTS_ENABLED:-true}
       MODULE_SIGNALS_ENABLED: ${MODULE_SIGNALS_ENABLED:-true}
+      # Zona horaria IANA de la planta. Las horas de los paros programados son
+      # hora de PARED de la planta; sin esto una ventana de "12:00" se
+      # resolvería a las 06:00. Una zona inválida hace fallar el arranque.
+      PLANT_TIMEZONE: ${PLANT_TIMEZONE:-America/Mexico_City}
       # Usuario admin inicial (lo siembra la migración CreateAdminUser). Cambiar en prod.
       ADMIN_USERNAME: ${ADMIN_USERNAME:-ADMIN}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}

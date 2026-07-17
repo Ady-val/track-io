@@ -13,6 +13,7 @@ import { Device } from '../devices/domain/entities/device.entity';
 import { DeviceSignal } from '../device-signals/domain/entities/device-signal.entity';
 import { AreaDowntimeModule } from '../area-downtime/area-downtime.module';
 import { AlertEscalationModule } from '../alert-escalation/alert-escalation.module';
+import { ScheduledDowntimesModule } from '../scheduled-downtimes/scheduled-downtimes.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AlertEscalationModule } from '../alert-escalation/alert-escalation.modu
     ]),
     AreaDowntimeModule,
     AlertEscalationModule,
+    ScheduledDowntimesModule,
   ],
   controllers: [SignalController],
   providers: [

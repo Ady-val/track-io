@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TypeOrmAreaDowntimeRepository } from '../../domain/repositories/typeorm-area-downtime.repository';
 import { TypeOrmAreaDowntimeEventRepository } from '../../domain/repositories/typeorm-area-downtime-event.repository';
 import { TypeOrmEventRepository } from '../../../events/domain/repositories/typeorm-event.repository';
+import { ScheduledDowntimeCalculatorService } from '../../../scheduled-downtimes/application/services/scheduled-downtime-calculator.service';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import type { AreaDowntime } from '../../domain/entities/area-downtime.entity';
 import type { Event } from '../../../events/domain/entities/event.entity';
@@ -19,7 +20,8 @@ export class AreaDowntimeService {
   constructor(
     private readonly areaDowntimeRepository: TypeOrmAreaDowntimeRepository,
     private readonly areaDowntimeEventRepository: TypeOrmAreaDowntimeEventRepository,
-    private readonly eventRepository: TypeOrmEventRepository
+    private readonly eventRepository: TypeOrmEventRepository,
+    private readonly scheduledDowntimeCalculatorService: ScheduledDowntimeCalculatorService
   ) {}
 
   async handleEventForAreaDowntime(event: Event): Promise<void> {
@@ -128,13 +130,69 @@ export class AreaDowntimeService {
     return areaDowntime;
   }
 
+  /**
+   * Cierra el downtime del área y congela su snapshot de paros programados.
+   *
+   * Este es el nivel de "cuánto estuvo parada la LÍNEA" (deduplicado: un solo
+   * downtime aunque haya varios eventos simultáneos), y es la fuente de verdad
+   * para los reportes de disponibilidad de Fase 2. Ver PLAN §1.2.
+   */
   private async endAreaDowntime(downtimeId: number): Promise<void> {
+    const downtime = await this.areaDowntimeRepository.findById(downtimeId);
+
+    if (!downtime) {
+      this.logger.warn(
+        `No se encontró el downtime ${downtimeId} al intentar cerrarlo`
+      );
+      return;
+    }
+
+    const endsAt = new Date();
+    // Misma retícula de segundo entero que el calculador (ver closeEvent):
+    // evita que el descuento supere al crudo por redondeo en ±1 s.
+    const durationSeconds = Math.max(
+      0,
+      Math.floor(endsAt.getTime() / 1000) -
+        Math.floor(downtime.startAt.getTime() / 1000)
+    );
+
+    // Igual que en el cierre de evento: el cálculo nunca puede romper el cierre.
+    let totalDiscountedSeconds = 0;
+    let snapshot: object | null = null;
+
+    try {
+      const result = await this.scheduledDowntimeCalculatorService.getDiscount(
+        downtime.areaId,
+        downtime.startAt,
+        endsAt
+      );
+      totalDiscountedSeconds = result.totalDiscountedSeconds;
+      snapshot = result;
+    } catch (error) {
+      this.logger.error(
+        `Fallo al calcular descuento de paros programados para el downtime ` +
+          `${downtimeId} (área ${downtime.areaId}); se cierra sin descuento: ` +
+          `${(error as Error).message}`,
+        (error as Error).stack
+      );
+    }
+
     await this.areaDowntimeRepository.update(downtimeId, {
       isActive: false,
-      endsAt: new Date(),
+      endsAt,
+      durationSeconds,
+      scheduledDowntimeDiscountSeconds: totalDiscountedSeconds,
+      effectiveDurationSeconds: Math.max(
+        0,
+        durationSeconds - totalDiscountedSeconds
+      ),
+      scheduledDowntimeSnapshot: snapshot,
     });
 
-    this.logger.log(`Ended downtime ${downtimeId}`);
+    this.logger.log(
+      `Ended downtime ${downtimeId} — crudo: ${durationSeconds} s, ` +
+        `descuento: ${totalDiscountedSeconds} s`
+    );
   }
 
   private async getActiveEventsForArea(areaId: number): Promise<Event[]> {

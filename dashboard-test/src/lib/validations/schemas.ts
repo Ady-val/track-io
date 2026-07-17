@@ -146,7 +146,10 @@ export const createDashboardMeasurementWithMeasurementSchema = z
 
 export const updateDashboardMeasurementWithMeasurementSchema = z
   .object({
-    externalId: z.string().min(1, "El External ID no puede estar vacío").optional(),
+    externalId: z
+      .string()
+      .min(1, "El External ID no puede estar vacío")
+      .optional(),
     name: z.string().min(1, "El nombre no puede estar vacío").optional(),
     type: measurementTypeEnum.optional(),
     groupId: z.number().int().positive().nullable().optional(),
@@ -354,6 +357,69 @@ export const updateReceptorSchema = z.object({
 
 export type CreateReceptorInput = z.infer<typeof createReceptorSchema>;
 export type UpdateReceptorInput = z.infer<typeof updateReceptorSchema>;
+
+// ============================================================================
+// Scheduled Downtime Schemas (Paros Programados)
+// ============================================================================
+
+const TIME_HHMM_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+const baseScheduledDowntimeShape = {
+  name: z
+    .string()
+    .min(1, "El nombre no puede estar vacío")
+    .max(255, "El nombre no puede exceder 255 caracteres"),
+  areaId: z.number().positive("Debes seleccionar un área"),
+  startTime: z
+    .string()
+    .regex(TIME_HHMM_REGEX, "La hora de inicio debe tener formato HH:mm"),
+  endTime: z
+    .string()
+    .regex(TIME_HHMM_REGEX, "La hora de fin debe tener formato HH:mm"),
+  daysOfWeek: z
+    .array(z.number().min(0).max(6))
+    .min(1, "Selecciona al menos un día de la semana"),
+  isActive: z.boolean().optional(),
+};
+
+// endTime < startTime es VÁLIDO: la ventana cruza medianoche y cierra al día
+// siguiente (ej. 23:00 -> 02:00), siguiendo el modelo DTSTART+DURATION de
+// RFC 5545. daysOfWeek son los días en que la ventana ARRANCA.
+// Solo se rechaza que sean iguales, por ambiguo (¿0 h o 24 h?).
+const SAME_TIME_MESSAGE =
+  "La hora de inicio y fin no pueden ser iguales. Para un día completo usa 00:00 a 23:59.";
+
+export const createScheduledDowntimeSchema = z
+  .object(baseScheduledDowntimeShape)
+  .refine((data) => data.endTime !== data.startTime, {
+    message: SAME_TIME_MESSAGE,
+    path: ["endTime"],
+  });
+
+export const updateScheduledDowntimeSchema = z
+  .object({
+    name: baseScheduledDowntimeShape.name.optional(),
+    areaId: baseScheduledDowntimeShape.areaId.optional(),
+    startTime: baseScheduledDowntimeShape.startTime.optional(),
+    endTime: baseScheduledDowntimeShape.endTime.optional(),
+    daysOfWeek: baseScheduledDowntimeShape.daysOfWeek.optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      !data.startTime || !data.endTime || data.endTime !== data.startTime,
+    {
+      message: SAME_TIME_MESSAGE,
+      path: ["endTime"],
+    }
+  );
+
+export type CreateScheduledDowntimeInput = z.infer<
+  typeof createScheduledDowntimeSchema
+>;
+export type UpdateScheduledDowntimeInput = z.infer<
+  typeof updateScheduledDowntimeSchema
+>;
 
 // ============================================================================
 // Role Schemas

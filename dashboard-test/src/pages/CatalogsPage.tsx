@@ -8,6 +8,7 @@ import { AreasCatalog } from "../components/organisms/catalogs/AreasCatalog";
 import { DepartmentsCatalog } from "../components/organisms/catalogs/DepartmentsCatalog";
 import { EmailsCatalog } from "../components/organisms/catalogs/EmailsCatalog";
 import { ReceptorsCatalog } from "../components/organisms/catalogs/ReceptorsCatalog";
+import { ScheduledDowntimesCatalog } from "../components/organisms/catalogs/ScheduledDowntimesCatalog";
 import { TorretaColorsCatalog } from "../components/organisms/catalogs/TorretaColorsCatalog";
 import { TorretasCatalog } from "../components/organisms/catalogs/TorretasCatalog";
 
@@ -17,7 +18,8 @@ type CatalogId =
   | "torretas"
   | "torreta-colors"
   | "receptors"
-  | "emails";
+  | "emails"
+  | "scheduled-downtimes";
 
 const allCatalogs = [
   {
@@ -40,6 +42,12 @@ const allCatalogs = [
   },
   { id: "receptors" as CatalogId, name: "Receptores", icon: "radio" },
   { id: "emails" as CatalogId, name: "Correos", icon: "mail" },
+  {
+    id: "scheduled-downtimes" as CatalogId,
+    name: "Paros Programados",
+    icon: "clock",
+    moduleType: ModuleType.SIGNALS,
+  },
 ];
 
 export function CatalogsPage() {
@@ -69,6 +77,10 @@ export function CatalogsPage() {
         return <ReceptorsCatalog />;
       case "emails":
         return <EmailsCatalog />;
+      case "scheduled-downtimes":
+        if (!modules[ModuleType.SIGNALS]) return null;
+
+        return <ScheduledDowntimesCatalog />;
       default:
         return <AreasCatalog />;
     }

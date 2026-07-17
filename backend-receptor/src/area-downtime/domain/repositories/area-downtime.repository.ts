@@ -9,6 +9,10 @@ export interface CreateAreaDowntimeDto {
 export interface UpdateAreaDowntimeDto {
   isActive?: boolean;
   endsAt?: Date;
+  durationSeconds?: number;
+  scheduledDowntimeDiscountSeconds?: number;
+  effectiveDurationSeconds?: number;
+  scheduledDowntimeSnapshot?: object | null;
 }
 
 export interface AreaDowntimeFilters {

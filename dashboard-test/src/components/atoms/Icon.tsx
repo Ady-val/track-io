@@ -16,6 +16,7 @@ import {
   FaBroadcastTower,
   FaEnvelope,
   FaLock,
+  FaClock,
 } from "react-icons/fa";
 import { FaShieldHalved } from "react-icons/fa6";
 import { MdTraffic } from "react-icons/md";
@@ -45,6 +46,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   palette: FaPalette,
   radio: FaBroadcastTower,
   mail: FaEnvelope,
+  clock: FaClock,
 };
 
 export const Icon: React.FC<IconProps> = ({

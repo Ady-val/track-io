@@ -15,6 +15,8 @@ export enum Module {
   RECEPTORS = 'receptors',
   EVENTS = 'events',
   EMAILS = 'emails',
+  SCHEDULED_DOWNTIMES = 'scheduled-downtimes',
+  REPORTS = 'reports',
   USERS = 'users',
   DASHBOARD = 'dashboard',
   ROLES_AND_PERMISSIONS = 'roles-and-permissions',

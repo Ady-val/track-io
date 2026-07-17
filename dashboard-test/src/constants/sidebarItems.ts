@@ -2,6 +2,7 @@ import type React from "react";
 
 import {
   FaChartLine,
+  FaChartColumn,
   FaGaugeHigh,
   FaIndustry,
   FaClock,
@@ -59,6 +60,13 @@ export const SidebarItems: SidebarItem[] = [
     icon: FaClock,
     label: "Tiempos de Paro",
     module: Module.AREA_DOWNTIME,
+    moduleType: ModuleType.SIGNALS,
+  },
+  {
+    path: "/dashboard/reportes",
+    icon: FaChartColumn,
+    label: "Reportes de Paros",
+    module: Module.REPORTS,
     moduleType: ModuleType.SIGNALS,
   },
   {

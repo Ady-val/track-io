@@ -28,16 +28,19 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { TestSeedService } from './seed/test-seed.service';
 import { User } from './users/domain/entities/user.entity';
 import systemModulesConfig from './config/system-modules.config';
+import plantTimezoneConfig from './config/plant-timezone.config';
 import { APP_GUARD } from '@nestjs/core';
 import { SystemModuleGuard } from './common/guards/system-module.guard';
 import { VirtualDeviceModule } from './virtual-device/virtual-device.module';
+import { ScheduledDowntimesModule } from './scheduled-downtimes/scheduled-downtimes.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [systemModulesConfig],
+      load: [systemModulesConfig, plantTimezoneConfig],
     }),
     ScheduleModule.forRoot(),
     HttpModule,
@@ -80,6 +83,8 @@ import { VirtualDeviceModule } from './virtual-device/virtual-device.module';
     AlertEscalationModule,
     EventsModule,
     VirtualDeviceModule,
+    ScheduledDowntimesModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

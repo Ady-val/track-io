@@ -19,6 +19,7 @@ import DashboardMeasurementsPage from "./pages/dashboardMeasurements";
 import { DevicesPage } from "./pages/DevicesPage";
 import { IndustrialDashboard } from "./pages/IndustrialDashboard";
 import RawSignalsPage from "./pages/rawSignals";
+import { ReportsPage } from "./pages/ReportsPage";
 import { RolesPage } from "./pages/RolesPage";
 import { UsersPage } from "./pages/UsersPage";
 
@@ -107,6 +108,18 @@ function App() {
                 </PermissionProtectedRoute>
               }
               path="downtimes"
+            />
+            <Route
+              element={
+                <PermissionProtectedRoute
+                  action={Action.READ}
+                  module={Module.REPORTS}
+                  moduleType={ModuleType.SIGNALS}
+                >
+                  <ReportsPage />
+                </PermissionProtectedRoute>
+              }
+              path="reportes"
             />
             <Route
               element={

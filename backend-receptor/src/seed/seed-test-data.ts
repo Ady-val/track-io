@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import type { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 
@@ -10,8 +11,19 @@ import { DeviceSignal } from '../device-signals/domain/entities/device-signal.en
 import { RawSignal } from '../signals/domain/entities/raw-signal.entity';
 import { ProcessedSignal } from '../signals/domain/entities/processed-signal.entity';
 import { Event, EventStatus } from '../events/domain/entities/event.entity';
+import {
+  EventScheduledDowntimeSlice,
+  SliceSegment,
+} from '../events/domain/entities/event-scheduled-downtime-slice.entity';
 import { AreaDowntime } from '../area-downtime/domain/entities/area-downtime.entity';
 import { AreaDowntimeEvent } from '../area-downtime/domain/entities/area-downtime-event.entity';
+import { ScheduledDowntime } from '../scheduled-downtimes/domain/entities/scheduled-downtime.entity';
+import { ScheduledDowntimeRepository } from '../scheduled-downtimes/domain/repositories/scheduled-downtime.repository';
+import { ScheduledDowntimeCacheService } from '../scheduled-downtimes/application/services/scheduled-downtime-cache.service';
+import {
+  ScheduledDowntimeCalculatorService,
+  type ScheduledDowntimeDiscount,
+} from '../scheduled-downtimes/application/services/scheduled-downtime-calculator.service';
 
 // Carga .env sólo en desarrollo local (dos niveles arriba: src/seed -> raíz del
 // paquete). En el contenedor de producción no existe ese archivo y las
@@ -19,9 +31,11 @@ import { AreaDowntimeEvent } from '../area-downtime/domain/entities/area-downtim
 dotenv.config({ path: join(__dirname, '..', '..', '.env') });
 
 /**
- * Datos de prueba para el pipeline de señales: RawSignal -> ProcessedSignal
- * -> DeviceSignal (catálogo) -> Event (paro registrado por área/departamento)
- * -> AreaDowntime (tiempo real de línea detenida).
+ * Datos de prueba para el pipeline completo:
+ *
+ *   RawSignal -> ProcessedSignal -> DeviceSignal (catálogo) -> Event (paro)
+ *                                        -> AreaDowntime (línea detenida)
+ *                                        -> descuento por ScheduledDowntime
  *
  * El patrón de generación (frecuencia diaria, solapes, duraciones) es
  * estático y determinista; sólo las fechas se calculan en tiempo de
@@ -29,19 +43,34 @@ dotenv.config({ path: join(__dirname, '..', '..', '.env') });
  * así que el script produce siempre el mismo resultado relativo sin
  * necesidad de tocarlo cada vez que se corre.
  *
- * Volumen objetivo: hasta 3 eventos por día, la mayoría de días con 1-2,
- * pocos días sin eventos.
+ * ## Paros programados
  *
- * Escenario de solape (2-3 veces por semana): dos eventos de la misma área
- * pero distinto departamento se traslapan en el tiempo (el segundo empieza
- * antes de que cierre el primero). El motor de AreaDowntime del backend
- * (ver area-downtime.service.ts) fusiona ambos en un único AreaDowntime
- * cuyo `startAt` es el inicio del primer evento y `endsAt` es el cierre del
- * último evento en cerrarse -- no la suma de los dos paros por separado.
- * Como este script inserta el histórico directamente en la base de datos
- * (sin pasar por el handler en vivo), calcula y siembra ese mismo resultado
- * en `area_downtimes` / `area_downtime_events` para que el escenario quede
- * demostrado también en esas tablas.
+ * El seed siembra el catálogo de paros programados (los tres tiempos de
+ * alimentos, de lunes a domingo) y luego genera los eventos SIN tenerlos en
+ * cuenta: un paro real ocurre cuando ocurre, se traslape o no con una ventana
+ * programada. Ese traslape es justamente lo que hay que demostrar.
+ *
+ * Para cada evento cerrado, el seed llama al MOTOR DE CÁLCULO REAL
+ * (`ScheduledDowntimeCalculatorService`, el mismo que usa `SignalService` al
+ * cerrar en vivo) y persiste crudo + descuento + efectivo + las rebanadas de
+ * trazabilidad. Los números sembrados no son inventados: salen del mismo
+ * código que corre en producción.
+ *
+ * ## Zona horaria (la trampa)
+ *
+ * `scheduled_downtimes.start_time` es HORA DE PARED DE LA PLANTA, y los
+ * contenedores corren en UTC. Por eso los eventos se construyen con
+ * `plantDateAt()` (hora de planta -> instante absoluto) y no con
+ * `Date.setHours()`, que usaría la hora local del servidor: en Docker un
+ * evento "de las 12:00" caería a las 06:00 de planta y no se traslaparía
+ * nunca con la comida.
+ *
+ * ## Escenarios de demostración
+ *
+ * Además del histórico de relleno, se siembran cinco eventos deterministas
+ * (DEMOS) que ejercitan cada caso interesante, y al terminar el script
+ * imprime el desglose de cada uno: evento, tiempo detenido del área, lapso de
+ * paro programado y, como resultado final, el tiempo de paro NO programado.
  */
 
 const AREA_NAMES = ['Linea 1', 'Linea 2', 'Linea 3', 'Linea 4', 'Linea 5'];
@@ -75,15 +104,155 @@ const REASONS: Record<string, { reason: string; comment: string }> = {
 const SEED_MARKER = '[SEED-TEST-DATA]';
 const TOTAL_DAYS = 60;
 
-function dateAt(daysAgo: number, hour: number, minute: number): Date {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  date.setHours(hour, minute, 0, 0);
-  return date;
+/**
+ * Zona horaria de la planta. Debe coincidir con `PLANT_TIMEZONE` del backend
+ * (`src/config/plant-timezone.config.ts`), o los descuentos que siembre este
+ * script no cuadrarán con los que calcule el backend en vivo.
+ */
+const PLANT_TZ = process.env['PLANT_TIMEZONE'] ?? 'America/Mexico_City';
+
+/** Todos los días de la semana. `Date.getDay()`: 0 = domingo … 6 = sábado. */
+const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
+
+/**
+ * Catálogo de paros programados sembrado en TODAS las áreas: los tres tiempos
+ * de alimentos, de lunes a domingo.
+ *
+ * La planta opera de continuo, así que lo único programado son las comidas: el
+ * tiempo productivo planeado es el calendario menos estas dos horas por día.
+ * Ninguna ventana se traslapa con otra ni cruza medianoche.
+ */
+const SCHEDULED_DOWNTIMES = [
+  {
+    name: 'Desayuno',
+    startTime: '08:00',
+    endTime: '08:30',
+    daysOfWeek: EVERY_DAY,
+  },
+  {
+    name: 'Comida',
+    startTime: '12:00',
+    endTime: '13:00',
+    daysOfWeek: EVERY_DAY,
+  },
+  {
+    name: 'Cena',
+    startTime: '19:00',
+    endTime: '19:30',
+    daysOfWeek: EVERY_DAY,
+  },
+];
+
+/** Fecha de calendario de la planta (sin hora, sin zona). month: 1-12. */
+interface PlantDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+/** Offset (ms) de una zona IANA en un instante dado. */
+function timeZoneOffsetMs(date: Date, timeZone: string): number {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const map: Record<string, number> = {};
+  for (const part of dtf.formatToParts(date)) {
+    if (part.type !== 'literal') map[part.type] = Number(part.value);
+  }
+
+  const asUTC = Date.UTC(
+    map['year']!,
+    map['month']! - 1,
+    map['day']!,
+    map['hour']! % 24,
+    map['minute']!,
+    map['second']!
+  );
+
+  return asUTC - date.getTime();
+}
+
+/** Fecha de calendario de la planta correspondiente a un instante absoluto. */
+function plantDateOf(instant: Date): PlantDate {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone: PLANT_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const map: Record<string, number> = {};
+  for (const part of dtf.formatToParts(instant)) {
+    if (part.type !== 'literal') map[part.type] = Number(part.value);
+  }
+
+  return { year: map['year']!, month: map['month']!, day: map['day']! };
+}
+
+function addPlantDays(date: PlantDate, days: number): PlantDate {
+  const shifted = new Date(Date.UTC(date.year, date.month - 1, date.day + days));
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+  };
+}
+
+/** Hora de pared de la planta (fecha + hora + minuto) -> instante absoluto. */
+function plantWallToInstant(date: PlantDate, hour: number, minute: number): Date {
+  const guess = Date.UTC(date.year, date.month - 1, date.day, hour, minute);
+
+  const offset1 = timeZoneOffsetMs(new Date(guess), PLANT_TZ);
+  let result = guess - offset1;
+
+  // Segunda pasada: cubre transiciones de horario de verano.
+  const offset2 = timeZoneOffsetMs(new Date(result), PLANT_TZ);
+  if (offset2 !== offset1) {
+    result = guess - offset2;
+  }
+
+  return new Date(result);
+}
+
+/**
+ * Instante absoluto de "hace N días, a tal hora DE PLANTA".
+ *
+ * Sustituye al viejo `dateAt()` basado en `Date.setHours()`, que usaba la hora
+ * local del proceso: en el contenedor (UTC) las 12:00 caían a las 06:00 de
+ * planta y ningún evento se traslapaba con la comida.
+ */
+function plantDateAt(daysAgo: number, hour: number, minute: number): Date {
+  const today = plantDateOf(new Date());
+  return plantWallToInstant(addPlantDays(today, -daysAgo), hour, minute);
 }
 
 function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60 * 1000);
+}
+
+/** Formatea un instante en hora de planta: '13/jul 12:00'. */
+function fmtPlant(date: Date): string {
+  return new Intl.DateTimeFormat('es-MX', {
+    timeZone: PLANT_TZ,
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+}
+
+/** Segundos -> '2h 30m'. */
+function fmtDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.round((seconds % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
 // Un "slot" es un evento individual, potencialmente parte de un grupo que
@@ -97,10 +266,145 @@ interface EventSlot {
   status: EventStatus;
   inProgressAt?: Date;
   closedAt?: Date;
+  /** Etiqueta del escenario de demostración al que pertenece, si aplica. */
+  demoKey?: string;
+}
+
+interface DemoScenario {
+  key: string;
+  title: string;
+  expectation: string;
+}
+
+const DEMO_SCENARIOS: DemoScenario[] = [
+  {
+    key: 'aceptacion',
+    title: 'Caso de aceptación: el paro se come la comida',
+    expectation:
+      'Paro 11:30-13:30 (2h) contra Comida 12:00-13:00 → 1h de paro NO programado, no 2h.',
+  },
+  {
+    key: 'sin-traslape',
+    title: 'Sin traslape: el descuento no inventa tiempo',
+    expectation:
+      'Paro 09:00-09:45 en pleno turno productivo → descuento 0, el paro real se reporta completo.',
+  },
+  {
+    key: 'medianoche',
+    title: 'Paro que cruza dos días: una rebanada por ocurrencia',
+    expectation:
+      'Paro 19:15 → 08:15 del día siguiente (13h) contra Cena 19:00-19:30 y Desayuno 08:00-08:30 → ' +
+      'DOS rebanadas con fechas distintas (15m + 15m), no una colapsada → 12h 30m de paro NO programado.',
+  },
+  {
+    key: 'varias-ventanas',
+    title: 'Un paro largo que cruza los tres tiempos de alimentos',
+    expectation:
+      'Paro 07:30-20:00 (12h 30m) contra Desayuno + Comida + Cena → descuento 2h (30m + 1h + 30m) ' +
+      '→ 10h 30m de paro NO programado.',
+  },
+  {
+    key: 'atencion',
+    title: 'Descuento repartido entre atención y solución',
+    expectation:
+      'Paro 11:45, atendido 12:30, cerrado 13:15. 1h 30m de reloj, pero sólo 30m productivos ' +
+      '(la comida parte el paro en dos). Es lo mismo que cuenta el escalamiento.',
+  },
+];
+
+/**
+ * Los cinco escenarios de demostración. Cada uno ocupa su propio día y área
+ * (ver `buildEventSlots`), de modo que su AreaDowntime no se mezcle con el
+ * ruido del histórico de relleno y los números del reporte final sean
+ * exactamente los del escenario.
+ */
+function buildDemoSlots(startGroupId: number): {
+  slots: EventSlot[];
+  nextGroupId: number;
+} {
+  let groupId = startGroupId;
+  const slots: EventSlot[] = [];
+
+  // 1. Caso de aceptación — Linea 1, Mantenimiento. 11:30 → 13:30.
+  const acceptanceStart = plantDateAt(3, 11, 30);
+  slots.push({
+    groupId: groupId++,
+    daysAgo: 3,
+    areaIndex: 0,
+    deptIndex: 0,
+    createdAt: acceptanceStart,
+    status: EventStatus.CLOSED,
+    inProgressAt: addMinutes(acceptanceStart, 5),
+    closedAt: addMinutes(acceptanceStart, 120),
+    demoKey: 'aceptacion',
+  });
+
+  // 2. Sin traslape — Linea 3, Calidad. 09:00 → 09:45, entre el desayuno y la
+  //    comida: ninguna ventana lo toca.
+  const cleanStart = plantDateAt(4, 9, 0);
+  slots.push({
+    groupId: groupId++,
+    daysAgo: 4,
+    areaIndex: 2,
+    deptIndex: 3,
+    createdAt: cleanStart,
+    status: EventStatus.CLOSED,
+    inProgressAt: addMinutes(cleanStart, 5),
+    closedAt: addMinutes(cleanStart, 45),
+    demoKey: 'sin-traslape',
+  });
+
+  // 3. Paro que cruza dos días — Linea 2, Materiales. 19:15 → 08:15 del día
+  //    siguiente: toca la cena de un día y el desayuno del otro, y debe
+  //    producir DOS rebanadas con fechas distintas.
+  const nightStart = plantDateAt(7, 19, 15);
+  slots.push({
+    groupId: groupId++,
+    daysAgo: 7,
+    areaIndex: 1,
+    deptIndex: 2,
+    createdAt: nightStart,
+    status: EventStatus.CLOSED,
+    inProgressAt: addMinutes(nightStart, 5),
+    closedAt: plantDateAt(6, 8, 15),
+    demoKey: 'medianoche',
+  });
+
+  // 4. Paro largo que cruza los tres alimentos — Linea 1, Ingeniería.
+  //    07:30 → 20:00.
+  const longStart = plantDateAt(5, 7, 30);
+  slots.push({
+    groupId: groupId++,
+    daysAgo: 5,
+    areaIndex: 0,
+    deptIndex: 1,
+    createdAt: longStart,
+    status: EventStatus.CLOSED,
+    inProgressAt: addMinutes(longStart, 10),
+    closedAt: plantDateAt(5, 20, 0),
+    demoKey: 'varias-ventanas',
+  });
+
+  // 5. Atención vs solución — Linea 4, Mantenimiento. La comida parte el paro
+  //    justo en medio: 11:45 → atendido 12:30 → cerrado 13:15.
+  slots.push({
+    groupId: groupId++,
+    daysAgo: 6,
+    areaIndex: 3,
+    deptIndex: 0,
+    createdAt: plantDateAt(6, 11, 45),
+    status: EventStatus.CLOSED,
+    inProgressAt: plantDateAt(6, 12, 30),
+    closedAt: plantDateAt(6, 13, 15),
+    demoKey: 'atencion',
+  });
+
+  return { slots, nextGroupId: groupId };
 }
 
 /**
  * Construye el calendario completo de eventos de prueba:
+ *  - Escenarios de demostración (arriba), que reservan su día en exclusiva.
  *  - Incidentes de solape: cada ~3-4 días (2-3 veces por semana) una misma
  *    área recibe dos eventos que se traslapan, siguiendo el patrón descrito
  *    por negocio (el segundo entra antes de que cierre el primero).
@@ -110,17 +414,29 @@ interface EventSlot {
  *    independientes en áreas distintas.
  *  - Relleno regular: patrón cíclico de 0-2 eventos independientes por día
  *    para el resto de la ventana de 60 días.
+ *
+ * Los eventos se generan SIN mirar el catálogo de paros programados: un paro
+ * real cae donde cae. Que algunos coincidan con la comida, el turno nocturno o
+ * el fin de semana es justamente lo que se quiere demostrar.
  */
 function buildEventSlots(): EventSlot[] {
-  const slots: EventSlot[] = [];
-  let nextGroupId = 1;
-  const usedDays = new Set<number>();
+  const demo = buildDemoSlots(1);
+  const slots: EventSlot[] = [...demo.slots];
+  let nextGroupId = demo.nextGroupId;
+
+  // Los días de demostración quedan reservados: el relleno no los toca, para
+  // que su AreaDowntime contenga exactamente el evento del escenario.
+  const usedDays = new Set<number>(demo.slots.map(s => s.daysAgo));
 
   // --- 1. Incidentes de solape (2 eventos de la misma área entrelazados) ---
   const incidentStepPattern = [3, 4, 3, 4]; // ~3.5 días de separación => 2-3/semana
   const incidentDays: number[] = [];
-  for (let d = 2, i = 0; d <= TOTAL_DAYS - 1; d += incidentStepPattern[i % incidentStepPattern.length]!, i++) {
-    incidentDays.push(d);
+  for (
+    let d = 2, i = 0;
+    d <= TOTAL_DAYS - 1;
+    d += incidentStepPattern[i % incidentStepPattern.length]!, i++
+  ) {
+    if (!usedDays.has(d)) incidentDays.push(d);
   }
   incidentDays.push(0); // el incidente más reciente queda activo (hoy)
 
@@ -133,7 +449,7 @@ function buildEventSlots(): EventSlot[] {
 
     const baseHour = 7 + ((i * 2) % 10); // 7..16
     const baseMinute = (i % 4) * 15; // 0,15,30,45
-    const aStart = dateAt(daysAgo, baseHour, baseMinute);
+    const aStart = plantDateAt(daysAgo, baseHour, baseMinute);
 
     if (daysAgo === 0) {
       // Incidente en curso: el primer evento ya está siendo atendido, el
@@ -202,7 +518,7 @@ function buildEventSlots(): EventSlot[] {
       const deptIndex = (i + slot * 2) % DEPARTMENTS.length;
       const hour = 7 + slot * 5;
       const minute = (slot * 20) % 60;
-      const createdAt = dateAt(daysAgo, hour, minute);
+      const createdAt = plantDateAt(daysAgo, hour, minute);
       const durationMinutes = 20 + ((i + slot) % 5) * 15;
 
       slots.push({
@@ -231,7 +547,7 @@ function buildEventSlots(): EventSlot[] {
       const deptIndex = (fillerIndex + slot * 3) % DEPARTMENTS.length;
       const hour = 6 + ((fillerIndex + slot * 4) % 15); // 6..20
       const minute = (slot * 25) % 60;
-      const createdAt = dateAt(daysAgo, hour, minute);
+      const createdAt = plantDateAt(daysAgo, hour, minute);
       const durationMinutes = 15 + ((fillerIndex + slot) % 6) * 15;
 
       slots.push({
@@ -321,6 +637,168 @@ async function findOrCreateDeviceSignal(
   return repo.save(repo.create({ name, deviceId, departmentId, externalValueId }));
 }
 
+/**
+ * Idempotente por (areaId, name): si el paro programado ya existe se
+ * actualizan sus horas/días en lugar de duplicarlo, de modo que reejecutar el
+ * seed tras cambiar `SCHEDULED_DOWNTIMES` deje el catálogo al día.
+ */
+async function findOrCreateScheduledDowntime(
+  dataSource: DataSource,
+  areaId: number,
+  config: { name: string; startTime: string; endTime: string; daysOfWeek: number[] }
+): Promise<ScheduledDowntime> {
+  const repo = dataSource.getRepository(ScheduledDowntime);
+  const existing = await repo.findOne({
+    where: { areaId, name: config.name },
+    withDeleted: true,
+  });
+
+  if (existing) {
+    existing.startTime = config.startTime;
+    existing.endTime = config.endTime;
+    existing.daysOfWeek = config.daysOfWeek;
+    existing.isActive = true;
+    if (existing.deletedAt) await repo.restore(existing.id);
+    return repo.save(existing);
+  }
+
+  return repo.save(
+    repo.create({
+      areaId,
+      name: config.name,
+      startTime: config.startTime,
+      endTime: config.endTime,
+      daysOfWeek: config.daysOfWeek,
+      isActive: true,
+    })
+  );
+}
+
+/**
+ * Instancia el motor de cálculo real fuera del contenedor de Nest.
+ *
+ * El seed no arranca la app (es un script suelto contra la BD), pero tampoco
+ * debe reimplementar el cálculo del descuento: sería una segunda fuente de
+ * verdad que se desincronizaría del backend en cuanto cambiara la lógica. Se
+ * construyen las tres piezas a mano y se usa el mismo servicio que
+ * `SignalService.closeEvent()`.
+ */
+function buildCalculator(dataSource: DataSource): ScheduledDowntimeCalculatorService {
+  const repository = new ScheduledDowntimeRepository(
+    dataSource.getRepository(ScheduledDowntime)
+  );
+  const cache = new ScheduledDowntimeCacheService(repository);
+  const configStub = {
+    get: (key: string): string | undefined =>
+      key === 'plant.timezone' ? PLANT_TZ : undefined,
+  } as unknown as ConfigService;
+
+  return new ScheduledDowntimeCalculatorService(cache, configStub);
+}
+
+/** Datos que el reporte final necesita de cada escenario de demostración. */
+interface DemoResult {
+  eventId: number;
+  areaName: string;
+  departmentName: string;
+  createdAt: Date;
+  inProgressAt: Date;
+  closedAt: Date;
+  durationSeconds: number;
+  discountSeconds: number;
+  responseDiscountSeconds: number;
+  effectiveSeconds: number;
+  slices: Array<{
+    name: string;
+    configuredStartTime: string;
+    configuredEndTime: string;
+    from: Date;
+    to: Date;
+    seconds: number;
+    segment: SliceSegment;
+  }>;
+  downtime: {
+    startAt: Date;
+    endsAt: Date;
+    durationSeconds: number;
+    discountSeconds: number;
+    effectiveSeconds: number;
+  };
+}
+
+function printDemoReport(results: Map<string, DemoResult>): void {
+  console.log('');
+  console.log('='.repeat(78));
+  console.log(`  DEMOSTRACIÓN — paros programados vs. paros reales`);
+  console.log(`  Zona horaria de planta: ${PLANT_TZ} (todas las horas de abajo)`);
+  console.log('='.repeat(78));
+
+  for (const scenario of DEMO_SCENARIOS) {
+    const r = results.get(scenario.key);
+    if (!r) continue;
+
+    console.log('');
+    console.log(`▸ ${scenario.title}`);
+    console.log(`  Esperado: ${scenario.expectation}`);
+    console.log('');
+    console.log(`  Evento #${r.eventId} — ${r.areaName} / ${r.departmentName}`);
+    console.log(
+      `    Inicio ${fmtPlant(r.createdAt)} → Atendido ${fmtPlant(r.inProgressAt)} ` +
+        `→ Cierre ${fmtPlant(r.closedAt)}`
+    );
+    console.log('');
+    console.log(
+      `    Tiempo detenido (crudo) .......... ${String(r.durationSeconds).padStart(6)} s  (${fmtDuration(r.durationSeconds)})`
+    );
+    console.log(
+      `    Paro programado dentro del paro .. ${String(r.discountSeconds).padStart(6)} s  (${fmtDuration(r.discountSeconds)})`
+    );
+
+    if (r.slices.length === 0) {
+      console.log('        · (ninguna ventana programada se traslapó)');
+    }
+    for (const s of r.slices) {
+      const tramo = s.segment === SliceSegment.RESPONSE ? 'atención' : 'solución';
+      console.log(
+        `        · ${s.name} (${s.configuredStartTime}–${s.configuredEndTime}) · ` +
+          `${fmtPlant(s.from)} → ${fmtPlant(s.to)} · ${s.seconds} s · durante la ${tramo}`
+      );
+    }
+
+    console.log(
+      `    ${'─'.repeat(34)}  ${'─'.repeat(8)}`
+    );
+    console.log(
+      `    PARO NO PROGRAMADO (resultado) ... ${String(r.effectiveSeconds).padStart(6)} s  (${fmtDuration(r.effectiveSeconds)})`
+    );
+
+    // La invariante que hace auditable el número: la suma de las rebanadas es
+    // exactamente el descuento, incluso con ventanas traslapadas entre sí.
+    const sliceSum = r.slices.reduce((sum, s) => sum + s.seconds, 0);
+    const ok =
+      sliceSum === r.discountSeconds &&
+      r.effectiveSeconds === r.durationSeconds - r.discountSeconds;
+    console.log(
+      `    Comprobación: Σ rebanadas = ${sliceSum} s = descuento; ` +
+        `${r.durationSeconds} − ${r.discountSeconds} = ${r.effectiveSeconds}  ${ok ? '✓' : '✗ INCONSISTENTE'}`
+    );
+
+    console.log('');
+    console.log(
+      `    Tiempo detenido del ÁREA (AreaDowntime): ` +
+        `${fmtPlant(r.downtime.startAt)} → ${fmtPlant(r.downtime.endsAt)}`
+    );
+    console.log(
+      `      crudo ${r.downtime.durationSeconds} s − programado ${r.downtime.discountSeconds} s ` +
+        `= NO programado ${r.downtime.effectiveSeconds} s (${fmtDuration(r.downtime.effectiveSeconds)})`
+    );
+  }
+
+  console.log('');
+  console.log('='.repeat(78));
+  console.log('');
+}
+
 async function seed(): Promise<void> {
   const dataSource = new DataSource({
     type: 'postgres',
@@ -339,6 +817,7 @@ async function seed(): Promise<void> {
 
   await dataSource.initialize();
   console.log('Conectado a la base de datos.');
+  console.log(`Zona horaria de planta: ${PLANT_TZ}`);
 
   try {
     // 1. Catálogos: áreas y departamentos.
@@ -388,9 +867,35 @@ async function seed(): Promise<void> {
       }
     }
 
-    // 4. Limpieza de datos de prueba previos (idempotencia) antes de
+    // 4. Catálogo de paros programados. Se siembra ANTES de los eventos
+    //    porque el motor de cálculo lo lee para descontar, pero los eventos se
+    //    generan sin mirarlo: un paro real ocurre cuando ocurre.
+    let scheduledDowntimesSeeded = 0;
+    for (const area of areas) {
+      for (const config of SCHEDULED_DOWNTIMES) {
+        await findOrCreateScheduledDowntime(dataSource, area.id, config);
+        scheduledDowntimesSeeded++;
+      }
+    }
+
+    // Purga de ventanas de corridas anteriores que ya no están en el catálogo:
+    // `findOrCreateScheduledDowntime` sólo crea o actualiza, así que sin esto
+    // un paro programado retirado del seed seguiría vivo en la BD y seguiría
+    // descontando tiempo.
+    const removedScheduled = await dataSource
+      .getRepository(ScheduledDowntime)
+      .createQueryBuilder()
+      .delete()
+      .where('area_id IN (:...areaIds)', { areaIds: areas.map(a => a.id) })
+      .andWhere('name NOT IN (:...names)', {
+        names: SCHEDULED_DOWNTIMES.map(s => s.name),
+      })
+      .execute();
+
+    // 5. Limpieza de datos de prueba previos (idempotencia) antes de
     //    re-sembrar el histórico, sin tocar los catálogos.
     const eventRepo = dataSource.getRepository(Event);
+    const sliceRepo = dataSource.getRepository(EventScheduledDowntimeSlice);
     const rawSignalRepo = dataSource.getRepository(RawSignal);
     const processedSignalRepo = dataSource.getRepository(ProcessedSignal);
     const areaDowntimeRepo = dataSource.getRepository(AreaDowntime);
@@ -412,6 +917,17 @@ async function seed(): Promise<void> {
         .where('area_id IN (:...areaIds)', { areaIds: seededAreaIds })
         .execute();
     }
+    // Las rebanadas cuelgan de los eventos por FK lógica (sin constraint DDL):
+    // hay que borrarlas explícitamente ANTES que sus eventos, o quedan huérfanas
+    // y el reporte de trazabilidad las mostraría contra eventos inexistentes.
+    await sliceRepo
+      .createQueryBuilder()
+      .delete()
+      .where(
+        'event_id IN (SELECT id FROM events WHERE comment LIKE :marker)',
+        { marker: `${SEED_MARKER}%` }
+      )
+      .execute();
     await eventRepo
       .createQueryBuilder()
       .delete()
@@ -428,11 +944,16 @@ async function seed(): Promise<void> {
       .where('device_signal_name LIKE :marker', { marker: `%${SEED_MARKER}` })
       .execute();
 
-    // 5. Pipeline de señales + eventos para cada slot generado, agrupado por
+    // 6. Pipeline de señales + eventos para cada slot generado, agrupado por
     //    groupId para poder calcular el AreaDowntime resultante.
+    const calculator = buildCalculator(dataSource);
     const slots = buildEventSlots();
     const eventIdsByGroup = new Map<number, number[]>();
     const slotsByGroup = new Map<number, EventSlot[]>();
+    const demoResults = new Map<string, DemoResult>();
+    const demoGroupKey = new Map<number, string>();
+    let slicesCreated = 0;
+    let discountedEvents = 0;
 
     for (const slot of slots) {
       const area = areas[slot.areaIndex]!;
@@ -491,12 +1012,58 @@ async function seed(): Promise<void> {
         comment: `${SEED_MARKER} ${texts.comment}`,
         createdAt,
       };
-      if (slot.inProgressAt) eventData.inProgressAt = slot.inProgressAt;
+
+      // Descuento por paros programados, calculado con el MOTOR REAL y
+      // repartido en los dos tramos del ciclo (atención / solución) igual que
+      // hace SignalService.closeEvent(). Los eventos abiertos no llevan
+      // descuento: se congela al cerrar.
+      let responseDiscount: ScheduledDowntimeDiscount | null = null;
+      let resolutionDiscount: ScheduledDowntimeDiscount | null = null;
+
       if (slot.closedAt) {
-        eventData.closedAt = slot.closedAt;
-        eventData.durationSeconds = Math.round(
+        const durationSeconds = Math.round(
           (slot.closedAt.getTime() - createdAt.getTime()) / 1000
         );
+
+        if (slot.inProgressAt) {
+          responseDiscount = await calculator.getDiscount(
+            area.id,
+            createdAt,
+            slot.inProgressAt
+          );
+          resolutionDiscount = await calculator.getDiscount(
+            area.id,
+            slot.inProgressAt,
+            slot.closedAt
+          );
+        } else {
+          resolutionDiscount = await calculator.getDiscount(
+            area.id,
+            createdAt,
+            slot.closedAt
+          );
+        }
+
+        // Los dos tramos son contiguos y disjuntos, así que el total es la
+        // suma exacta — no hace falta recalcular sobre el rango completo.
+        const discountTotal =
+          (responseDiscount?.totalDiscountedSeconds ?? 0) +
+          resolutionDiscount.totalDiscountedSeconds;
+
+        if (slot.inProgressAt) eventData.inProgressAt = slot.inProgressAt;
+        eventData.closedAt = slot.closedAt;
+        eventData.durationSeconds = durationSeconds;
+        eventData.scheduledDowntimeDiscountSeconds = discountTotal;
+        eventData.effectiveDurationSeconds = Math.max(
+          0,
+          durationSeconds - discountTotal
+        );
+        if (responseDiscount) {
+          eventData.responseDiscountSeconds = responseDiscount.totalDiscountedSeconds;
+        }
+        if (discountTotal > 0) discountedEvents++;
+      } else if (slot.inProgressAt) {
+        eventData.inProgressAt = slot.inProgressAt;
       }
 
       const event = await eventRepo.save(eventRepo.create(eventData));
@@ -509,6 +1076,78 @@ async function seed(): Promise<void> {
         .where('id = :id', { id: event.id })
         .execute();
 
+      // Rebanadas de trazabilidad: el "de qué hora a qué hora" influyó cada
+      // paro programado, con nombre y ventana congelados.
+      const sliceRows = [
+        ...(responseDiscount
+          ? responseDiscount.slices.map(s => ({
+              discount: responseDiscount!,
+              slice: s,
+              segment: SliceSegment.RESPONSE,
+            }))
+          : []),
+        ...(resolutionDiscount
+          ? resolutionDiscount.slices.map(s => ({
+              discount: resolutionDiscount!,
+              slice: s,
+              segment: SliceSegment.RESOLUTION,
+            }))
+          : []),
+      ];
+
+      if (sliceRows.length > 0) {
+        await sliceRepo.save(
+          sliceRepo.create(
+            sliceRows.map(({ discount, slice, segment }) => ({
+              eventId: event.id,
+              scheduledDowntimeId: slice.scheduledDowntimeId,
+              name: slice.name,
+              configuredStartTime: slice.configuredStartTime,
+              configuredEndTime: slice.configuredEndTime,
+              occurredFrom: slice.from,
+              occurredTo: slice.to,
+              seconds: slice.seconds,
+              segment,
+              timezone: discount.timezone,
+            }))
+          )
+        );
+        slicesCreated += sliceRows.length;
+      }
+
+      if (slot.demoKey && slot.inProgressAt && slot.closedAt) {
+        demoGroupKey.set(slot.groupId, slot.demoKey);
+        demoResults.set(slot.demoKey, {
+          eventId: event.id,
+          areaName: area.name,
+          departmentName: department.name,
+          createdAt,
+          inProgressAt: slot.inProgressAt,
+          closedAt: slot.closedAt,
+          durationSeconds: eventData.durationSeconds!,
+          discountSeconds: eventData.scheduledDowntimeDiscountSeconds!,
+          responseDiscountSeconds: eventData.responseDiscountSeconds ?? 0,
+          effectiveSeconds: eventData.effectiveDurationSeconds!,
+          slices: sliceRows.map(({ slice, segment }) => ({
+            name: slice.name,
+            configuredStartTime: slice.configuredStartTime,
+            configuredEndTime: slice.configuredEndTime,
+            from: slice.from,
+            to: slice.to,
+            seconds: slice.seconds,
+            segment,
+          })),
+          // Se rellena al construir el AreaDowntime del grupo, más abajo.
+          downtime: {
+            startAt: createdAt,
+            endsAt: slot.closedAt,
+            durationSeconds: 0,
+            discountSeconds: 0,
+            effectiveSeconds: 0,
+          },
+        });
+      }
+
       const groupEventIds = eventIdsByGroup.get(slot.groupId) ?? [];
       groupEventIds.push(event.id);
       eventIdsByGroup.set(slot.groupId, groupEventIds);
@@ -518,10 +1157,12 @@ async function seed(): Promise<void> {
       slotsByGroup.set(slot.groupId, groupSlots);
     }
 
-    // 6. AreaDowntime por grupo: replica la lógica de negocio
+    // 7. AreaDowntime por grupo: replica la lógica de negocio
     //    (area-downtime.service.ts) sin pasar por el handler en vivo --
     //    startAt = inicio del primer evento del grupo, endsAt = cierre del
     //    último evento del grupo en cerrarse, isActive si alguno sigue abierto.
+    //    El descuento se calcula sobre el intervalo del ÁREA, no sumando el de
+    //    los eventos: dos eventos traslapados detienen la línea una sola vez.
     let downtimesCreated = 0;
     for (const [groupId, groupSlots] of slotsByGroup.entries()) {
       const eventIds = eventIdsByGroup.get(groupId)!;
@@ -539,13 +1180,43 @@ async function seed(): Promise<void> {
             groupSlots[0]!.closedAt!
           );
 
+      const downtimeData: Partial<AreaDowntime> = {
+        areaId,
+        startAt,
+        isActive: stillActive,
+      };
+
+      if (endsAt) {
+        const durationSeconds = Math.max(
+          0,
+          Math.round((endsAt.getTime() - startAt.getTime()) / 1000)
+        );
+        const discount = await calculator.getDiscount(areaId, startAt, endsAt);
+
+        downtimeData.endsAt = endsAt;
+        downtimeData.durationSeconds = durationSeconds;
+        downtimeData.scheduledDowntimeDiscountSeconds = discount.totalDiscountedSeconds;
+        downtimeData.effectiveDurationSeconds = Math.max(
+          0,
+          durationSeconds - discount.totalDiscountedSeconds
+        );
+        downtimeData.scheduledDowntimeSnapshot = discount;
+
+        const demoKey = demoGroupKey.get(groupId);
+        const demoResult = demoKey ? demoResults.get(demoKey) : undefined;
+        if (demoResult) {
+          demoResult.downtime = {
+            startAt,
+            endsAt,
+            durationSeconds,
+            discountSeconds: discount.totalDiscountedSeconds,
+            effectiveSeconds: downtimeData.effectiveDurationSeconds,
+          };
+        }
+      }
+
       const areaDowntime = await areaDowntimeRepo.save(
-        areaDowntimeRepo.create({
-          areaId,
-          startAt,
-          isActive: stillActive,
-          ...(endsAt ? { endsAt } : {}),
-        })
+        areaDowntimeRepo.create(downtimeData)
       );
 
       for (const eventId of eventIds) {
@@ -565,9 +1236,20 @@ async function seed(): Promise<void> {
     console.log(`Departamentos: ${departments.length}`);
     console.log(`Dispositivos: ${devices.length}`);
     console.log(`Señales de dispositivo: ${signalsByAreaDept.size}`);
+    console.log(
+      `Paros programados: ${scheduledDowntimesSeeded}` +
+        (removedScheduled.affected
+          ? ` (${removedScheduled.affected} obsoletos eliminados)`
+          : '')
+    );
     console.log(`Eventos creados: ${slots.length}`);
+    console.log(`  de los cuales con descuento por paro programado: ${discountedEvents}`);
+    console.log(`Rebanadas de trazabilidad creadas: ${slicesCreated}`);
     console.log(`AreaDowntimes creados: ${downtimesCreated}`);
     console.log(`  de los cuales con eventos entrelazados (2+ eventos): ${overlapGroups}`);
+
+    printDemoReport(demoResults);
+
     console.log('Seed de datos de prueba completado.');
   } finally {
     await dataSource.destroy();

@@ -11,6 +11,7 @@ import {
 } from '../../../test-helpers';
 import { EventStatus } from '../../../events/domain/entities/event.entity';
 import type { AreaDowntimeFilters } from '../../domain/repositories/area-downtime.repository';
+import { ScheduledDowntimeCalculatorService } from '../../../scheduled-downtimes/application/services/scheduled-downtime-calculator.service';
 
 describe('AreaDowntimeService', () => {
   let service: AreaDowntimeService;
@@ -22,6 +23,18 @@ describe('AreaDowntimeService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AreaDowntimeService,
+        {
+          // Por defecto sin descuento: aísla estos tests de la lógica de
+          // paros programados (cubierta en su propio spec).
+          provide: ScheduledDowntimeCalculatorService,
+          useValue: {
+            getDiscount: jest.fn().mockResolvedValue({
+              timezone: 'America/Chihuahua',
+              totalDiscountedSeconds: 0,
+              slices: [],
+            }),
+          },
+        },
         {
           provide: TypeOrmAreaDowntimeRepository,
           useValue: {
@@ -116,6 +129,9 @@ describe('AreaDowntimeService', () => {
 
       eventRepository.findActiveByArea.mockResolvedValue(activeEvents);
       areaDowntimeRepository.findActiveByAreaId.mockResolvedValue(mockDowntime);
+      // endAreaDowntime ahora lee el downtime para conocer su startAt y calcular
+      // el descuento por paros programados sobre [startAt, endsAt).
+      areaDowntimeRepository.findById.mockResolvedValue(mockDowntime);
       areaDowntimeRepository.update.mockResolvedValue(mockDowntime);
 
       await service.handleEventForAreaDowntime(event);
@@ -123,6 +139,10 @@ describe('AreaDowntimeService', () => {
       expect(areaDowntimeRepository.update).toHaveBeenCalledWith(1, {
         isActive: false,
         endsAt: expect.any(Date) as unknown as Date,
+        durationSeconds: expect.any(Number) as unknown as number,
+        scheduledDowntimeDiscountSeconds: 0,
+        effectiveDurationSeconds: expect.any(Number) as unknown as number,
+        scheduledDowntimeSnapshot: expect.any(Object) as unknown as object,
       });
     });
 
@@ -361,6 +381,9 @@ describe('AreaDowntimeService', () => {
       });
 
       areaDowntimeRepository.findActiveByAreaId.mockResolvedValue(mockDowntime);
+      // endAreaDowntime ahora lee el downtime para conocer su startAt y poder
+      // calcular el descuento por paros programados sobre [startAt, endsAt).
+      areaDowntimeRepository.findById.mockResolvedValue(mockDowntime);
       areaDowntimeRepository.update.mockResolvedValue(mockDowntime);
 
       const result = await service.endDowntime(areaId);
@@ -369,6 +392,10 @@ describe('AreaDowntimeService', () => {
       expect(areaDowntimeRepository.update).toHaveBeenCalledWith(1, {
         isActive: false,
         endsAt: expect.any(Date) as unknown as Date,
+        durationSeconds: expect.any(Number) as unknown as number,
+        scheduledDowntimeDiscountSeconds: 0,
+        effectiveDurationSeconds: expect.any(Number) as unknown as number,
+        scheduledDowntimeSnapshot: expect.any(Object) as unknown as object,
       });
     });
 

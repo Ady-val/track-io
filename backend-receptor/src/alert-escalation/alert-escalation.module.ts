@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduledDowntimesModule } from '../scheduled-downtimes/scheduled-downtimes.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 
@@ -25,6 +26,7 @@ import { Event } from '../events/domain/entities/event.entity';
 
 @Module({
   imports: [
+    ScheduledDowntimesModule,
     TypeOrmModule.forFeature([
       AlertEscalationConfig,
       AlertEscalationMessage,

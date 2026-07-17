@@ -2,6 +2,7 @@ import type React from "react";
 
 import {
   FaChartLine,
+  FaChartColumn,
   FaGaugeHigh,
   FaIndustry,
   FaClock,
@@ -17,6 +18,7 @@ import { DevicesPage } from "@/pages/DevicesPage";
 import IndexPage from "@/pages/index";
 import { IndustrialDashboard } from "@/pages/IndustrialDashboard";
 import RawSignalsPage from "@/pages/rawSignals";
+import { ReportsPage } from "@/pages/ReportsPage";
 
 export interface RouteConfig {
   path: string;
@@ -81,6 +83,14 @@ export const routesConfig: RouteConfig[] = [
         element: AreaDowntimesPage,
         title: "Tiempos de Paro",
         icon: FaClock,
+        isProtected: true,
+        showInSidebar: true,
+      },
+      {
+        path: "reportes",
+        element: ReportsPage,
+        title: "Reportes de Paros",
+        icon: FaChartColumn,
         isProtected: true,
         showInSidebar: true,
       },

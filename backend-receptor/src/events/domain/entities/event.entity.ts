@@ -92,6 +92,40 @@ export class Event {
   })
   durationSeconds?: number;
 
+  /**
+   * Descuento por paros programados aplicado al cerrar (segundos).
+   * NULL mientras el evento está abierto; 0 si no hubo traslape.
+   * Ver documentation/PLAN_MIGRACION_IOTRACK.md §1.3.2.
+   */
+  @Column({
+    name: 'scheduled_downtime_discount_seconds',
+    type: 'integer',
+    nullable: true,
+  })
+  scheduledDowntimeDiscountSeconds?: number;
+
+  /** duration_seconds − scheduled_downtime_discount_seconds. Nunca negativo. */
+  @Column({
+    name: 'effective_duration_seconds',
+    type: 'integer',
+    nullable: true,
+  })
+  effectiveDurationSeconds?: number;
+
+  /**
+   * Parte del descuento por paros programados que cayó dentro del tramo de
+   * ATENCIÓN (`created_at` → `in_progress_at`). NULL mientras el evento está
+   * abierto (o si `in_progress_at` era null al cerrar). Ver BUILD_SPEC_FASE2 §4.1.
+   * El descuento del tramo de solución se deriva:
+   *   resolutionDiscount = scheduled_downtime_discount_seconds − response_discount_seconds.
+   */
+  @Column({
+    name: 'response_discount_seconds',
+    type: 'integer',
+    nullable: true,
+  })
+  responseDiscountSeconds?: number;
+
   @Column({ name: 'virtual_device', type: 'boolean', default: false })
   virtualDevice!: boolean;
 
