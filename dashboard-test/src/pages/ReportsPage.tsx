@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import { InsightsButton } from "@/components/organisms/insights/InsightsButton";
 import { DowntimeParetoChart } from "@/components/organisms/reports/DowntimeParetoChart";
 import { DowntimeTrendChart } from "@/components/organisms/reports/DowntimeTrendChart";
 import { EventTraceTable } from "@/components/organisms/reports/EventTraceTable";
@@ -55,6 +56,15 @@ export function ReportsPage() {
 
       <ReportFilters
         exporting={exporting}
+        insightsSlot={
+          <InsightsButton
+            areaId={filters?.areaId}
+            disabled={!filters}
+            from={filters?.from ?? ""}
+            groupBy={filters?.groupBy ?? "day"}
+            to={filters?.to ?? ""}
+          />
+        }
         showScheduled={showScheduled}
         onChange={handleFilterChange}
         onExport={handleExport}
@@ -116,11 +126,17 @@ export function ReportsPage() {
                 Atención vs solución (promedio por departamento)
               </h3>
               <ResponseResolutionChart
-                data={report.byDepartment.map((d) => ({
-                  label: d.departmentName,
-                  responseSeconds: d.avgResponseSeconds ?? 0,
-                  resolutionSeconds: d.avgResolutionSeconds ?? 0,
-                }))}
+                data={report.byDepartment
+                  .filter(
+                    (d) =>
+                      d.avgResponseSeconds != null ||
+                      d.avgResolutionSeconds != null
+                  )
+                  .map((d) => ({
+                    label: d.departmentName,
+                    responseSeconds: d.avgResponseSeconds ?? 0,
+                    resolutionSeconds: d.avgResolutionSeconds ?? 0,
+                  }))}
               />
             </div>
           </div>
@@ -130,11 +146,13 @@ export function ReportsPage() {
             <DowntimeTrendChart
               data={report.trend.map((t) => ({
                 bucket: t.bucket,
-                scheduledSeconds: t.scheduledDowntimeSeconds,
                 unplannedSeconds: t.unplannedDowntimeSeconds,
+                availability: t.availability,
+                scheduledSeconds: t.scheduledDowntimeSeconds,
+                plannedProductionSeconds: t.plannedProductionSeconds,
+                calendarSeconds: t.calendarSeconds,
               }))}
               groupBy={report.range.groupBy}
-              showScheduled={showScheduled}
             />
           </div>
 

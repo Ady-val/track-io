@@ -34,6 +34,7 @@ import { SystemModuleGuard } from './common/guards/system-module.guard';
 import { VirtualDeviceModule } from './virtual-device/virtual-device.module';
 import { ScheduledDowntimesModule } from './scheduled-downtimes/scheduled-downtimes.module';
 import { ReportsModule } from './reports/reports.module';
+import { InsightsModule } from './insights/insights.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { ReportsModule } from './reports/reports.module';
     VirtualDeviceModule,
     ScheduledDowntimesModule,
     ReportsModule,
+    InsightsModule,
   ],
   controllers: [AppController],
   providers: [

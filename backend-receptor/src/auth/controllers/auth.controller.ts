@@ -123,6 +123,7 @@ export class AuthController {
       modules: {
         signals: boolean;
         measurements: boolean;
+        insights: boolean;
       };
     };
   }> {
@@ -133,6 +134,7 @@ export class AuthController {
     // Access config values using enum keys (uppercase) and map to lowercase for API response
     const signalsEnabled = modules[SystemModule.SIGNALS] ?? false;
     const measurementsEnabled = modules[SystemModule.MEASUREMENTS] ?? false;
+    const insightsEnabled = modules[SystemModule.INSIGHTS] ?? false;
 
     return {
       message: 'Current user retrieved successfully',
@@ -142,6 +144,7 @@ export class AuthController {
         modules: {
           signals: signalsEnabled,
           measurements: measurementsEnabled,
+          insights: insightsEnabled,
         },
       },
     };

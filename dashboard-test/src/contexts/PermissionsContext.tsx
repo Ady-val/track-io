@@ -13,11 +13,13 @@ import { useAuth } from "./AuthContext";
 export enum ModuleType {
   SIGNALS = "signals",
   MEASUREMENTS = "measurements",
+  INSIGHTS = "insights",
 }
 
 export interface UserModulesType {
   [ModuleType.SIGNALS]: boolean;
   [ModuleType.MEASUREMENTS]: boolean;
+  [ModuleType.INSIGHTS]: boolean;
 }
 
 export interface Permission {
@@ -37,6 +39,7 @@ export interface UserPermissions {
   modules: {
     signals: boolean;
     measurements: boolean;
+    insights: boolean;
   };
 }
 
@@ -66,6 +69,7 @@ export function PermissionsProvider({
   const [modules, setModules] = useState<UserModulesType>({
     [ModuleType.SIGNALS]: false,
     [ModuleType.MEASUREMENTS]: false,
+    [ModuleType.INSIGHTS]: false,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +97,7 @@ export function PermissionsProvider({
       setModules({
         [ModuleType.SIGNALS]: modules.signals,
         [ModuleType.MEASUREMENTS]: modules.measurements,
+        [ModuleType.INSIGHTS]: modules.insights,
       });
     } catch (err) {
       const errorMessage =
@@ -107,6 +112,7 @@ export function PermissionsProvider({
       setModules({
         [ModuleType.SIGNALS]: false,
         [ModuleType.MEASUREMENTS]: false,
+        [ModuleType.INSIGHTS]: false,
       });
     } finally {
       setIsLoading(false);

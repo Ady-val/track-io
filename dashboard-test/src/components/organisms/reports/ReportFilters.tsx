@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { useAreas, type Area } from "@/hooks/useCatalogs";
@@ -73,12 +74,14 @@ export function ReportFilters({
   exporting,
   showScheduled,
   onShowScheduledChange,
+  insightsSlot,
 }: {
   onChange: (value: ReportFilterValue) => void;
   onExport: () => void;
   exporting: boolean;
   showScheduled: boolean;
   onShowScheduledChange: (value: boolean) => void;
+  insightsSlot?: ReactNode;
 }) {
   const { data: areasData } = useAreas();
   const areas: Area[] = areasData?.data ?? [];
@@ -212,15 +215,18 @@ export function ReportFilters({
         </Select>
       </div>
 
-      <Button
-        className="text-white ml-auto"
-        color="success"
-        isLoading={exporting}
-        variant="solid"
-        onPress={onExport}
-      >
-        Exportar a Excel
-      </Button>
+      <div className="flex items-center gap-2 ml-auto">
+        {insightsSlot}
+        <Button
+          className="text-white"
+          color="success"
+          isLoading={exporting}
+          variant="solid"
+          onPress={onExport}
+        >
+          Exportar a Excel
+        </Button>
+      </div>
     </div>
   );
 }
