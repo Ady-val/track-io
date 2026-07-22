@@ -287,13 +287,18 @@ export class DowntimeReportService {
       .getMany();
   }
 
-  /** Tramos efectivos derivados de un evento (§4.1). null si no atendido. */
-  private effectiveTimes(event: Event): {
-    effResponse: number | null;
-    effResolution: number | null;
-  } {
+  /**
+   * Tiempos crudos (wall) y efectivos de atención/solución de un evento.
+   * `null` si no fue atendido (sin `in_progress_at`) o no está cerrado.
+   */
+  private segmentTimes(event: Event): {
+    responseSeconds: number;
+    resolutionSeconds: number;
+    effResponse: number;
+    effResolution: number;
+  } | null {
     if (!event.inProgressAt || !event.closedAt) {
-      return { effResponse: null, effResolution: null };
+      return null;
     }
     const responseSeconds = Math.max(
       0,
@@ -312,30 +317,61 @@ export class DowntimeReportService {
       (event.scheduledDowntimeDiscountSeconds ?? 0) - responseDiscount;
 
     return {
+      responseSeconds,
+      resolutionSeconds,
       effResponse: Math.max(0, responseSeconds - responseDiscount),
       effResolution: Math.max(0, resolutionSeconds - resolutionDiscount),
     };
+  }
+
+  /**
+   * Un evento entra al promedio de un tramo solo si hubo algo que medir:
+   * `wall > 0 && effective === 0` significa que la ventana cayó ENTERA en
+   * paro programado (fin de semana, comida) — no es "atendieron en 0
+   * minutos", es que la pregunta no aplica. `wall === 0 && effective === 0`
+   * SÍ es un cero real (atención/solución instantánea) y cuenta.
+   * Los tramos se evalúan por separado: un evento puede excluirse de
+   * atención y aun así contar en solución.
+   */
+  private includesInAverage(
+    wallSeconds: number,
+    effectiveSeconds: number
+  ): boolean {
+    return !(wallSeconds > 0 && effectiveSeconds === 0);
   }
 
   private computeAverages(events: Event[]): {
     avgResponse: number | null;
     avgResolution: number | null;
   } {
-    // Excluye los eventos sin in_progress_at: no los cuenta como 0 (§5.5).
-    const attended = events.filter(e => e.inProgressAt != null);
-    if (attended.length === 0) {
-      return { avgResponse: null, avgResolution: null };
-    }
     let sumResponse = 0;
+    let countResponse = 0;
     let sumResolution = 0;
-    for (const event of attended) {
-      const { effResponse, effResolution } = this.effectiveTimes(event);
-      sumResponse += effResponse ?? 0;
-      sumResolution += effResolution ?? 0;
+    let countResolution = 0;
+
+    for (const event of events) {
+      const times = this.segmentTimes(event);
+      if (!times) continue; // no atendido (§5.5)
+
+      if (this.includesInAverage(times.responseSeconds, times.effResponse)) {
+        sumResponse += times.effResponse;
+        countResponse += 1;
+      }
+      if (
+        this.includesInAverage(times.resolutionSeconds, times.effResolution)
+      ) {
+        sumResolution += times.effResolution;
+        countResolution += 1;
+      }
     }
+
     return {
-      avgResponse: Math.round(sumResponse / attended.length),
-      avgResolution: Math.round(sumResolution / attended.length),
+      avgResponse:
+        countResponse > 0 ? Math.round(sumResponse / countResponse) : null,
+      avgResolution:
+        countResolution > 0
+          ? Math.round(sumResolution / countResolution)
+          : null,
     };
   }
 
@@ -363,8 +399,9 @@ export class DowntimeReportService {
       unplannedDowntimeSeconds: number;
       eventCount: number;
       responseSum: number;
+      responseCount: number;
       resolutionSum: number;
-      attendedCount: number;
+      resolutionCount: number;
     }
     const byDept = new Map<number, Acc>();
 
@@ -378,19 +415,28 @@ export class DowntimeReportService {
           unplannedDowntimeSeconds: 0,
           eventCount: 0,
           responseSum: 0,
+          responseCount: 0,
           resolutionSum: 0,
-          attendedCount: 0,
+          resolutionCount: 0,
         };
         byDept.set(deptId, acc);
       }
       acc.unplannedDowntimeSeconds +=
         event.effectiveDurationSeconds ?? event.durationSeconds ?? 0;
       acc.eventCount += 1;
-      if (event.inProgressAt != null) {
-        const { effResponse, effResolution } = this.effectiveTimes(event);
-        acc.responseSum += effResponse ?? 0;
-        acc.resolutionSum += effResolution ?? 0;
-        acc.attendedCount += 1;
+
+      const times = this.segmentTimes(event);
+      if (times) {
+        if (this.includesInAverage(times.responseSeconds, times.effResponse)) {
+          acc.responseSum += times.effResponse;
+          acc.responseCount += 1;
+        }
+        if (
+          this.includesInAverage(times.resolutionSeconds, times.effResolution)
+        ) {
+          acc.resolutionSum += times.effResolution;
+          acc.resolutionCount += 1;
+        }
       }
     }
 
@@ -409,12 +455,12 @@ export class DowntimeReportService {
         unplannedDowntimeSeconds: r.unplannedDowntimeSeconds,
         eventCount: r.eventCount,
         avgResponseSeconds:
-          r.attendedCount > 0
-            ? Math.round(r.responseSum / r.attendedCount)
+          r.responseCount > 0
+            ? Math.round(r.responseSum / r.responseCount)
             : null,
         avgResolutionSeconds:
-          r.attendedCount > 0
-            ? Math.round(r.resolutionSum / r.attendedCount)
+          r.resolutionCount > 0
+            ? Math.round(r.resolutionSum / r.resolutionCount)
             : null,
         cumulativePercent: total > 0 ? (cumulative / total) * 100 : 0,
       };
@@ -462,6 +508,7 @@ export class DowntimeReportService {
 
       trend.push({
         bucket: bucket.label,
+        calendarSeconds,
         scheduledDowntimeSeconds: scheduled,
         unplannedDowntimeSeconds: unplanned,
         plannedProductionSeconds: planned,
@@ -528,25 +575,11 @@ export class DowntimeReportService {
     event: Event,
     slices: EventScheduledDowntimeSlice[]
   ): EventReportRow {
-    const responseSeconds =
-      event.inProgressAt != null
-        ? Math.max(
-            0,
-            Math.floor(
-              (event.inProgressAt.getTime() - event.createdAt.getTime()) / 1000
-            )
-          )
-        : null;
-    const resolutionSeconds =
-      event.inProgressAt != null && event.closedAt != null
-        ? Math.max(
-            0,
-            Math.floor(
-              (event.closedAt.getTime() - event.inProgressAt.getTime()) / 1000
-            )
-          )
-        : null;
-    const { effResponse, effResolution } = this.effectiveTimes(event);
+    const times = this.segmentTimes(event);
+    const responseSeconds = times?.responseSeconds ?? null;
+    const resolutionSeconds = times?.resolutionSeconds ?? null;
+    const effResponse = times?.effResponse ?? null;
+    const effResolution = times?.effResolution ?? null;
 
     const sliceRows: EventReportSlice[] = slices.map(slice => ({
       name: slice.name,

@@ -31,12 +31,17 @@ export function ReportKpiCards({
         label="Paro programado"
         value={formatDuration(summary.scheduledDowntimeSeconds)}
       />
-      <KpiCard label="Nº de paros" value={String(summary.eventCount)} />
+      <KpiCard label="Nº de llamadas" value={String(summary.eventCount)} />
       <KpiCard
         label="Atención / Solución prom."
-        value={`${formatDuration(summary.avgResponseSeconds)} / ${formatDuration(
-          summary.avgResolutionSeconds
-        )}`}
+        value={
+          summary.avgResponseSeconds == null &&
+          summary.avgResolutionSeconds == null
+            ? "—"
+            : `${formatDuration(summary.avgResponseSeconds)} / ${formatDuration(
+                summary.avgResolutionSeconds
+              )}`
+        }
       />
     </div>
   );

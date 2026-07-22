@@ -364,6 +364,186 @@ describe('DowntimeReportService', () => {
     expect(report.summary.runSeconds).toBeGreaterThanOrEqual(0);
   });
 
+  /**
+   * Escenario del build real (Corrección 1): 7 eventos, 4 productivos (5 min
+   * de atención cada uno; 40/55/55/40 min de solución) y 3 caídos ENTERos en
+   * paro programado (fin de semana): 1 de Calidad + 2 de Ingeniería.
+   */
+  function buildSevenEventScenario(): Event[] {
+    const productive = (
+      id: number,
+      departmentId: number,
+      departmentName: string,
+      resolutionMinutes: number
+    ) => {
+      const inProgressAt = plant('2026-07-13T12:05:00'); // 300 s de atención
+      const closedAt = new Date(
+        inProgressAt.getTime() + resolutionMinutes * 60 * 1000
+      );
+      return buildEvent({
+        id,
+        departmentId,
+        departmentName,
+        createdAt: plant('2026-07-13T12:00:00'),
+        inProgressAt,
+        closedAt,
+        scheduledDowntimeDiscountSeconds: 0,
+        responseDiscountSeconds: 0,
+      });
+    };
+
+    // Cae entera en paro programado: wall > 0 en ambos tramos, efectivo 0 en ambos.
+    const weekend = (
+      id: number,
+      departmentId: number,
+      departmentName: string
+    ) =>
+      buildEvent({
+        id,
+        departmentId,
+        departmentName,
+        createdAt: plant('2026-07-12T12:00:00'), // domingo
+        inProgressAt: plant('2026-07-12T12:05:00'), // 300 s de atención (wall)
+        closedAt: plant('2026-07-12T12:35:00'), // 1800 s de solución (wall)
+        durationSeconds: 0,
+        effectiveDurationSeconds: 0,
+        responseDiscountSeconds: 300, // descuenta TODA la atención
+        scheduledDowntimeDiscountSeconds: 2100, // 300 (atención) + 1800 (solución)
+      });
+
+    return [
+      productive(1, 10, 'Calidad', 40),
+      productive(2, 20, 'Mantenimiento', 55),
+      productive(3, 30, 'Materiales', 55),
+      productive(4, 20, 'Mantenimiento', 40),
+      weekend(5, 10, 'Calidad'),
+      weekend(6, 40, 'Ingeniería'),
+      weekend(7, 40, 'Ingeniería'),
+    ];
+  }
+
+  it('C1 — reproducción exacta del build: promedios excluyen los 3 eventos de fin de semana', async () => {
+    const service = buildService({
+      areas: [{ id: 1, name: 'A1' }],
+      eventRows: buildSevenEventScenario(),
+      downtimeRows: [],
+      getDiscountedSeconds: jest.fn().mockResolvedValue(0),
+      configured: true,
+    });
+
+    const report = await service.getDowntimeReport({
+      from: plant('2026-07-11T00:00:00').toISOString(),
+      to: plant('2026-07-17T00:00:00').toISOString(),
+    });
+
+    expect(report.summary.avgResponseSeconds).toBe(300); // 5m 00s
+    expect(report.summary.avgResolutionSeconds).toBe(2850); // 47m 30s
+  });
+
+  it('C1 — por departamento: Calidad 5m/40m (no 2m30s/20m); Ingeniería null/null (no 0/0)', async () => {
+    const service = buildService({
+      areas: [{ id: 1, name: 'A1' }],
+      eventRows: buildSevenEventScenario(),
+      downtimeRows: [],
+      getDiscountedSeconds: jest.fn().mockResolvedValue(0),
+      configured: true,
+    });
+
+    const report = await service.getDowntimeReport({
+      from: plant('2026-07-11T00:00:00').toISOString(),
+      to: plant('2026-07-17T00:00:00').toISOString(),
+    });
+
+    const calidad = report.byDepartment.find(d => d.departmentId === 10);
+    const ingenieria = report.byDepartment.find(d => d.departmentId === 40);
+
+    expect(calidad?.avgResponseSeconds).toBe(300); // 5m
+    expect(calidad?.avgResolutionSeconds).toBe(2400); // 40m
+    expect(ingenieria?.avgResponseSeconds).toBeNull();
+    expect(ingenieria?.avgResolutionSeconds).toBeNull();
+  });
+
+  it('C1 — el matiz: wall=0 y efectivo=0 (respuesta instantánea real) SÍ entra al promedio con 0', async () => {
+    const service = buildService({
+      areas: [{ id: 1, name: 'A1' }],
+      eventRows: [
+        buildEvent({
+          id: 1,
+          createdAt: plant('2026-07-13T12:00:00'),
+          inProgressAt: plant('2026-07-13T12:00:00'), // 0 s de atención (real)
+          closedAt: plant('2026-07-13T12:10:00'), // 600 s de solución
+          scheduledDowntimeDiscountSeconds: 0,
+          responseDiscountSeconds: 0,
+        }),
+      ],
+      downtimeRows: [],
+      getDiscountedSeconds: jest.fn().mockResolvedValue(0),
+      configured: true,
+    });
+
+    const report = await service.getDowntimeReport({
+      from: plant('2026-07-13T00:00:00').toISOString(),
+      to: plant('2026-07-13T23:00:00').toISOString(),
+    });
+
+    expect(report.summary.avgResponseSeconds).toBe(0);
+    expect(report.summary.avgResolutionSeconds).toBe(600);
+  });
+
+  it('C1 — tramos independientes: atención cayó entera en la comida, solución fue productiva', async () => {
+    const service = buildService({
+      areas: [{ id: 1, name: 'A1' }],
+      eventRows: [
+        buildEvent({
+          id: 1,
+          createdAt: plant('2026-07-13T12:00:00'),
+          inProgressAt: plant('2026-07-13T12:30:00'), // 1800 s de atención (wall)
+          closedAt: plant('2026-07-13T13:00:00'), // 1800 s de solución
+          responseDiscountSeconds: 1800, // TODA la atención cayó en la comida
+          scheduledDowntimeDiscountSeconds: 1800, // nada se descontó de la solución
+        }),
+      ],
+      downtimeRows: [],
+      getDiscountedSeconds: jest.fn().mockResolvedValue(0),
+      configured: true,
+    });
+
+    const report = await service.getDowntimeReport({
+      from: plant('2026-07-13T00:00:00').toISOString(),
+      to: plant('2026-07-13T23:00:00').toISOString(),
+    });
+
+    expect(report.summary.avgResponseSeconds).toBeNull();
+    expect(report.summary.avgResolutionSeconds).toBe(1800);
+  });
+
+  it('C1 — sin eventos válidos (todos excluidos): null, nunca 0', async () => {
+    const service = buildService({
+      areas: [{ id: 1, name: 'A1' }],
+      eventRows: [
+        buildEvent({
+          id: 1,
+          createdAt: plant('2026-07-12T12:00:00'),
+          inProgressAt: plant('2026-07-12T12:05:00'),
+          closedAt: plant('2026-07-12T12:35:00'),
+          responseDiscountSeconds: 300,
+          scheduledDowntimeDiscountSeconds: 2100,
+        }),
+      ],
+      downtimeRows: [],
+      getDiscountedSeconds: jest.fn().mockResolvedValue(0),
+      configured: true,
+    });
+
+    const report = await service.getDowntimeReport({
+      from: plant('2026-07-12T00:00:00').toISOString(),
+      to: plant('2026-07-13T00:00:00').toISOString(),
+    });
+
+    expect(report.summary.avgResponseSeconds).toBeNull();
+    expect(report.summary.avgResolutionSeconds).toBeNull();
+  });
+
   it('hasScheduledDowntimeConfigured refleja si el área tiene ventanas activas', async () => {
     const service = buildService({
       areas: [{ id: 1, name: 'A1' }],

@@ -11,6 +11,7 @@ import { Bar } from "react-chartjs-2";
 
 import { formatDuration } from "@/lib/formatDuration";
 
+import { niceTimeStepSeconds } from "./chartAxis";
 import { REPORT_COLORS } from "./reportColors";
 
 ChartJS.register(
@@ -47,6 +48,12 @@ export function ResponseResolutionChart({
     return <Placeholder text="Sin datos de atención/solución en el rango" />;
   }
 
+  const maxSeconds = Math.max(
+    0,
+    ...data.map((d) => d.responseSeconds + d.resolutionSeconds)
+  );
+  const stepSize = niceTimeStepSeconds(maxSeconds);
+
   return (
     <div className="h-80">
       <Bar
@@ -81,7 +88,9 @@ export function ResponseResolutionChart({
           scales: {
             x: {
               stacked: true,
+              beginAtZero: true,
               ticks: {
+                stepSize,
                 color: "#94a3b8",
                 callback: (v) => formatDuration(Number(v)),
               },

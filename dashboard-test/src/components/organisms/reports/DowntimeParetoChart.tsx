@@ -14,6 +14,7 @@ import { Chart } from "react-chartjs-2";
 
 import { formatDuration } from "@/lib/formatDuration";
 
+import { niceTimeStepSeconds } from "./chartAxis";
 import { REPORT_COLORS } from "./reportColors";
 
 ChartJS.register(
@@ -48,6 +49,9 @@ export function DowntimeParetoChart({
     return <ChartPlaceholder text="Sin paros no programados en el rango" />;
   }
 
+  const maxSeconds = Math.max(0, ...data.map((d) => d.seconds));
+  const stepSize = niceTimeStepSeconds(maxSeconds);
+
   return (
     <div className="h-80">
       <Chart
@@ -78,7 +82,9 @@ export function DowntimeParetoChart({
             x: { ticks: { color: "#94a3b8" }, grid: { color: "#334155" } },
             y: {
               position: "left",
+              beginAtZero: true,
               ticks: {
+                stepSize,
                 color: "#94a3b8",
                 callback: (v) => formatDuration(Number(v)),
               },

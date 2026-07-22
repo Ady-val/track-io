@@ -27,6 +27,7 @@ export interface DowntimeReportDepartmentRow {
 
 export interface DowntimeReportTrendRow {
   bucket: string;
+  calendarSeconds: number;
   scheduledDowntimeSeconds: number;
   unplannedDowntimeSeconds: number;
   plannedProductionSeconds: number;
