@@ -67,10 +67,12 @@ dotenv.config({ path: join(__dirname, '..', '..', '.env') });
  *
  * ## Escenarios de demostración
  *
- * Además del histórico de relleno, se siembran cinco eventos deterministas
- * (DEMOS) que ejercitan cada caso interesante, y al terminar el script
- * imprime el desglose de cada uno: evento, tiempo detenido del área, lapso de
- * paro programado y, como resultado final, el tiempo de paro NO programado.
+ * Además del histórico de relleno, se siembran cinco escenarios deterministas
+ * (DEMOS) que ejercitan cada caso interesante — dos de ellos encadenan 2
+ * eventos traslapados en vez de uno solo, porque en producción ningún evento
+ * individual dura más de 3h — y al terminar el script imprime el desglose de
+ * cada uno: evento(s), tiempo detenido del área, lapso de paro programado y,
+ * como resultado final, el tiempo de paro NO programado.
  */
 
 const AREA_NAMES = ['Linea 1', 'Linea 2', 'Linea 3', 'Linea 4', 'Linea 5'];
@@ -93,7 +95,8 @@ const REASONS: Record<string, { reason: string; comment: string }> = {
   },
   MAT: {
     reason: 'Desabasto de materia prima',
-    comment: 'Línea detenida en espera de reabastecimiento desde almacén central.',
+    comment:
+      'Línea detenida en espera de reabastecimiento desde almacén central.',
   },
   CAL: {
     reason: 'Retención por control de calidad',
@@ -170,10 +173,10 @@ function timeZoneOffsetMs(date: Date, timeZone: string): number {
   const asUTC = Date.UTC(
     map['year']!,
     map['month']! - 1,
-    map['day']!,
+    map['day'],
     map['hour']! % 24,
-    map['minute']!,
-    map['second']!
+    map['minute'],
+    map['second']
   );
 
   return asUTC - date.getTime();
@@ -196,7 +199,9 @@ function plantDateOf(instant: Date): PlantDate {
 }
 
 function addPlantDays(date: PlantDate, days: number): PlantDate {
-  const shifted = new Date(Date.UTC(date.year, date.month - 1, date.day + days));
+  const shifted = new Date(
+    Date.UTC(date.year, date.month - 1, date.day + days)
+  );
   return {
     year: shifted.getUTCFullYear(),
     month: shifted.getUTCMonth() + 1,
@@ -205,7 +210,11 @@ function addPlantDays(date: PlantDate, days: number): PlantDate {
 }
 
 /** Hora de pared de la planta (fecha + hora + minuto) -> instante absoluto. */
-function plantWallToInstant(date: PlantDate, hour: number, minute: number): Date {
+function plantWallToInstant(
+  date: PlantDate,
+  hour: number,
+  minute: number
+): Date {
   const guess = Date.UTC(date.year, date.month - 1, date.day, hour, minute);
 
   const offset1 = timeZoneOffsetMs(new Date(guess), PLANT_TZ);
@@ -291,17 +300,19 @@ const DEMO_SCENARIOS: DemoScenario[] = [
   },
   {
     key: 'medianoche',
-    title: 'Paro que cruza dos días: una rebanada por ocurrencia',
+    title: '2 eventos encadenados cruzan la medianoche (ningún evento >3h)',
     expectation:
-      'Paro 19:15 → 08:15 del día siguiente (13h) contra Cena 19:00-19:30 y Desayuno 08:00-08:30 → ' +
-      'DOS rebanadas con fechas distintas (15m + 15m), no una colapsada → 12h 30m de paro NO programado.',
+      'Evento 1: 18:45-21:30 (2h45m, toca Cena 19:00-19:30). Evento 2: 21:15-00:15 del día ' +
+      'siguiente (3h, arranca 15m antes de que cierre el 1º). Se fusionan en UN AreaDowntime ' +
+      '18:45 → 00:15 (5h30m) que cruza de un día a otro → 30m de descuento → 5h de paro NO programado.',
   },
   {
     key: 'varias-ventanas',
-    title: 'Un paro largo que cruza los tres tiempos de alimentos',
+    title: '2 eventos encadenados cruzan Desayuno y Comida (ningún evento >3h)',
     expectation:
-      'Paro 07:30-20:00 (12h 30m) contra Desayuno + Comida + Cena → descuento 2h (30m + 1h + 30m) ' +
-      '→ 10h 30m de paro NO programado.',
+      'Evento 1: 07:45-10:15 (2h30m, toca Desayuno 08:00-08:30). Evento 2: 10:00-13:00 ' +
+      '(3h, arranca 15m antes de que cierre el 1º, toca Comida 12:00-13:00). Se fusionan en UN ' +
+      'AreaDowntime 07:45 → 13:00 (5h15m) → descuento 1h30m (30m + 1h) → 3h45m de paro NO programado.',
   },
   {
     key: 'atencion',
@@ -313,10 +324,13 @@ const DEMO_SCENARIOS: DemoScenario[] = [
 ];
 
 /**
- * Los cinco escenarios de demostración. Cada uno ocupa su propio día y área
- * (ver `buildEventSlots`), de modo que su AreaDowntime no se mezcle con el
- * ruido del histórico de relleno y los números del reporte final sean
- * exactamente los del escenario.
+ * Los cinco escenarios de demostración. Cada uno reserva su(s) propio(s)
+ * día(s) y área (ver `buildEventSlots`), de modo que su AreaDowntime no se
+ * mezcle con el ruido del histórico de relleno y los números del reporte
+ * final sean exactamente los del escenario. Dos de ellos ("medianoche" y
+ * "varias-ventanas") encadenan 2 eventos traslapados en vez de uno solo:
+ * ningún evento individual dura más de 3h, igual que en producción — es el
+ * AreaDowntime fusionado el que puede durar más.
  */
 function buildDemoSlots(startGroupId: number): {
   slots: EventSlot[];
@@ -354,34 +368,67 @@ function buildDemoSlots(startGroupId: number): {
     demoKey: 'sin-traslape',
   });
 
-  // 3. Paro que cruza dos días — Linea 2, Materiales. 19:15 → 08:15 del día
-  //    siguiente: toca la cena de un día y el desayuno del otro, y debe
-  //    producir DOS rebanadas con fechas distintas.
-  const nightStart = plantDateAt(7, 19, 15);
+  // 3. Paro que cruza la medianoche — Linea 2, Materiales. En producción
+  //    ningún evento individual dura más de 3h; lo que sí es normal es que
+  //    2-3 eventos se traslapen y el ÁREA quede detenida más tiempo. Dos
+  //    eventos encadenados (18:45→21:30 y 21:15→00:15, 15 min de traslape)
+  //    se fusionan en un solo AreaDowntime que cruza de un día al otro y
+  //    toca la Cena (19:00-19:30) en el primer tramo.
+  const midnightEvent1Start = plantDateAt(7, 18, 45);
+  const midnightGroupId = groupId++;
   slots.push({
-    groupId: groupId++,
+    groupId: midnightGroupId,
     daysAgo: 7,
     areaIndex: 1,
     deptIndex: 2,
-    createdAt: nightStart,
+    createdAt: midnightEvent1Start,
     status: EventStatus.CLOSED,
-    inProgressAt: addMinutes(nightStart, 5),
-    closedAt: plantDateAt(6, 8, 15),
+    inProgressAt: addMinutes(midnightEvent1Start, 5),
+    closedAt: addMinutes(midnightEvent1Start, 165), // 18:45 + 2h45m = 21:30
+    demoKey: 'medianoche',
+  });
+  const midnightEvent2Start = plantDateAt(7, 21, 15); // arranca antes de que cierre el 1º
+  slots.push({
+    groupId: midnightGroupId,
+    daysAgo: 7,
+    areaIndex: 1,
+    deptIndex: 2,
+    createdAt: midnightEvent2Start,
+    status: EventStatus.CLOSED,
+    inProgressAt: addMinutes(midnightEvent2Start, 5),
+    closedAt: addMinutes(midnightEvent2Start, 180), // 21:15 + 3h = 00:15 del día siguiente
     demoKey: 'medianoche',
   });
 
-  // 4. Paro largo que cruza los tres alimentos — Linea 1, Ingeniería.
-  //    07:30 → 20:00.
-  const longStart = plantDateAt(5, 7, 30);
+  // 4. Paro que cruza dos ventanas de paro programado — Linea 1, Ingeniería.
+  //    Mismo principio: dos eventos ≤3h encadenados (07:45→10:15 y
+  //    10:00→13:00, 15 min de traslape) en vez de un evento-maratón de
+  //    12h+. El primero toca Desayuno (08:00-08:30), el segundo toca Comida
+  //    (12:00-13:00); juntos, el AreaDowntime muestra el descuento de ambas
+  //    ventanas sin que ningún evento individual sea irreal.
+  const windowsEvent1Start = plantDateAt(5, 7, 45);
+  const windowsGroupId = groupId++;
   slots.push({
-    groupId: groupId++,
+    groupId: windowsGroupId,
     daysAgo: 5,
     areaIndex: 0,
     deptIndex: 1,
-    createdAt: longStart,
+    createdAt: windowsEvent1Start,
     status: EventStatus.CLOSED,
-    inProgressAt: addMinutes(longStart, 10),
-    closedAt: plantDateAt(5, 20, 0),
+    inProgressAt: addMinutes(windowsEvent1Start, 10),
+    closedAt: addMinutes(windowsEvent1Start, 150), // 07:45 + 2h30m = 10:15
+    demoKey: 'varias-ventanas',
+  });
+  const windowsEvent2Start = plantDateAt(5, 10, 0); // arranca antes de que cierre el 1º
+  slots.push({
+    groupId: windowsGroupId,
+    daysAgo: 5,
+    areaIndex: 0,
+    deptIndex: 1,
+    createdAt: windowsEvent2Start,
+    status: EventStatus.CLOSED,
+    inProgressAt: addMinutes(windowsEvent2Start, 10),
+    closedAt: addMinutes(windowsEvent2Start, 180), // 10:00 + 3h = 13:00
     demoKey: 'varias-ventanas',
   });
 
@@ -567,7 +614,10 @@ function buildEventSlots(): EventSlot[] {
   return slots;
 }
 
-async function findOrCreateArea(dataSource: DataSource, name: string): Promise<Area> {
+async function findOrCreateArea(
+  dataSource: DataSource,
+  name: string
+): Promise<Area> {
   const repo = dataSource.getRepository(Area);
   const existing = await repo.findOneBy({ name });
   if (existing) return existing;
@@ -598,7 +648,10 @@ async function findOrCreateDevice(
   // antiguo "Torreta"), se corrige en lugar de duplicarla.
   const existingByArea = await repo.findOneBy({ areaId });
   if (existingByArea) {
-    if (existingByArea.name !== name || existingByArea.externalId !== externalId) {
+    if (
+      existingByArea.name !== name ||
+      existingByArea.externalId !== externalId
+    ) {
       existingByArea.name = name;
       existingByArea.externalId = externalId;
       await repo.save(existingByArea);
@@ -609,7 +662,9 @@ async function findOrCreateDevice(
   const existingByExternalId = await repo.findOneBy({ externalId });
   if (existingByExternalId) return existingByExternalId;
 
-  return repo.save(repo.create({ name, externalId, areaId, isVirtualDevice: false }));
+  return repo.save(
+    repo.create({ name, externalId, areaId, isVirtualDevice: false })
+  );
 }
 
 async function findOrCreateDeviceSignal(
@@ -626,7 +681,10 @@ async function findOrCreateDeviceSignal(
   // si cambió, se actualiza en lugar de crear una señal duplicada.
   const existing = await repo.findOneBy({ deviceId, name });
   if (existing) {
-    if (existing.externalValueId !== externalValueId || existing.departmentId !== departmentId) {
+    if (
+      existing.externalValueId !== externalValueId ||
+      existing.departmentId !== departmentId
+    ) {
       existing.externalValueId = externalValueId;
       existing.departmentId = departmentId;
       await repo.save(existing);
@@ -634,7 +692,9 @@ async function findOrCreateDeviceSignal(
     return existing;
   }
 
-  return repo.save(repo.create({ name, deviceId, departmentId, externalValueId }));
+  return repo.save(
+    repo.create({ name, deviceId, departmentId, externalValueId })
+  );
 }
 
 /**
@@ -645,7 +705,12 @@ async function findOrCreateDeviceSignal(
 async function findOrCreateScheduledDowntime(
   dataSource: DataSource,
   areaId: number,
-  config: { name: string; startTime: string; endTime: string; daysOfWeek: number[] }
+  config: {
+    name: string;
+    startTime: string;
+    endTime: string;
+    daysOfWeek: number[];
+  }
 ): Promise<ScheduledDowntime> {
   const repo = dataSource.getRepository(ScheduledDowntime);
   const existing = await repo.findOne({
@@ -683,7 +748,9 @@ async function findOrCreateScheduledDowntime(
  * construyen las tres piezas a mano y se usa el mismo servicio que
  * `SignalService.closeEvent()`.
  */
-function buildCalculator(dataSource: DataSource): ScheduledDowntimeCalculatorService {
+function buildCalculator(
+  dataSource: DataSource
+): ScheduledDowntimeCalculatorService {
   const repository = new ScheduledDowntimeRepository(
     dataSource.getRepository(ScheduledDowntime)
   );
@@ -697,7 +764,7 @@ function buildCalculator(dataSource: DataSource): ScheduledDowntimeCalculatorSer
 }
 
 /** Datos que el reporte final necesita de cada escenario de demostración. */
-interface DemoResult {
+interface DemoEventSummary {
   eventId: number;
   areaName: string;
   departmentName: string;
@@ -717,6 +784,16 @@ interface DemoResult {
     seconds: number;
     segment: SliceSegment;
   }>;
+}
+
+/**
+ * Resultado de un escenario de demostración. `events` tiene más de un
+ * elemento cuando el escenario encadena varios eventos realistas (ninguno
+ * mayor a 3h — igual que en producción) que se traslapan entre sí y se
+ * fusionan en UN solo AreaDowntime, en vez de simular un único evento-maratón.
+ */
+interface DemoResult {
+  events: DemoEventSummary[];
   downtime: {
     startAt: Date;
     endsAt: Date;
@@ -730,7 +807,9 @@ function printDemoReport(results: Map<string, DemoResult>): void {
   console.log('');
   console.log('='.repeat(78));
   console.log(`  DEMOSTRACIÓN — paros programados vs. paros reales`);
-  console.log(`  Zona horaria de planta: ${PLANT_TZ} (todas las horas de abajo)`);
+  console.log(
+    `  Zona horaria de planta: ${PLANT_TZ} (todas las horas de abajo)`
+  );
   console.log('='.repeat(78));
 
   for (const scenario of DEMO_SCENARIOS) {
@@ -740,50 +819,64 @@ function printDemoReport(results: Map<string, DemoResult>): void {
     console.log('');
     console.log(`▸ ${scenario.title}`);
     console.log(`  Esperado: ${scenario.expectation}`);
-    console.log('');
-    console.log(`  Evento #${r.eventId} — ${r.areaName} / ${r.departmentName}`);
-    console.log(
-      `    Inicio ${fmtPlant(r.createdAt)} → Atendido ${fmtPlant(r.inProgressAt)} ` +
-        `→ Cierre ${fmtPlant(r.closedAt)}`
-    );
-    console.log('');
-    console.log(
-      `    Tiempo detenido (crudo) .......... ${String(r.durationSeconds).padStart(6)} s  (${fmtDuration(r.durationSeconds)})`
-    );
-    console.log(
-      `    Paro programado dentro del paro .. ${String(r.discountSeconds).padStart(6)} s  (${fmtDuration(r.discountSeconds)})`
-    );
 
-    if (r.slices.length === 0) {
-      console.log('        · (ninguna ventana programada se traslapó)');
-    }
-    for (const s of r.slices) {
-      const tramo = s.segment === SliceSegment.RESPONSE ? 'atención' : 'solución';
+    for (const [index, ev] of r.events.entries()) {
+      const label =
+        r.events.length > 1
+          ? ` (evento ${index + 1}/${r.events.length} del grupo)`
+          : '';
+      console.log('');
       console.log(
-        `        · ${s.name} (${s.configuredStartTime}–${s.configuredEndTime}) · ` +
-          `${fmtPlant(s.from)} → ${fmtPlant(s.to)} · ${s.seconds} s · durante la ${tramo}`
+        `  Evento #${ev.eventId}${label} — ${ev.areaName} / ${ev.departmentName}`
+      );
+      console.log(
+        `    Inicio ${fmtPlant(ev.createdAt)} → Atendido ${fmtPlant(ev.inProgressAt)} ` +
+          `→ Cierre ${fmtPlant(ev.closedAt)}`
+      );
+      console.log('');
+      console.log(
+        `    Tiempo detenido (crudo) .......... ${String(ev.durationSeconds).padStart(6)} s  (${fmtDuration(ev.durationSeconds)})`
+      );
+      console.log(
+        `    Paro programado dentro del paro .. ${String(ev.discountSeconds).padStart(6)} s  (${fmtDuration(ev.discountSeconds)})`
+      );
+
+      if (ev.slices.length === 0) {
+        console.log('        · (ninguna ventana programada se traslapó)');
+      }
+      for (const s of ev.slices) {
+        const tramo =
+          s.segment === SliceSegment.RESPONSE ? 'atención' : 'solución';
+        console.log(
+          `        · ${s.name} (${s.configuredStartTime}–${s.configuredEndTime}) · ` +
+            `${fmtPlant(s.from)} → ${fmtPlant(s.to)} · ${s.seconds} s · durante la ${tramo}`
+        );
+      }
+
+      console.log(`    ${'─'.repeat(34)}  ${'─'.repeat(8)}`);
+      console.log(
+        `    PARO NO PROGRAMADO (resultado) ... ${String(ev.effectiveSeconds).padStart(6)} s  (${fmtDuration(ev.effectiveSeconds)})`
+      );
+
+      // La invariante que hace auditable el número: la suma de las rebanadas
+      // es exactamente el descuento, incluso con ventanas traslapadas entre sí.
+      const sliceSum = ev.slices.reduce((sum, s) => sum + s.seconds, 0);
+      const ok =
+        sliceSum === ev.discountSeconds &&
+        ev.effectiveSeconds === ev.durationSeconds - ev.discountSeconds;
+      console.log(
+        `    Comprobación: Σ rebanadas = ${sliceSum} s = descuento; ` +
+          `${ev.durationSeconds} − ${ev.discountSeconds} = ${ev.effectiveSeconds}  ${ok ? '✓' : '✗ INCONSISTENTE'}`
       );
     }
 
-    console.log(
-      `    ${'─'.repeat(34)}  ${'─'.repeat(8)}`
-    );
-    console.log(
-      `    PARO NO PROGRAMADO (resultado) ... ${String(r.effectiveSeconds).padStart(6)} s  (${fmtDuration(r.effectiveSeconds)})`
-    );
-
-    // La invariante que hace auditable el número: la suma de las rebanadas es
-    // exactamente el descuento, incluso con ventanas traslapadas entre sí.
-    const sliceSum = r.slices.reduce((sum, s) => sum + s.seconds, 0);
-    const ok =
-      sliceSum === r.discountSeconds &&
-      r.effectiveSeconds === r.durationSeconds - r.discountSeconds;
-    console.log(
-      `    Comprobación: Σ rebanadas = ${sliceSum} s = descuento; ` +
-        `${r.durationSeconds} − ${r.discountSeconds} = ${r.effectiveSeconds}  ${ok ? '✓' : '✗ INCONSISTENTE'}`
-    );
-
     console.log('');
+    if (r.events.length > 1) {
+      console.log(
+        `  Los ${r.events.length} eventos se traslapan y se fusionan en UN solo ` +
+          `AreaDowntime (igual que en producción):`
+      );
+    }
     console.log(
       `    Tiempo detenido del ÁREA (AreaDowntime): ` +
         `${fmtPlant(r.downtime.startAt)} → ${fmtPlant(r.downtime.endsAt)}`
@@ -828,7 +921,9 @@ async function seed(): Promise<void> {
 
     const departments: Department[] = [];
     for (const dept of DEPARTMENTS) {
-      departments.push(await findOrCreateDepartment(dataSource, dept.name, dept.htmlColor));
+      departments.push(
+        await findOrCreateDepartment(dataSource, dept.name, dept.htmlColor)
+      );
     }
 
     // 2. Dispositivos: una botonera por área (dispositivo físico con
@@ -923,10 +1018,9 @@ async function seed(): Promise<void> {
     await sliceRepo
       .createQueryBuilder()
       .delete()
-      .where(
-        'event_id IN (SELECT id FROM events WHERE comment LIKE :marker)',
-        { marker: `${SEED_MARKER}%` }
-      )
+      .where('event_id IN (SELECT id FROM events WHERE comment LIKE :marker)', {
+        marker: `${SEED_MARKER}%`,
+      })
       .execute();
     await eventRepo
       .createQueryBuilder()
@@ -960,7 +1054,9 @@ async function seed(): Promise<void> {
       const department = departments[slot.deptIndex]!;
       const device = devices[slot.areaIndex]!;
       const deptCode = DEPARTMENTS[slot.deptIndex]!.code;
-      const signal = signalsByAreaDept.get(`${slot.areaIndex}-${slot.deptIndex}`)!;
+      const signal = signalsByAreaDept.get(
+        `${slot.areaIndex}-${slot.deptIndex}`
+      )!;
       const texts = REASONS[deptCode]!;
       const createdAt = slot.createdAt;
 
@@ -1059,7 +1155,8 @@ async function seed(): Promise<void> {
           durationSeconds - discountTotal
         );
         if (responseDiscount) {
-          eventData.responseDiscountSeconds = responseDiscount.totalDiscountedSeconds;
+          eventData.responseDiscountSeconds =
+            responseDiscount.totalDiscountedSeconds;
         }
         if (discountTotal > 0) discountedEvents++;
       } else if (slot.inProgressAt) {
@@ -1081,14 +1178,14 @@ async function seed(): Promise<void> {
       const sliceRows = [
         ...(responseDiscount
           ? responseDiscount.slices.map(s => ({
-              discount: responseDiscount!,
+              discount: responseDiscount,
               slice: s,
               segment: SliceSegment.RESPONSE,
             }))
           : []),
         ...(resolutionDiscount
           ? resolutionDiscount.slices.map(s => ({
-              discount: resolutionDiscount!,
+              discount: resolutionDiscount,
               slice: s,
               segment: SliceSegment.RESOLUTION,
             }))
@@ -1117,7 +1214,8 @@ async function seed(): Promise<void> {
 
       if (slot.demoKey && slot.inProgressAt && slot.closedAt) {
         demoGroupKey.set(slot.groupId, slot.demoKey);
-        demoResults.set(slot.demoKey, {
+
+        const eventSummary: DemoEventSummary = {
           eventId: event.id,
           areaName: area.name,
           departmentName: department.name,
@@ -1137,15 +1235,27 @@ async function seed(): Promise<void> {
             seconds: slice.seconds,
             segment,
           })),
-          // Se rellena al construir el AreaDowntime del grupo, más abajo.
-          downtime: {
-            startAt: createdAt,
-            endsAt: slot.closedAt,
-            durationSeconds: 0,
-            discountSeconds: 0,
-            effectiveSeconds: 0,
-          },
-        });
+        };
+
+        // Un escenario puede encadenar varios eventos (mismo demoKey, mismo
+        // groupId) que se traslapan y se fusionan en un solo AreaDowntime:
+        // se acumulan en `events` en vez de sobreescribir.
+        const existingResult = demoResults.get(slot.demoKey);
+        if (existingResult) {
+          existingResult.events.push(eventSummary);
+        } else {
+          demoResults.set(slot.demoKey, {
+            events: [eventSummary],
+            // Se rellena al construir el AreaDowntime del grupo, más abajo.
+            downtime: {
+              startAt: createdAt,
+              endsAt: slot.closedAt,
+              durationSeconds: 0,
+              discountSeconds: 0,
+              effectiveSeconds: 0,
+            },
+          });
+        }
       }
 
       const groupEventIds = eventIdsByGroup.get(slot.groupId) ?? [];
@@ -1195,7 +1305,8 @@ async function seed(): Promise<void> {
 
         downtimeData.endsAt = endsAt;
         downtimeData.durationSeconds = durationSeconds;
-        downtimeData.scheduledDowntimeDiscountSeconds = discount.totalDiscountedSeconds;
+        downtimeData.scheduledDowntimeDiscountSeconds =
+          discount.totalDiscountedSeconds;
         downtimeData.effectiveDurationSeconds = Math.max(
           0,
           durationSeconds - discount.totalDiscountedSeconds
@@ -1230,7 +1341,9 @@ async function seed(): Promise<void> {
       downtimesCreated++;
     }
 
-    const overlapGroups = [...slotsByGroup.values()].filter(g => g.length > 1).length;
+    const overlapGroups = [...slotsByGroup.values()].filter(
+      g => g.length > 1
+    ).length;
 
     console.log(`Áreas: ${areas.length}`);
     console.log(`Departamentos: ${departments.length}`);
@@ -1243,10 +1356,14 @@ async function seed(): Promise<void> {
           : '')
     );
     console.log(`Eventos creados: ${slots.length}`);
-    console.log(`  de los cuales con descuento por paro programado: ${discountedEvents}`);
+    console.log(
+      `  de los cuales con descuento por paro programado: ${discountedEvents}`
+    );
     console.log(`Rebanadas de trazabilidad creadas: ${slicesCreated}`);
     console.log(`AreaDowntimes creados: ${downtimesCreated}`);
-    console.log(`  de los cuales con eventos entrelazados (2+ eventos): ${overlapGroups}`);
+    console.log(
+      `  de los cuales con eventos entrelazados (2+ eventos): ${overlapGroups}`
+    );
 
     printDemoReport(demoResults);
 
