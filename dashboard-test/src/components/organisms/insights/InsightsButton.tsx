@@ -73,6 +73,7 @@ export function InsightsButton({
       const analysis = await insightsService.analyze({
         startDate: from,
         endDate: to,
+        groupBy,
         ...(areaId !== undefined && { areaId }),
       });
 

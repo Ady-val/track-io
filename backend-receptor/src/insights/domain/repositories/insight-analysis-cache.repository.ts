@@ -9,6 +9,7 @@ export interface CreateInsightAnalysisCacheDto {
   endDate: Date;
   areaId?: number;
   findingsJson: unknown;
+  metaJson?: unknown;
   totalEventsAnalyzed: number;
   model: string;
   expiresAt: Date;

@@ -3,7 +3,10 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { AggregatedInsightsPayload } from '../../domain/types/aggregated-insights-payload.type';
 import type { RawFinding } from '../../domain/types/insight-finding.type';
 import type { InsightLanguage } from '../dtos/analyze-insights.dto';
-import { buildInsightsSystemPrompt } from './prompts';
+import {
+  buildInsightsSystemPrompt,
+  type InsightsPromptOptions,
+} from './prompts';
 
 const DEFAULT_MODEL = 'claude-sonnet-5';
 // Sonnet 5 corre con "adaptive thinking" prendido por defecto si no se
@@ -80,9 +83,10 @@ export class AnthropicInsightsClient {
 
   async findPatterns(
     payload: AggregatedInsightsPayload,
-    language: InsightLanguage
+    language: InsightLanguage,
+    promptOptions: InsightsPromptOptions
   ): Promise<{ findings: RawFinding[]; model: string }> {
-    const system = buildInsightsSystemPrompt(language);
+    const system = buildInsightsSystemPrompt(language, promptOptions);
     const userContent = JSON.stringify(payload);
 
     // 1 reintento si la respuesta llega pero no se puede parsear (JSON

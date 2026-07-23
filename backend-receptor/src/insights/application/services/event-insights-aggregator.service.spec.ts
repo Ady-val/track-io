@@ -93,6 +93,7 @@ describe('EventInsightsAggregator', () => {
   const range = {
     startDate: plant('2026-07-13T00:00:00').toISOString(),
     endDate: plant('2026-07-14T00:00:00').toISOString(),
+    groupBy: 'day' as const,
   };
 
   it('nunca expone eventos individuales — solo agregados', async () => {
@@ -265,5 +266,110 @@ describe('EventInsightsAggregator', () => {
     expect(payload.byAreaDepartment).toEqual([]);
     expect(payload.topSignalsByDuration).toEqual([]);
     expect(payload.virtualDeviceSummary).toBeNull();
+  });
+
+  describe('byPeriod (§Tarea 2 del ajuste de agrupación)', () => {
+    it('agrupa por día: un bucket por día, cada evento en el bucket de su closedAt', async () => {
+      const twoDayRange = {
+        startDate: plant('2026-07-13T00:00:00').toISOString(),
+        endDate: plant('2026-07-15T00:00:00').toISOString(),
+        groupBy: 'day' as const,
+      };
+      const events = [
+        buildEvent({
+          id: 1,
+          closedAt: plant('2026-07-13T12:40:00'),
+          durationSeconds: 600,
+        }),
+        buildEvent({
+          id: 2,
+          closedAt: plant('2026-07-14T09:00:00'),
+          durationSeconds: 1200,
+        }),
+      ];
+      const aggregator = buildAggregator({ events });
+
+      const payload = await aggregator.build(twoDayRange);
+
+      expect(payload.range.groupBy).toBe('day');
+      expect(payload.range.bucketCount).toBe(2);
+      expect(payload.byPeriod).toHaveLength(2);
+      expect(payload.byPeriod[0]?.bucketLabel).toBe('2026-07-13');
+      expect(payload.byPeriod[0]?.eventCount).toBe(1);
+      expect(payload.byPeriod[0]?.totalMinutes).toBeCloseTo(10, 5);
+      expect(payload.byPeriod[1]?.bucketLabel).toBe('2026-07-14');
+      expect(payload.byPeriod[1]?.eventCount).toBe(1);
+      expect(payload.byPeriod[1]?.totalMinutes).toBeCloseTo(20, 5);
+    });
+
+    it('agrupa por semana: un solo bucket etiquetado "Semana del ..." para un rango de una semana', async () => {
+      const weekRange = {
+        startDate: plant('2026-07-13T00:00:00').toISOString(), // lunes
+        endDate: plant('2026-07-20T00:00:00').toISOString(), // lunes siguiente
+        groupBy: 'week' as const,
+      };
+      const events = [
+        buildEvent({ id: 1, closedAt: plant('2026-07-15T12:00:00') }),
+      ];
+      const aggregator = buildAggregator({ events });
+
+      const payload = await aggregator.build(weekRange);
+
+      expect(payload.range.groupBy).toBe('week');
+      expect(payload.byPeriod).toHaveLength(1);
+      expect(payload.byPeriod[0]?.bucketLabel).toMatch(
+        /^Semana del \d{4}-\d{2}-\d{2}$/
+      );
+      expect(payload.byPeriod[0]?.eventCount).toBe(1);
+    });
+
+    it('agrupa por mes: bucket etiquetado con el nombre del mes en español', async () => {
+      const monthRange = {
+        startDate: plant('2026-07-01T00:00:00').toISOString(),
+        endDate: plant('2026-08-01T00:00:00').toISOString(),
+        groupBy: 'month' as const,
+      };
+      const events = [
+        buildEvent({ id: 1, closedAt: plant('2026-07-15T12:00:00') }),
+      ];
+      const aggregator = buildAggregator({ events });
+
+      const payload = await aggregator.build(monthRange);
+
+      expect(payload.range.groupBy).toBe('month');
+      expect(payload.byPeriod).toHaveLength(1);
+      expect(payload.byPeriod[0]?.bucketLabel).toBe('Julio 2026');
+    });
+
+    it('con menos de 2 buckets, bucketCount permite detectar agrupación degenerada', async () => {
+      const oneDayRange = {
+        startDate: plant('2026-07-13T00:00:00').toISOString(),
+        endDate: plant('2026-07-14T00:00:00').toISOString(),
+        groupBy: 'month' as const,
+      };
+      const aggregator = buildAggregator({ events: [buildEvent({ id: 1 })] });
+
+      const payload = await aggregator.build(oneDayRange);
+
+      expect(payload.range.bucketCount).toBe(1);
+      expect(payload.byPeriod).toHaveLength(1);
+    });
+
+    it('dos requests con distinta agrupación producen byPeriod distinto para el mismo rango', async () => {
+      const events = [
+        buildEvent({ id: 1, closedAt: plant('2026-07-13T12:00:00') }),
+      ];
+      const aggregator = buildAggregator({ events });
+
+      const dayPayload = await aggregator.build({ ...range, groupBy: 'day' });
+      const weekPayload = await aggregator.build({
+        ...range,
+        groupBy: 'week',
+      });
+
+      expect(dayPayload.byPeriod).not.toEqual(weekPayload.byPeriod);
+      expect(dayPayload.range.groupBy).toBe('day');
+      expect(weekPayload.range.groupBy).toBe('week');
+    });
   });
 });

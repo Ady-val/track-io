@@ -2,6 +2,7 @@ import type {
   InsightCategory,
   InsightSeverity,
 } from '../../domain/types/insight-finding.type';
+import type { GroupBy } from '../../../reports/application/services/plant-time.util';
 
 export interface InsightSupportingMetric {
   label: string;
@@ -26,6 +27,31 @@ export interface InsightFindingDto {
   relatedSignalId?: number;
 }
 
+export type InsightNoticeCode = 'DEGENERATE_GROUPING' | 'SMALL_SAMPLE';
+
+/** Aviso estructurado sobre limitaciones del análisis (§Tareas 3 y 4). */
+export interface InsightNotice {
+  code: InsightNoticeCode;
+  message: string;
+}
+
+export interface InsightTopMetric {
+  name: string;
+  minutes: number;
+}
+
+/**
+ * Resumen del periodo que SIEMPRE cambia con fechas/área, aunque los
+ * hallazgos del modelo se parezcan entre sí (§Tarea 5 — "hacer visible lo
+ * que sí se mueve").
+ */
+export interface InsightPeriodSummary {
+  totalEventsAnalyzed: number;
+  totalDowntimeMinutes: number;
+  topDepartment: InsightTopMetric | null;
+  topSignal: InsightTopMetric | null;
+}
+
 export interface InsightAnalysisMeta {
   startDate: string;
   endDate: string;
@@ -33,6 +59,9 @@ export interface InsightAnalysisMeta {
   generatedAt: string;
   model: string;
   cached: boolean;
+  groupBy: GroupBy;
+  notices?: InsightNotice[];
+  summary: InsightPeriodSummary;
 }
 
 export interface InsightAnalysisResponseDto {

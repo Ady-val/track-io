@@ -1,5 +1,7 @@
 // Espejo de los contratos de backend (backend-receptor/src/insights).
 
+import type { GroupBy } from "@/types/report";
+
 export type InsightSeverity = "info" | "warning" | "critical";
 
 export type InsightCategory =
@@ -28,6 +30,25 @@ export interface InsightFinding {
   relatedSignalId?: number;
 }
 
+export type InsightNoticeCode = "DEGENERATE_GROUPING" | "SMALL_SAMPLE";
+
+export interface InsightNotice {
+  code: InsightNoticeCode;
+  message: string;
+}
+
+export interface InsightTopMetric {
+  name: string;
+  minutes: number;
+}
+
+export interface InsightPeriodSummary {
+  totalEventsAnalyzed: number;
+  totalDowntimeMinutes: number;
+  topDepartment: InsightTopMetric | null;
+  topSignal: InsightTopMetric | null;
+}
+
 export interface InsightAnalysisMeta {
   startDate: string;
   endDate: string;
@@ -35,6 +56,9 @@ export interface InsightAnalysisMeta {
   generatedAt: string;
   model: string;
   cached: boolean;
+  groupBy: GroupBy;
+  notices?: InsightNotice[];
+  summary: InsightPeriodSummary;
 }
 
 export interface InsightAnalysisResult {
@@ -57,4 +81,5 @@ export interface AnalyzeInsightsParams {
   endDate: string;
   areaId?: number;
   language?: "es" | "en";
+  groupBy?: GroupBy;
 }

@@ -1,6 +1,12 @@
 import type { InsightsRequestStatus } from "./InsightsButton";
 
-import type { InsightAnalysisResult } from "@/types/insights";
+import { FaTriangleExclamation } from "react-icons/fa6";
+
+import type {
+  InsightAnalysisResult,
+  InsightNotice,
+  InsightPeriodSummary,
+} from "@/types/insights";
 import type { GroupBy } from "@/types/report";
 
 import { Button, Chip, ErrorMessage, Spinner, Text } from "../../atoms";
@@ -67,6 +73,66 @@ function AnalysisScope({
   );
 }
 
+function NoticeBanner({ notices }: { notices: InsightNotice[] }) {
+  if (notices.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {notices.map((notice) => (
+        <div
+          key={notice.code}
+          className="flex items-start gap-2 bg-amber-500/15 border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-amber-200"
+        >
+          <FaTriangleExclamation className="mt-0.5 shrink-0 text-amber-400" />
+          <span>{notice.message}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 min-w-0">
+      <p className="text-[11px] text-slate-400">{label}</p>
+      <p className="text-sm font-medium text-white truncate" title={value}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function PeriodSummaryCards({ summary }: { summary: InsightPeriodSummary }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <SummaryCard
+        label="Eventos analizados"
+        value={String(summary.totalEventsAnalyzed)}
+      />
+      <SummaryCard
+        label="Minutos de paro"
+        value={`${Math.round(summary.totalDowntimeMinutes)} min`}
+      />
+      <SummaryCard
+        label="Depto. con más paro"
+        value={
+          summary.topDepartment
+            ? `${summary.topDepartment.name} (${summary.topDepartment.minutes} min)`
+            : "—"
+        }
+      />
+      <SummaryCard
+        label="Señal con más paro"
+        value={
+          summary.topSignal
+            ? `${summary.topSignal.name} (${summary.topSignal.minutes} min)`
+            : "—"
+        }
+      />
+    </div>
+  );
+}
+
 export function InsightsResultModal({
   isOpen,
   onClose,
@@ -86,7 +152,13 @@ export function InsightsResultModal({
       onClose={onClose}
     >
       <div className="flex flex-col gap-4">
-        <AnalysisScope from={from} groupBy={groupBy} to={to} />
+        <AnalysisScope
+          from={from}
+          groupBy={
+            status === "success" && result ? result.meta.groupBy : groupBy
+          }
+          to={to}
+        />
 
         {status === "loading" && (
           <div className="flex flex-col items-center justify-center gap-3 py-12">
@@ -126,6 +198,12 @@ export function InsightsResultModal({
               <span>·</span>
               <span>modelo {result.meta.model}</span>
             </div>
+
+            {result.meta.notices && result.meta.notices.length > 0 && (
+              <NoticeBanner notices={result.meta.notices} />
+            )}
+
+            <PeriodSummaryCards summary={result.meta.summary} />
 
             {result.findings.length === 0 ? (
               <InsightsEmptyState />

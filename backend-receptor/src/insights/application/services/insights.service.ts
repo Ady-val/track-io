@@ -8,6 +8,7 @@ import {
 import { InsightAnalysisCacheRepository } from '../../domain/repositories/insight-analysis-cache.repository';
 import type { AggregatedInsightsPayload } from '../../domain/types/aggregated-insights-payload.type';
 import type { RawFinding } from '../../domain/types/insight-finding.type';
+import type { GroupBy } from '../../../reports/application/services/plant-time.util';
 import type {
   AnalyzeInsightsDto,
   InsightLanguage,
@@ -17,11 +18,19 @@ import type {
   InsightFindingDto,
   InsightSupportingMetric,
   InsightsHealthDto,
+  InsightNotice,
+  InsightPeriodSummary,
 } from '../dtos/insight-analysis-response.dto';
 
 const DEFAULT_MAX_RANGE_DAYS = 90;
 const DEFAULT_CACHE_TTL_MINUTES = 1440;
+const DEFAULT_MIN_SAMPLE = 20;
 const MAX_FINDINGS = 5;
+
+interface CachedMeta {
+  notices?: InsightNotice[];
+  summary?: InsightPeriodSummary;
+}
 
 @Injectable()
 export class InsightsService {
@@ -43,16 +52,19 @@ export class InsightsService {
   async analyze(dto: AnalyzeInsightsDto): Promise<InsightAnalysisResponseDto> {
     const { from, to } = this.validateRange(dto.startDate, dto.endDate);
     const language: InsightLanguage = dto.language ?? 'es';
+    const days = this.computeDays(from, to);
+    const groupBy: GroupBy = dto.groupBy ?? this.deriveDefaultGroupBy(days);
 
     if (!this.anthropic.isConfigured()) {
       throw new InsightsApiKeyMissingError();
     }
 
-    const cacheKey = this.buildCacheKey(dto, language);
+    const cacheKey = this.buildCacheKey(dto, language, groupBy);
     const ttlMinutes = this.cacheTtlMinutes();
     if (ttlMinutes > 0) {
       const cached = await this.cache.findValidByCacheKey(cacheKey);
       if (cached) {
+        const meta = (cached.metaJson as CachedMeta | null) ?? {};
         return {
           findings: cached.findingsJson as InsightFindingDto[],
           meta: {
@@ -62,6 +74,15 @@ export class InsightsService {
             generatedAt: cached.createdAt.toISOString(),
             model: cached.model,
             cached: true,
+            groupBy,
+            ...(meta.notices &&
+              meta.notices.length > 0 && { notices: meta.notices }),
+            summary: meta.summary ?? {
+              totalEventsAnalyzed: cached.totalEventsAnalyzed,
+              totalDowntimeMinutes: 0,
+              topDepartment: null,
+              topSignal: null,
+            },
           },
         };
       }
@@ -70,20 +91,35 @@ export class InsightsService {
     const payload = await this.aggregator.build({
       startDate: from.toISOString(),
       endDate: to.toISOString(),
+      groupBy,
       ...(dto.areaId !== undefined && { areaId: dto.areaId }),
     });
 
     this.logger.log(
-      `Insights: rango=${from.toISOString()}..${to.toISOString()} areaId=${dto.areaId ?? 'todas'} totalEvents=${payload.totals.totalEvents} payloadBytes=${JSON.stringify(payload).length}`
+      `Insights: rango=${from.toISOString()}..${to.toISOString()} areaId=${dto.areaId ?? 'todas'} groupBy=${groupBy} totalEvents=${payload.totals.totalEvents} payloadBytes=${JSON.stringify(payload).length}`
     );
 
+    const summary = this.buildPeriodSummary(payload);
+
     if (payload.totals.totalEvents === 0) {
-      return this.buildResponse([], payload, this.anthropic.model, false);
+      return this.buildResponse(
+        [],
+        payload,
+        this.anthropic.model,
+        false,
+        groupBy,
+        [],
+        summary
+      );
     }
+
+    const notices = this.buildNotices(payload, groupBy, days, language);
+    const smallSample = payload.totals.totalEvents < this.minSampleThreshold();
 
     const { findings: rawFindings, model } = await this.anthropic.findPatterns(
       payload,
-      language
+      language,
+      { groupBy, smallSample }
     );
     const findings = this.resolveAndValidate(rawFindings, payload, language);
 
@@ -94,20 +130,32 @@ export class InsightsService {
         endDate: to,
         ...(dto.areaId !== undefined && { areaId: dto.areaId }),
         findingsJson: findings,
+        metaJson: { notices, summary },
         totalEventsAnalyzed: payload.totals.totalEvents,
         model,
         expiresAt: new Date(Date.now() + ttlMinutes * 60_000),
       });
     }
 
-    return this.buildResponse(findings, payload, model, false);
+    return this.buildResponse(
+      findings,
+      payload,
+      model,
+      false,
+      groupBy,
+      notices,
+      summary
+    );
   }
 
   private buildResponse(
     findings: InsightFindingDto[],
     payload: AggregatedInsightsPayload,
     model: string,
-    cached: boolean
+    cached: boolean,
+    groupBy: GroupBy,
+    notices: InsightNotice[],
+    summary: InsightPeriodSummary
   ): InsightAnalysisResponseDto {
     return {
       findings,
@@ -118,6 +166,9 @@ export class InsightsService {
         generatedAt: new Date().toISOString(),
         model,
         cached,
+        groupBy,
+        ...(notices.length > 0 && { notices }),
+        summary,
       },
     };
   }
@@ -145,6 +196,94 @@ export class InsightsService {
     return { from, to };
   }
 
+  private computeDays(from: Date, to: Date): number {
+    return Math.max(
+      1,
+      Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000))
+    );
+  }
+
+  /** ≤14 días → day, ≤60 días → week, más → month (§Tarea 3). */
+  private deriveDefaultGroupBy(days: number): GroupBy {
+    if (days <= 14) return 'day';
+    if (days <= 60) return 'week';
+    return 'month';
+  }
+
+  private minSampleThreshold(): number {
+    const raw = process.env['INSIGHTS_MIN_SAMPLE'];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_MIN_SAMPLE;
+  }
+
+  private buildPeriodSummary(
+    payload: AggregatedInsightsPayload
+  ): InsightPeriodSummary {
+    const topDept = payload.byAreaDepartment[0];
+    const topSignal = payload.topSignalsByDuration[0];
+    return {
+      totalEventsAnalyzed: payload.totals.totalEvents,
+      totalDowntimeMinutes: Math.round(payload.totals.totalDowntimeMinutes),
+      topDepartment: topDept
+        ? {
+            name: `${topDept.areaName} · ${topDept.departmentName}`,
+            minutes: Math.round(topDept.totalMinutes),
+          }
+        : null,
+      topSignal: topSignal
+        ? {
+            name: topSignal.signalName,
+            minutes: Math.round(topSignal.totalMinutes),
+          }
+        : null,
+    };
+  }
+
+  /**
+   * Avisos estructurados sobre limitaciones del análisis (§Tareas 3 y 4):
+   * agrupación degenerada (<2 buckets, nada que comparar en el tiempo) y
+   * muestra chica (pocos eventos, riesgo de confundir un outlier con un
+   * patrón). No bloquean el análisis, solo lo explican.
+   */
+  private buildNotices(
+    payload: AggregatedInsightsPayload,
+    groupBy: GroupBy,
+    days: number,
+    language: InsightLanguage
+  ): InsightNotice[] {
+    const notices: InsightNotice[] = [];
+    const groupLabel: Record<GroupBy, { es: string; en: string }> = {
+      day: { es: 'día', en: 'day' },
+      week: { es: 'semana', en: 'week' },
+      month: { es: 'mes', en: 'month' },
+    };
+
+    if (payload.range.bucketCount < 2) {
+      const recommended = this.deriveDefaultGroupBy(days);
+      const message =
+        recommended !== groupBy
+          ? language === 'en'
+            ? `The range is short to group by ${groupLabel[groupBy].en}; it was analyzed as a single block. Try grouping by ${groupLabel[recommended].en} or widen the range.`
+            : `El rango es corto para agrupar por ${groupLabel[groupBy].es}; se analizó como un bloque único. Prueba agrupar por ${groupLabel[recommended].es} o amplía el rango.`
+          : language === 'en'
+            ? `The range (${days} day${days === 1 ? '' : 's'}) is too short to compare periods; it was analyzed as a single block. Widen the range to see an evolution.`
+            : `El rango (${days} día${days === 1 ? '' : 's'}) es muy corto para comparar periodos; se analizó como un bloque único. Amplía el rango para ver evolución.`;
+      notices.push({ code: 'DEGENERATE_GROUPING', message });
+    }
+
+    if (payload.totals.totalEvents < this.minSampleThreshold()) {
+      notices.push({
+        code: 'SMALL_SAMPLE',
+        message:
+          language === 'en'
+            ? `Small sample (${payload.totals.totalEvents} events): findings may be dominated by isolated cases.`
+            : `Muestra pequeña (${payload.totals.totalEvents} eventos): los hallazgos pueden estar dominados por casos aislados.`,
+      });
+    }
+
+    return notices;
+  }
+
   private maxRangeDays(): number {
     const raw = process.env['INSIGHTS_MAX_RANGE_DAYS'];
     const parsed = raw ? Number(raw) : NaN;
@@ -161,11 +300,16 @@ export class InsightsService {
       : DEFAULT_CACHE_TTL_MINUTES;
   }
 
-  private buildCacheKey(dto: AnalyzeInsightsDto, language: string): string {
+  private buildCacheKey(
+    dto: AnalyzeInsightsDto,
+    language: string,
+    groupBy: GroupBy
+  ): string {
     const raw = [
       dto.startDate,
       dto.endDate,
       dto.areaId ?? 'all',
+      groupBy,
       language,
       this.anthropic.model,
     ].join('|');

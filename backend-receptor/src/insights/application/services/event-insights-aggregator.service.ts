@@ -10,6 +10,11 @@ import { EventAlertLog } from '../../../alert-escalation/domain/entities/event-a
 import { AlertLevel } from '../../../alert-escalation/domain/entities/alert-escalation-message.entity';
 import { AreaRepository } from '../../../areas/domain/repositories/area.repository';
 import { ScheduledDowntimeCalculatorService } from '../../../scheduled-downtimes/application/services/scheduled-downtime-calculator.service';
+import {
+  plantTimeBuckets,
+  type GroupBy,
+  type TimeBucket,
+} from '../../../reports/application/services/plant-time.util';
 import type { AggregatedInsightsPayload } from '../../domain/types/aggregated-insights-payload.type';
 
 const DEFAULT_TOP_SIGNALS = 10;
@@ -18,6 +23,7 @@ const MAX_BY_REASON_ROWS = 20;
 export interface AggregatorRange {
   startDate: string;
   endDate: string;
+  groupBy: GroupBy;
   areaId?: number;
 }
 
@@ -118,11 +124,16 @@ export class EventInsightsAggregator {
       range.areaId
     );
 
+    const buckets = plantTimeBuckets(from, to, this.timezone, range.groupBy);
+
     return {
       range: {
         startDate: from.toISOString(),
         endDate: to.toISOString(),
         days,
+        groupBy: range.groupBy,
+        bucketCount: buckets.length,
+        timezone: this.timezone,
       },
       totals: {
         totalEvents: events.length,
@@ -135,6 +146,12 @@ export class EventInsightsAggregator {
         escalatedToLevel2Pct: pct(level2EventIds.size, events.length),
       },
       byAreaDepartment: this.buildByAreaDepartment(events, alertEventIds),
+      byPeriod: this.buildByPeriod(
+        events,
+        alertEventIds,
+        buckets,
+        range.groupBy
+      ),
       byHourOfDay: this.buildByHourOfDay(events),
       byDayOfWeek: this.buildByDayOfWeek(events),
       byReason: this.buildByReason(events),
@@ -257,6 +274,70 @@ export class EventInsightsAggregator {
         avgMinutes: toMinutes(acc.totalMinutesSeconds / acc.eventCount),
         escalatedToAlertPct: pct(acc.alertCount, acc.eventCount),
       }));
+  }
+
+  /**
+   * Serie temporal a la granularidad de `groupBy`, en calendario de planta
+   * (reusa `plantTimeBuckets`, la misma aritmética que usa Reportes). Cada
+   * evento se ancla al bucket de su `closedAt` — coherente con el filtro de
+   * rango de `closedEventsInRange()`, que también usa `closedAt`.
+   */
+  private buildByPeriod(
+    events: Event[],
+    alertEventIds: Set<number>,
+    buckets: TimeBucket[],
+    groupBy: GroupBy
+  ): AggregatedInsightsPayload['byPeriod'] {
+    return buckets.map((bucket, index) => {
+      const isLast = index === buckets.length - 1;
+      const bucketEvents = events.filter(event => {
+        const anchor = (event.closedAt ?? event.createdAt).getTime();
+        return (
+          anchor >= bucket.start.getTime() &&
+          (isLast
+            ? anchor <= bucket.end.getTime()
+            : anchor < bucket.end.getTime())
+        );
+      });
+      const totalSeconds = bucketEvents.reduce(
+        (sum, e) => sum + this.eventDurationSeconds(e),
+        0
+      );
+      const alertCount = bucketEvents.filter(e =>
+        alertEventIds.has(e.id)
+      ).length;
+
+      return {
+        bucketStart: bucket.start.toISOString(),
+        bucketLabel: this.periodLabel(bucket, groupBy),
+        eventCount: bucketEvents.length,
+        totalMinutes: toMinutes(totalSeconds),
+        avgMinutes:
+          bucketEvents.length > 0
+            ? toMinutes(totalSeconds / bucketEvents.length)
+            : 0,
+        escalatedToAlertPct: pct(alertCount, bucketEvents.length),
+      };
+    });
+  }
+
+  private periodLabel(bucket: TimeBucket, groupBy: GroupBy): string {
+    if (groupBy === 'month') {
+      // formatToParts en vez de format(): evita el conector "de" que
+      // Intl inserta en es-MX ("julio de 2026") — queremos "Julio 2026".
+      const parts = new Intl.DateTimeFormat('es-MX', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: this.timezone,
+      }).formatToParts(bucket.start);
+      const month = parts.find(p => p.type === 'month')?.value ?? '';
+      const year = parts.find(p => p.type === 'year')?.value ?? '';
+      return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`;
+    }
+    if (groupBy === 'week') {
+      return `Semana del ${bucket.label}`;
+    }
+    return bucket.label;
   }
 
   private plantHourAndDow(date: Date): { hour: number; dow: number } {

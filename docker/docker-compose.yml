@@ -49,6 +49,9 @@ services:
       INSIGHTS_MAX_RANGE_DAYS: ${INSIGHTS_MAX_RANGE_DAYS:-90}
       INSIGHTS_TOP_SIGNALS: ${INSIGHTS_TOP_SIGNALS:-10}
       INSIGHTS_CACHE_TTL_MINUTES: ${INSIGHTS_CACHE_TTL_MINUTES:-1440}
+      # Umbral de "muestra chica": por debajo de esto, se avisa que los
+      # hallazgos pueden estar dominados por casos aislados.
+      INSIGHTS_MIN_SAMPLE: ${INSIGHTS_MIN_SAMPLE:-20}
       # Zona horaria IANA de la planta. Las horas de los paros programados son
       # hora de PARED de la planta; sin esto una ventana de "12:00" se
       # resolvería a las 06:00. Una zona inválida hace fallar el arranque.

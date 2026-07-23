@@ -33,6 +33,10 @@ export class InsightAnalysisCache {
   @Column({ name: 'findings_json', type: 'jsonb' })
   findingsJson!: unknown;
 
+  /** Notices (degenerate grouping / small sample) + mini-resumen del periodo. */
+  @Column({ name: 'meta_json', type: 'jsonb', nullable: true })
+  metaJson?: unknown;
+
   @Column({ name: 'total_events_analyzed', type: 'integer' })
   totalEventsAnalyzed!: number;
 

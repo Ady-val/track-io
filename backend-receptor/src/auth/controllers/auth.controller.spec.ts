@@ -224,6 +224,7 @@ describe('AuthController', () => {
       expect(result.data.modules).toEqual({
         signals: true,
         measurements: true,
+        insights: false,
       });
       expect(service.getUserPermissions).toHaveBeenCalledWith(mockUser.id);
       expect(service.getUserData).toHaveBeenCalledWith(mockUser.id);

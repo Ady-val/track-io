@@ -43,12 +43,14 @@ describe('AnthropicInsightsClient', () => {
     expect(client.isConfigured()).toBe(false);
   });
 
+  const defaultPromptOptions = { groupBy: 'day' as const, smallSample: false };
+
   it('findPatterns() lanza InsightsApiKeyMissingError sin llegar a la red cuando falta la API key', async () => {
     delete process.env['ANTHROPIC_API_KEY'];
     const client = new AnthropicInsightsClient();
-    await expect(client.findPatterns(payload, 'es')).rejects.toBeInstanceOf(
-      InsightsApiKeyMissingError
-    );
+    await expect(
+      client.findPatterns(payload, 'es', defaultPromptOptions)
+    ).rejects.toBeInstanceOf(InsightsApiKeyMissingError);
   });
 
   it('usa ANTHROPIC_MODEL cuando está definido, y el default si no', () => {
@@ -155,6 +157,11 @@ describe('AnthropicInsightsClient', () => {
       },
     ]);
 
+    const defaultPromptOptions = {
+      groupBy: 'day' as const,
+      smallSample: false,
+    };
+
     it('reintenta una vez si la primera respuesta llega truncada, y devuelve los hallazgos si la segunda es válida', async () => {
       const create = jest
         .fn()
@@ -162,7 +169,11 @@ describe('AnthropicInsightsClient', () => {
         .mockResolvedValueOnce(textMessage(validArrayText));
       const client = withFakeClient(create);
 
-      const result = await client.findPatterns(payload, 'es');
+      const result = await client.findPatterns(
+        payload,
+        'es',
+        defaultPromptOptions
+      );
 
       expect(create).toHaveBeenCalledTimes(2);
       expect(result.findings).toHaveLength(1);
@@ -174,9 +185,9 @@ describe('AnthropicInsightsClient', () => {
         .mockResolvedValue(textMessage('{"title": "siempre truncado'));
       const client = withFakeClient(create);
 
-      await expect(client.findPatterns(payload, 'es')).rejects.toBeInstanceOf(
-        InsightsUpstreamError
-      );
+      await expect(
+        client.findPatterns(payload, 'es', defaultPromptOptions)
+      ).rejects.toBeInstanceOf(InsightsUpstreamError);
       expect(create).toHaveBeenCalledTimes(2);
     });
 
@@ -186,11 +197,59 @@ describe('AnthropicInsightsClient', () => {
         .mockResolvedValueOnce(textMessage(validArrayText));
       const client = withFakeClient(create);
 
-      await client.findPatterns(payload, 'es');
+      await client.findPatterns(payload, 'es', defaultPromptOptions);
 
       expect(create).toHaveBeenCalledWith(
         expect.objectContaining({ thinking: { type: 'disabled' } })
       );
+    });
+
+    it('el system prompt enmarca el análisis al nivel de agrupación pedido', async () => {
+      const create = jest
+        .fn()
+        .mockResolvedValueOnce(textMessage(validArrayText));
+      const client = withFakeClient(create);
+
+      await client.findPatterns(payload, 'es', {
+        groupBy: 'week',
+        smallSample: false,
+      });
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining('esta semana vs la anterior'),
+        })
+      );
+    });
+
+    it('el system prompt advierte sobre muestra chica cuando smallSample es true', async () => {
+      const create = jest
+        .fn()
+        .mockResolvedValueOnce(textMessage(validArrayText));
+      const client = withFakeClient(create);
+
+      await client.findPatterns(payload, 'es', {
+        groupBy: 'day',
+        smallSample: true,
+      });
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining('MUESTRA CHICA'),
+        })
+      );
+    });
+
+    it('el system prompt NO incluye la advertencia de muestra chica cuando smallSample es false', async () => {
+      const create = jest
+        .fn()
+        .mockResolvedValueOnce(textMessage(validArrayText));
+      const client = withFakeClient(create);
+
+      await client.findPatterns(payload, 'es', defaultPromptOptions);
+
+      const call = create.mock.calls[0]?.[0] as { system: string };
+      expect(call.system).not.toContain('MUESTRA CHICA');
     });
   });
 });

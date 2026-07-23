@@ -1,15 +1,28 @@
+import type { GroupBy } from '../../../reports/application/services/plant-time.util';
+
 /**
  * Payload agregado que se envía al modelo. Es lo ÚNICO que ve la IA: nunca
  * eventos individuales, nunca datos personales más allá de nombres de
  * área/departamento/señal. Diseñado para ser compacto — su tamaño depende de
- * (áreas × departamentos + 24 horas + 7 días + N señales), no de la cantidad
- * de eventos del periodo (ver backend-receptor/src/insights § escalabilidad).
+ * (áreas × departamentos + 24 horas + 7 días + N señales + N buckets), no de
+ * la cantidad de eventos del periodo (ver backend-receptor/src/insights §
+ * escalabilidad).
  *
  * Todos los tiempos están en MINUTOS (ver EventInsightsAggregator — la
  * conversión segundos→minutos ocurre una sola vez, ahí).
  */
 export interface AggregatedInsightsPayload {
-  range: { startDate: string; endDate: string; days: number };
+  range: {
+    startDate: string;
+    endDate: string;
+    days: number;
+    /** Granularidad temporal usada para construir `byPeriod`. */
+    groupBy: GroupBy;
+    /** Cantidad de buckets en `byPeriod` — <2 significa "nada que comparar". */
+    bucketCount: number;
+    /** Zona horaria de planta usada para los límites de bucket (no UTC). */
+    timezone: string;
+  };
   totals: {
     totalEvents: number;
     totalActiveMinutes: number;
@@ -26,6 +39,20 @@ export interface AggregatedInsightsPayload {
     areaName: string;
     departmentId: number;
     departmentName: string;
+    eventCount: number;
+    totalMinutes: number;
+    avgMinutes: number;
+    escalatedToAlertPct: number;
+  }>;
+  /**
+   * Serie temporal a la granularidad de `range.groupBy` (día/semana/mes),
+   * calculada en calendario de planta. Es lo que le permite al modelo
+   * comparar un periodo contra otro — sin esto, cambiar la agrupación no
+   * cambia lo que el modelo tiene enfrente (ver §Tarea 2 del ajuste).
+   */
+  byPeriod: Array<{
+    bucketStart: string;
+    bucketLabel: string;
     eventCount: number;
     totalMinutes: number;
     avgMinutes: number;
